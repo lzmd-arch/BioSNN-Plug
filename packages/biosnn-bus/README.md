@@ -11,10 +11,13 @@
 
 ## 安装
 
+尚未发布到 PyPI，当前从 Git 安装：
+
 ```bash
-pip install biosnn-bus
+pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
+
 # 需要 torch 桥接时（SpikeTrain.to_torch / from_torch）
-pip install "biosnn-bus[torch]"
+pip install "biosnn-bus[torch] @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
 ```
 
 只依赖 numpy。

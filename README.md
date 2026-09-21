@@ -100,10 +100,14 @@ flowchart TB
 
 ## 快速开始
 
-`biosnn-bus` 只依赖 numpy，无需 GPU：
+`biosnn-bus` 只依赖 numpy，无需 GPU。
+
+> **PyPI 发布尚未开通。** `pip install biosnn-bus` 会在打上 `v0.1.0` tag 之后可用；
+> 在那之前请从 Git 安装（发布通道见 [release.yml](.github/workflows/release.yml)）。
 
 ```bash
-pip install biosnn-bus
+# PyPI 发布尚未开通（见 .github/workflows/release.yml）；当前从 Git 安装：
+pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
 ```
 
 写一个模态插件就是实现三个方法和两个属性：
@@ -179,7 +183,7 @@ scripts/               CI 与 pre-commit 用的检查脚本
 
 - 代码：[Apache-2.0](LICENSE)
 - 文档与本计划书：[CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)
-- 数据集：遵循各数据源许可。本仓库**不提供数据镜像**，只提供下载与预处理脚本。
+- 数据集：遵循各数据源许可。本仓库**不提供数据镜像**；下载与预处理脚本将随第一阶段提供。
 
 ## 引用
 

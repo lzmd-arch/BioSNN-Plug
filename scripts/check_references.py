@@ -30,9 +30,13 @@ from urllib.parse import urlparse
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REFERENCES_FILE = REPO_ROOT / "docs" / "references.md"
 
-#: 允许的核验状态。``verified`` 表示逐条核验过元数据与引用数字；
-#: ``partial`` 表示文献存在但部分数字未在原文中确认；``unverified`` 表示尚未核验。
-ALLOWED_STATUS = {"verified", "partial", "unverified"}
+#: 允许的核验状态。
+#:
+#: ``verified`` 表示逐条核验过元数据与引用数字；``partial`` 表示文献存在、元数据正确，
+#: 但部分归因数字未在原文中确认；``metadata-error`` 表示文献存在、但登记的作者/年份/
+#: 卷期页/文章号有误。把 ``metadata-error`` 与 ``partial`` 分开，是因为两者要做的事
+#: 完全不同——前者要去改书目，后者只需要补核数字，混在一起看状态列分辨不出来。
+ALLOWED_STATUS = {"verified", "partial", "metadata-error", "unverified"}
 
 COLUMNS = ["编号", "文献", "URL", "核验状态"]
 

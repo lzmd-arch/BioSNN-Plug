@@ -39,3 +39,4 @@
 | [ADR-0004](ADR-0004-monorepo-uv-workspace.md) | 采用 monorepo + uv workspace，而非双仓库 | 已采纳 |
 | [ADR-0005](ADR-0005-versioning-policy.md) | 版本策略：骨架库 semver，研究代码 12 个月免责期 | 已采纳 |
 | [ADR-0006](ADR-0006-plugin-interface-fidelity.md) | `ModalityPlugin` 保持计划书 §2.3 的原始签名 | 已采纳 |
+| [ADR-0007](ADR-0007-td-ltp-critic-provenance.md) | Critic 采用 TD-LTP，出处为 Frémaux et al. (2013) | 已采纳 |

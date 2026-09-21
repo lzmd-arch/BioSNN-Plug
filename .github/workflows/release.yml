@@ -1,0 +1,152 @@
+# 发布流水线：打 tag 即发布 `biosnn-bus`。
+#
+# ## 首次发布前必须做的一件事
+#
+# 本工作流用 **PyPI trusted publishing**（OIDC）发布，不存任何 API token。代价是
+# 必须先在 PyPI 侧登记这个发布者，否则 `publish-pypi` 会失败——**那是预期行为，
+# 不是 bug**。
+#
+# 在 <https://pypi.org/manage/account/publishing/> 添加一个 pending publisher：
+#
+#   PyPI Project Name : biosnn-bus
+#   Owner             : lzmd-arch
+#   Repository name   : BioSNN-Plug
+#   Workflow name     : release.yml
+#   Environment name  : pypi        ← 必须与下面 job 里的 environment 一致
+#
+# 登记之后，推一个 `v<version>` tag 即可发布。在此之前可以用
+# `gh workflow run release.yml` 手动触发——它只跑校验与构建，不会发布。
+#
+# ## 发布步骤
+#
+#   1. 改 `packages/biosnn-bus/pyproject.toml` 的 version（与 `__init__.py` 的
+#      `__version__` 保持一致，`scripts/check_version_consistency.py` 会盯着）；
+#   2. 提交、推送；
+#   3. `git tag v0.1.0 && git push origin v0.1.0`。
+#
+# `verify` job 会先确认 **tag 名与包版本一致**——tag 写错了就在这一步拦下，
+# 不会出现"发了 v0.2.0 但包内容是 0.1.0"这种事后很难补救的情况。
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  # 手动触发只做校验与构建，不发布。用来在没有 tag、或 PyPI 尚未配置时验证流水线。
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ── 校验：tag 与包版本必须一致 ────────────────────────────────────────────
+  verify:
+    name: 校验版本
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 骨架库内部版本号一致（pyproject ↔ __init__ ↔ 计划书）
+        run: python scripts/check_version_consistency.py
+
+      - name: tag 与 packages/biosnn-bus 的版本一致
+        env:
+          TAG: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          python - <<'PY'
+          import os, pathlib, sys, tomllib
+
+          if os.environ["EVENT"] != "push":
+              version = tomllib.loads(
+                  pathlib.Path("packages/biosnn-bus/pyproject.toml").read_text(encoding="utf-8")
+              )["project"]["version"]
+              print(f"手动触发，跳过 tag 校验（当前包版本 {version}）")
+              sys.exit(0)
+
+          tag = os.environ["TAG"]
+          version = tomllib.loads(
+              pathlib.Path("packages/biosnn-bus/pyproject.toml").read_text(encoding="utf-8")
+          )["project"]["version"]
+          expected = f"v{version}"
+          if tag != expected:
+              sys.exit(f"tag {tag!r} 与包版本 {version!r} 不符，应为 {expected!r}。")
+          print(f"tag {tag} 与包版本一致")
+          PY
+
+      - name: 冒烟测试（发出去的包必须是能跑的）
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy
+          python -m pip install ./packages/biosnn-bus
+          python -c "import biosnn_bus; print('biosnn-bus', biosnn_bus.__version__)"
+
+  # ── 构建：产出 sdist + wheel ──────────────────────────────────────────────
+  build:
+    name: 构建发行包
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv build --package biosnn-bus --out-dir dist
+      - name: 确认 wheel 没有把 torch 拖成依赖（见 ADR-0002）
+        run: |
+          uv venv /tmp/clean --python 3.12
+          uv pip install --python /tmp/clean/bin/python dist/*.whl
+          /tmp/clean/bin/python -c "
+          import importlib.util
+          assert importlib.util.find_spec('torch') is None, '骨架库不应依赖 torch'
+          import biosnn_bus; print('OK', biosnn_bus.__version__)
+          "
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  # ── 发布到 PyPI（仅在打 tag 时执行）──────────────────────────────────────
+  publish-pypi:
+    name: 发布到 PyPI
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/biosnn-bus
+    permissions:
+      id-token: write # trusted publishing 必需
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+
+  # ── 建 GitHub Release 并附上产物 ─────────────────────────────────────────
+  # 与 PyPI 发布相互独立：PyPI 那边没配好不会挡住这里出 Release。
+  github-release:
+    name: 建 GitHub Release
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes

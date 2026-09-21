@@ -114,10 +114,15 @@ families are arbitrated by an ES meta-learned arbiter. See the project plan (Chi
 
 ## Quickstart
 
-`biosnn-bus` depends only on numpy and needs no GPU:
+`biosnn-bus` depends only on numpy and needs no GPU.
+
+> **Not on PyPI yet.** `pip install biosnn-bus` will work once the `v0.1.0` tag is pushed;
+> until then install from Git (the release pipeline is in
+> [release.yml](.github/workflows/release.yml)).
 
 ```bash
-pip install biosnn-bus
+# PyPI 发布尚未开通（见 .github/workflows/release.yml）；当前从 Git 安装：
+pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
 ```
 
 A modality plugin is three methods and two properties:
@@ -203,7 +208,7 @@ pretending there is a team.
 - Code: [Apache-2.0](LICENSE)
 - Documentation and the project plan: [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)
 - Datasets: under their respective licenses. This repository ships **no data mirrors**,
-  only download and preprocessing scripts.
+  download and preprocessing scripts will ship with phase 1.
 
 ## Citation
 

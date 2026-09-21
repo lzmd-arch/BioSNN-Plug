@@ -123,6 +123,27 @@ audio = "my_pkg.plugins.audio:AudioPlugin"
 如果你做出了一个模态插件，欢迎开 issue 告诉大家，我们会把它列进 README。
 这也正是计划书 §12.6 里"第三方插件生态"从愿景变成事实的路径。
 
+## 发布
+
+`biosnn-bus` 通过 [`.github/workflows/release.yml`](.github/workflows/release.yml)
+发布：推一个 `v<version>` tag 即触发。流程与首次发布前必须做的 PyPI 侧配置
+（trusted publishing 登记）都写在该文件顶部的注释里。
+
+维护者摘要：
+
+```bash
+# 1. 改 packages/biosnn-bus/pyproject.toml 的 version，并同步 __init__.py 的 __version__
+#    （scripts/check_version_consistency.py 会校这两处 + 计划书文件名）
+# 2. 提交推送后打 tag
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+`verify` job 会先确认 tag 名与包版本一致——写错 tag 会在这一步被拦下，不会出现
+"发了 v0.2.0 但包内容还是 0.1.0"这类事后难补救的情况。
+
+PyPI 尚未配置好之前，可以用 `gh workflow run release.yml` 手动触发流水线：
+它只跑校验与构建，不发布。
+
 ## 报告问题
 
 用 [issue 模板](https://github.com/lzmd-arch/BioSNN-Plug/issues/new/choose)。
