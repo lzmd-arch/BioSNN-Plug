@@ -9,63 +9,44 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.ipynb)
 
-> Most of this project's design documentation is written in Chinese, since that is the
-> maintainer's working language. The code, docstrings of the public API, and this README
-> are the English entry points. If you need a design document in English, please
-> [open an issue](https://github.com/lzmd-arch/BioSNN-Plug/issues) — that is a real
-> signal that someone outside the project needs it.
-
----
+> Design documentation is written in Chinese, the maintainer's working language. The code,
+> the public-API docstrings, and this README are the English entry points. If you need a
+> design document in English, [open an issue](https://github.com/lzmd-arch/BioSNN-Plug/issues).
 
 ## What this is
 
-A **research prototype** exploring one scientific question:
+A research prototype testing one question: **can intelligence grow out of purely local
+learning rules, and learn to extend its own boundaries by calling on external reasoning?**
 
-> **Can intelligence grow out of purely local learning rules, and learn to extend its own
-> boundaries by calling on external reasoning?**
+Three claims are under test:
 
-Concretely, three claims are under test:
-
-1. **No surrogate gradients anywhere** — every synaptic update is driven by local signals
-   (e-prop + kernelized IB-Hebbian + R-STDP), with no global backpropagation;
-2. **Modality plugins** — text, image and audio attach to a shared cognitive core as
-   independent plugins; adding a modality requires no change to the existing architecture;
-3. **The SNN calls the LLM** — the SNN is the cognitive subject and decides *when to act*
-   and *what to associate*; the LLM only decides *which action type to take and what
-   content to generate*, sitting **inside** the SNN substrate as a replaceable
-   inference engine.
+1. **No surrogate gradients** — every synaptic update is driven by local signals (kernelized IB-Hebbian in perception, e-prop in the cognitive core, R-STDP in execution);
+2. **Modality plugins** — text, image and audio attach to a shared cognitive core as independent plugins; adding a modality requires no change to the existing architecture;
+3. **The SNN calls the LLM** — the SNN is the cognitive subject and decides *when to act* and *what to associate*; the LLM is a replaceable inference engine that only decides *what to generate*.
 
 ## What this is not
 
-**Not a production framework.** No SOTA-chasing, no availability guarantees, no team
-behind it.
+**Not a production framework.** No SOTA-chasing, no availability guarantees, one maintainer, no SLA on issues.
 
-**Not "yet another multimodal SNN library".** Performance is not the goal. The point is to
-test whether a high-risk route holds up — the project plan itself concedes the technical
-risk here is higher than the alternative.
+**Not a general SNN library.** Performance is not the goal; the point is to test whether a high-risk route holds up.
 
-**Not a source of inspiration, a source of evidence.** Every claim is meant to be
-reproducible from this public repository. Citations that could not be verified are marked
-`unverified` rather than quietly presented as fact (see [docs/references.md](docs/references.md)).
+**Evidence, not inspiration.** Every claim is meant to be reproducible from this repository; citations that could not be verified are marked `unverified` (see [references](docs/references.md)).
 
 ## Status
 
 | Part | Status |
 | :--- | :--- |
 | `biosnn-bus` skeleton library | **0.1.0, usable** — plugin interface, registry/discovery, spike-bus skeleton |
-| Research code (e-prop / IB-Hebbian / R-STDP) | **Not started** — see the plan |
-| Cognitive core, LLM orchestration | Not started |
+| Research code / cognitive core / LLM orchestration | **Not started** — see [the plan](BioSNN-Plug_项目计划书_v6.2.md) |
 
-The spike bus is currently a **skeleton**: dual-channel routing is in place, but the
-default fusion strategy is plain concatenation — it is **not** the TAAF
-temporal-attention-guided fusion described in the design document. That is a phase-2
-research task. See [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.md).
+Two boundaries worth stating plainly:
+
+- The spike bus is a **skeleton**: dual-channel routing is in place, but the default fusion strategy is plain concatenation — **not** the TAAF temporal-attention-guided fusion described in the design document. That is a phase-2 research task ([ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.md)).
+- The skeleton library is **not on PyPI yet**. `pip install biosnn-bus` works once the `v0.1.0` tag is pushed (release pipeline in [release.yml](.github/workflows/release.yml)).
 
 ## Architecture
 
-Data flows bottom-up. ✅ marks what **already runs in this repository today**; ⬜ marks what
-the project plan describes but has not been built. They are deliberately drawn on the same
-diagram, because it doubles as the roadmap.
+Data flows bottom-up. ✅ marks what already runs in this repository; ⬜ marks what the plan describes but has not been built. Both are on the same diagram because it doubles as the roadmap.
 
 ```mermaid
 flowchart TB
@@ -107,21 +88,13 @@ flowchart TB
     MCP -.->|result re-encoded| EM
 ```
 
-Every layer learns with **purely local** rules, never surrogate gradients: kernelized
-IB-Hebbian + divisional normalization in perception, e-prop (Trace Propagation + ALIF) in
-the cognitive core, R-STDP + a Critic in execution. Conflicts between the three rule
-families are arbitrated by an ES meta-learned arbiter. See the project plan (Chinese) §2-3.
+Conflicts between the three rule families are arbitrated by an **ES meta-learned arbiter** (⬜ phase 2). Full description in [the plan](BioSNN-Plug_项目计划书_v6.2.md) §2-3.
 
 ## Quickstart
 
-`biosnn-bus` depends only on numpy and needs no GPU.
-
-> **Not on PyPI yet.** `pip install biosnn-bus` will work once the `v0.1.0` tag is pushed;
-> until then install from Git (the release pipeline is in
-> [release.yml](.github/workflows/release.yml)).
+Depends only on numpy, no GPU needed. Not on PyPI yet, so install from Git:
 
 ```bash
-# PyPI 发布尚未开通（见 .github/workflows/release.yml）；当前从 Git 安装：
 pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
 ```
 
@@ -166,8 +139,11 @@ output = bus.step({"level": np.linspace(0, 1, 12)})
 print(output)
 ```
 
-Or just open the [Colab notebook](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.ipynb)
-(5 minutes, no GPU) — it draws the full spike raster from plugin to cognitive-core input.
+The [Colab notebook](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.ipynb)
+(5 minutes, no GPU) draws the full spike raster from plugin to cognitive-core input.
+
+Want a third-party package to ship a plugin? You **do not need to change a single line of
+this repository** — see the [plugin guide](docs/plugin_guide.md#让第三方包提供插件).
 
 ## Repository layout
 
@@ -179,37 +155,16 @@ docs/                  Plugin guide, ADRs, reproducibility checklist, references
 scripts/               Checks used by CI and pre-commit
 ```
 
-## Third-party plugins
+## Maintenance
 
-You do **not** need to change a single line of this repository. Declare an entry point in
-your own package:
+One maintainer; reports with a complete reproduction get priority.
 
-```toml
-[project.entry-points."biosnn_bus.plugins"]
-audio = "my_pkg.plugins.audio:AudioPlugin"
-```
+- `biosnn-bus` follows semver, currently `0.x` — by convention, minor versions in `0.x` may contain breaking changes. The first release someone else depends on will be `1.0.0`.
+- `research/` makes no compatibility promises for its first 12 months (until 2027-09).
+- Third-party modality plugins live in their own packages; no PR to this repository needed ([ADR-0003](docs/adr/ADR-0003-entry-point-plugin-discovery.md)).
 
-Users then run `discover_plugins()` and `get_plugin("audio")`. See
-[ADR-0003](docs/adr/ADR-0003-entry-point-plugin-discovery.md).
+## License and citation
 
-## Maintenance expectations
+Code [Apache-2.0](LICENSE); documentation and the project plan [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Datasets follow their own licenses — this repository ships no data mirrors; download and preprocessing scripts will ship with phase 1.
 
-**One maintainer.** This is stated up front on purpose — managing expectations beats
-pretending there is a team.
-
-- **No SLA on issues.** Reports with a complete reproduction get priority.
-- **`biosnn-bus` follows semver**, but is currently `0.x` — by semver convention, minor
-  versions in `0.x` may contain breaking changes. The first release that someone else
-  depends on will be `1.0.0`.
-- **`research/` makes no compatibility promises for its first 12 months** (until 2027-09).
-
-## License
-
-- Code: [Apache-2.0](LICENSE)
-- Documentation and the project plan: [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)
-- Datasets: under their respective licenses. This repository ships **no data mirrors**,
-  download and preprocessing scripts will ship with phase 1.
-
-## Citation
-
-If this project helps your research, please cite [CITATION.cff](CITATION.cff).
+Cite via [CITATION.cff](CITATION.cff).
