@@ -6,8 +6,7 @@
 
 > **这是骨架，不是认知核心。** 本库不包含任何学习规则（e-prop / R-STDP /
 > 核化 IB-Hebbian）、不包含脉冲神经元模型、不依赖 GPU、不依赖 PyTorch。它提供
-> 的是插件的接口契约、注册与发现机制、以及脉冲总线的接缝。骨架库不依赖任何
-> 研究先成功。
+> 的是插件的接口契约、注册与发现机制、以及脉冲总线的接缝。
 
 ## 安装
 
@@ -98,7 +97,7 @@ print(bus)
 §2.2 描述的 TAAF 时间注意力引导融合——后者是第二阶段的研究任务。总线已经把
 `FusionStrategy` 协议和双通道路由留好，替换策略不会改动调用方代码。
 
-详见仓库内的 `docs/adr/`。
+理由见 [ADR-0001](https://github.com/lzmd-arch/BioSNN-Plug/blob/main/docs/adr/ADR-0001-skeleton-as-separate-library.md)。
 
 ## 许可证
 

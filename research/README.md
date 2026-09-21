@@ -9,9 +9,7 @@
 > 破坏性变更免责期：研究代码前 12 个月明确标注 API 不稳定，骨架库独立 semver
 > 不受影响。
 
-理由很直接：一个 36 个月的研究项目，前 12 个月会不断推翻自己的设计。此时承诺
-API 稳定，结果只有两种——要么被自己的承诺绑住手脚，要么违背承诺。两种都比不承诺
-更糟。详见 [`docs/adr/ADR-0005`](../docs/adr/ADR-0005-versioning-policy.md)。
+取舍的理由见 [`docs/adr/ADR-0005`](../docs/adr/ADR-0005-versioning-policy.md)。
 
 **要拿来用的东西请用 [`biosnn-bus`](../packages/biosnn-bus/)**，它遵循 semver
 并且刻意不依赖本目录的任何代码（见 [`ADR-0001`](../docs/adr/ADR-0001-skeleton-as-separate-library.md)）。
@@ -34,7 +32,7 @@ API 稳定，结果只有两种——要么被自己的承诺绑住手脚，要�
 ```text
 research/
 ├─ <阶段或主题>/
-│  ├─ README.md          这一块在验证什么、当前结论、如何复现
+│  ├─ README.md
 │  ├─ <实现>.py
 │  └─ tests/
 └─ ...

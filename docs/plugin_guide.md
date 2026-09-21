@@ -104,9 +104,10 @@ except PluginContractError as exc:
     print("如期被拦下:", exc)
 ```
 
-> 为什么不在注册时就查？因为 `spike_dim` 是静态声明、`encode` 的输出是运行时行为，
-> 注册时无法预知后者。要求插件作者在 `encode` 里始终用 `self.spike_dim` 构造输出，
-> 是最省事也最不容易错的做法——上面 `LevelEncoder.encode` 就是这么写的。
+> 注册时查不了声明与输出是否一致：`spike_dim` 是静态声明，`encode` 的输出是运行时
+> 行为。所以在 `encode` 里就用 `self.spike_dim` 构造输出，两者不会错位
+> （上面的 `LevelEncoder.encode` 就是这么写的）。为什么校验不放在 `__init_subclass__`，
+> 见 [ADR-0006](../docs/adr/ADR-0006-plugin-interface-fidelity.md)。
 
 ## 两条可选属性
 
@@ -163,22 +164,34 @@ print(FastEncoder().temporal_scale)
 
 ## 契约自检
 
-`SpikeBus.register()` 会调用插件的 `validate()`。三类问题会在那一刻被拦下：
+`SpikeBus.register()` 会调用插件的 `validate()`，以下四类问题在那一刻被拦下：
 
 ```python
-class BadDim(LevelEncoder):
-    @property
-    def spike_dim(self) -> int:
-        return -3
-
-
 class BadName(LevelEncoder):
     @property
     def modality_name(self) -> str:
         return "   "
 
 
-for bad in (BadDim(), BadName()):
+class BadDim(LevelEncoder):
+    @property
+    def spike_dim(self) -> int:
+        return -3
+
+
+class BadScale(LevelEncoder):
+    @property
+    def temporal_scale(self) -> float:
+        return 0.0
+
+
+class BadChannel(LevelEncoder):
+    @property
+    def fusion_channel(self) -> str:
+        return "auditory"
+
+
+for bad in (BadName(), BadDim(), BadScale(), BadChannel()):
     try:
         SpikeBus(bus_dim=32).register(bad)
     except PluginContractError as exc:
@@ -227,10 +240,6 @@ discover_plugins()  # 扫描并注册所有已安装分发包声明的插件
 bus = SpikeBus(bus_dim=256, seed=0)
 bus.register(get_plugin("audio")())
 ```
-
-> 上面这段标注了 `no-run`，因为按定义它依赖本仓库之外的东西。这是 `no-run` 的
-> **正当**用法——它存在的意义就是给这种情况留口子。反过来，如果一段代码明明能在本
-> 仓库里跑，却标了 `no-run`，那是在绕过检查，review 时应当被指出来。
 
 `discover_plugins()` 是幂等的，重复调用不会重复注册。若某个 entry point 指向的不是
 `ModalityPlugin` 子类，或者加载时抛 ImportError，错误信息里会带上 entry point 的名字
@@ -281,8 +290,8 @@ def test_plugs_into_the_bus(plugin):
     assert bus.step({"image_diff": np.zeros((6, 4, 5))}).data.shape == (6, 32)
 ```
 
-四条测试分别覆盖：形状契约、参数校验、编解码往返、总线接入。**前两条是必须的**——
-它们把"插件写错了"从"实验跑不通"变成"注册时一行报错"。
+**形状契约与拒绝错误形状这两条是必须的**——它们把"插件写错了"从训练中途才暴露，
+变成注册时一行报错。
 
 ## 再往下
 

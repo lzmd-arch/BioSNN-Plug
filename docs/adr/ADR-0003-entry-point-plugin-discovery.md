@@ -53,8 +53,8 @@ audio = "my_pkg.plugins.audio:AudioPlugin"
 **代价（已接受）**
 
 - **全局可变状态**：模块级注册表是进程级的。测试之间必须隔离（见
-  `tests/conftest.py` 里的 `isolated_registry` 夹具），否则一个测试注册的插件会
-  泄漏到下一个测试。这是真实存在的坑，已经在测试夹具里处理；
+  `packages/biosnn-bus/tests/conftest.py` 里的 `isolated_registry` 夹具），否则一个
+  测试注册的插件会泄漏到下一个测试。这是真实存在的坑，已经在测试夹具里处理；
 - 重名冲突默认报错而非静默覆盖（`override=True` 才覆盖）。两个模态插件撞名时，
   开发者在注册那一刻就知道，而不是训练到一半发现用的是别人的编码器；
 - 装饰器 `@register_plugin` 是**导入副作用**——不 import 插件模块就不会注册。

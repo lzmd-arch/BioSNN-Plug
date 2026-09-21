@@ -1,12 +1,10 @@
 # 复现清单
 
 > 计划书 §12.4 要求"每个阶段的精确环境（commit hash、依赖版本、随机种子）"。
-> 这份文档给出模板与骨架库阶段的实际记录。
 
 ## 为什么需要它
 
-这个项目的核心主张之一是**"所有结论可在公开仓库中复现"**（计划书 §1.2 第 5 条）。
-而复现失败最常见的原因不是代码错了，是**环境对不上**：换了 numpy 版本、换了
+复现失败最常见的原因不是代码错了，是**环境对不上**：换了 numpy 版本、换了
 PyTorch 版本、随机种子没记、跑的是本地未提交的改动。
 
 所以每次对外报告实验结论时，都要附上下面这段。**没附的结论视为未经复现。**
@@ -72,12 +70,13 @@ nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
 
 ## 提交前自检
 
+除 [`CONTRIBUTING.md`](../CONTRIBUTING.md) 的通用清单外，复现相关还要确认这一条：
+
 ```bash
-uv sync --locked                        # lock 与 pyproject 必须一致
-uv run pytest -q                        # 全绿
-uv run pre-commit run --all-files       # 含文档代码块、版本号、引用清单检查
-uv run python examples/quickstart_register_plugin.py
+uv sync --locked      # lock 与 pyproject 必须一致
 ```
+
+上面"同样的 lock 文件解析出同样的依赖版本"这句话，前提就是这一步通过。
 
 ## 骨架库阶段的环境记录
 
@@ -89,7 +88,6 @@ uv run python examples/quickstart_register_plugin.py
 | 骨架库版本 | `biosnn-bus` 0.1.0 |
 | Python | >= 3.10（CI 覆盖 3.10 / 3.11 / 3.12） |
 | 运行时依赖 | 仅 `numpy>=1.24` |
-| 随机性 | 仅稀疏随机投影，见上 |
 | 硬件要求 | 无。CPU 即可 |
 
 ## 后续阶段的记录位置

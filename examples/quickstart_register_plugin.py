@@ -3,12 +3,8 @@
 #
 # 这个例子演示 `biosnn-bus` 要解决的唯一问题：**新增模态不需要修改已有架构**。
 #
-# 我们会
-#
-# 1. 写一个全新的模态插件（把一维信号编码成群体脉冲）；
-# 2. 用 `register_plugin` 注册它；
-# 3. 把它和自带的图像插件一起接进 `SpikeBus`；
-# 4. 看两条融合通道如何各自路由，并画出脉冲栅格图。
+# 依次做四件事：写一个全新的模态插件（把一维信号编码成群体脉冲）、注册它、
+# 和自带的图像插件一起接进 `SpikeBus`、看双通道路由与脉冲栅格图。
 #
 # 全程纯 CPU，唯一依赖是 numpy（绘图用 matplotlib）。
 
@@ -31,7 +27,7 @@ from biosnn_bus.plugins import DiffImagePlugin
 # `temporal_scale` 有默认值，按需覆盖。
 #
 # 这里用的是**群体水平编码**：`spike_dim` 个神经元各自"偏好"一个信号水平，信号
-# 落在谁的地盘上谁就放电。简单、稀疏、可解释，正好用来看清总线在做什么。
+# 落在谁的地盘上谁就放电，正好用来看清总线在做什么。
 
 
 # %%
@@ -138,8 +134,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 sine_plugin = bus.get("sine_wave")
 image_plugin = bus.get("image_diff")
 
-# 总线输出带 ±1 权重的随机投影，是浮点电流而非 0/1 脉冲。为了画栅格图，
-# 这里取"正电流"的单元——即真正被推高的那些认知核心神经元。
+# 取"正电流"的单元——即真正被推高的那些认知核心神经元（见上一节说明）。
 output_units = output.binary(threshold=0.0)
 
 # 图里的标签用英文：默认的 DejaVu Sans 没有中文字形，中文标签在多数环境

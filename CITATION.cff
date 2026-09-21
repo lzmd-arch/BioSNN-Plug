@@ -24,5 +24,7 @@ keywords:
   - continual learning
   - LLM orchestration
   - biologically plausible learning
+# 指骨架库 biosnn-bus 的版本；整个项目尚无版本标签。
+# 未填 date-released：截至本文件提交时没有任何 tag 或 PyPI 发布，
+# 填一个发布日期就是在声称一次并未发生的发布。
 version: "0.1.0"
-date-released: "2026-09-21"

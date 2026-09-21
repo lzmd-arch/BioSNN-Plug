@@ -4,8 +4,7 @@
 
 1. **这是一个研究原型，不是生产框架。** 有些看起来"显然该加"的功能会被搁置，
    理由是它不在计划书的路线里。
-2. **单人维护，issue 与 PR 的响应不设 SLA。** 管理预期比假装有团队更利于信任。
-   带完整复现步骤的报告会被优先处理。
+2. **单人维护，issue 与 PR 的响应不设 SLA。** 带完整复现步骤的报告会被优先处理。
 3. **写模态插件不需要往这里提 PR。** 独立成包即可，见下面的"第三方插件"一节。
 
 ## 开发环境
@@ -47,8 +46,6 @@ CI 会再跑一遍，另外加 **lychee 链接存活检查**与**依赖许可审
 
 ### 文档代码块：默认执行，例外显式标注
 
-这条规则值得单独说，因为它跟多数项目不一样。
-
 `scripts/check_doc_code_blocks.py` **会真的执行** Markdown 里的 Python 代码块。
 原因是纯语法检查（`ast.parse`）抓不到计划书 §12.3 点名的那类问题——
 `self.threshold` 语法完全合法，错在于运行时这个属性不存在。
@@ -70,14 +67,10 @@ CI 会再跑一遍，另外加 **lychee 链接存活检查**与**依赖许可审
 
 新增或修改任何外部引用时：
 
-1. 在 [`docs/references.md`](docs/references.md) 里登记，标明**核验状态**；
-2. 核验四件事：存在性、元数据、归属（别把 A 的结论记到 B 头上）、
-   **正文里归因于它的具体数字能否在原文中找到**；
-3. 核验不到就如实标 `unverified` 或 `partial`，并在备注里写清哪一项没对上。
+在 [`docs/references.md`](docs/references.md) 里登记并标明**核验状态**。
 
-这个仓库真实发生过一次署名错误：参考文献 [8] 的作者被误署为 "Khacef et al."，
-v6.1 才更正为 Hajizada et al.。**一份诚实的 `unverified` 比一份假的 `verified`
-有价值得多。**
+核验规则（要核哪四件事、各状态什么含义、核不到怎么办）由那个文件定义——它是引用
+规则的唯一归属。这个仓库真实发生过一次署名错误，起因就记在那里。
 
 ## 改动类型与兼容性
 
@@ -95,7 +88,7 @@ v6.1 才更正为 Hajizada et al.。**一份诚实的 `unverified` 比一份假�
 如果这个 PR 做了一个后来人会问"为什么不那样写"的决定，**新增一篇 ADR**。
 格式与判断标准见 [`docs/adr/README.md`](docs/adr/README.md)。
 
-ADR 一旦记录就不改正文——改变主意时新写一篇并互相链接。历史比整洁重要。
+ADR 一旦记录就不改正文——改变主意时新写一篇并互相链接。
 
 ## PR 流程
 
@@ -110,18 +103,13 @@ CI 必须全绿。目前 CI 覆盖 Python 3.10 / 3.11 / 3.12，全部在 CPU 上
 
 ## 第三方插件
 
-**不要往本仓库提 PR。** 在你的包里声明 entry point，用户侧 `discover_plugins()`
-就能发现它：
+**不要往本仓库提 PR。** 在你自己的 `pyproject.toml` 里声明一个 entry point
+（group 为 `biosnn_bus.plugins`）即可，本仓库零改动。
 
-```toml
-[project.entry-points."biosnn_bus.plugins"]
-audio = "my_pkg.plugins.audio:AudioPlugin"
-```
+配置怎么写、用户侧怎么接入，见
+[`docs/plugin_guide.md`](docs/plugin_guide.md#让第三方包提供插件)。
 
-完整教程见 [`docs/plugin_guide.md`](docs/plugin_guide.md)。
-
-如果你做出了一个模态插件，欢迎开 issue 告诉大家，我们会把它列进 README。
-这也正是计划书 §12.6 里"第三方插件生态"从愿景变成事实的路径。
+做出了模态插件欢迎开 issue 告诉大家。
 
 ## 发布
 
@@ -148,8 +136,6 @@ PyPI 尚未配置好之前，可以用 `gh workflow run release.yml` 手动触�
 
 用 [issue 模板](https://github.com/lzmd-arch/BioSNN-Plug/issues/new/choose)。
 Bug 报告请务必带上**最小复现脚本**与**环境信息**——模板里给了现成的命令。
-
-没有复现步骤的报告往往只能停在"无法重现"。
 
 ## 许可证
 

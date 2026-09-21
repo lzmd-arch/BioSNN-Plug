@@ -36,7 +36,8 @@
 
 两处需要说清楚的边界：
 
-- 脉冲总线是**骨架**：双通道路由已就位，但默认融合策略是平凡拼接，**不是**计划书 §2.2 描述的 TAAF 时间注意力引导融合——那是第二阶段的研究任务（[ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.md)）。
+- 脉冲总线是**骨架**：双通道路由已就位，但默认融合策略是平凡拼接，**不是**计划书 §2.2 描述的 TAAF 时间注意力引导融合——那是第二阶段的研究任务。（骨架库为何独立成包、
+为何刻意不包含这些东西，见 [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.md)。）
 - 骨架库**尚未发布到 PyPI**。`pip install biosnn-bus` 要等 `v0.1.0` tag 打上才可用（发布通道见 [release.yml](.github/workflows/release.yml)）。
 
 ## 架构

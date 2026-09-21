@@ -70,9 +70,8 @@ class Membrane(Protocol):
 - **类型检查变弱**：`Membrane` 是结构化协议，`isinstance(x, Membrane)` 只检查有没有
   `forward` 属性，抓不到签名不匹配（比如 `forward(self)` 少一个参数）。这是 Python
   Protocol 的固有限制，不是本决定引入的；
-- 严格来说这是**对计划书的一处偏离**，虽然很小。本 ADR 就是这处偏离的记录——
-  读代码的人看到 `Membrane` 而不是 `nn.Module` 时，能在这里找到原因，而不是以为
-  是抄漏了。
+- 严格来说这是**对计划书的一处偏离**，虽然很小。读代码的人看到 `Membrane`
+  而不是 `nn.Module` 时，应能在这里找到原因，而不是以为是抄漏了。
 
 **为什么校验放在 `validate()` 而不是 `__init_subclass__`**
 

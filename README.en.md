@@ -43,7 +43,11 @@ Three claims are under test:
 
 Two boundaries worth stating plainly:
 
-- The spike bus is a **skeleton**: dual-channel routing is in place, but the default fusion strategy is plain concatenation — **not** the TAAF temporal-attention-guided fusion described in the design document. That is a phase-2 research task ([ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.md)).
+- The spike bus is a **skeleton**: dual-channel routing is in place, but the default fusion
+  strategy is plain concatenation — **not** the TAAF temporal-attention-guided fusion the design
+  document describes. That is a phase-2 research task. Why the skeleton library is a separate
+  package, and why it deliberately excludes all of that, is in
+  [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.md).
 - The skeleton library is **not on PyPI yet**. `pip install biosnn-bus` works once the `v0.1.0` tag is pushed (release pipeline in [release.yml](.github/workflows/release.yml)).
 
 ## Architecture
