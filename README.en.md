@@ -9,9 +9,11 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.ipynb)
 
-> Design documentation is written in Chinese, the maintainer's working language. The code,
-> the public-API docstrings, and this README are the English entry points. If you need a
-> design document in English, [open an issue](https://github.com/lzmd-arch/BioSNN-Plug/issues).
+> **English support is partial.** This README is the English entry point, and the code
+> reads without Chinese (identifiers, type hints, structure). Everything else — docstrings,
+> comments, error messages, the plugin guide and the design documents — is written in
+> Chinese, the maintainer's working language. If you need an English API reference or
+> design document, [open an issue](https://github.com/lzmd-arch/BioSNN-Plug/issues).
 
 ## What this is
 
