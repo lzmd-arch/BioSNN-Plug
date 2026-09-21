@@ -119,20 +119,24 @@ jobs:
       - run: uv sync --locked
       - name: 导出依赖许可证清单
         run: |
-          uv run --with pip-licenses pip-licenses \
-            --format=markdown --with-urls --with-license-file --no-license-path \
-            > dependency-licenses.md
+          uv run --with pip-licenses pip-licenses --format=json > licenses.json
+          uv run --with pip-licenses pip-licenses --format=markdown --with-urls > dependency-licenses.md
           cat dependency-licenses.md
-      - name: 拒绝强 copyleft 依赖进入骨架库运行时依赖
-        run: |
-          if grep -Ei '\| *(A?GPL|SSPL|BUSL)' dependency-licenses.md; then
-            echo "::error::骨架库运行时依赖里出现强 copyleft 许可证，见上方清单。"
-            exit 1
-          fi
+      - name: 拒绝强 copyleft 依赖
+        # 用脚本而不是内联 grep。第一版是内联的
+        #   grep -Ei '\| *(A?GPL|SSPL|BUSL)' dependency-licenses.md
+        # 它在首次 CI 运行时就误报了：--with-license-file 会把许可证**正文**整段灌进
+        # 表格，而 PSF 许可证正文里有一句 "GPL-compatible licenses make it possible
+        # to combine Python with ..."，整行 grep 直接命中。
+        # 纯文本 grep 分不清"许可证名称"与"正文里提到 GPL"。脚本只比对名称字段，
+        # 而且能本地跑——这一条本地跑一次就能发现，不该由 CI 来发现。
+        run: uv run python scripts/check_licenses.py licenses.json
       - uses: actions/upload-artifact@v4
         with:
           name: dependency-licenses
-          path: dependency-licenses.md
+          path: |
+            dependency-licenses.md
+            licenses.json
 
   # ── 计划书 §七 第零阶段成功标准：「骨架库可 pip install」 ─────────────────
   package:

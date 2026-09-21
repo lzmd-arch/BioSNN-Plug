@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 import textwrap
@@ -23,6 +24,7 @@ SCRIPTS = REPO_ROOT / "scripts"
 DOC_BLOCKS = SCRIPTS / "check_doc_code_blocks.py"
 REFERENCES = SCRIPTS / "check_references.py"
 VERSIONS = SCRIPTS / "check_version_consistency.py"
+LICENSES = SCRIPTS / "check_licenses.py"
 
 
 def run(script: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -354,7 +356,80 @@ class TestVersionConsistency:
         assert run(VERSIONS, "--root", str(tmp_path)).returncode == 0
 
 
-@pytest.mark.parametrize("script", [DOC_BLOCKS, REFERENCES, VERSIONS])
+class TestLicenses:
+    """``scripts/check_licenses.py``。
+
+    这一组测试的存在理由很具体：第一版许可检查是 CI 里的一条内联 grep，
+    它在**首次 CI 运行时就误报**了——`pip-licenses --with-license-file` 会把许可证
+    正文灌进表格，而 PSF 许可证正文里有一句 "GPL-compatible licenses make it
+    possible to combine Python with ..."，整行 grep 直接命中，于是 CI 红了一个根本
+    没有强 copyleft 依赖的仓库。下面第一条就是这个 bug 的回归测试。
+    """
+
+    @staticmethod
+    def _json(tmp_path: Path, packages: list[dict]) -> Path:
+        path = tmp_path / "licenses.json"
+        path.write_text(json.dumps(packages, ensure_ascii=False), encoding="utf-8")
+        return path
+
+    def test_psf_license_mentioning_gpl_in_its_text_is_not_a_violation(self, tmp_path):
+        """回归测试：许可证**正文**里提到 GPL，不等于这个依赖是 GPL。"""
+        path = self._json(
+            tmp_path,
+            [
+                {
+                    "Name": "typing_extensions",
+                    "Version": "4.16.0",
+                    "License": "PSF-2.0",
+                    "LicenseText": (
+                        "GPL-compatible licenses make it possible to combine Python with "
+                        "other software that is released under the GNU General Public License."
+                    ),
+                }
+            ],
+        )
+        assert run(LICENSES, str(path)).returncode == 0
+
+    @pytest.mark.parametrize("license_name", ["AGPL-3.0", "GPL-3.0-only", "SSPL-1.0", "BUSL-1.1"])
+    def test_rejects_strong_copyleft(self, tmp_path, license_name):
+        path = self._json(tmp_path, [{"Name": "bad", "Version": "1.0", "License": license_name}])
+        result = run(LICENSES, str(path))
+        assert result.returncode == 1
+        assert "强 copyleft" in result.stderr
+
+    @pytest.mark.parametrize("license_name", ["LGPL-3.0", "MPL-2.0"])
+    def test_weak_copyleft_is_reported_but_not_blocking(self, tmp_path, license_name):
+        path = self._json(tmp_path, [{"Name": "weak", "Version": "1.0", "License": license_name}])
+        assert run(LICENSES, str(path)).returncode == 0
+        assert run(LICENSES, str(path), "--strict").returncode == 1
+
+    def test_unknown_license_is_flagged_but_not_blocking(self, tmp_path):
+        path = self._json(tmp_path, [{"Name": "mystery", "Version": "1.0", "License": "UNKNOWN"}])
+        result = run(LICENSES, str(path))
+        assert result.returncode == 0
+        assert "许可证未知" in result.stdout
+        assert run(LICENSES, str(path), "--strict").returncode == 1
+
+    def test_empty_dependency_list_fails(self, tmp_path):
+        """空清单意味着这次审计什么都没查——那本身就该失败，不能算"通过"。"""
+        path = self._json(tmp_path, [])
+        result = run(LICENSES, str(path))
+        assert result.returncode == 1
+        assert "没有实际检查任何东西" in result.stderr
+
+    def test_accepts_a_normal_apache_mit_tree(self, tmp_path):
+        path = self._json(
+            tmp_path,
+            [
+                {"Name": "numpy", "Version": "2.5.3", "License": "BSD-3-Clause"},
+                {"Name": "ruff", "Version": "0.16.8", "License": "MIT"},
+                {"Name": "biosnn-bus", "Version": "0.1.0", "License": "Apache-2.0"},
+            ],
+        )
+        assert run(LICENSES, str(path)).returncode == 0
+
+
+@pytest.mark.parametrize("script", [DOC_BLOCKS, REFERENCES, VERSIONS, LICENSES])
 def test_scripts_are_runnable_as_cli(script):
     """三个脚本都必须能被 CI 与 pre-commit 直接调用（``--help`` 不报错）。"""
     assert script.exists()
