@@ -2,7 +2,7 @@
 
 **面向高生物合理性的全模态脉冲神经网络认知原型**
 
-[English](README.en.md) · [项目计划书](BioSNN-Plug_项目计划书_v6.md) · [插件开发指南](docs/plugin_guide.md) · [架构决策记录](docs/adr/)
+[English](README.en.md) · [项目计划书](BioSNN-Plug_项目计划书_v6.2.md) · [插件开发指南](docs/plugin_guide.md) · [架构决策记录](docs/adr/)
 
 [![CI](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml/badge.svg)](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
@@ -41,12 +41,62 @@
 | 部分 | 状态 |
 | :--- | :--- |
 | `biosnn-bus` 骨架库 | **0.1.0 可用**——插件接口、注册与发现、脉冲总线骨架 |
-| 研究代码（e-prop / IB-Hebbian / R-STDP） | **尚未开始**，第一阶段计划见[计划书 §七](BioSNN-Plug_项目计划书_v6.md) |
+| 研究代码（e-prop / IB-Hebbian / R-STDP） | **尚未开始**，第一阶段计划见[计划书 §七](BioSNN-Plug_项目计划书_v6.2.md) |
 | 认知核心、LLM 协同模块 | 未开始 |
 
 脉冲总线目前是**骨架**：双通道路由已经就位，但默认融合策略是平凡的拼接，
 **不是**计划书 §2.2 描述的 TAAF 时间注意力引导融合——后者是第二阶段的研究任务。
 详见 [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.md)。
+
+## 架构
+
+数据自下而上流动。图中 ✅ 是**当前仓库里已经能跑的东西**，⬜ 是计划书里尚未实现的
+部分——这份图刻意把两者画在同一张图上，因为它同时是路线图。
+
+```mermaid
+flowchart TB
+    subgraph L5["LLM 调度与协同层"]
+        MCP["MCP / API 接口<br/>可替换的推理引擎<br/>⬜ 第五阶段"]
+    end
+
+    subgraph L4["执行层"]
+        ACT["动作生成 + 模态解码器<br/>R-STDP + 奖励预测 Critic<br/>⬜ 第一至三阶段"]
+    end
+
+    subgraph L3["认知层（认知核心）"]
+        WM["工作记忆<br/>RSNN + ALIF + e-prop<br/>⬜ 第一阶段"]
+        EM["情景记忆<br/>模式分离 + 神经发生<br/>⬜ 第四阶段"]
+        MG["元认知门控<br/>不确定性监控<br/>⬜ 第四阶段"]
+    end
+
+    subgraph L2["骨架库 biosnn-bus"]
+        BUS["SpikeBus<br/>按融合通道分组 · 时间网格对齐<br/>融合 · 稀疏随机投影<br/>✅ 已实现"]
+    end
+
+    subgraph L1["感知层（插件化）"]
+        IMG["图像插件<br/>差分编码 / DVS<br/>✅ 参考实现"]
+        TXT["文本插件<br/>Token + 时间常数编码<br/>⬜ 第二阶段"]
+        AUD["音频插件<br/>耳蜗模型频率分解<br/>⬜ 第三阶段"]
+        THIRD["第三方插件<br/>entry points 接入<br/>✅ 机制已就绪"]
+    end
+
+    IMG --> BUS
+    TXT -.-> BUS
+    AUD -.-> BUS
+    THIRD -.-> BUS
+
+    BUS --> WM
+    WM --> EM
+    EM --> MG
+    MG --> ACT
+    MG -.->|触发调用| MCP
+    MCP -.->|结果编码回注| EM
+```
+
+每一层的学习规则都是**纯局部**的，不用代理梯度：感知层是核化 IB-Hebbian + 除法
+归一化，认知层是 e-prop（Trace Propagation + ALIF），执行层是 R-STDP + Critic。
+三层之间的冲突由 ES 元学习仲裁器调节。完整说明见
+[项目计划书](BioSNN-Plug_项目计划书_v6.2.md) §2、§3。
 
 ## 快速开始
 

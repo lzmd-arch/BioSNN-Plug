@@ -2,7 +2,7 @@
 
 **A biologically-plausible, fully multimodal spiking neural network cognitive prototype**
 
-[中文](README.md) · [Project plan (Chinese)](BioSNN-Plug_项目计划书_v6.md) · [Plugin guide (Chinese)](docs/plugin_guide.md) · [ADRs (Chinese)](docs/adr/)
+[中文](README.md) · [Project plan (Chinese)](BioSNN-Plug_项目计划书_v6.2.md) · [Plugin guide (Chinese)](docs/plugin_guide.md) · [ADRs (Chinese)](docs/adr/)
 
 [![CI](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml/badge.svg)](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
@@ -60,6 +60,57 @@ The spike bus is currently a **skeleton**: dual-channel routing is in place, but
 default fusion strategy is plain concatenation — it is **not** the TAAF
 temporal-attention-guided fusion described in the design document. That is a phase-2
 research task. See [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.md).
+
+## Architecture
+
+Data flows bottom-up. ✅ marks what **already runs in this repository today**; ⬜ marks what
+the project plan describes but has not been built. They are deliberately drawn on the same
+diagram, because it doubles as the roadmap.
+
+```mermaid
+flowchart TB
+    subgraph L5["LLM orchestration layer"]
+        MCP["MCP / API interface<br/>replaceable inference engine<br/>⬜ phase 5"]
+    end
+
+    subgraph L4["Execution layer"]
+        ACT["Action generation + modality decoders<br/>R-STDP + reward-prediction Critic<br/>⬜ phases 1-3"]
+    end
+
+    subgraph L3["Cognitive layer (cognitive core)"]
+        WM["Working memory<br/>RSNN + ALIF + e-prop<br/>⬜ phase 1"]
+        EM["Episodic memory<br/>pattern separation + neurogenesis<br/>⬜ phase 4"]
+        MG["Metacognitive gating<br/>uncertainty monitoring<br/>⬜ phase 4"]
+    end
+
+    subgraph L2["biosnn-bus skeleton library"]
+        BUS["SpikeBus<br/>group by fusion channel · align time grid<br/>fuse · sparse random projection<br/>✅ implemented"]
+    end
+
+    subgraph L1["Perception layer (pluginised)"]
+        IMG["Image plugin<br/>difference / DVS encoding<br/>✅ reference implementation"]
+        TXT["Text plugin<br/>token + time-constant encoding<br/>⬜ phase 2"]
+        AUD["Audio plugin<br/>cochlear frequency decomposition<br/>⬜ phase 3"]
+        THIRD["Third-party plugins<br/>entry-point discovery<br/>✅ mechanism in place"]
+    end
+
+    IMG --> BUS
+    TXT -.-> BUS
+    AUD -.-> BUS
+    THIRD -.-> BUS
+
+    BUS --> WM
+    WM --> EM
+    EM --> MG
+    MG --> ACT
+    MG -.->|triggers| MCP
+    MCP -.->|result re-encoded| EM
+```
+
+Every layer learns with **purely local** rules, never surrogate gradients: kernelized
+IB-Hebbian + divisional normalization in perception, e-prop (Trace Propagation + ALIF) in
+the cognitive core, R-STDP + a Critic in execution. Conflicts between the three rule
+families are arbitrated by an ES meta-learned arbiter. See the project plan (Chinese) §2-3.
 
 ## Quickstart
 

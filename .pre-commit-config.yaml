@@ -11,10 +11,12 @@ default_language_version:
 # 计划书正文是只读文件（git 与 CI 只读它，不写它），任何会改文件的钩子碰到它都会
 # 抛 PermissionError 而不是给出有用的信息。这里整体排除它。
 #
+# 模式刻意不写死版本号：计划书会随版本改名（_v6 → _v6.2 → …），写死的话每次改名
+# 这个排除就失效，而失效的表现是钩子直接崩掉、不是给出可读的报错。
+#
 # 注意排除的只是**改文件**的那几个钩子；计划书仍然受版本号一致性检查管辖
 # （scripts/check_version_consistency.py 会读它的文件名与正文版本行）。
-# 那个文件名只到主版本号（_v6 vs 正文 v6.2）的问题已记录在案，见该脚本的警告输出。
-exclude: ^BioSNN-Plug_项目计划书_v6\.md$
+exclude: 项目计划书.*\.md$
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
