@@ -1,0 +1,27 @@
+# 统一换行为 LF，避免 Windows/Linux 协作者之间的整文件 diff
+* text=auto eol=lf
+
+# 二进制文件不参与换行转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.whl binary
+*.pt binary
+*.pth binary
+*.ckpt binary
+
+# Windows 脚本必须保留 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# 锁文件在 diff 中折叠，且不参与语言统计
+uv.lock linguist-generated=true -diff
+
+# 研究产出物不计入仓库语言统计
+docs/** linguist-documentation=true

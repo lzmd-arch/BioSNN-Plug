@@ -1,0 +1,19 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{md,markdown}]
+# Markdown 中行尾双空格是有意义的换行语法，不能裁剪
+trim_trailing_whitespace = false
+
+[*.{yml,yaml,json,toml,ipynb}]
+indent_size = 2
+
+[*.{js,ts,html,css}]
+indent_size = 2

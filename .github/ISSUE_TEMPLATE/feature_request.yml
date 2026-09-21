@@ -1,0 +1,54 @@
+name: 功能建议 / 插件投稿
+description: 提议新功能，或投稿一个第三方模态插件
+title: "[Idea] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **想投稿模态插件？** 先看一句：你不需要改本仓库的任何代码。
+        插件包只要在自己的 `pyproject.toml` 里声明 entry point 就能被
+        `discover_plugins()` 发现（见 `docs/plugin_guide.md`）。所以投稿通常是
+        "我来做这个包，链接在此"，而不是往本仓库提 PR。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你想解决什么问题
+      description: 描述场景与痛点，而不是直接给方案。
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 你设想的做法
+    validations:
+      required: false
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 类型
+      options:
+        - 新的模态插件（独立分发包）
+        - 改进 biosnn_bus 骨架库 API
+        - 改进工具链 / CI / 文档
+        - 研究方向的建议
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 你考虑过的替代方案
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: acknowledgement
+    attributes:
+      label: 确认
+      options:
+        - label: 我知道这是一个研究原型而非生产框架，提案可能因为与计划书的路线不符而被搁置
+          required: true

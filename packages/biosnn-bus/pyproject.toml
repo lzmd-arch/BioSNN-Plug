@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "biosnn-bus"
+version = "0.1.0"
+description = "BioSNN-Plug 的模态插件骨架库：ModalityPlugin 接口、脉冲总线与插件注册机制（与认知核心解耦，无 GPU 依赖）"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+authors = [{ name = "离中梦蝶", email = "269058959+lzmd-arch@users.noreply.github.com" }]
+keywords = ["spiking-neural-network", "neuromorphic", "multimodal", "plugin", "snn"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+# torch 只作为可选桥接，核心不依赖它——见 docs/adr/ADR-0002。
+torch = ["torch>=2.0"]
+examples = ["matplotlib>=3.8"]
+
+[project.urls]
+Homepage = "https://github.com/lzmd-arch/BioSNN-Plug"
+Repository = "https://github.com/lzmd-arch/BioSNN-Plug"
+Documentation = "https://github.com/lzmd-arch/BioSNN-Plug/tree/main/docs"
+Issues = "https://github.com/lzmd-arch/BioSNN-Plug/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/biosnn_bus"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/", "tests/", "README.md"]

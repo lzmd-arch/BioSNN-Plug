@@ -1,0 +1,78 @@
+name: Bug 报告
+description: 报告一个可复现的问题（骨架库 biosnn-bus 或仓库工具链）
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请尽量把下面的信息填全——尤其是**最小复现脚本**。
+
+        本仓库是**单人维护的研究原型**，issue 响应不设 SLA。带完整复现步骤的报告会
+        被优先处理；没有复现步骤的报告往往只能停在"无法重现"。
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: 问题出在哪一层
+      options:
+        - label: biosnn-bus 骨架库（插件接口 / 注册机制 / 脉冲总线）
+        - label: 仓库工具链（CI / pre-commit / scripts / notebook 生成）
+        - label: 文档（说明有误、示例跑不通）
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 发生了什么
+      description: 实际行为 vs. 你期望的行为。
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 最小复现脚本
+      description: |
+        一段能独立跑起来的最短代码，或一个指向 gist / 分支的链接。
+        能贴成可直接粘贴运行的形式最好，不要只描述"我点了某个函数"。
+      render: python
+      placeholder: |
+        import numpy as np
+        from biosnn_bus import SpikeBus
+        from biosnn_bus.plugins import DiffImagePlugin
+
+        bus = SpikeBus(bus_dim=64, seed=0)
+        bus.register(DiffImagePlugin(height=8, width=8))
+        print(bus.step({"image_diff": np.zeros((5, 8, 8))}))
+    validations:
+      required: true
+
+  - type: textarea
+    id: traceback
+    attributes:
+      label: 完整回溯
+      description: 报错的话请贴完整 traceback，不要只贴最后一行。
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境信息
+      description: 下面这条命令可以一次性打印全部所需信息，请直接粘贴输出。
+      render: text
+      placeholder: |
+        python -c "import sys, platform, numpy; print(sys.version); print(platform.platform()); print('numpy', numpy.__version__)"
+        python -c "import biosnn_bus; print('biosnn-bus', biosnn_bus.__version__)"
+        git rev-parse HEAD
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 补充信息
+      description: 截图、日志、你已经试过的排查方向。
+    validations:
+      required: false

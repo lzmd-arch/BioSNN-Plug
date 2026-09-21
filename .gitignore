@@ -1,0 +1,74 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# ---- 虚拟环境 ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- uv ----
+# uv.lock 需要提交（复现清单要求精确依赖版本）
+# 见 docs/reproducibility.md
+
+# ---- 测试与覆盖率 ----
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# ---- 类型检查与缓存 ----
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.pytype/
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+*.ipynb~
+
+# ---- 数据与实验产物（不镜像数据，只提供下载脚本）----
+data/
+datasets/
+outputs/
+runs/
+wandb/
+*.ckpt
+*.pth
+*.pt
+*.npz
+*.h5
+
+# ---- 编辑器 / 系统 ----
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 构建与文档 ----
+site/
+docs/_build/
+
+# ---- 环境变量 ----
+.env
+.env.*
+!.env.example

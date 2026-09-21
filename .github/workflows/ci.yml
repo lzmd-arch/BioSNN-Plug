@@ -1,0 +1,168 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # 缓存与工作目录不在同一文件系统时，硬链接会失败并刷一屏警告
+  UV_LINK_MODE: copy
+
+jobs:
+  # ── 计划书 §12.3：单元测试 ────────────────────────────────────────────────
+  test:
+    name: pytest (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - run: uv sync --locked
+      - name: 跑测试（骨架库全 CPU，无 GPU 依赖）
+        run: uv run pytest -q
+
+  # ── 计划书 §12.3：风格 ────────────────────────────────────────────────────
+  lint:
+    name: ruff（check + format）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check --output-format=github .
+      - run: uv run ruff format --check .
+
+  # ── 计划书 §12.3：文档代码块语法检查 ──────────────────────────────────────
+  # 拦 self.threshold 这类未定义引用。它会真的执行文档里的代码块——纯语法检查
+  # 抓不到属性拼写错误。无法独立运行的片段必须在围栏上显式标注 `python no-run`。
+  doc-code-blocks:
+    name: 文档代码块检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run python scripts/check_doc_code_blocks.py
+
+  # ── 计划书 §12.3：版本号一致性检查 ────────────────────────────────────────
+  version-consistency:
+    name: 版本号一致性检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/check_version_consistency.py
+
+  # ── 计划书 §12.3：引用清单结构检查（不联网）───────────────────────────────
+  references:
+    name: 引用清单检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/check_references.py
+
+  # ── 计划书 §12.3：引用链接存活检查 ────────────────────────────────────────
+  # 这是拦截"Khacef 署名"那类错误的入口：错误 DOI 与死链会在这里暴露。
+  links:
+    name: 引用链接存活检查（lychee）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          # 403 也放行：ACM DL / Nature / IEEE 会对自动化检查返回 403，
+          # 那说明"服务器拒绝了我们"，而不是"链接是错的"。真正的 404 仍然会失败。
+          args: >-
+            --no-progress
+            --max-concurrency 8
+            --accept 200,206,429,403
+            --exclude-path .venv
+            --exclude-path node_modules
+            './**/*.md'
+          fail: true
+
+  # ── 计划书 §12.1：第三方依赖许可审计 ──────────────────────────────────────
+  # 计划书点名要核查 eprop-PyTorch 与 Lava/Loihi 相关组件的许可证条款。
+  # 这里只做基线：列出全部依赖的许可证，并在出现强 copyleft 时失败。
+  license-audit:
+    name: 依赖许可审计
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - name: 导出依赖许可证清单
+        run: |
+          uv run --with pip-licenses pip-licenses \
+            --format=markdown --with-urls --with-license-file --no-license-path \
+            > dependency-licenses.md
+          cat dependency-licenses.md
+      - name: 拒绝强 copyleft 依赖进入骨架库运行时依赖
+        run: |
+          if grep -Ei '\| *(A?GPL|SSPL|BUSL)' dependency-licenses.md; then
+            echo "::error::骨架库运行时依赖里出现强 copyleft 许可证，见上方清单。"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dependency-licenses
+          path: dependency-licenses.md
+
+  # ── 计划书 §七 第零阶段成功标准：「骨架库可 pip install」 ─────────────────
+  package:
+    name: 构建 wheel 并在干净环境安装
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv build --package biosnn-bus --out-dir dist
+      - name: 在全新 venv 里安装并导入（证明对外可用）
+        run: |
+          uv venv /tmp/clean --python 3.12
+          uv pip install --python /tmp/clean/bin/python dist/*.whl
+          /tmp/clean/bin/python -c "
+          import biosnn_bus
+          from biosnn_bus import ModalityPlugin, SpikeBus, SpikeTrain
+          from biosnn_bus.plugins import DiffImagePlugin
+          print('biosnn-bus', biosnn_bus.__version__, 'OK')
+          "
+      - name: 确认 wheel 没有把 torch 拖成依赖
+        run: |
+          /tmp/clean/bin/python -c "
+          import importlib.util, sys
+          assert importlib.util.find_spec('torch') is None, '骨架库不应依赖 torch（见 ADR-0002）'
+          print('未安装 torch，符合预期')
+          "
+      - uses: actions/upload-artifact@v4
+        with:
+          name: biosnn-bus-wheel
+          path: dist/*.whl

@@ -1,0 +1,107 @@
+[project]
+name = "biosnn-plug"
+version = "0.0.0"
+description = "BioSNN-Plug：纯局部学习驱动的可扩展全模态脉冲神经网络认知原型（研究原型，非生产框架）"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "离中梦蝶", email = "269058959+lzmd-arch@users.noreply.github.com" }]
+keywords = ["spiking-neural-network", "neuromorphic", "local-learning", "multimodal"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/lzmd-arch/BioSNN-Plug"
+Repository = "https://github.com/lzmd-arch/BioSNN-Plug"
+Issues = "https://github.com/lzmd-arch/BioSNN-Plug/issues"
+
+[dependency-groups]
+dev = [
+  # 骨架库以 editable 方式装进开发环境，改代码即时生效
+  "biosnn-bus",
+  "pytest>=8.0",
+  "pytest-cov>=6.0",
+  "ruff>=0.9",
+  "pre-commit>=4.0",
+  "matplotlib>=3.8",
+  "nbformat>=5.10",
+  "numpy>=1.24",
+]
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+# 让 uv 从 workspace 内解析 biosnn-bus，而不是去 PyPI 找同名包
+[tool.uv.sources]
+biosnn-bus = { workspace = true }
+
+# 根工程本身不打包：它只承载 workspace 声明、开发依赖与工具配置。
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+# packages/... 是骨架库自己的测试；tests/ 是仓库工具链（检查脚本等）的测试
+testpaths = ["packages/biosnn-bus/tests", "tests"]
+# 目录名 biosnn-bus 含连字符、不能作为包，因此把 tests/ 挂进 sys.path，
+# 让测试文件能 `from helpers import ...`。
+pythonpath = ["packages/biosnn-bus/tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+  "gpu: 需要 CUDA 的测试（CI 默认跳过，本地可用 -m gpu 运行）",
+  "slow: 运行时间较长的测试",
+]
+
+[tool.coverage.run]
+source = ["biosnn_bus"]
+branch = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+# 排除三类：
+# - Markdown：文档里的代码块由 scripts/check_doc_code_blocks.py 负责（计划书 §12.3
+#   明确要求这一项），而且根目录的计划书是只读文件；
+# - .ipynb：notebook 是由 examples/*.py 生成的产物，源脚本已经被 lint 过了。
+#   再 lint 一遍不只是冗余——notebook 的每个单元是独立作用域，ruff 会认为
+#   `# noqa: E402` 多余并删掉它，而生成器下一轮又写回来，两者永远拉锯。
+extend-exclude = [".venv", "build", "dist", "*.md", "*.ipynb"]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "N",   # pep8-naming
+  "UP",  # pyupgrade
+  "B",   # flake8-bugbear
+  "C4",  # flake8-comprehensions
+  "SIM", # flake8-simplify
+  "RUF", # ruff 专有规则
+]
+ignore = [
+  # 骨架库刻意允许中文 docstring 与注释，行长按 ruff 的 line-length 统一处理
+  "E501",
+  # 本项目是中文优先的项目，全角标点（：（）「」等）是正文的一部分而非笔误。
+  # RUF001/2/3 会把它们全部标成"易混淆字符"，在这类代码库里纯属噪声。
+  "RUF001",
+  "RUF002",
+  "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"packages/biosnn-bus/tests/*" = ["N802", "N803"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true

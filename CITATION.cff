@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "如果本项目的骨架库或研究代码对你的工作有帮助，请按以下信息引用。"
+title: "BioSNN-Plug: 面向高生物合理性的全模态脉冲神经网络认知原型"
+abstract: >-
+  BioSNN-Plug 是一个研究原型，验证纯局部学习规则（e-prop、核化 IB-Hebbian、R-STDP，
+  不使用代理梯度）能否通过经验积累实现智能的自然生长，并让 SNN 作为认知主体学会调度
+  可替换的外部 LLM 推理引擎来扩展自身能力边界。仓库同时提供独立可分发的模态插件骨架库
+  biosnn-bus。
+type: software
+authors:
+  - name: "离中梦蝶"
+    alias: lzmd-arch
+    website: "https://github.com/lzmd-arch"
+repository-code: "https://github.com/lzmd-arch/BioSNN-Plug"
+url: "https://github.com/lzmd-arch/BioSNN-Plug"
+license: Apache-2.0
+license-url: "https://github.com/lzmd-arch/BioSNN-Plug/blob/main/LICENSE"
+keywords:
+  - spiking neural networks
+  - local learning rules
+  - e-prop
+  - neuromorphic computing
+  - multimodal learning
+  - continual learning
+  - LLM orchestration
+  - biologically plausible learning
+version: "0.1.0"
+date-released: "2026-09-21"

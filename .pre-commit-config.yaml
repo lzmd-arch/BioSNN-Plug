@@ -1,0 +1,79 @@
+# 提交即拦截（计划书 §12.3）。
+#
+# 这些钩子对应计划书 §12.3 表格里的每一行。CI 会再跑一遍同样的检查——本地钩子是为了
+# 让问题在提交前就暴露，CI 是为了保证没人能绕过。
+#
+# 环境：先 `uv sync`，再用 `uv run pre-commit install` 装上钩子。
+# 首次运行需要联网拉取钩子仓库。
+default_language_version:
+  python: python3
+
+# 计划书正文是只读文件（git 与 CI 只读它，不写它），任何会改文件的钩子碰到它都会
+# 抛 PermissionError 而不是给出有用的信息。这里整体排除它。
+#
+# 注意排除的只是**改文件**的那几个钩子；计划书仍然受版本号一致性检查管辖
+# （scripts/check_version_consistency.py 会读它的文件名与正文版本行）。
+# 那个文件名只到主版本号（_v6 vs 正文 v6.2）的问题已记录在案，见该脚本的警告输出。
+exclude: ^BioSNN-Plug_项目计划书_v6\.md$
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=2048]
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.8
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      # 「文档代码块语法检查」——计划书 §12.3 表格里点名要拦 self.threshold 那类
+      # 未定义引用。注意它不只是语法检查：默认会真的执行文档里的代码块，
+      # 因为 ast.parse 抓不到属性拼写错误。详见 scripts/check_doc_code_blocks.py。
+      - id: doc-code-blocks
+        name: 文档代码块检查（语法 + 执行）
+        entry: python scripts/check_doc_code_blocks.py
+        language: system
+        files: \.md$
+        pass_filenames: false
+
+      # 「版本号一致性检查」——拦"文件名与内容版本号错位"。
+      - id: version-consistency
+        name: 版本号一致性检查
+        entry: python scripts/check_version_consistency.py
+        language: system
+        files: (pyproject\.toml|__init__\.py|.*项目计划书.*\.md)$
+        pass_filenames: false
+
+      # 「引用清单结构检查」——拦 Khacef 署名那类元数据错误。
+      # HTTP 存活检查在 CI 里由 lychee 负责，不进 pre-commit（联网钩子会拖慢每次提交）。
+      - id: references
+        name: 引用清单检查
+        entry: python scripts/check_references.py
+        language: system
+        files: ^docs/references\.md$
+        pass_filenames: false
+
+      # Colab notebook 由示例脚本生成，脚本是唯一真相源。这里自动重建，
+      # 免得手写副本与脚本漂移——那正是"CI 绿但用户跑不通"的成因。
+      - id: build-notebook
+        name: 由示例脚本重建 Colab notebook
+        entry: python scripts/build_notebook.py
+        language: system
+        files: ^examples/.*\.py$
+        pass_filenames: false
