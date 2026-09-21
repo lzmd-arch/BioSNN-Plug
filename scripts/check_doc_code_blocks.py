@@ -54,7 +54,10 @@ DEFAULT_TARGETS = [
 FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})\s*(?P<info>.*?)\s*$")
 
 #: 围栏信息串里带这些词就只做语法检查。
-SKIP_EXEC_FLAGS = {"no-run", "norun", "skip", "skip-exec"}
+#: 刻意只留这两个写法——这是绕过检查的口子，写法越少越好审。
+#: （早先还有 "skip" / "skip-exec"，它们过于宽泛，与将来可能引入的其它围栏
+#:   属性容易撞名，已去掉。）
+SKIP_EXEC_FLAGS = {"no-run", "norun"}
 
 #: 会被当作 Python 处理的语言标记（含空标记）。
 PYTHON_LANGS = {"python", "python3", "py", "py3"}
@@ -83,10 +86,6 @@ class CodeBlock:
     start_line: int
     source: str
     runnable: bool
-
-    @property
-    def language(self) -> str:
-        return "python"
 
 
 @dataclass(frozen=True)

@@ -69,6 +69,6 @@ site/
 docs/_build/
 
 # ---- 环境变量 ----
+# 本项目不使用任何环境变量；这里只是防止贡献者把本地的 .env 误提交。
 .env
 .env.*
-!.env.example

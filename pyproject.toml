@@ -98,9 +98,6 @@ ignore = [
   "RUF003",
 ]
 
-[tool.ruff.lint.per-file-ignores]
-"packages/biosnn-bus/tests/*" = ["N802", "N803"]
-
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"

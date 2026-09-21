@@ -64,7 +64,7 @@ nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
   ——后者对字符串按进程加盐（`PYTHONHASHSEED`），会让同一份配置在不同进程里得到
   不同的投影矩阵，"固定种子即可复现"这句话就只在单进程内成立。
 
-  这条有回归测试盯着：`tests/test_bus.py::test_projection_seed_survives_a_process_boundary`
+  这条有回归测试盯着：`packages/biosnn-bus/tests/test_bus.py::test_projection_seed_survives_a_process_boundary`
   用两个不同的 `PYTHONHASHSEED` 起子进程，比对输出必须一致。
 
 - 插件自己的随机性由插件自己负责。写插件时请把 `seed` 暴露成构造参数，
