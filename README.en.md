@@ -2,18 +2,18 @@
 
 **A biologically-plausible, fully multimodal spiking neural network cognitive prototype**
 
-[中文](README.md) · [Project plan (Chinese)](BioSNN-Plug_项目计划书_v6.2.md) · [Plugin guide (Chinese)](docs/plugin_guide.md) · [ADRs (Chinese)](docs/adr/)
+> **What is and isn't translated.** The documentation is available in Chinese, English and
+> Japanese. The **code is not** — docstrings, inline comments and error messages are written
+> in Chinese only, so a non-Chinese reader will still meet Chinese text when working with the
+> library. The Japanese documentation is a machine-assisted translation that has not been
+> reviewed by a native speaker; if something reads unnaturally, please open an issue.
+
+[中文](README.md) · [日本語](README.ja.md) · [Project plan (Chinese)](BioSNN-Plug_项目计划书_v6.2.md) · [Plugin guide](docs/plugin_guide.en.md) · [Architecture decision records](docs/adr/README.en.md)
 
 [![CI](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml/badge.svg)](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.ipynb)
-
-> **English support is partial.** This README is the English entry point, and the code
-> reads without Chinese (identifiers, type hints, structure). Everything else — docstrings,
-> comments, error messages, the plugin guide and the design documents — is written in
-> Chinese, the maintainer's working language. If you need an English API reference or
-> design document, [open an issue](https://github.com/lzmd-arch/BioSNN-Plug/issues).
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.en.ipynb)
 
 ## What this is
 
@@ -24,7 +24,7 @@ Three claims are under test:
 
 1. **No surrogate gradients** — every synaptic update is driven by local signals (kernelized IB-Hebbian in perception, e-prop in the cognitive core, R-STDP in execution);
 2. **Modality plugins** — text, image and audio attach to a shared cognitive core as independent plugins; adding a modality requires no change to the existing architecture;
-3. **The SNN calls the LLM** — the SNN is the cognitive subject and decides *when to act* and *what to associate*; the LLM is a replaceable inference engine that only decides *what to generate*.
+3. **The SNN calls the LLM autonomously** — the SNN is the cognitive subject and decides *when to act* and *what to associate*; the LLM is a replaceable inference engine responsible only for *what to generate*.
 
 ## What this is not
 
@@ -32,27 +32,27 @@ Three claims are under test:
 
 **Not a general SNN library.** Performance is not the goal; the point is to test whether a high-risk route holds up.
 
-**Evidence, not inspiration.** Every claim is meant to be reproducible from this repository; citations that could not be verified are marked `unverified` (see [references](docs/references.md)).
+**Evidence, not inspiration.** Conclusions have to be reproducible from this repository; citations that cannot be verified are marked `unverified` (see the [reference list](docs/references.en.md)).
 
 ## Status
 
 | Part | Status |
 | :--- | :--- |
-| `biosnn-bus` skeleton library | **0.1.0, usable** — plugin interface, registry/discovery, spike-bus skeleton |
-| Research code / cognitive core / LLM orchestration | **Not started** — see [the plan](BioSNN-Plug_项目计划书_v6.2.md) |
+| `biosnn-bus` skeleton library | **0.1.0, usable** — plugin interface, registration and discovery, spike-bus skeleton |
+| Research code / cognitive core / LLM orchestration | **Not started** — see the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §7 |
 
 Two boundaries worth stating plainly:
 
 - The spike bus is a **skeleton**: dual-channel routing is in place, but the default fusion
-  strategy is plain concatenation — **not** the TAAF temporal-attention-guided fusion the design
-  document describes. That is a phase-2 research task. Why the skeleton library is a separate
-  package, and why it deliberately excludes all of that, is in
-  [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.md).
-- The skeleton library is **not on PyPI yet**. `pip install biosnn-bus` works once the `v0.1.0` tag is pushed (release pipeline in [release.yml](.github/workflows/release.yml)).
+  strategy is plain concatenation — **not** the TAAF temporal-attention-guided fusion described
+  in §2.2 of the project plan. That is a phase-2 research task. (Why the skeleton library is a
+  separate package, and why it deliberately includes none of these things, see
+  [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.en.md).)
+- The skeleton library is **not on PyPI yet**. `pip install biosnn-bus` only becomes usable once the `v0.1.0` tag is pushed (release channel in [release.yml](.github/workflows/release.yml)).
 
 ## Architecture
 
-Data flows bottom-up. ✅ marks what already runs in this repository; ⬜ marks what the plan describes but has not been built. Both are on the same diagram because it doubles as the roadmap.
+Data flows bottom-up. ✅ marks what already runs in this repository; ⬜ marks what the project plan describes but has not been implemented. Both are on the same diagram because it doubles as the roadmap.
 
 ```mermaid
 flowchart TB
@@ -74,11 +74,11 @@ flowchart TB
         BUS["SpikeBus<br/>group by fusion channel · align time grid<br/>fuse · sparse random projection<br/>✅ implemented"]
     end
 
-    subgraph L1["Perception layer (pluginised)"]
-        IMG["Image plugin<br/>difference / DVS encoding<br/>✅ reference implementation"]
+    subgraph L1["Perception layer (plugin-based)"]
+        IMG["Image plugin<br/>difference encoding / DVS<br/>✅ reference implementation"]
         TXT["Text plugin<br/>token + time-constant encoding<br/>⬜ phase 2"]
-        AUD["Audio plugin<br/>cochlear frequency decomposition<br/>⬜ phase 3"]
-        THIRD["Third-party plugins<br/>entry-point discovery<br/>✅ mechanism in place"]
+        AUD["Audio plugin<br/>cochlear-model frequency decomposition<br/>⬜ phase 3"]
+        THIRD["Third-party plugins<br/>attached via entry points<br/>✅ mechanism in place"]
     end
 
     IMG --> BUS
@@ -90,11 +90,12 @@ flowchart TB
     WM --> EM
     EM --> MG
     MG --> ACT
-    MG -.->|triggers| MCP
-    MCP -.->|result re-encoded| EM
+    MG -.->|triggers a call| MCP
+    MCP -.->|results encoded back| EM
 ```
 
-Conflicts between the three rule families are arbitrated by an **ES meta-learned arbiter** (⬜ phase 2). Full description in [the plan](BioSNN-Plug_项目计划书_v6.2.md) §2-3.
+Conflicts between layers are arbitrated by an **ES meta-learning arbiter** (⬜ phase 2). The complete
+description of each layer's learning rules is in the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §2 and §3.
 
 ## Quickstart
 
@@ -113,7 +114,7 @@ from biosnn_bus import ModalityPlugin, PassThroughMembrane, SpikeBus, SpikeTrain
 
 
 class LevelEncoder(ModalityPlugin):
-    """Encode a 1-D signal as a population of spikes by level."""
+    """Encode a one-dimensional signal as a population of spikes by level."""
 
     def __init__(self, spike_dim: int = 16) -> None:
         self._spike_dim = spike_dim
@@ -145,19 +146,19 @@ output = bus.step({"level": np.linspace(0, 1, 12)})
 print(output)
 ```
 
-The [Colab notebook](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.ipynb)
-(5 minutes, no GPU) draws the full spike raster from plugin to cognitive-core input.
+The [Colab demo](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.en.ipynb)
+(5 minutes, no GPU) draws the full spike raster from the plugin to the input of the cognitive core.
 
-Want a third-party package to ship a plugin? You **do not need to change a single line of
-this repository** — see the [plugin guide](docs/plugin_guide.md#让第三方包提供插件).
+Want a third-party package to ship a plugin? You **do not need to change a single line of this
+repository** — see the [plugin guide](docs/plugin_guide.en.md#third-party-plugin-integration).
 
 ## Repository layout
 
 ```text
-packages/biosnn-bus/   The skeleton library: separately distributable, semver, depends on no research code
-research/              Research code, filled in from phase 1; 12-month breaking-change grace period
-examples/              Runnable examples; the script is the source of truth, the notebook is generated from it
-docs/                  Plugin guide, ADRs, reproducibility checklist, references
+packages/biosnn-bus/   The skeleton library: an independent distribution package, follows semver, depends on no research code
+research/              Research code: filled in from phase 1, 12-month breaking-change grace period
+examples/              Runnable examples; the script is the single source of truth, the notebook is generated from it
+docs/                  Plugin guide, ADRs, reproducibility checklist, reference list
 scripts/               Checks used by CI and pre-commit
 ```
 
@@ -165,12 +166,12 @@ scripts/               Checks used by CI and pre-commit
 
 One maintainer; reports with a complete reproduction get priority.
 
-- `biosnn-bus` follows semver, currently `0.x` — by convention, minor versions in `0.x` may contain breaking changes. The first release someone else depends on will be `1.0.0`.
-- `research/` makes no compatibility promises for its first 12 months (until 2027-09).
-- Third-party modality plugins live in their own packages; no PR to this repository needed ([ADR-0003](docs/adr/ADR-0003-entry-point-plugin-discovery.md)).
+- `biosnn-bus` follows semver and is currently `0.x` — by convention, minor versions in `0.x` may contain breaking changes. The first version others depend on is bumped to `1.0.0`;
+- code under `research/` makes no compatibility promises for its first 12 months (until 2027-09);
+- third-party modality plugins can simply be their own packages; no PR to this repository is needed ([ADR-0003](docs/adr/ADR-0003-entry-point-plugin-discovery.en.md)).
 
 ## License and citation
 
-Code [Apache-2.0](LICENSE); documentation and the project plan [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Datasets follow their own licenses — this repository ships no data mirrors; download and preprocessing scripts will ship with phase 1.
+Code [Apache-2.0](LICENSE); documentation and the project plan [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Datasets follow the license of each data source; this repository ships no data mirrors — download and preprocessing scripts will ship with phase 1.
 
 Cite via [CITATION.cff](CITATION.cff).

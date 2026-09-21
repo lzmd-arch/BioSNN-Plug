@@ -85,6 +85,21 @@ jobs:
           python-version: "3.12"
       - run: python scripts/check_references.py
 
+  # ── 三语一致性检查 ────────────────────────────────────────────────────────
+  # 文档有中文 / English / 日本語 三版。最大的风险不是"翻译得不好"，而是
+  # **改了一处忘了另两处**——漂移的译文比没有译文更误导人，读者会以为读到的是
+  # 当前状态。这个 job 拦四类漂移：漏译、标题结构错位、代码块被改坏、
+  # 内部链接指回别的语言。
+  translations:
+    name: 三语一致性检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/check_translations.py
+
   # ── 计划书 §12.3：引用链接存活检查 ────────────────────────────────────────
   # 这是拦截"Khacef 署名"那类错误的入口：错误 DOI 与死链会在这里暴露。
   links:

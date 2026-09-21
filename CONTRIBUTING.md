@@ -132,6 +132,32 @@ git tag v0.1.0 && git push origin v0.1.0
 PyPI 尚未配置好之前，可以用 `gh workflow run release.yml` 手动触发流水线：
 它只跑校验与构建，不发布。
 
+## 文档翻译
+
+文档有中文 / English / 日本語 三版。改动任何一份受管文档时，**三份要一起改**——
+漂移的译文比没有译文更误导人，读者会以为读到的是当前状态。
+
+`scripts/check_translations.py` 拦四类漂移，本地跑一次即可自查：
+
+```bash
+uv run python scripts/check_translations.py
+```
+
+| 它会拦什么 | 怎么发生的 |
+| :--- | :--- |
+| 漏译 | 新增文档时忘了补 `.en.md` / `.ja.md` |
+| 标题结构错位 | 译文漏掉一节，或把 `###` 写成 `##` |
+| 代码块被改坏 | 翻译时手滑改了参数值、标识符或命令 |
+| 内部链接指回别的语言 | 译文的链接没跟着文件名一起改 |
+
+**文档正文翻译，代码不翻译。** 代码块里的注释与 docstring 可以译；变量名、命令、
+路径、注册名等字符串字面量不行——`get_plugin("audio")` 里的 `"audio"` 译了，代码就
+跑不通了（CI 会执行文档里的代码块，所以这类错误当场暴露）。
+
+术语以 [`docs/GLOSSARY.md`](docs/GLOSSARY.md) 为准；表里没有的新术语，先补表再用。
+
+用任何语言提 issue 或 PR 都可以。
+
 ## 报告问题
 
 用 [issue 模板](https://github.com/lzmd-arch/BioSNN-Plug/issues/new/choose)。

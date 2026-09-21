@@ -2,7 +2,7 @@
 
 **面向高生物合理性的全模态脉冲神经网络认知原型**
 
-[English](README.en.md) · [项目计划书](BioSNN-Plug_项目计划书_v6.2.md) · [插件开发指南](docs/plugin_guide.md) · [架构决策记录](docs/adr/)
+[English](README.en.md) · [项目计划书](BioSNN-Plug_项目计划书_v6.2.md) · [插件开发指南](docs/plugin_guide.md) · [架构决策记录](docs/adr/README.md)
 
 [![CI](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml/badge.svg)](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)

@@ -40,6 +40,14 @@ ALLOWED_STATUS = {"verified", "partial", "metadata-error", "unverified"}
 
 COLUMNS = ["编号", "文献", "URL", "核验状态"]
 
+#: 表头第一列的可接受写法。
+#:
+#: 引用清单有三语版本（`references.md` / `.en.md` / `.ja.md`），译文里表头会被翻译。
+#: 第一版按中文 `编号` 精确匹配，译文一翻译表头，`parse_rows` 就返回空、并报
+#: "没有解析到任何引用条目"——**静默失败**，比报错更难查。所以这里接受各语言的写法。
+#: 第二列到第四列不参与锚定（只有第一列用于定位表格），故无需罗列。
+HEADER_FIRST_CELLS = {"编号", "No.", "No", "#", "番号", "序号"}
+
 ROW_RE = re.compile(r"^\|(?P<cells>.+)\|\s*$")
 
 
@@ -65,7 +73,7 @@ def parse_rows(text: str) -> list[tuple[int, list[str]]]:
     header_index = None
     for index, line in enumerate(lines):
         cells = split_cells(line)
-        if cells and cells[0] == COLUMNS[0]:
+        if cells and cells[0] in HEADER_FIRST_CELLS:
             header_index = index
             break
     if header_index is None:
@@ -154,19 +162,32 @@ def check(findings: list[str], references_file: Path) -> None:
         )
 
 
+def default_targets() -> list[Path]:
+    """默认检查引用清单的**全部语言版本**。
+
+    译文（`references.en.md` / `.ja.md`）的书目条目与原文相同，但表头与说明文字是
+    翻译的——编号连续性、URL 格式、状态字面量这些结构问题在译文里同样会犯，不检查
+    就等于译文没人管。第一版只查中文那一份。
+    """
+    found = sorted(DEFAULT_REFERENCES_FILE.parent.glob(f"{DEFAULT_REFERENCES_FILE.stem}*.md"))
+    return found or [DEFAULT_REFERENCES_FILE]
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
         "path",
-        nargs="?",
+        nargs="*",
         type=Path,
-        default=DEFAULT_REFERENCES_FILE,
-        help="引用清单路径（默认 docs/references.md）",
+        default=None,
+        help="引用清单路径（默认检查 docs/references 的全部语言版本）",
     )
     args = parser.parse_args(argv)
 
+    targets = args.path or default_targets()
     findings: list[str] = []
-    check(findings, args.path)
+    for target in targets:
+        check(findings, target)
 
     for finding in findings:
         print(f"[错误] {finding}", file=sys.stderr)
@@ -174,7 +195,9 @@ def main(argv: list[str] | None = None) -> int:
     if findings:
         print(f"引用清单检查未通过：{len(findings)} 个问题。")
         return 1
-    print("引用清单结构检查通过（HTTP 存活检查由 CI 里的 lychee 负责）。")
+    print(
+        f"引用清单结构检查通过（{len(targets)} 份语言版本；HTTP 存活检查由 CI 里的 lychee 负责）。"
+    )
     return 0
 
 

@@ -64,11 +64,22 @@ repos:
 
       # 「引用清单结构检查」——拦 Khacef 署名那类元数据错误。
       # HTTP 存活检查在 CI 里由 lychee 负责，不进 pre-commit（联网钩子会拖慢每次提交）。
+      # 脚本默认检查全部语言版本，所以触发范围也要覆盖 `.en.md` / `.ja.md`。
       - id: references
         name: 引用清单检查
         entry: python scripts/check_references.py
         language: system
-        files: ^docs/references\.md$
+        files: ^docs/references(\.en|\.ja)?\.md$
+        pass_filenames: false
+
+      # 「三语一致性检查」——拦"改了一处忘了另两处"。
+      # 漂移的译文比没有译文更误导人，所以漏译、结构错位、代码块被改坏、
+      # 链接指回别的语言，都在这里拦下。
+      - id: translations
+        name: 三语一致性检查
+        entry: python scripts/check_translations.py
+        language: system
+        files: (\.md|README|CONTRIBUTING)$
         pass_filenames: false
 
       # Colab notebook 由示例脚本生成，脚本是唯一真相源。这里自动重建，

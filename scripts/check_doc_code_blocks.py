@@ -42,13 +42,18 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 #: 默认扫描范围：所有面向用户的文档。计划书本体是只读文件，不进扫描。
+#:
+#: 用通配符而非逐个列出语言版本：文档有三语（`X.md` / `X.en.md` / `X.ja.md`），
+#: 每加一种语言就要改一次清单，迟早漏掉。`docs/**/*.md` 本来就是 glob，所以
+#: `docs/` 下的译文一直是被覆盖的；这里把根目录与 packages/research 也对齐。
+#:
+#: **译文的代码块必须被真实执行**——译文里的示例烂掉，光靠结构检查发现不了。
 DEFAULT_TARGETS = [
-    "README.md",
-    "README.en.md",
-    "CONTRIBUTING.md",
+    "README*.md",
+    "CONTRIBUTING*.md",
     "docs/**/*.md",
-    "packages/*/README.md",
-    "research/README.md",
+    "packages/*/README*.md",
+    "research/README*.md",
 ]
 
 FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})\s*(?P<info>.*?)\s*$")
