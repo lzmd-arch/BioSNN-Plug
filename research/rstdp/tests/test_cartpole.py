@@ -306,7 +306,8 @@ class TestLogitScaleAnnealing:
         return context.agent.actor.logit_scale
 
     def test_no_schedule_leaves_the_constant_alone(self):
-        assert self._run() == pytest.approx(1.0)
+        """**两端都显式给 ``None``** 才是不退火——默认现在是退火（ADR-0009）。"""
+        assert self._run(logit_scale_start=None, logit_scale_end=None) == pytest.approx(1.0)
 
     def test_the_schedule_ends_at_the_end_value(self):
         """最后一个回合结束后应当落在 ``logit_scale_end`` 上（线性 progress 走到 1）。"""
@@ -350,11 +351,45 @@ class TestLogitScaleAnnealing:
 class TestStructuralOptionsReachTheActor:
     """结构性那一组选项必须真的传到 Actor 上。"""
 
-    def test_defaults_are_the_current_scheme(self):
+    def test_defaults_are_the_accepted_configuration(self):
+        """默认值就是 ADR-0009 采纳的合格配置——**不再是 ε-贪心**。"""
         actor = _agent().actor
-        assert actor.action_sampling == "epsilon_greedy"
-        assert actor.trace_center == "none"
-        assert actor.logit_scale == 1.0
+        assert actor.action_sampling == "boltzmann"
+        assert actor.trace_center == "sampling"
+        assert actor.logit_scale == 20.0
+
+    def test_the_old_epsilon_greedy_scheme_is_still_reachable(self):
+        """旧的 ε-贪心方案仍可显式选回——账里那一整批对照就是它。"""
+        agent = CartPoleAgent(
+            4,
+            critic_units=3,
+            actor_action_sampling="epsilon_greedy",
+            actor_trace_center="none",
+            actor_logit_scale=1.0,
+            generator=torch.Generator().manual_seed(0),
+        )
+        assert agent.actor.action_sampling == "epsilon_greedy"
+        assert agent.actor.trace_center == "none"
+
+    def test_run_trial_defaults_match_the_accepted_configuration(self):
+        """``run_trial`` 的两个调度默认值也要与 ADR-0009 一致。"""
+        import inspect
+
+        from research.rstdp.cartpole import run_trial
+
+        parameters = inspect.signature(run_trial).parameters
+        assert parameters["actor_lr_final_fraction"].default == pytest.approx(0.1)
+        assert parameters["logit_scale_start"].default == pytest.approx(2.0)
+        assert parameters["logit_scale_end"].default == pytest.approx(20.0)
+
+        # **CLI 的默认值也必须跟上**：这两个不是 agent 构造参数，走的是独立字面量，
+        # 所以它们会与 run_trial 的默认值漂移——实测就漏过一次（CLI 还是 None ⇒ 默认不退火，
+        # 于是 `--seed 0` 跑出的是恒定 logit 20 的塌陷配置）。
+        from research.rstdp.cartpole import build_parser
+
+        cli = {action.dest: action.default for action in build_parser()._actions}
+        assert cli["logit_scale_start"] == pytest.approx(2.0)
+        assert cli["logit_scale_end"] == pytest.approx(20.0)
 
     def test_boltzmann_and_centering_reach_the_actor(self):
         agent = CartPoleAgent(

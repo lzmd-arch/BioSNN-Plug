@@ -77,9 +77,9 @@ class CartPoleAgent:
         actor_learning_rate: float = 3e-3,
         actor_signal_clip: float | None = None,
         actor_polyak_tau: float | None = None,
-        actor_action_sampling: str = "epsilon_greedy",
-        actor_logit_scale: float = 1.0,
-        actor_trace_center: str = "none",
+        actor_action_sampling: str = "boltzmann",
+        actor_logit_scale: float = 20.0,
+        actor_trace_center: str = "sampling",
         critic_learning_rate: float = 5e-4,
         critic_value_scale: float = 200.0,
         trace_decay: float = 0.9,
@@ -508,14 +508,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--logit-scale-start",
         type=float,
-        default=None,
+        default=2.0,
         help="Boltzmann 逆温度的**起点**；与 --logit-scale-end 一起给出才启用退火（log 空间"
         "线性插值）。先用近均匀把策略学起来，再收紧拿决策边际——恒定值两端各丢一半",
     )
     parser.add_argument(
         "--logit-scale-end",
         type=float,
-        default=None,
+        default=20.0,
         help="Boltzmann 逆温度的**终点**",
     )
     parser.add_argument("--exploration-start", type=float, default=0.3)
@@ -523,7 +523,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--actor-lr-final-fraction",
         type=float,
-        default=1.0,
+        default=0.1,
         help="Actor 学习率在训练末降到初始值的这个比例（1.0 = 不衰减）。"
         "实测贪心策略在恒定学习率下剧烈震荡，衰减是冲着这个去的",
     )
@@ -702,9 +702,9 @@ def run_trial(
     success_signal: str | None = None,
     exploration_start: float = 0.3,
     exploration_end: float = 0.02,
-    logit_scale_start: float | None = None,
-    logit_scale_end: float | None = None,
-    actor_lr_final_fraction: float = 1.0,
+    logit_scale_start: float | None = 2.0,
+    logit_scale_end: float | None = 20.0,
+    actor_lr_final_fraction: float = 0.1,
     evaluation_episodes: int = 10,
     evaluation_interval: int = 20,
     greedy_eval_every: int | None = None,
