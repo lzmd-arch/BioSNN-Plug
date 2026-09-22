@@ -137,7 +137,7 @@ date (to 2027-09).
 
 | Validation line | Where the record lives | Acceptance figure |
 | :--- | :--- | :--- |
-| W1 kernelized IB-Hebbian perception layer | [`research/ib_hebbian/README.en.md`](../research/ib_hebbian/README.en.md) | MNIST 98.01% (threshold 70%) |
+| W1 kernelized IB-Hebbian perception layer | [`research/ib_hebbian/README.en.md`](../research/ib_hebbian/README.en.md) | MNIST **98.01%** (supervised SGD readout) / **97.79%** (ridge closed-form readout, current default); criterion 70%. **Both readouts are supervised** — 98.01% is the joint result of locally learned features plus a supervised readout, not a purely local accuracy; see the README section on what local precisely means |
 | W2 e-prop cognitive layer | [`research/eprop/README.en.md`](../research/eprop/README.en.md) | sMNIST 77.48%; active-neuron fraction 1.0000 (threshold > 60%) |
 | W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.en.md`](../research/rstdp/README.en.md) | ✅ **Both §7 criteria met**: CartPole median **260.0 steps** (held-out seeds 25–44, 20 of them, criterion ≥ 200); max offset ratio **0.0359** (all seeds < 0.10 ✓). **But the minimum is 74**, below our own added "stable" condition (≥ 100; 2 of 20 under 100). Configuration and rationale: [ADR-0009](adr/ADR-0009-w3-behaviour-policy-and-trace-centring.en.md) |
 

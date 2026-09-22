@@ -137,7 +137,7 @@ research` が第 1 フェーズの実験環境です。したがってスケル�
 
 | 検証線 | 記録の場所 | 受入の数値 |
 | :--- | :--- | :--- |
-| W1 カーネル化 IB-Hebbian 知覚層 | [`research/ib_hebbian/README.ja.md`](../research/ib_hebbian/README.ja.md) | MNIST 98.01%（閾値 70%） |
+| W1 カーネル化 IB-Hebbian 知覚層 | [`research/ib_hebbian/README.ja.md`](../research/ib_hebbian/README.ja.md) | MNIST **98.01%**（教師あり SGD 読み出し）/ **97.79%**（リッジ回帰の閉形式解の読み出し、現在の既定）；基準 70%。**どちらの読み出しも教師あり**——98.01% は「局所的に学んだ特徴 + 教師あり読み出し」の共同の結果であり、純局所的な精度ではない。README の「『局所』の正確な表現」を参照 |
 | W2 e-prop 認知層 | [`research/eprop/README.ja.md`](../research/eprop/README.ja.md) | sMNIST 77.48%；活動ニューロン比率 1.0000（閾値 > 60%） |
 | W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.ja.md`](../research/rstdp/README.ja.md) | ✅ **§七 の二基準を達成**：CartPole 中央値 **260.0 歩**（ホールドアウトシード 25–44、二十個、基準 ≥ 200）；偏移比の最大 **0.0359**（全シード < 0.10 ✓）。**ただし最小値は 74** で、自ら加えた「安定」条件（≥ 100、二十個中二個が 100 未満）は未達。設定と根拠は [ADR-0009](adr/ADR-0009-w3-behaviour-policy-and-trace-centring.ja.md) 参照 |
 

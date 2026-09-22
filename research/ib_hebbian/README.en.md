@@ -24,7 +24,28 @@ plan lists as P0.
 
 ## Current conclusion
 
-**Met. Test accuracy 98.01%, threshold 70%.**
+**Met. Test accuracy 98.01% (threshold 70%).**
+
+**But that number is two pieces bolted together, and that must be stated plainly**: the hidden
+layers learn features with a **local rule**, and the classification is then done by a **supervised
+linear readout**. 98.01% is the joint result of the two — **not "the accuracy the local rule reaches
+on its own"**.
+
+There are two readout implementations, both above the threshold:
+
+| Readout | Test accuracy | How it is learned |
+| :--- | ---: | :--- |
+| Cross-entropy + SGD | 98.01% | Backpropagation + learning rate + momentum + 100 epochs |
+| **Ridge closed form (current default)** | **97.79%** | Accumulate `XᵀX / XᵀY`, then **solve once**: no backpropagation, no learning rate, no iterations; λ=1e-4 chosen by the **validation set** (best of `{0, 1e-4, 1e-3, 1e-2, 1e-1}`, validation accuracy 0.9793) |
+
+**Neither is a "local" readout** — both use labels, both are supervised. What the closed form
+removes is **backpropagation and iteration**, **not globality**: `XᵀX` is an `(H+1)²` matrix that
+requires **every training sample** to accumulate. See the "Accurate statement of 'local'" section.
+
+The hidden-layer side is unaffected by the readout choice: it optimises **its own** objective
+(Eq. 35's binary teaching signal) and never sees the readout during training. Its local objective
+was measured falling monotonically from −0.1299 to −0.2918, so **the 0.22-point gap comes only from
+swapping the algorithm in the classification step**, not from worse features.
 
 The paper's MNIST figure for a 3-layer × 1024 fully connected net with the Gaussian kernel
 plus grouping plus divisive normalization is **98.1%** (backprop 98.6%), so this
@@ -121,6 +142,16 @@ feasible"), so this implementation and the paper's take the same path.
 **So the phrasing to use is**: "each layer updates from a local objective, with no
 cross-layer gradient flow-back, and the update rule has 3-factor Hebbian form (Eq. 18)";
 it should **not** be "there is no backpropagation at all".
+
+**Which kind of "not local" the readout is needs saying separately.** The closed-form readout
+(`readout.py`) has **no backpropagation and no iterations**; its two accumulators — `h hᵀ`
+(pre-×-post activity) and `h yᵀ` (pre-synaptic activity × teaching signal) — are **additive per
+sample** Hebbian-style correlations, which is the only "Hebbian-like" step here. **But the `XᵀX`
+they accumulate is an `(H+1)²` global second-order statistic** requiring **every training sample**;
+the final solve is global too; and it uses labels. So the phrasing to use is "**a closed-form,
+non-iterative readout with no backpropagation**", and **not** "a locally learned readout" or
+"purely local classification". What it improves over the SGD readout is that it **removes
+backpropagation and iteration — not globality**.
 
 ## Minimal reproduction script
 

@@ -55,6 +55,7 @@ from research.common.metrics import active_neuron_fraction, spike_sparsity
 from research.common.provenance import DegradationLog, collect
 from research.common.seeding import SeedBook
 from research.ib_hebbian.model import IBHebbianPerceptron, preprocess_mnist
+from research.ib_hebbian.readout import RidgeReadout
 
 #: 学习率衰减点，写成总 epoch 的比例。论文 D.6 的 50/75/90 是对 100 epoch 而言，
 #: 正好等于 0.5/0.75/0.9，所以取 100 epoch 时与原设置逐点一致。
@@ -103,7 +104,23 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--divnorm-power", type=float, default=0.2)
     parser.add_argument("--smoothing-delta", type=float, default=1.0)
     parser.add_argument("--hidden-lr", type=float, default=1.0, help="η_l，局部学习率")
-    parser.add_argument("--readout-lr", type=float, default=5e-3, help="η_f，读出学习率")
+    parser.add_argument(
+        "--readout-lr", type=float, default=5e-3, help="η_f，读出学习率（仅 --readout-kind sgd）"
+    )
+    parser.add_argument(
+        "--readout-kind",
+        default="ridge",
+        choices=["ridge", "sgd"],
+        help="读出层怎么学。**默认 ridge**：累积 XᵀX 与 XᵀY 后一次解出岭回归闭式解"
+        "（无 backward、无学习率、无迭代）。'sgd' 是原来的交叉熵 + SGD 路径，保留作对照。"
+        "**两者都不是「局部」的**——闭式解去掉了反向传播与迭代，但 XᵀX 仍是全局二阶统计量",
+    )
+    parser.add_argument(
+        "--readout-ridge",
+        type=float,
+        default=1e-2,
+        help="岭回归的正则系数 λ（仅 --readout-kind ridge）。偏置项不正则化",
+    )
     parser.add_argument("--dropout", type=float, default=0.01)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--device", default=None, choices=[None, "cpu", "cuda"])
@@ -190,16 +207,64 @@ def train(args: argparse.Namespace, device: torch.device):
             running = 0.0
             for start in range(0, len(order), args.batch_size):
                 batch = order[start : start + args.batch_size]
-                running += model.step(train_x[batch], train_y[batch])
+                running += model.step(
+                    train_x[batch], train_y[batch], update_readout=args.readout_kind == "sgd"
+                )
             running /= max(1, len(order) // args.batch_size)
 
             if epoch == 1 or epoch % max(1, args.epochs // 10) == 0 or epoch == args.epochs:
-                val_loss, val_accuracy = model.evaluate(val_x, val_y)
-                print(
-                    f"epoch {epoch:3d}  train_ce {running:.4f}  "
-                    f"val_ce {val_loss:.4f}  val_acc {val_accuracy:.4f}",
-                    flush=True,
-                )
+                if args.readout_kind == "ridge":
+                    # **不能打印读出的 CE/acc**：ridge 模式下读出要到训练结束才解出来，
+                    # 现在它是随机初始权重，那两列数会随隐藏层特征漂移而乱走，看着像发散。
+                    # 打印真正在被优化的量——各隐藏层的局部目标之和。
+                    objective = model.hidden_objective(val_x, val_y)
+                    print(
+                        f"epoch {epoch:3d}  隐藏层局部目标（验证集）{objective:.4f}",
+                        flush=True,
+                    )
+                else:
+                    val_loss, val_accuracy = model.evaluate(val_x, val_y)
+                    print(
+                        f"epoch {epoch:3d}  train_ce {running:.4f}  "
+                        f"val_ce {val_loss:.4f}  val_acc {val_accuracy:.4f}",
+                        flush=True,
+                    )
+
+    # **闭式解读出：训练完之后一次解出来。** 不迭代、不反传、无学习率。
+    #
+    # 放在循环**外面**而不是里面，是因为隐藏层的特征随训练在变——在线累积会把不同 epoch
+    # 的特征混在一起，解出来的 W 不对应任何一组特征。标准做法就是冻结特征后解一次。
+    #
+    # 注意这一步与隐藏层的局部性主张**正交**：隐藏层用的是自己的目标（Eq. 35 的教学信号），
+    # 训练期间完全不知道读出是什么。见 readout.py 的边界说明。
+    if args.readout_kind == "ridge":
+        readout_started = time.perf_counter()
+        accumulator = RidgeReadout(args.width, 10, ridge=args.readout_ridge, device=device)
+        with torch.no_grad():
+            for start in range(0, len(train_x), args.batch_size):
+                stop = start + args.batch_size
+                accumulator.accumulate(model.features(train_x[start:stop]), train_y[start:stop])
+        # **λ 用验证集选，不拍一个数。** Gram 矩阵只累积一次，多解几个几乎不花时间；
+        # 而原来的做法是手写一个 1e-2 就去读测试准确率——那既没有依据，也是在测试集上
+        # 选超参。候选集覆盖 0（无正则）到 1e-1，选验证准确率最高的那个。
+        candidates = (0.0, 1e-4, 1e-3, 1e-2, 1e-1)
+        best_ridge, best_accuracy = None, -1.0
+        for candidate in candidates:
+            weight, bias = accumulator.solve(candidate)
+            model.set_readout(weight, bias)
+            _, accuracy = model.evaluate(val_x, val_y)
+            print(f"  λ={candidate:<7g} 验证准确率 {accuracy:.4f}", flush=True)
+            if accuracy > best_accuracy:
+                best_ridge, best_accuracy = candidate, accuracy
+
+        model.set_readout(*accumulator.solve(best_ridge))
+        print()
+        print(
+            f"闭式解读出：累积 {accumulator.count} 个训练样本的 (XᵀX, XᵀY)，"
+            f"λ 由验证集选出 ={best_ridge:g}（验证准确率 {best_accuracy:.4f}），"
+            f"全程耗时 {time.perf_counter() - readout_started:.1f} s",
+            flush=True,
+        )
 
     elapsed = time.perf_counter() - started
     test_loss, test_accuracy = model.evaluate(test_x, test_y)
@@ -225,6 +290,18 @@ def train(args: argparse.Namespace, device: torch.device):
         gpu=describe_device(device).render(),
         peak_mb=memory["peak_mb"],
         degradation=degradation,
+        notes=[
+            f"隐藏层：width={args.width}, n_layers={args.n_layers}, n_groups={args.n_groups}, "
+            f"sigma={args.sigma}, gamma={args.gamma}, divnorm_power={args.divnorm_power}, "
+            f"eta_local={args.hidden_lr}, dropout={args.dropout}",
+            f"读出：kind={args.readout_kind}"
+            + (
+                f", ridge_lambda={best_ridge:g}（验证集选出；累积 XᵀX / XᵀY 后一次解出，无反向传播、无迭代）"
+                if args.readout_kind == "ridge"
+                else f", eta_readout={args.readout_lr}（交叉熵 + SGD）"
+            ),
+            "局部性：隐藏层逐层用自身目标就地更新、输入被切断梯度；读出的 (XᵀX, XᵀY) 是全局二阶统计量",
+        ],
     )
     print("\n" + record.render_block())
 

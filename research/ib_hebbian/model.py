@@ -157,17 +157,62 @@ class IBHebbianPerceptron(nn.Module):
 
         return logits
 
-    def step(self, x: torch.Tensor, labels: torch.Tensor) -> float:
-        """一个训练步：更新全部隐藏层与读出层。
+    def step(self, x: torch.Tensor, labels: torch.Tensor, *, update_readout: bool = True) -> float:
+        """一个训练步：更新全部隐藏层（以及可选地更新读出层）。
+
+        Args:
+            update_readout: 为假时**只更新隐藏层**。闭式解读出（``readout.RidgeReadout``）
+                模式下用它——读出不是逐 epoch 学的，而是训练完之后一次解出来的，
+                所以训练期间它不该被动。
 
         Returns:
-            更新**之前**的读出交叉熵——即这一步开始时的状态，这样曲线反映的是
-            "更新前的损失"，而不是更新后的（后者会让人误以为收敛更快）。
+            更新**之前**的读出交叉熵。``update_readout=False`` 时读出的权重还没解出来，
+            这个数**没有意义**（调用方应忽略它）。
         """
         with torch.no_grad():
             cross_entropy = float(functional.cross_entropy(self.forward(x, labels), labels).item())
-        self.forward(x, labels, update_hidden=True, update_readout=True)
+        self.forward(x, labels, update_hidden=True, update_readout=update_readout)
         return cross_entropy
+
+    @torch.no_grad()
+    def hidden_objective(self, x: torch.Tensor, labels: torch.Tensor) -> float:
+        """各隐藏层**局部目标之和**。
+
+        闭式解读出模式下**这才是在被优化的量**：读出不是逐 epoch 学的，所以在它被解出来
+        之前，任何用读出算的交叉熵/准确率都没有意义（会随隐藏层特征的漂移而乱走）。
+        进度日志要打印的是这个，不是那个。
+        """
+        if labels is None:
+            raise ValueError("局部目标需要 labels。")
+        kernel = self.label_kernel(labels)
+        h = x
+        total = 0.0
+        for layer in self.layers:
+            total += layer.measure_local_objective(h, kernel)
+            h = layer(h, kernel, update=False)
+        return float(total)
+
+    @torch.no_grad()
+    def features(self, x: torch.Tensor) -> torch.Tensor:
+        """末层特征 ``h``（不更新任何权重）。闭式解读出累积 ``XᵀX / XᵀY`` 时用它。"""
+        return self.hidden_activations(x, None, update=False)
+
+    @torch.no_grad()
+    def set_readout(self, weight: torch.Tensor, bias: torch.Tensor) -> None:
+        """把闭式解出来的读入写进读出层。
+
+        Raises:
+            ValueError: 形状对不上——那是"解出来的东西"与"要被写进去的层"不是一回事，
+                必须当场暴露。
+        """
+        expected = (self.n_classes, self.width)
+        if tuple(weight.shape) != expected or tuple(bias.shape) != (self.n_classes,):
+            raise ValueError(
+                f"读出权重/偏置的形状应为 {expected} / ({self.n_classes},)，"
+                f"收到 {tuple(weight.shape)} / {tuple(bias.shape)}。"
+            )
+        self.readout.weight.copy_(weight.to(self.readout.weight.dtype))
+        self.readout.bias.copy_(bias.to(self.readout.bias.dtype))
 
     @torch.no_grad()
     def evaluate(self, x: torch.Tensor, labels: torch.Tensor) -> tuple[float, float]:
