@@ -144,6 +144,17 @@ def apply_smoke_overrides(args: argparse.Namespace) -> int:
     return 512
 
 
+def build_ridge_readout(args: argparse.Namespace, device: torch.device) -> RidgeReadout:
+    """按 ``--readout-kind ridge`` 造累积器。
+
+    **λ 不在这里给**：``RidgeReadout`` 构造时的 λ 只是 ``solve()`` 不带参数时的兜底，
+    而 ``train()`` 里每一次 ``solve()`` 都显式带上候选值（``--readout-ridge`` 或验证集候选集）。
+    把 ``args.readout_ridge`` 直接传进来是错的——它的默认值是 ``None``，会让
+    「不给 λ 就在验证集上选」这条默认路径当场崩掉（CI 冒烟步骤抓到过）。
+    """
+    return RidgeReadout(args.width, 10, device=device)
+
+
 def build_model(args: argparse.Namespace) -> IBHebbianPerceptron:
     return IBHebbianPerceptron(
         28 * 28,
@@ -240,7 +251,12 @@ def train(args: argparse.Namespace, device: torch.device):
     # 训练期间完全不知道读出是什么。见 readout.py 的边界说明。
     if args.readout_kind == "ridge":
         readout_started = time.perf_counter()
-        accumulator = RidgeReadout(args.width, 10, ridge=args.readout_ridge, device=device)
+        # 构造时**不给 λ**：这里的 λ 只是 ``solve()`` 不带参数时的兜底，而下面每一次
+        # ``solve()`` 都显式带上候选值，兜底用不到。曾经把 ``args.readout_ridge`` 直接传进来——
+        # 它的默认值是 None，于是「不给 λ 就在验证集上选」这条**默认路径**一进来就 TypeError，
+        # CI 的冒烟步骤抓到的就是这个。造累积器这一步现在收在 ``build_ridge_readout`` 里，
+        # 由测试盯着。
+        accumulator = build_ridge_readout(args, device)
         with torch.no_grad():
             for start in range(0, len(train_x), args.batch_size):
                 stop = start + args.batch_size

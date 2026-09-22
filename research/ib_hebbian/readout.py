@@ -57,6 +57,10 @@ class RidgeReadout:
         ridge: float = 1e-2,
         device: torch.device | None = None,
     ) -> None:
+        # None 是调用方的错，但报出来要能看懂：这个 ridge 只在 `solve()` 不带参数时当兜底，
+        # 调用方该传一个具体数。给 None 会让下面那句变成一句与参数名无关的 TypeError。
+        if ridge is None:
+            raise ValueError("ridge 不能是 None；λ 在 solve() 时显式给出，或在这里给一个具体值。")
         if ridge < 0:
             raise ValueError(f"ridge 必须非负，收到 {ridge}。")
         self.width = int(width)
