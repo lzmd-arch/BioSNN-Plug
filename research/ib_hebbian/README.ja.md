@@ -51,19 +51,22 @@
 再現記録（`docs/reproducibility.md` のテンプレート、`research/common/provenance.py` が生成）：
 
 ```text
-实验名称：ib_hebbian/mnist
-日期：2026-09-22 19:24:21 中国标准时间
-Git commit：d047f82b4bcf25c8bddbb91ec6d77ba0d92df189
-Git 状态：干净
+実験名：ib_hebbian/mnist
+日付：2026-09-23 07:05:00 中国標準時
+Git commit：edd0a82cca39408e88e3ceac136a154fdca2fc02
+Git 状態：クリーン
 Python：3.12.14
-操作系统 / 架构：Windows 11 / AMD64
-硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
-随机种子：base=0；全局种子=1741413617；划分验证集=1435468909；权重初始化=3486733650；每轮打乱=2263596658
-依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
-运行命令：train_mnist.py --device cuda
-耗时：224.9 s
-显存峰值：1,167.1 MiB（§6.2 硬约束 8GB）
-§6.2 降级路径：未触发
+OS / アーキテクチャ：Windows 11 / AMD64
+ハードウェア：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+乱数シード：base=0；グローバルシード=1741413617；検証セット分割=1435468909；重み初期化=3486733650；各エポックのシャッフル=2263596658
+依存スナップショット：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+実行コマンド：train_mnist.py --device cuda
+所要時間：256.3 s
+ピークメモリ：1,167.0 MiB（§6.2 の硬い制約 8GB）
+§6.2 の縮退経路：未発動
+備考：隠れ層：width=1024, n_layers=3, n_groups=32, sigma=5.0, gamma=2.0, divnorm_power=0.2, eta_local=1.0, dropout=0.01
+備考：読み出し：kind=ridge, ridge_lambda=0.0001（検証セットが選択；XᵀX / XᵀY を累積し一度だけ求解、逆伝播なし・反復なし）
+備考：局所性：隠れ層は層ごとに自身の目的関数でその場で更新し、入力の勾配は切断；読み出しの (XᵀX, XᵀY) は大域的な二次統計量
 ```
 
 **GPU メモリ**：8 GB のうち 1.14 GB。§6.2 の三つの縮退パス（規模縮退、分割学習、
