@@ -636,14 +636,16 @@ class TestPopulationCritic:
         factor = critic.trace_second_factor(torch.tensor([0.01, 0.5, 0.99]))
         assert factor[1] > factor[0] and factor[1] > factor[2]
 
-    def test_the_gradient_factor_is_the_rate_times_one_minus_the_rate(self):
-        """比值恒为 ``1−y``，所以饱和单元被压得最狠——这正是换它的理由。"""
-        plain = PopulationCritic(5, n_units=3)
-        gradient = PopulationCritic(5, n_units=3, trace_post_factor="gradient")
+    def test_the_gradient_factor_carries_the_readout_and_the_gain(self):
+        """``u_j·g·y_j(1−y_j)``——``u_j`` 必须留在里面。
+
+        有符号读出那一档正是靠 ``u_j`` 把每个单元的符号带进更新方向；把它当常数约掉，
+        有符号读出就变成了一个静默的错。均匀全正时它退化成 ``g(1−y)`` 乘一个常数。
+        """
+        critic = PopulationCritic(5, n_units=3, trace_post_factor="gradient")
         rates = torch.tensor([0.05, 0.5, 0.99])
-        torch.testing.assert_close(
-            gradient.trace_second_factor(rates) / plain.trace_second_factor(rates), 1.0 - rates
-        )
+        expected = critic.readout * critic.gain * rates * (1.0 - rates)
+        torch.testing.assert_close(critic.trace_second_factor(rates), expected)
 
     def test_the_trace_actually_accumulates_the_gradient_factor(self):
         critic = PopulationCritic(3, n_units=2, trace_decay=0.0, trace_post_factor="gradient")
@@ -652,7 +654,8 @@ class TestPopulationCritic:
         features = torch.tensor([1.0, 2.0, 0.0])
         critic.update(features, critic.value(features), td_error=0.0)
         rates = critic.rates(features)
-        torch.testing.assert_close(critic.trace, torch.outer(rates * (1.0 - rates), features))
+        expected = critic.readout * critic.gain * rates * (1.0 - rates)
+        torch.testing.assert_close(critic.trace, torch.outer(expected, features))
 
     def test_the_post_factor_does_not_change_the_readout_or_the_rows(self):
         critic = PopulationCritic(6, n_units=4, trace_post_factor="gradient", learning_rate=1.0)

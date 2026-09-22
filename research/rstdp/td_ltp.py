@@ -252,6 +252,7 @@ class PopulationCritic:
         output_bias: float = 0.0,
         bias_learning_rate: float | None = None,
         trace_post_factor: str = "rate",
+        readout: str = "uniform",
         init_directions: torch.Tensor | None = None,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
@@ -266,6 +267,15 @@ class PopulationCritic:
             raise ValueError(
                 f"trace_post_factor 只能是 'rate' 或 'gradient'，收到 {trace_post_factor!r}。"
             )
+        if readout not in ("uniform", "random"):
+            raise ValueError(f"readout 只能是 'uniform' 或 'random'，收到 {readout!r}。")
+        if readout == "random" and trace_post_factor != "gradient":
+            # 见 readout 的说明：全正那条符号论证只在 rate 后因子下成立。有符号读出配 rate
+            # 后因子会让一半单元的更新方向反过来——**这不是保守，是避免一个静默的错**。
+            raise ValueError(
+                "readout='random'（有符号）必须配 trace_post_factor='gradient'："
+                "rate 后因子下 TD 梯度与更新方向同号要求 u_j > 0。"
+            )
 
         self.n_features = int(n_features)
         self.n_units = int(n_units)
@@ -276,6 +286,7 @@ class PopulationCritic:
         self.value_scale = float(value_scale)
         self.bias_learning_rate = bias_learning_rate
         self.trace_post_factor = trace_post_factor
+        self.readout_kind = readout
         device = device or torch.device("cpu")
         # 加性偏置 ``V = Σ u_j y_j + out_bias``。零初始化，``x + 0.0`` 精确，所以**默认路径
         # 逐位不变**。它与 ``bias`` 不是一回事：``bias`` 是每个单元的**输入阈值**，影响的是
@@ -310,9 +321,21 @@ class PopulationCritic:
             self.weights = torch.rand(n_units, n_features, device=device, generator=generator)
         self.trace = torch.zeros(n_units, n_features, device=device)
         self._normalize()
-        # 固定且**非负**的读出。u_j 若取负号，更新方向对那一族单元就反了——
-        # 因为规则给的是 δ·y_j·x，而 TD 梯度是 δ·u_j·y_j(1−y_j)·x，两者同号要求 u_j > 0。
-        self.readout = torch.full((n_units,), value_scale / n_units, device=device)
+        # 固定读出。``uniform`` 是 ``value_scale/n_units`` 的**全正**均匀读出；``random``
+        # 是固定但**有符号**的随机读出（``Σ|u_j| = value_scale``，值域与前者可比）。
+        #
+        # 为什么要有符号那一档：把读出换成自由最小二乘解，**同一批单元活动**的解释方差
+        # 从 −0.9 变成 **+0.6**（实测，见 signal_probe 的「自由线性读出的 EV」一列）。
+        # 特征里有信息，是「全正且均匀」这个读出把它浪费掉了。论文要求读出**固定**，
+        # 没有要求全正；原先取全正的理由是 rate 后因子下的符号论证（``u_j > 0`` 才保证
+        # ``δ·y_j·x`` 与 TD 梯度同号），那条论证在 gradient 后因子下不再成立，所以
+        # 有符号读出必须配 gradient（上面有断言挡着）。
+        generator = device_generator(generator, device)
+        if readout == "random":
+            raw = torch.rand(n_units, device=device, generator=generator) * 2.0 - 1.0
+            self.readout = value_scale * raw / raw.abs().sum().clamp_min(1e-12)
+        else:
+            self.readout = torch.full((n_units,), value_scale / n_units, device=device)
 
     @torch.no_grad()
     def _normalize(self) -> None:
@@ -338,7 +361,11 @@ class PopulationCritic:
         **量级要注意**：``y(1−y) ≤ 0.25`` 而 ``y`` 典型约 0.5，所以切过去等于把 Critic 的
         有效学习率大约减半——比较时必须把这一条一起看，不能只看中位数。
         """
-        return rates if self.trace_post_factor == "rate" else rates * (1.0 - rates)
+        if self.trace_post_factor == "rate":
+            return rates
+        # gradient：``u_j·g·y_j(1−y_j)`` 的形状。``u_j`` 必须**留在里面**——有符号读出的
+        # 那一档正是靠它把每个单元的符号带进更新方向。
+        return self.readout * self.gain * rates * (1.0 - rates)
 
     def value_floor(self) -> float:
         """``V`` 在**权重非负**这一前提下的下界：``value_scale · σ(−gain · bias)``。
@@ -357,7 +384,9 @@ class PopulationCritic:
         稳定地拿到 ``δ = 1 − V ≈ −6.8``，且**与动作无关**——那是整个回合里最大的一次 Actor
         更新，打在痕迹视野内「死前那几步」上，恰恰是最需要知道「哪个动作能救回来」的地方。
         """
-        return self.value_scale / (1.0 + math.exp(self.gain * self.bias))
+        # ``Σ_j u_j·σ(−g·b)``——均匀全正读出下就是 ``value_scale·σ(−g·b)``；有符号读出下
+        # 它不再是「可达下界」（正负项会互相抵消），所以那个档位下这个数只作参照。
+        return float(self.readout.sum()) / (1.0 + math.exp(self.gain * self.bias))
 
     @torch.no_grad()
     def rates(self, features: torch.Tensor) -> torch.Tensor:

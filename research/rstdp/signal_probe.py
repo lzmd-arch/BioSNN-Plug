@@ -171,6 +171,40 @@ def project_to_l1_tangent(direction: np.ndarray, weights: np.ndarray) -> np.ndar
     return direction - float(np.mean(sign * direction)) * sign
 
 
+def _unit_activities(critic, units: torch.Tensor, centers, sigma, states) -> np.ndarray:
+    """给定偏好方向 ``units``，算每个探针状态上的单元活动 ``(n_states, n_units)``。"""
+    rows = []
+    for s in states:
+        features = encode_state(torch.as_tensor(s, dtype=torch.float32), centers, sigma)
+        normalized = features / features.norm().clamp_min(1e-12)
+        rows.append(torch.sigmoid(critic.gain * ((units @ normalized) - critic.bias)).numpy())
+    return np.stack(rows)
+
+
+def _readout_fits(agent, centers, sigma, states, true_values) -> tuple[float, float]:
+    """自由线性读出（含截距）拟合同一批单元活动的解释方差：``(训练后, 未训练)``。
+
+    **为什么要这一条**：探针原本只能报「Critic 的 V 不准」，而不准有两种完全不同的成因
+    ——特征是够用的、只是**固定正读出**（``u_j = value_scale/n_units``）把信息浪费掉了；
+    或者这 64 个余弦-sigmoid 根本表达不了 ``V*``。前者只要放开读出，后者要换架构。
+    把读出换成最小二乘解、其余不动，就能把两者分开。
+
+    「未训练」那一列是对照：如果训练后的特征反而不如随机方向，说明**规则把特征弄坏了**。
+    """
+    generator = torch.Generator().manual_seed(12345)
+    untrained = torch.rand(
+        agent.critic.weights.shape, generator=generator, device=agent.critic.weights.device
+    )
+
+    def fit(units: torch.Tensor) -> float:
+        activities = _unit_activities(agent.critic, units, centers, sigma, states)
+        design = np.hstack([activities, np.ones((len(states), 1))])  # 常数列当截距
+        coefficients, *_ = np.linalg.lstsq(design, np.asarray(true_values, dtype=float), rcond=None)
+        return explained_variance(design @ coefficients, true_values)
+
+    return fit(agent.critic.weights), fit(untrained)
+
+
 def _subsample(states: np.ndarray, limit: int) -> np.ndarray:
     """等距抽样到 ``limit`` 个。
 
@@ -204,6 +238,7 @@ class ProbeReport:
     floor_hit_fraction: float
     negative_weight_fraction: float
     predicted_min: float
+    predicted_max: float
     true_value_min: float
     true_value_max: float
     true_value_std: float
@@ -216,6 +251,13 @@ class ProbeReport:
 
     explained_variance_high: float
     n_high: int
+    #: 用**同一批**单元活动做自变量的自由线性读出（含截距）最小二乘拟合 V* 的解释方差。
+    #:
+    #: 它把「规则没学好」与「特征表达不了」分开：拟合得好说明特征里**有**信息，
+    #: 是固定正读出把信息浪费掉了；拟合不好说明这 64 个余弦-sigmoid 表达不了 V*。
+    readout_fit_ev: float
+    #: 同一件事，但自变量换成**未经训练**的随机方向——用来判断训练是让特征变好还是变坏。
+    readout_fit_ev_untrained: float
     terminal_delta: float
     interior_delta: float
     delta_advantage_slope: float
@@ -234,14 +276,21 @@ class ProbeReport:
                 f"    贴着它的状态占比 {self.floor_hit_fraction:.4f}",
                 f"  Critic 权重为负的占比      {self.negative_weight_fraction:.4f}"
                 "    ← 不为 0 才说明 V 能低于那个下界",
-                f"  V 的取值区间               [{self.predicted_min:.2f}, …]"
+                f"  V 的取值区间               [{self.predicted_min:.2f}, "
+                f"{self.predicted_max:.2f}]"
                 f"    真值下界 {self.true_value_min:.2f}"
                 f"    够不着的差距 {self.value_min_gap:+.2f}",
+                f"  **值域对比**：V 宽 {self.predicted_max - self.predicted_min:.1f}"
+                f" vs V* 宽 {self.true_value_max - self.true_value_min:.1f}"
+                f"（比值 {(self.predicted_max - self.predicted_min) / max(self.true_value_max - self.true_value_min, 1e-9):.2f}）",
                 f"  真值 V* 的区间 / 标准差     [{self.true_value_min:.2f}, "
                 f"{self.true_value_max:.2f}] / {self.true_value_std:.2f}",
                 f"  预测 V 的标准差            {self.predicted_std:.2f}",
                 f"  高价值子集上的 EV          {self.explained_variance_high:+.4f}"
                 f"（{self.n_high} 个状态，V* >= {DANGER_VALUE:.0f}）",
+                f"  **自由线性读出的 EV**      {self.readout_fit_ev:+.4f}"
+                "    ← 自变量是同一批单元的活动",
+                f"  同上，但用**未训练**的方向    {self.readout_fit_ev_untrained:+.4f}",
                 f"  终止步 δ 均值              {self.terminal_delta:+.4f}",
                 f"  内部步 δ 均值              {self.interior_delta:+.4f}",
                 f"  δ 对**另一动作**优势的斜率 / r  {self.delta_advantage_slope:+.4f} / "
@@ -478,6 +527,7 @@ def probe(
     term, interior = terminal_delta(
         env, policy, agent.critic, centers, sigma, episodes=episodes, seed=seed
     )
+    readout_fit, readout_fit_untrained = _readout_fits(agent, centers, sigma, states, true_values)
     return ProbeReport(
         n_states=len(states),
         explained_variance=explained_variance(predicted, true_values),
@@ -487,6 +537,7 @@ def probe(
         floor_hit_fraction=floor_hits,
         negative_weight_fraction=negative_weight_fraction,
         predicted_min=predicted_min,
+        predicted_max=float(np.max(predicted)),
         true_value_min=true_value_min,
         true_value_max=float(np.max(true_values)),
         true_value_std=float(np.std(true_values)),
@@ -500,6 +551,8 @@ def probe(
         delta_advantage_r=correlation,
         danger_agreement=agreement,
         n_danger=int(danger_mask.sum()),
+        readout_fit_ev=readout_fit,
+        readout_fit_ev_untrained=readout_fit_untrained,
     )
 
 
@@ -592,6 +645,19 @@ def build_parser() -> argparse.ArgumentParser:
         "--compare-rules", action="store_true", help="额外跑 U/T 余弦面板（逐状态两个优势，较慢）"
     )
     parser.add_argument("--actor-lr-final-fraction", type=float, default=0.1)
+    parser.add_argument(
+        "--actor-learning-rate",
+        type=float,
+        default=None,
+        help="覆盖 Actor 学习率。**传 0 就是冻结 Actor**——那把这个探针变成一个判定实验："
+        "目标不再移动，若 Critic 仍然学不准，说明是它的学习规则/结构不行；若学准了，"
+        "说明瓶颈是「目标一直在动」（Actor 不停游走导致 V* 非平稳）",
+    )
+    parser.add_argument("--critic-learning-rate", type=float, default=None)
+    parser.add_argument("--critic-readout", default=None, choices=[None, "uniform", "random"])
+    parser.add_argument(
+        "--critic-trace-post-factor", default=None, choices=[None, "rate", "gradient"]
+    )
     parser.add_argument("--device", default="cpu", choices=["cpu", "cuda"])
     return parser
 
@@ -615,6 +681,10 @@ def main(argv: list[str] | None = None) -> int:
             seed,
             episodes=args.episodes,
             actor_lr_final_fraction=args.actor_lr_final_fraction,
+            actor_learning_rate=args.actor_learning_rate,
+            critic_learning_rate=args.critic_learning_rate,
+            critic_readout=args.critic_readout,
+            critic_trace_post_factor=args.critic_trace_post_factor,
             device=device,
             return_context=True,
         )

@@ -92,6 +92,7 @@ class CartPoleAgent:
         critic_output_bias: float = 0.0,
         critic_bias_learning_rate: float | None = None,
         critic_trace_post_factor: str = "rate",
+        critic_readout: str = "uniform",
         critic_gain: float = 8.0,
         critic_threshold: float = 0.4,
         critic_init_directions: torch.Tensor | None = None,
@@ -129,6 +130,7 @@ class CartPoleAgent:
                 output_bias=critic_output_bias,
                 bias_learning_rate=critic_bias_learning_rate,
                 trace_post_factor=critic_trace_post_factor,
+                readout=critic_readout,
                 gain=critic_gain,
                 bias=critic_threshold,
                 init_directions=critic_init_directions,
@@ -312,6 +314,7 @@ CLI_TO_AGENT_PARAM = {
     "critic_output_bias": "critic_output_bias",
     "critic_bias_learning_rate": "critic_bias_learning_rate",
     "critic_trace_post_factor": "critic_trace_post_factor",
+    "critic_readout": "critic_readout",
     "critic_gain": "critic_gain",
     "critic_threshold": "critic_threshold",
 }
@@ -426,6 +429,15 @@ def build_parser() -> argparse.ArgumentParser:
         default=agent_default("critic_value_scale"),
         help="Critic 输出的量程。群体版里它经**固定读出**换算成 V 的值域上限；"
         "CartPole 在 γ=0.99 下满分策略的值约 100，所以取 200 留余量",
+    )
+    parser.add_argument(
+        "--critic-readout",
+        default=agent_default("critic_readout"),
+        choices=["uniform", "random"],
+        help="固定读出。'uniform' 是 value_scale/n_units 的**全正均匀**读出；"
+        "'random' 是固定但**有符号**的随机读出。换它的理由是实测：把读出换成自由最小二乘解，"
+        "**同一批单元活动**的 EV 从 −0.9 变成 +0.6——特征里有信息，是全正均匀读出浪费掉了。"
+        "**有符号必须配 --critic-trace-post-factor gradient**（有断言挡着）",
     )
     parser.add_argument(
         "--critic-gain",
@@ -636,6 +648,7 @@ def run_trial(
     critic_output_bias: float | None = None,
     critic_bias_learning_rate: float | None = None,
     critic_trace_post_factor: str | None = None,
+    critic_readout: str | None = None,
     critic_gain: float | None = None,
     critic_threshold: float | None = None,
     trace_decay: float | None = None,
@@ -698,6 +711,7 @@ def run_trial(
         "critic_output_bias": critic_output_bias,
         "critic_bias_learning_rate": critic_bias_learning_rate,
         "critic_trace_post_factor": critic_trace_post_factor,
+        "critic_readout": critic_readout,
         "critic_gain": critic_gain,
         "critic_threshold": critic_threshold,
         "trace_decay": trace_decay,
@@ -735,6 +749,7 @@ def run_trial(
         critic_output_bias=resolved["critic_output_bias"],
         critic_bias_learning_rate=resolved["critic_bias_learning_rate"],
         critic_trace_post_factor=resolved["critic_trace_post_factor"],
+        critic_readout=resolved["critic_readout"],
         critic_gain=resolved["critic_gain"],
         critic_threshold=resolved["critic_threshold"],
         critic_init_directions=init_directions,
@@ -866,6 +881,7 @@ def main(argv: list[str] | None = None) -> int:
         critic_output_bias=args.critic_output_bias,
         critic_bias_learning_rate=args.critic_bias_learning_rate,
         critic_trace_post_factor=args.critic_trace_post_factor,
+        critic_readout=args.critic_readout,
         critic_gain=args.critic_gain,
         critic_threshold=args.critic_threshold,
         trace_decay=args.trace_decay,
