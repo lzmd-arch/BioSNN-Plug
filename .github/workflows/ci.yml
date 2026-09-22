@@ -66,6 +66,14 @@ jobs:
             echo "── $script"
             uv run python "$script"
           done
+      - name: 下载 MNIST（验收脚本的冒烟模式要用，约 10 MB）
+        run: uv run python scripts/download_data.py mnist
+      - name: 跑验收脚本的冒烟模式
+        # 这两条只证明"整条训练路径能执行"——冒烟规模下的精度没有意义，
+        # 它们在 main() 里被显式豁免了验收判定。正确性由单元测试承担。
+        run: |
+          uv run python -m research.ib_hebbian.train_mnist --smoke
+          uv run python -m research.eprop.train_sequential --smoke
       - name: 骨架库的 torch 桥接测试（本地装了 torch 才会跑）
         # 这几条在 test job 里因为没装 torch 而被 importorskip 跳过；
         # 这里补上真正跑一遍——from_torch 的内存别名 bug 就是这么漏掉的。
