@@ -171,6 +171,19 @@ def project_to_l1_tangent(direction: np.ndarray, weights: np.ndarray) -> np.ndar
     return direction - float(np.mean(sign * direction)) * sign
 
 
+def _rotation(weights: torch.Tensor, initial: torch.Tensor | None) -> float:
+    """每行权重转过的平均角度（弧度）。``initial`` 为 ``None`` 时返回 ``nan``。
+
+    行按 L2 归一化到单位长度，所以两行的点积就是夹角的余弦。``arccos`` 夹到 ``[-1, 1]``
+    免得浮点误差把它顶出去。
+    """
+    if initial is None:
+        return float("nan")
+    with torch.no_grad():
+        cosine = (weights * initial).sum(dim=1).clamp(-1.0, 1.0)
+        return float(torch.acos(cosine).mean().item())
+
+
 def _unit_activities(critic, units: torch.Tensor, centers, sigma, states) -> np.ndarray:
     """给定偏好方向 ``units``，算每个探针状态上的单元活动 ``(n_states, n_units)``。"""
     rows = []
@@ -258,6 +271,10 @@ class ProbeReport:
     readout_fit_ev: float
     #: 同一件事，但自变量换成**未经训练**的随机方向——用来判断训练是让特征变好还是变坏。
     readout_fit_ev_untrained: float
+    #: Critic 每行权重从训练开始到现在**转过的平均角度**（弧度）。行是单位向量，所以
+    #: 点积就是余弦。它回答的是「学不准」是因为规则在乱动，还是因为**压根没怎么动**——
+    #: 实测未训练的随机方向已有 EV +0.53、训练后只到 +0.61，这个数会说明原因。
+    critic_rotation_radians: float
     terminal_delta: float
     interior_delta: float
     delta_advantage_slope: float
@@ -291,6 +308,8 @@ class ProbeReport:
                 f"  **自由线性读出的 EV**      {self.readout_fit_ev:+.4f}"
                 "    ← 自变量是同一批单元的活动",
                 f"  同上，但用**未训练**的方向    {self.readout_fit_ev_untrained:+.4f}",
+                f"  Critic 权重转过的角度       {self.critic_rotation_radians:.3f} rad"
+                f"（{self.critic_rotation_radians / 3.14159:.2f}π）",
                 f"  终止步 δ 均值              {self.terminal_delta:+.4f}",
                 f"  内部步 δ 均值              {self.interior_delta:+.4f}",
                 f"  δ 对**另一动作**优势的斜率 / r  {self.delta_advantage_slope:+.4f} / "
@@ -421,6 +440,7 @@ def probe(
     episodes: int = 20,
     danger_value: float = DANGER_VALUE,
     max_states: int = 300,
+    initial_critic_weights: torch.Tensor | None = None,
 ) -> ProbeReport:
     """跑一次完整探针。``env`` 必须是 CartPole 实例，调用方负责关闭它。
 
@@ -553,6 +573,7 @@ def probe(
         n_danger=int(danger_mask.sum()),
         readout_fit_ev=readout_fit,
         readout_fit_ev_untrained=readout_fit_untrained,
+        critic_rotation_radians=_rotation(agent.critic.weights, initial_critic_weights),
     )
 
 
@@ -696,6 +717,7 @@ def main(argv: list[str] | None = None) -> int:
             seed=seed,
             episodes=args.probe_episodes,
             max_states=args.max_states,
+            initial_critic_weights=context.initial_critic_weights,
         )
         print()
         print(f"=== seed {seed}（贪心评测 {result.mean_steps:.1f} 步）===")

@@ -552,6 +552,9 @@ class AgentContext:
     centers: torch.Tensor
     book: SeedBook
     encoding_sigma: float
+    #: 训练**开始前**的 Critic 权重快照。用来量「训练到底把 Critic 转动了多少」——
+    #: 单看解释方差说不清「学不准」是因为规则在乱动还是因为压根没动。
+    initial_critic_weights: torch.Tensor
 
 
 def _greedy_score(
@@ -757,6 +760,8 @@ def run_trial(
         generator=torch.Generator().manual_seed(book.derive("Actor 与 Critic 初始权重")),
     )
 
+    initial_critic_weights = agent.critic.weights.detach().clone()
+
     env = gymnasium.make("CartPole-v1")
     # **必须给环境播种。** gymnasium 的 CartPole 有自己的 RNG，不播种的话每次运行的
     # 初始状态与状态转移都不同——上面那一串种子就覆盖不到实验的一半。实测发现过：
@@ -849,7 +854,11 @@ def run_trial(
     )
     if return_context:
         return result, AgentContext(
-            agent=agent, centers=centers, book=book, encoding_sigma=encoding_sigma
+            agent=agent,
+            centers=centers,
+            book=book,
+            encoding_sigma=encoding_sigma,
+            initial_critic_weights=initial_critic_weights,
         )
     if return_agent:
         return result, agent
