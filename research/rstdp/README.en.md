@@ -115,6 +115,29 @@ never seeded** — the same seed run twice gave 20.4 and 9.3 steps. The latter m
 conclusion: before the fix, there was no way to tell how much of the "seed-to-seed
 variation" came from the algorithm and how much from the environment's RNG.
 
+## Capacity probe: a negative result
+
+`research/rstdp/capacity_probe.py` uses CartPole's classic heuristic controller as a target to
+measure **the capacity ceiling for a linear policy on this encoding** — the linear classifier's
+form is identical to `RSTDPActor`'s action selection.
+
+| Features N | σ=0.25 | σ=0.5 | σ=1.0 |
+| ---: | ---: | ---: | ---: |
+| 16 | 24.6 | 209.8 | 494.2 |
+| 64 | 294.2 | **497.2** | 500.0 |
+| 256 | 449.4 | 500.0 | 500.0 |
+| 1024 | 498.4 | 500.0 | 500.0 |
+
+(The table gives the fitted linear policy's mean survival steps; the expert heuristic itself
+scores 500.0.)
+
+**The current configuration is N=64, σ=0.5, which corresponds to 497.2 steps.** In other
+words: a linear policy that nearly solves CartPole **exists** on this encoding, and R-STDP did
+not find it.
+
+So the "the Actor lacks capacity" hypothesis is **refuted**, and adding capacity is not the
+answer. That also rules out what looked like the cheapest explanation.
+
 ## Known boundaries
 
 1. **Acceptance is not met** — no seed reaches 200 steps.
@@ -129,15 +152,29 @@ variation" came from the algorithm and how much from the environment's RNG.
    ADR-0007's alternative C (falling back to TD-STDP) is therefore not a switch in this
    implementation — it would require going back to a spiking model. **That fallback was not
    tried.**
-4. **Hyperparameters are highly sensitive and were not systematically tuned.** A Critic
-   learning rate of 1e-3 versus 5e-4 makes a large difference on this task (44 vs 223 steps,
-   the latter a lucky RNG stream). The values in use were found over a handful of
-   configurations, not by tuning.
-5. **The Actor is weak.** It is a linear policy over a fixed random population encoding.
-   Common R-STDP solutions to CartPole use far larger feature sets (tile coding, multi-layer
-   receptive fields) or let STDP shape the features themselves. **The capacity of this design
-   is likely the bottleneck**, rather than the rules.
-6. **§3.2's quantitative boundary was not reproduced.** Measuring "fails at ~25%σR" requires
+4. **The tuning has to be redone after seeding the environment.** The "sensitivity"
+   conclusions I scanned earlier (for instance a Critic learning rate of 1e-3 versus 5e-4
+   giving 44 vs 223 steps) **were all measured before the environment was seeded and are
+   therefore untrustworthy** — back then the same configuration could differ twofold between
+   two runs. Re-scanning after seeding gives a different picture (boundary 6 below): every
+   configuration lands between 9 and 59 steps and ends with the Critic saturated. **Most of
+   the tuning judgement this entry made on that earlier data has to be discarded.**
+5. **The "the Actor lacks capacity" hypothesis is refuted.** See the capacity probe below: on
+   **the same encoding**, a linear policy reaches 497 steps. So capacity is not the
+   bottleneck; the problem is on the credit-assignment / learning-signal side.
+6. **The direct cause of the failure is half located: the Critic's output saturates.** Measured,
+   `V` always pins to its ceiling (`value_scale · ‖x‖`), so `δ = r + γV(s') − V(s)` degenerates
+   into a **constant** (`1 − 0.01·V_ceiling`) and the Actor receives exactly the biased signal
+   §3.2 warns about. That is the direct mechanism by which this entry failed acceptance.
+7. **But swapping the Critic for standard TD(λ) does not fix it either.** I ran the control:
+   with the second factor being the unit's own output the weights diverge to NaN (so that
+   positive feedback is real); with the standard TD(λ) trace `e ← λe + x` it no longer
+   diverges, but 800 episodes still only reach 21–40 steps. **So the structural defect in the
+   second factor is real, but it is not the whole story** — the true root cause is not yet
+   located. Known candidates: the Actor's credit assignment, interference from the L1 weight
+   normalization, and the very fact that the Actor uses δ as its signal while the Critic is
+   unconverged.
+8. **§3.2's quantitative boundary was not reproduced.** Measuring "fails at ~25%σR" requires
    a task whose action distribution stays mixed; `examples/paper_fremaux2013.py`
    deliberately does **not** demonstrate it, because my first version was actually measuring
    "which action the actor happens to pick" rather than the bias structure.
