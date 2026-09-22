@@ -229,14 +229,24 @@ def _subsample(states: np.ndarray, limit: int) -> np.ndarray:
     return states[np.linspace(0, len(states) - 1, limit).astype(int)]
 
 
-def _linear_fit(x, y) -> tuple[float, float]:
-    """最小二乘斜率与相关系数。样本不足或 ``x`` 无方差时返回 ``nan``。"""
+def _linear_fit(x, y) -> tuple[float, float, int]:
+    """最小二乘斜率、相关系数、以及**被丢掉的非有限点个数**。
+
+    样本不足、``x`` 无方差、或剩下的点太少时返回 ``nan``。
+
+    **第三个返回值是刻意的**：这个回归此前一直返回 ``nan`` 而没人知道为什么——一个静默的
+    ``nan`` 让「δ 是不是优势估计」这个唯一直接的检验变成盲的，而账里好几条论证都要靠它。
+    现在把丢掉的点数报出来，``nan`` 的成因就从「不知道」变成「有数可查」。
+    """
     x = np.asarray(x, dtype=float)
     y = np.asarray(y, dtype=float)
+    finite = np.isfinite(x) & np.isfinite(y)
+    dropped = int((~finite).sum())
+    x, y = x[finite], y[finite]
     if x.size < 2 or float(np.std(x)) == 0.0:
-        return float("nan"), float("nan")
+        return float("nan"), float("nan"), dropped
     slope = float(np.polyfit(x, y, 1)[0])
-    return slope, float(np.corrcoef(x, y)[0, 1])
+    return slope, float(np.corrcoef(x, y)[0, 1]), dropped
 
 
 @dataclass
@@ -279,6 +289,9 @@ class ProbeReport:
     interior_delta: float
     delta_advantage_slope: float
     delta_advantage_r: float
+    #: 那个回归里被丢掉的非有限点个数。**不报出来就等于静默变盲**——它此前一直是 nan
+    #: 而没人知道为什么。
+    delta_advantage_dropped: int
     danger_agreement: float
     n_danger: int
 
@@ -313,7 +326,8 @@ class ProbeReport:
                 f"  终止步 δ 均值              {self.terminal_delta:+.4f}",
                 f"  内部步 δ 均值              {self.interior_delta:+.4f}",
                 f"  δ 对**另一动作**优势的斜率 / r  {self.delta_advantage_slope:+.4f} / "
-                f"{self.delta_advantage_r:+.4f}",
+                f"{self.delta_advantage_r:+.4f}"
+                f"    丢掉非有限点 {self.delta_advantage_dropped}",
                 "    （策略是确定性的，所以 A(s, 贪心动作) ≡ 0，不能用它做回归）",
                 f"  危险区与启发式一致率       {self.danger_agreement:.4f}",
             ]
@@ -522,7 +536,7 @@ def probe(
         other = 1 - int(action)
         deltas.append(delta)
         advantages_.append(action_value(env, s, other, policy) - state_value(env, s, policy))
-    slope, correlation = _linear_fit(advantages_, deltas)
+    slope, correlation, dropped = _linear_fit(advantages_, deltas)
 
     # 危险区按**真值**判定，而不是「终止前 N 步」这个代理——代理里混着一些其实还安全的
     # 状态，而探针要问的是「动作对不对真正决定成败的那一段」。
@@ -569,6 +583,7 @@ def probe(
         interior_delta=interior,
         delta_advantage_slope=slope,
         delta_advantage_r=correlation,
+        delta_advantage_dropped=dropped,
         danger_agreement=agreement,
         n_danger=int(danger_mask.sum()),
         readout_fit_ev=readout_fit,
@@ -601,8 +616,29 @@ def compare_rules(
         T_j = Σ_s w(s)·(Q(s,j) − V^π(s))·x(s)
         U_j = Σ_s w(s)·δ(s, a(s))·1{a(s)=j}·x(s)
 
-    两者都先投影到该列 L1 球面的切空间再比。``cos ≥ 0.5`` ⇒ 方向没问题，去怪信号或步长；
-    ``≤ 0.2`` ⇒ 方向不对，去怪 Actor 的规则。**十秒钟就能替掉一轮 10 种子扫描。**
+    两者都先投影到该列 L1 球面的切空间再比。
+
+    **聚合的 ``cos_mean`` 单独看会骗人。** ``U`` 的支撑只有**被选中那一列**
+    （``if j == action`` 才累加），而 ``T`` 两列都有；两列大致对称时，逐状态余弦的上限就是
+    ``1/sqrt(2) ≈ 0.707``。实测的 ``cos_mean = 0.74`` 正落在上限附近——**那说明量到的是结构
+    上限，而不是「方向对得准」**。所以这里同时报：
+
+    * ``per_state_cos_median`` / ``per_state_cos_p90``：逐状态的余弦；
+    * ``single_column_fraction``：``U`` 只碰到一列的那些状态的占比（这是个**离散事实**，
+      不依赖任何阈值，因此比余弦更硬）；
+    * ``two_column_ceiling``：那个 ``1/sqrt(2)`` 的上限本身，放在旁边好对照。
+
+    **实测结果是比这个上限更彻底的退化**：确定策略下 ``A(s, π(s)) ≡ 0``，所以 ``T`` 也
+    只有一个非零列，而且**是另一列**——``U`` 与 ``T`` 的支撑**不相交**，逐状态余弦恒为 0。
+    （``T`` 的支撑不可能是被选中列：那一列的真优势是 0。）
+
+    所以判读用两个**离散**的数，不用余弦：
+
+    * ``single_column_fraction = 1`` ⇒ 规则只碰被选中那一列；
+    * ``disjoint_support_fraction = 1`` ⇒ 规则的更新与**唯一带信息的那一列**正交。
+
+    两个都 ≈ 1 就是「规则从不比较动作」的硬证据；``per_state_cos_median`` 因此恒为 0，
+    它不再是判据，只是那个事实的推论。
     """
     policy = greedy_policy(agent.actor, centers, sigma)
     occupied, danger = probe_states(env, policy, episodes=episodes, seed=seed)
@@ -613,8 +649,16 @@ def compare_rules(
 
     n_features = agent.actor.n_features
     n_actions = agent.actor.n_actions
+    weights = agent.actor.weights.numpy()
     target = np.zeros((n_features, n_actions))
     rule = np.zeros((n_features, n_actions))
+    state_targets: list[np.ndarray] = []
+    state_rules: list[np.ndarray] = []
+    per_state_cosines: list[float] = []
+    single_column_states = 0
+    target_single_column_states = 0
+    disjoint_support_states = 0
+    chosen_advantage_zero_states = 0
     for s in states:
         state_tensor = torch.as_tensor(s, dtype=torch.float32)
         features = encode_state(state_tensor, centers, sigma).numpy()
@@ -634,12 +678,55 @@ def compare_rules(
             )
             - value_critic
         )
-        for j in range(n_actions):
-            target[:, j] += (action_value(env, s, j, policy) - value_true) * features
-            if j == action:
-                rule[:, j] += delta * features
 
-    weights = agent.actor.weights.numpy()
+        state_rule = np.zeros((n_features, n_actions))
+        state_target = np.zeros((n_features, n_actions))
+        for j in range(n_actions):
+            state_target[:, j] = (action_value(env, s, j, policy) - value_true) * features
+            if j == action:
+                state_rule[:, j] = delta * features
+        # **确定策略下 ``A(s, π(s)) ≡ 0``**：强制走策略自己会走的动作、再按策略走，那就是
+        # ``V^π`` 的定义。所以 ``U`` 支撑在被选中列、``T`` 支撑在**另一列**，两者**支撑不相交**
+        # ——逐状态余弦因此恒为 0。这不是「方向差」，是「两者的支撑根本没有交集」。
+        chosen_advantage = float(action_value(env, s, action, policy) - value_true)
+        if abs(chosen_advantage) < 1e-9:
+            chosen_advantage_zero_states += 1
+        rule += state_rule
+        target += state_target
+        state_targets.append(state_target)
+        state_rules.append(state_rule)
+
+        # **逐状态余弦**：这是判「缺一列」的关键量。``rule`` 的支撑**只有被选中那一列**，
+        # 而 ``target`` 两列都有；两列大致对称时逐状态余弦的上限就是 ``1/sqrt(2) ≈ 0.707``。
+        # 所以聚合的 ``cos_mean = 0.74`` 落在上限附近时，它量的是**结构上限**，不是「对齐得好」。
+        nonzero_columns = int((np.abs(state_rule).sum(axis=0) > 0).sum())
+        if nonzero_columns <= 1:
+            single_column_states += 1
+        target_columns = int((np.abs(state_target).sum(axis=0) > 0).sum())
+        if target_columns <= 1:
+            target_single_column_states += 1
+        # **支撑是否不相交**：这是整条机制最硬的一个数——离散、不依赖阈值、不依赖归一化。
+        rule_columns = (np.abs(state_rule).sum(axis=0) > 0).sum()
+        target_columns_present = (np.abs(state_target).sum(axis=0) > 0).sum()
+        if (
+            rule_columns == 1
+            and target_columns_present == 1
+            and int(np.abs(state_rule).sum(axis=0).argmax())
+            != int(np.abs(state_target).sum(axis=0).argmax())
+        ):
+            disjoint_support_states += 1
+        projected_rule = np.stack(
+            [project_to_l1_tangent(state_rule[:, j], weights[:, j]) for j in range(n_actions)],
+            axis=1,
+        )
+        projected_target = np.stack(
+            [project_to_l1_tangent(state_target[:, j], weights[:, j]) for j in range(n_actions)],
+            axis=1,
+        )
+        denominator = float(np.linalg.norm(projected_rule) * np.linalg.norm(projected_target))
+        if denominator > 0:
+            per_state_cosines.append(float((projected_rule * projected_target).sum() / denominator))
+
     out: dict[str, float] = {}
     for j in range(n_actions):
         u = project_to_l1_tangent(rule[:, j], weights[:, j])
@@ -653,6 +740,28 @@ def compare_rules(
         if np.linalg.norm(target) > 0
         else float("nan")
     )
+    out["per_state_cos_median"] = (
+        float(np.median(per_state_cosines)) if per_state_cosines else float("nan")
+    )
+    out["per_state_cos_p90"] = (
+        float(np.percentile(per_state_cosines, 90)) if per_state_cosines else float("nan")
+    )
+    out["single_column_fraction"] = single_column_states / max(len(states), 1)
+    out["target_single_column_fraction"] = target_single_column_states / max(len(states), 1)
+    out["disjoint_support_fraction"] = disjoint_support_states / max(len(states), 1)
+    out["chosen_advantage_zero_fraction"] = chosen_advantage_zero_states / max(len(states), 1)
+    # **目标方向本身可能近乎为零**，而那时任何余弦都是噪声。实测就是这样：好策略访问到的状态
+    # 上杆子接近竖直，**两个动作几乎等价**，于是 A(s, ·) ≈ 0，T 也 ≈ 0。所以把 |T| 的量级
+    # 一起报出来——`|U|/|T| = 92` 那个数其实是**分母小**，不是分子大。
+    target_norms = [float(np.linalg.norm(state_targets[i])) for i in range(len(state_targets))]
+    rule_norms = [float(np.linalg.norm(state_rules[i])) for i in range(len(state_rules))]
+    out["target_state_norm_median"] = (
+        float(np.median(target_norms)) if target_norms else float("nan")
+    )
+    out["rule_state_norm_median"] = float(np.median(rule_norms)) if rule_norms else float("nan")
+    #: 两列对称时逐状态余弦的结构上限。**先算出来放在旁边**：实测值贴着它，就说明量到的是
+    #: 上限而不是对齐；远低于它才是「方向不对」。
+    out["two_column_ceiling"] = float(1.0 / np.sqrt(2.0))
     return out
 
 
@@ -733,8 +842,31 @@ def main(argv: list[str] | None = None) -> int:
                 max_states=args.max_states,
             )
             print(
-                f"  规则方向 vs 优势方向 cos = {cosines['cos_mean']:+.4f}"
-                f"（|U|/|T| = {cosines['rule_norm_over_target_norm']:.4f}）"
+                f"  规则方向 vs 优势方向（聚合）cos = {cosines['cos_mean']:+.4f}"
+                f"     |U|/|T| = {cosines['rule_norm_over_target_norm']:.4f}"
+            )
+            print(
+                f"  逐状态余弦 中位数 = {cosines['per_state_cos_median']:+.4f}"
+                f"  p90 = {cosines['per_state_cos_p90']:+.4f}"
+                f"    两列对称时的**结构上限** = {cosines['two_column_ceiling']:.4f}"
+            )
+            print(
+                f"  U 只碰到一列的状态占比 = {cosines['single_column_fraction']:.4f}"
+                f"    T 也只碰一列 = {cosines['target_single_column_fraction']:.4f}"
+            )
+            print(
+                f"  **两者支撑不相交**的占比 = {cosines['disjoint_support_fraction']:.4f}"
+                "    ← 离散事实，不依赖阈值"
+            )
+            print(
+                f"  A(s, 策略自己的动作) 恰为 0 的占比 = "
+                f"{cosines['chosen_advantage_zero_fraction']:.4f}"
+                "    ← 确定策略的必然结果（恒等式，不是发现）"
+            )
+            print(
+                f"  逐状态 |U| 中位数 = {cosines['rule_state_norm_median']:.4f}"
+                f"    |T| 中位数 = {cosines['target_state_norm_median']:.4f}"
+                "    ← |T| 很小则「|U|/|T| 很大」是分母小，不是分子大；此时余弦是噪声"
             )
         rows.append((seed, result.mean_steps, report))
 

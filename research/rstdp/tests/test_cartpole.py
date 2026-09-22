@@ -215,6 +215,70 @@ class TestNewOptionsReachTheCritic:
         assert agent.critic.out_bias.item() == pytest.approx(-30.0)
 
 
+class TestGreedyScoreIsActuallyGreedy:
+    """``_greedy_score`` 在 boltzmann 下必须真的返回 argmax。
+
+    回归测试：``select_action`` 的 boltzmann 分支不看 ``exploration``，所以只传
+    ``exploration=0.0`` 会得到一个**随机**策略——而那个函数同时供途中曲线与末次验收使用。
+    """
+
+    @staticmethod
+    def _agent() -> CartPoleAgent:
+        agent = CartPoleAgent(
+            4,
+            critic_units=3,
+            actor_action_sampling="boltzmann",
+            actor_logit_scale=0.5,
+            generator=torch.Generator().manual_seed(0),
+        )
+        return agent
+
+    def test_the_evaluation_path_passes_greedy_true(self):
+        """``_greedy_score`` **必须**把 ``greedy=True`` 传下去——这才是那个缺陷的接线处。
+
+        不去比两次评测的结果相不相等：``run_episode`` 每次都 ``env.reset()``，初始状态来自
+        环境自己的随机流，所以两次评测本来就会不同——那个断言测不出想测的东西（第一版就是
+        这么写的，它失败得毫无信息）。
+        """
+        gymnasium = pytest.importorskip("gymnasium")
+        from research.rstdp.cartpole import _greedy_score
+
+        class _Recorder(CartPoleAgent):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.seen: list[bool] = []
+
+            def behave(self, features, **kwargs):
+                self.seen.append(bool(kwargs.get("greedy", False)))
+                return super().behave(features, **kwargs)
+
+        env = gymnasium.make("CartPole-v1")
+        agent = _Recorder(
+            4,
+            critic_units=3,
+            actor_action_sampling="boltzmann",
+            actor_logit_scale=0.5,
+            generator=torch.Generator().manual_seed(0),
+        )
+        _greedy_score(env, agent, torch.zeros(4, 4), 0.5, torch.Generator().manual_seed(0), 3)
+        env.close()
+        assert agent.seen, "一局都没跑起来"
+        assert all(agent.seen), "评测路径必须每一步都传 greedy=True"
+
+    def test_an_untrained_boltzmann_agent_does_not_get_lucky(self):
+        """未训练的 boltzmann 智能体应当接近随机策略的 ~9–10 步，而不是偶然更高。"""
+        pytest.importorskip("gymnasium")
+        from research.rstdp.cartpole import _greedy_score
+
+        gymnasium = pytest.importorskip("gymnasium")
+        env = gymnasium.make("CartPole-v1")
+        score = _greedy_score(
+            env, self._agent(), torch.zeros(4, 4), 0.5, torch.Generator().manual_seed(0), 10
+        )
+        env.close()
+        assert score < 40.0, "贪心评测下未训练的策略不该有高分；分数高说明还在采样"
+
+
 class TestStructuralOptionsReachTheActor:
     """结构性那一组选项必须真的传到 Actor 上。"""
 

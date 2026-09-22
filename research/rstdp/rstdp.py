@@ -176,14 +176,27 @@ class RSTDPActor:
         *,
         generator: torch.Generator,
         exploration: float = 0.0,
+        greedy: bool = False,
         return_explored: bool = False,
     ):
         """按得分选动作，``exploration`` 概率下随机探索。
+
+        ``greedy=True`` 时**无视采样方案**直接返回 ``argmax``——**评测必须走这条路**。
+
+        起因是一个真实踩到的坑：``boltzmann`` 分支根本不看 ``exploration``，所以评测代码
+        传 ``exploration=0.0`` 时它**照样采样**。于是 boltzmann 各档的「贪心评测」量的是
+        一个**随机策略**的存活步数，而那个尺度的天花板被压得很低——一个满分策略（启发式，
+        500 步）在动作准确率 70% 时只值 97.4 步、60% 时只值 36.3 步。那一行结论因此是被
+        评测路径本身污染的。
 
         ``return_explored=True`` 时返回 ``(action, explored)``——调用方需要知道这一步
         是不是探索步（探索步不该拿去强化 Actor），而**只有这里知道**：随机数在这里被消耗，
         外面无法复现。
         """
+        if greedy:
+            action = int(self.scores(features).argmax().item())
+            return (action, False) if return_explored else action
+
         explored = False
         if self.action_sampling == "boltzmann":
             # **没有「探索步」这回事了**：被采样的动作就是策略自己的选择，所以每一步都该

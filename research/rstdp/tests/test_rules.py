@@ -422,6 +422,48 @@ class TestBoltzmannAndCentering:
             actor.update(features, action=step % 2, success_signal=1.0)
         assert not torch.allclose(actor.weights, before)
 
+    def test_greedy_overrides_the_sampling_scheme(self):
+        """``greedy=True`` 必须**无视采样方案**返回 argmax。
+
+        这条是一个真实缺陷的回归测试：``boltzmann`` 分支根本不看 ``exploration``，所以评测
+        代码传 ``exploration=0.0`` 时它照样采样——boltzmann 各档的「贪心评测」因此在量一个
+        随机策略。那个尺度的天花板被压得很低（满分策略在动作准确率 70% 时只值 97.4 步）。
+        """
+        actor = RSTDPActor(4, 2, normalize=False, action_sampling="boltzmann", logit_scale=0.5)
+        with torch.no_grad():
+            actor.weights.copy_(torch.tensor([[3.0, -1.0]] * 4))
+        generator = torch.Generator().manual_seed(0)
+        actions = {
+            actor.select_action(torch.ones(4), generator=generator, exploration=0.0, greedy=True)
+            for _ in range(50)
+        }
+        assert actions == {0}, "greedy=True 时不允许出现采样"
+
+    def test_greedy_matches_the_epsilon_greedy_path_and_consumes_no_randomness(self):
+        """ε-贪心下 ``greedy=True`` 与 ``exploration=0.0`` **逐位一致**，且都不消耗随机数。
+
+        前者保证既有数字全部不变；后者保证评测不会扰动训练的随机流。
+        """
+        actor = RSTDPActor(4, 2, normalize=False)
+        with torch.no_grad():
+            actor.weights.copy_(torch.tensor([[1.0, -1.0]] * 4))
+        features = torch.ones(4)
+        for seed in range(5):
+            old_action = actor.select_action(
+                features, generator=torch.Generator().manual_seed(seed), exploration=0.0
+            )
+            new_action = actor.select_action(
+                features, generator=torch.Generator().manual_seed(seed), greedy=True
+            )
+            assert old_action == new_action
+
+        untouched = torch.Generator().manual_seed(7)
+        before = int(torch.randint(0, 2**31 - 1, (1,), generator=untouched).item())
+        fresh = torch.Generator().manual_seed(7)
+        actor.select_action(features, generator=fresh, greedy=True)
+        after = int(torch.randint(0, 2**31 - 1, (1,), generator=fresh).item())
+        assert before == after, "greedy 路径不该动随机数"
+
     @pytest.mark.parametrize(
         ("kwargs", "match"),
         [

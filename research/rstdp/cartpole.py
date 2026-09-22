@@ -155,9 +155,18 @@ class CartPoleAgent:
 
     @torch.no_grad()
     def behave(
-        self, features: torch.Tensor, *, generator: torch.Generator, exploration: float
+        self,
+        features: torch.Tensor,
+        *,
+        generator: torch.Generator,
+        exploration: float,
+        greedy: bool = False,
     ) -> tuple[int, bool]:
         """选动作（含探索）。
+
+        Args:
+            greedy: 为真时**无视采样方案**直接取 ``argmax``。评测路径必须传它——``boltzmann``
+                分支不看 ``exploration``，传 ``exploration=0.0`` 并不能让它变贪心。
 
         Returns:
             ``(action, explored)``。**是否探索必须由这里报出来**，不能让调用方自己重算——
@@ -165,7 +174,11 @@ class CartPoleAgent:
             这么写的，结果探索步的判定恒为假，等于把探索动作也当成 Actor 的选择去强化。
         """
         return self.actor.select_action(
-            features, generator=generator, exploration=exploration, return_explored=True
+            features,
+            generator=generator,
+            exploration=exploration,
+            greedy=greedy,
+            return_explored=True,
         )
 
     @torch.no_grad()
@@ -233,9 +246,14 @@ def run_episode(
     generator: torch.Generator,
     exploration: float,
     learn: bool,
+    greedy: bool = False,
     tracker: BiasTracker | None = None,
 ) -> tuple[int, float]:
     """跑一个回合。
+
+    Args:
+        greedy: 评测路径必须传真。``boltzmann`` 分支不看 ``exploration``，所以光传
+            ``exploration=0.0`` 并不能得到贪心策略——评测会退化成量一个随机策略。
 
     Returns:
         ``(存活步数, 回合内 Actor 资格痕迹的最大幅值)``。
@@ -255,7 +273,9 @@ def run_episode(
     steps = 0
     max_trace = 0.0
     for _ in range(EPISODE_LIMIT):
-        action, explored = agent.behave(features, generator=generator, exploration=exploration)
+        action, explored = agent.behave(
+            features, generator=generator, exploration=exploration, greedy=greedy
+        )
         raw_next, reward, terminated, truncated, _ = env.step(action)
         next_state = torch.tensor(raw_next, dtype=torch.float32, device=centers.device)
         next_features = encode_state(next_state, centers, sigma)
@@ -569,11 +589,21 @@ def _greedy_score(
 
     途中评测与末次验收走的是同一个函数：两份实现一定会漂移，而漂移之后「曲线上的峰值」
     与「验收数字」就不再是同一个量，那种错误不会报错。
+
+    **必须传 ``greedy=True``**：``boltzmann`` 分支不看 ``exploration``，只传
+    ``exploration=0.0`` 的话它照样按 softmax 采样，量到的是一个随机策略。
     """
     lengths = [
-        run_episode(env, agent, centers, sigma, generator=generator, exploration=0.0, learn=False)[
-            0
-        ]
+        run_episode(
+            env,
+            agent,
+            centers,
+            sigma,
+            generator=generator,
+            exploration=0.0,
+            learn=False,
+            greedy=True,
+        )[0]
         for _ in range(episodes)
     ]
     return sum(lengths) / len(lengths)
