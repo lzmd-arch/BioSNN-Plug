@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 import torch
 
@@ -542,6 +544,83 @@ class TestCriticDirectionPool:
         _, first = self._inputs(64)
         _, second = self._inputs(64)
         torch.testing.assert_close(first, second)
+
+
+class TestLocalityIsPinned:
+    """「纯局部」不能只是文档里的一句话——这里把它钉成断言。
+
+    W2（e-prop）那条线**已经**有这组断言了，见 ``research/eprop/tests/test_eprop.py``：
+    ``update()`` 之后 ``w_rec`` / ``w_in`` / ``w_out`` 的 ``.grad`` 必须是 ``None``、
+    张量上不能有 ``grad_fn``；而 BPTT **基线**必须**有**梯度（那正是它作为对照的作用）。
+    W3 此前没有这个加固，所以「无全局反向传播」在本条目里只是承诺。补上。
+    """
+
+    @staticmethod
+    def _step() -> CartPoleAgent:
+        agent = _agent()
+        agent.learn_step(
+            torch.tensor([1.0, 0.5, 0.25, 0.0]),
+            0,
+            1.0,
+            torch.tensor([0.0, 1.0, 0.5, 0.25]),
+            terminated=True,
+        )
+        return agent
+
+    def test_learn_step_leaves_no_gradients_anywhere(self):
+        """走一步学习之后，参与学习的每个张量都不该带计算图、也不该有梯度。"""
+        agent = self._step()
+        tensors = {
+            "actor.weights": agent.actor.weights,
+            "actor.trace": agent.actor.trace,
+            "critic.weights": agent.critic.weights,
+            "critic.readout": agent.critic.readout,
+            "critic.out_bias": agent.critic.out_bias,
+        }
+        for name, tensor in tensors.items():
+            assert tensor.grad_fn is None, f"{name} 带着计算图——学习路径上不该有 autograd"
+            assert tensor.grad is None, f"{name} 上出现了梯度"
+
+    def test_a_whole_episode_leaves_no_gradients(self):
+        """整回合也不留——不只单步。"""
+        agent = _agent()
+        run_episode(
+            _StubEnv(done_after=4, truncated=False),
+            agent,
+            torch.zeros(4, 4),
+            0.5,
+            generator=torch.Generator().manual_seed(0),
+            exploration=0.0,
+            learn=True,
+        )
+        for name in ("weights", "trace"):
+            tensor = getattr(agent.actor, name)
+            assert tensor.grad_fn is None and tensor.grad is None, f"actor.{name} 不干净"
+            tensor = getattr(agent.critic, name)
+            assert tensor.grad_fn is None and tensor.grad is None, f"critic.{name} 不干净"
+
+    @pytest.mark.parametrize("forbidden", [".backward(", "torch.optim", "torch.autograd"])
+    def test_the_source_never_reaches_for_autograd(self, forbidden):
+        """源码级检查：学习路径上的任何模块都不出现这三样东西。
+
+        这比「运行时没留下梯度」更强——它防的是「今天因为没人调用所以恰好没触发」。
+        断言的粒度是**代码行**（先剥掉 ``#`` 之后的注释），所以文档里说明「不用 autograd」
+        不会误报。
+
+        豁免 ``capacity_probe.py``：它是**诊断**模块，用 Adam 拟合一个线性策略来测该编码的
+        容量上限，明确标注「只诊断，不产生验收数字」。它与学习规则不是一回事。
+        """
+        package = Path(__file__).resolve().parents[1]
+        exempt = {"capacity_probe.py"}
+        offenders = []
+        for path in sorted(package.glob("*.py")):
+            if path.name in exempt:
+                continue
+            for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                code = line.split("#", 1)[0]
+                if forbidden in code:
+                    offenders.append(f"{path.name}:{lineno}  {forbidden}")
+        assert not offenders, "学习路径上出现了 autograd 的痕迹：" + "；".join(offenders)
 
 
 class TestIdenticalConstruction:
