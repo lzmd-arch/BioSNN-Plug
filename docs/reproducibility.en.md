@@ -139,6 +139,7 @@ date (to 2027-09).
 | :--- | :--- | :--- |
 | W1 kernelized IB-Hebbian perception layer | [`research/ib_hebbian/README.en.md`](../research/ib_hebbian/README.en.md) | MNIST 98.01% (threshold 70%) |
 | W2 e-prop cognitive layer | [`research/eprop/README.en.md`](../research/eprop/README.en.md) | sMNIST 77.48%; active-neuron fraction 1.0000 (threshold > 60%) |
+| W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.en.md`](../research/rstdp/README.en.md) | ⚠️ **Not met**: CartPole 9.3–37.3 steps (criterion ≥ 200); offset ratio 0.05–1.37 (criterion < 0.10, only 1 of 5 seeds passes) |
 
 ## Where later phases record this
 

@@ -139,6 +139,7 @@ research` が第 1 フェーズの実験環境です。したがってスケル�
 | :--- | :--- | :--- |
 | W1 カーネル化 IB-Hebbian 知覚層 | [`research/ib_hebbian/README.ja.md`](../research/ib_hebbian/README.ja.md) | MNIST 98.01%（閾値 70%） |
 | W2 e-prop 認知層 | [`research/eprop/README.ja.md`](../research/eprop/README.ja.md) | sMNIST 77.48%；活動ニューロン比率 1.0000（閾値 > 60%） |
+| W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.ja.md`](../research/rstdp/README.ja.md) | ⚠️ **未達**：CartPole 9.3〜37.3 歩（基準 ≥ 200）；偏移比 0.05〜1.37（基準 < 0.10、五つのシードのうち達したのは 1 つ） |
 
 ## 以降のフェーズでの記録場所
 
