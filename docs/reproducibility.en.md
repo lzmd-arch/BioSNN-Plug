@@ -139,7 +139,7 @@ date (to 2027-09).
 | :--- | :--- | :--- |
 | W1 kernelized IB-Hebbian perception layer | [`research/ib_hebbian/README.en.md`](../research/ib_hebbian/README.en.md) | MNIST 98.01% (threshold 70%) |
 | W2 e-prop cognitive layer | [`research/eprop/README.en.md`](../research/eprop/README.en.md) | sMNIST 77.48%; active-neuron fraction 1.0000 (threshold > 60%) |
-| W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.en.md`](../research/rstdp/README.en.md) | ⚠️ **Not met**: CartPole median **100.0 steps** (10 seeds, criterion ≥ 200; min 63 / max 173); median offset ratio 0.012 (all seeds < 0.10 ✓). All 18 levers tried this phase failed the pre-registered adoption rule — see the README's conclusion and boundaries |
+| W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.en.md`](../research/rstdp/README.en.md) | ✅ **Both §7 criteria met**: CartPole median **260.0 steps** (held-out seeds 25–44, 20 of them, criterion ≥ 200); max offset ratio **0.0359** (all seeds < 0.10 ✓). **But the minimum is 74**, below our own added "stable" condition (≥ 100; 2 of 20 under 100). Configuration and rationale: [ADR-0009](adr/ADR-0009-w3-behaviour-policy-and-trace-centring.en.md) |
 
 ## Where later phases record this
 

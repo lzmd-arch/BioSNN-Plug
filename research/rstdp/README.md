@@ -13,9 +13,24 @@ Critic 不是可选项。§3.2 引 Frémaux et al. (2010)：成功偏移达 σR 
 
 ## 当前结论
 
-**仍未达到验收。** ≥10 个种子的中位数 **100.0 步**（阈值 ≥ 200），最小 63、最大 173。
-说得更完整一点：**本阶段试过的每一条杠杆都没有通过预登记的采纳规则**——而失效模式已经被
-测清楚到可以逐条否证的程度。
+**达到计划书 §七 判据的两项；未达到「稳定」这一附加条件。**
+
+| 判据 | 实测（留出种子 25–44，20 个，**完全未参与任何选择**） | 结论 |
+| :--- | :--- | :--- |
+| CartPole 200 步以上 | 中位数 **260.0** | **达到** |
+| 成功偏移 < 10%σR | 最大 **0.0359** | **达到**（全部种子通过） |
+| （自加的「稳定」条件）最小值 ≥ 100 | 最小 **74** | **未达到**（20 个里 2 个低于 100） |
+
+选择集（种子 0–9）中位数 250.4，与留出集接近——**所以这不是种子选择效应**。
+那两颗拖后腿的种子的**峰值是 90–124**，是「学得不够好」而不是塌陷（恒定温度下真正的塌陷
+峰值只有 10–12 步）——失败模式换了种类。
+
+**验收配置**（四项现已为默认值，见 [ADR-0009](../../docs/adr/ADR-0009-w3-behaviour-policy-and-trace-centring.md)）：Boltzmann 行为策略 + 按采样概率中心化
+痕迹 + 逆温度在 log 空间从 2 退火到 20 + Actor 学习率衰减到 0.1×。所以
+`cartpole.py --seed 0` 跑的**就是**它。
+
+下面几节保留为本阶段的证据链——**包括那些被否证的方向**，因为「什么不管用、为什么」
+与「什么管用」同等重要。
 
 ### 采纳规则（先于测量写死）
 
@@ -139,8 +154,8 @@ Critic」。这个推断**被它自己的干预否证了**，见下一节。
 
 ```text
 实验名称：rstdp/cartpole
-日期：2026-09-23 03:05:37 中国标准时间
-Git commit：5e64247ef9bc08931b225ba8ae100f3968dacc9f
+日期：2026-09-23 05:21:05 中国标准时间
+Git commit：75bc258e2e6e1745ac1ee706faef1377bacebf9f
 Git 状态：干净
 Python：3.12.14
 操作系统 / 架构：Windows 11 / AMD64
@@ -148,11 +163,11 @@ Python：3.12.14
 随机种子：base=0；Actor 与 Critic 初始权重=3589114572；Critic 感受野采样=1786091376；动作探索=3138835151；感受野采样环境=2269638270；环境动作空间种子=4106697854；环境随机种子=2726622797；群体编码中心=4160090208
 依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
 运行命令：cartpole.py --seed 0 --device cpu
-耗时：27.6 s
+耗时：23.4 s
 显存峰值：0.0 MiB（§6.2 硬约束 8GB）
 §6.2 降级路径：未触发
 备注：N=64, sigma=0.5, eta_actor=0.003, eta_critic=0.0005, trace_decay=0.9, gamma=0.99, success_signal=td_error
-备注：Actor：normalize=True, clip=None, polyak_tau=None, sampling=epsilon_greedy, logit_scale=1.0, trace_center=none, lr_final_fraction=1.0
+备注：Actor：normalize=True, clip=None, polyak_tau=None, sampling=boltzmann, logit_scale=20.0, trace_center=sampling, lr_final_fraction=0.1
 备注：Critic：kind=population, units=64, value_scale=200.0, gain=8.0, threshold=0.4, output_bias=0.0, bias_lr=None, post_factor=rate
 备注：探索：start=0.3, end=0.02, 回合数=800
 备注：状态编码：4 维连续状态的高斯群体编码（本项目自己的选择）
