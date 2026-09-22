@@ -45,6 +45,8 @@ from __future__ import annotations
 
 import torch
 
+from research.common.seeding import device_generator
+
 __all__ = ["RSTDPActor"]
 
 
@@ -81,7 +83,7 @@ class RSTDPActor:
         self.weight_norm = float(weight_norm)
         self.normalize = bool(normalize)
 
-        generator = generator or torch.Generator(device=device)
+        generator = device_generator(generator, device)
         self.weights = torch.randn(n_features, n_actions, device=device, generator=generator)
         self.trace = torch.zeros(n_features, n_actions, device=device)
         if self.normalize:

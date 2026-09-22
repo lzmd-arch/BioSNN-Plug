@@ -362,3 +362,44 @@ class TestPopulationCritic:
     def test_rejects_invalid_hyperparameters(self, kwargs, match):
         with pytest.raises(ValueError, match=match):
             PopulationCritic(4, **kwargs)
+
+
+class TestCliDefaultsMatchTheClass:
+    """回归测试：CLI 默认值必须与 :class:`CartPoleAgent` 的构造默认值一致。
+
+    起因是一个真实踩到的坑：类的 ``actor_learning_rate`` 默认 1e-2、
+    ``critic_value_scale`` 默认 60.0，而 argparse 里写的是 3e-3 与 200.0。
+    直接构造 agent 的人会**静默**拿到与 CLI 不同的行为——两个独立的消融臂第一版脚本
+    都因此对不上基线。两份默认值就一定会漂移，所以现在只有一份（类的签名）。
+    """
+
+    def test_every_shared_parameter_agrees(self):
+        from research.rstdp.cartpole import CLI_TO_AGENT_PARAM, agent_default, build_parser
+
+        parser = build_parser()
+        cli = {action.dest: action.default for action in parser._actions}
+
+        mismatched = []
+        for cli_name, agent_param in CLI_TO_AGENT_PARAM.items():
+            if cli[cli_name] != agent_default(agent_param):
+                mismatched.append(
+                    f"{cli_name}: CLI={cli[cli_name]!r} vs 类={agent_default(agent_param)!r}"
+                )
+        assert not mismatched, "CLI 与类默认值不一致：" + "；".join(mismatched)
+
+    def test_the_two_parameters_that_actually_drifted(self):
+        """把当初漂移的那两个钉死——它们是这条测试存在的理由。"""
+        from research.rstdp.cartpole import build_parser
+
+        parser = build_parser()
+        cli = {action.dest: action.default for action in parser._actions}
+        assert cli["actor_learning_rate"] == pytest.approx(3e-3)
+        assert cli["critic_value_scale"] == pytest.approx(200.0)
+
+    def test_actor_normalize_is_reachable_from_the_cli(self):
+        """归一化此前**没有 CLI 出口**，消融只能另写脚本——现在能直接开关。"""
+        from research.rstdp.cartpole import build_parser
+
+        parser = build_parser()
+        assert parser.parse_args([]).actor_normalize is True
+        assert parser.parse_args(["--no-actor-normalize"]).actor_normalize is False

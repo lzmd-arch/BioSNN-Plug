@@ -55,6 +55,8 @@ from __future__ import annotations
 
 import torch
 
+from research.common.seeding import device_generator
+
 __all__ = ["PopulationCritic", "TDLCritic", "td_error"]
 
 
@@ -116,7 +118,7 @@ class TDLCritic:
         #
         # ``value_scale`` 用来恢复被归一化拿掉的那个自由度（Critic 的整体增益）：
         # CartPole 的回报可达数百，而 ‖x‖ ≈ √N，所以需要几十倍的放大。
-        generator = generator or torch.Generator(device=device)
+        generator = device_generator(generator, device)
         self.weights = torch.randn(n_features, device=device, generator=generator) * init_scale
         self.trace = torch.zeros(n_features, device=device)
         self._normalize()
@@ -255,7 +257,7 @@ class PopulationCritic:
         #
         # 确有一条稳定成立：感受野让**同一输入**下的群体响应铺得更开（实测组内发放率范围
         # 0.039–0.712 vs 0.075–0.348），也就是每个输入有更独特的群体编码。
-        generator = generator or torch.Generator(device=device)
+        generator = device_generator(generator, device)
         if init_directions is not None:
             if init_directions.shape != (n_units, n_features):
                 raise ValueError(

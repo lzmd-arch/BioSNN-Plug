@@ -29,14 +29,16 @@ CartPole 的 4 维连续状态用**高斯群体编码**：``N`` 个编码神经�
 from __future__ import annotations
 
 import argparse
+import inspect
 import time
+from dataclasses import dataclass
 
 import torch
 
 from research.common.device import describe_device, measure_peak_memory, select_device
 from research.common.provenance import DegradationLog, collect
 from research.common.seeding import SeedBook
-from research.rstdp.measure_bias import BiasTracker
+from research.rstdp.measure_bias import OFFSET_THRESHOLD, BiasTracker
 from research.rstdp.rstdp import RSTDPActor
 from research.rstdp.td_ltp import PopulationCritic, TDLCritic, td_error
 
@@ -67,12 +69,12 @@ class CartPoleAgent:
 
     def __init__(
         self,
-        n_features: int,
+        n_features: int = 64,
         n_actions: int = 2,
         *,
-        actor_learning_rate: float = 1e-2,
+        actor_learning_rate: float = 3e-3,
         critic_learning_rate: float = 5e-4,
-        critic_value_scale: float = 60.0,
+        critic_value_scale: float = 200.0,
         trace_decay: float = 0.9,
         critic_trace_decay: float = 0.9,
         discount: float = 0.99,
@@ -202,7 +204,11 @@ def run_episode(
         实际是测量时机错了。
     """
     raw_state, _ = env.reset()
-    state = torch.tensor(raw_state, dtype=torch.float32)
+    # **状态张量必须与 centers 同设备。** centers 会被搬到 agent 所在的设备上，而
+    # gymnasium 返回的是 CPU 上的 numpy 数组——不搬就会在 encode_state 里炸
+    # "Expected all tensors to be on the same device"。这个 bug 潜伏了很久没被发现，
+    # 因为 W3 的验收一直是显式带 --device cpu 跑的，而**默认**设备是 CUDA。
+    state = torch.tensor(raw_state, dtype=torch.float32, device=centers.device)
     features = encode_state(state, centers, sigma)
 
     steps = 0
@@ -210,7 +216,7 @@ def run_episode(
     for _ in range(EPISODE_LIMIT):
         action, explored = agent.behave(features, generator=generator, exploration=exploration)
         raw_next, reward, terminated, truncated, _ = env.step(action)
-        next_state = torch.tensor(raw_next, dtype=torch.float32)
+        next_state = torch.tensor(raw_next, dtype=torch.float32, device=centers.device)
         next_features = encode_state(next_state, centers, sigma)
 
         if learn:
@@ -237,41 +243,108 @@ def run_episode(
     return steps, max_trace
 
 
+#: CLI 的 ``dest`` → :class:`CartPoleAgent` 的构造参数名（两者不一定同名，
+#: 例如 ``--actor-normalize`` 的 dest 是 ``actor_normalize``）。
+#:
+#: **CLI 的默认值一律从类的签名派生**，不在这里另写一遍字面量。
+#: 起因是一个真实踩到的坑：\`CartPoleAgent.__init__\` 的 \`actor_learning_rate\` 默认是
+#: 1e-2、\`critic_value_scale\` 默认是 60.0，而 argparse 里写的是 3e-3 与 200.0——直接
+#: 构造 agent 的人（消融脚本、将来的使用者）会**静默**拿到与 CLI 不同的行为。两个独立的
+#: 消融臂第一版脚本都因此对不上基线，各浪费了一轮。
+#:
+#: 有两份默认值就一定会漂移，所以这里只留一份：类的签名。
+CLI_TO_AGENT_PARAM = {
+    "n_features": "n_features",
+    "actor_learning_rate": "actor_learning_rate",
+    "critic_learning_rate": "critic_learning_rate",
+    "critic_value_scale": "critic_value_scale",
+    "trace_decay": "trace_decay",
+    "discount": "discount",
+    "success_signal": "success_signal",
+    "actor_normalize": "normalize_weights",
+    "critic_kind": "critic_kind",
+    "critic_units": "critic_units",
+}
+
+
+def agent_default(parameter: str):
+    """取 :class:`CartPoleAgent` 某个构造参数的默认值。
+
+    Raises:
+        KeyError: 没有这个构造参数，**或者该参数没有默认值**。后一种必须显式报错：
+            ``inspect.Parameter.empty`` 是个哨兵对象，拿它当 argparse 的 ``default``
+            不会报错，只会让 ``args.<name>`` 变成那个哨兵——实测就是这么炸的
+            （``n_features`` 当时是唯一没有默认值的构造参数）。
+    """
+    signature = inspect.signature(CartPoleAgent.__init__)
+    if parameter not in signature.parameters:
+        raise KeyError(f"CartPoleAgent 没有构造参数 {parameter!r}。")
+    default = signature.parameters[parameter].default
+    if default is inspect.Parameter.empty:
+        raise KeyError(
+            f"CartPoleAgent 的构造参数 {parameter!r} 没有默认值，无法从签名派生 CLI 默认值。"
+            f"要么给它一个默认值，要么在 build_parser 里写独立字面量并说明原因。"
+        )
+    return default
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=__doc__.splitlines()[0],
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    # —— 只有这几项不属于 CartPoleAgent，才写独立字面量 ——
     parser.add_argument("--episodes", type=int, default=800)
-    parser.add_argument("--n-features", type=int, default=64, help="状态编码神经元数 N")
     parser.add_argument("--encoding-sigma", type=float, default=0.5)
-    parser.add_argument("--actor-learning-rate", type=float, default=3e-3)
+    # —— 以下默认值全部来自类签名，见 CLI_TO_AGENT_PARAM 的说明 ——
+    parser.add_argument(
+        "--n-features",
+        type=int,
+        default=agent_default("n_features"),
+        help="状态编码神经元数 N",
+    )
+    parser.add_argument(
+        "--actor-learning-rate", type=float, default=agent_default("actor_learning_rate")
+    )
+    parser.add_argument(
+        "--actor-normalize",
+        action=argparse.BooleanOptionalAction,
+        default=agent_default("normalize_weights"),
+        help="Actor 的逐动作列 L1 权重归一化（计划书 §3.2「权重总和恒定」）。"
+        "用 --no-actor-normalize 关掉——注意关掉会同时解除容量约束**与**尺度锁定，"
+        "权重尺度从 L1=1 变成约 51，所以等价的相对步长要大 lr 约 51 倍",
+    )
     parser.add_argument(
         "--critic-learning-rate",
         type=float,
-        default=5e-4,
+        default=agent_default("critic_learning_rate"),
         help="Critic 学习率。**这一项极敏感**：1e-3 与 5e-4 在本任务上差别巨大，见 README",
     )
     parser.add_argument(
         "--critic-kind",
-        default="population",
+        default=agent_default("critic_kind"),
         choices=["population", "single"],
         help="Critic 结构：'population' 是论文那样的群体 + 固定读出；'single' 是单单元版"
         "（保留用于对照——两者的差别见 README）",
     )
-    parser.add_argument("--critic-units", type=int, default=64, help="群体 Critic 的单元数")
+    parser.add_argument(
+        "--critic-units",
+        type=int,
+        default=agent_default("critic_units"),
+        help="群体 Critic 的单元数",
+    )
     parser.add_argument(
         "--critic-value-scale",
         type=float,
-        default=200.0,
+        default=agent_default("critic_value_scale"),
         help="Critic 输出的量程。群体版里它经**固定读出**换算成 V 的值域上限；"
         "CartPole 在 γ=0.99 下满分策略的值约 100，所以取 200 留余量",
     )
-    parser.add_argument("--trace-decay", type=float, default=0.9)
-    parser.add_argument("--discount", type=float, default=0.99)
+    parser.add_argument("--trace-decay", type=float, default=agent_default("trace_decay"))
+    parser.add_argument("--discount", type=float, default=agent_default("discount"))
     parser.add_argument(
         "--success-signal",
-        default="td_error",
+        default=agent_default("success_signal"),
         choices=["reward_minus_value", "td_error"],
         help="Actor 的成功信号。默认用 TD 误差：CartPole 每步都给 +1 的**密集恒定奖励**，"
         "此时 S = R − ⟨R⟩ 恒为 0 附近、毫无对比度——计划书 §3.2 那个式子是给"
@@ -295,24 +368,46 @@ def apply_smoke_overrides(args: argparse.Namespace) -> None:
     args.device = "cpu"
 
 
-def main(argv: list[str] | None = None) -> int:
+@dataclass
+class TrialResult:
+    """一次完整训练 + 贪心评测的结果。
+
+    字段刻意同时包含**逐种子可比的量**（``mean_steps``）与**分布信息**（``min/max``）：
+    本问题的种子方差极大（同一配置内实测能差 3.5 倍），只看均值会被离群点带走。
+    """
+
+    seed: int
+    mean_steps: float
+    min_steps: int
+    max_steps: int
+    offset_ratio: float
+    offset: float
+    sigma: float
+    elapsed_s: float
+    peak_mb: float
+    seeds_used: str
+
+
+def build_agent_inputs(
+    book: SeedBook,
+    *,
+    n_features: int,
+    encoding_sigma: float,
+    critic_units: int,
+    device: torch.device,
+):
+    """采样群体编码中心与 Critic 单元的偏好方向（感受野）。
+
+    抽成独立函数是为了让 :mod:`research.rstdp.sweep` 与 CLI 走**同一条**构造路径——
+    两份实现必然会漂移，而种子派生路径一漂移，数字就不可比且不会报错。
+    """
     import gymnasium
-
-    args = build_parser().parse_args(argv)
-    if args.smoke:
-        apply_smoke_overrides(args)
-
-    book = SeedBook(base=args.seed)
-    device = select_device(args.device)
 
     generator = torch.Generator().manual_seed(book.derive("群体编码中心"))
     # CartPole 的 4 维状态大致落在 [-3, 3]（位置/角度/速度各不同量纲），
     # 这里用 [-1.5, 1.5] 的均匀中心覆盖，编码 σ 由参数控制。
-    centers = (torch.rand(args.n_features, 4, generator=generator) - 0.5) * 3.0
-    centers = centers.to(device)
+    centers = ((torch.rand(n_features, 4, generator=generator) - 0.5) * 3.0).to(device)
 
-    # 采样代表性状态，作为 Critic 单元的偏好方向（感受野）。随机方向不行——实测
-    # V 的跨度只有 10，见 td_ltp.PopulationCritic 的说明。
     direction_rng = torch.Generator().manual_seed(book.derive("Critic 感受野采样"))
     sample_env = gymnasium.make("CartPole-v1")
     sample_env.reset(seed=book.derive("感受野采样环境"))
@@ -321,7 +416,11 @@ def main(argv: list[str] | None = None) -> int:
         raw, _ = sample_env.reset()
         for _ in range(EPISODE_LIMIT):
             sampled.append(
-                encode_state(torch.tensor(raw, dtype=torch.float32), centers, args.encoding_sigma)
+                encode_state(
+                    torch.tensor(raw, dtype=torch.float32, device=centers.device),
+                    centers,
+                    encoding_sigma,
+                )
             )
             raw, _, term, trunc, _ = sample_env.step(
                 int(torch.randint(2, (1,), generator=direction_rng).item())
@@ -330,19 +429,81 @@ def main(argv: list[str] | None = None) -> int:
                 break
     sample_env.close()
     sampled = torch.stack(sampled)
-    choice = torch.randperm(len(sampled), generator=direction_rng)[: args.critic_units]
-    init_directions = sampled[choice].to(device)
+    choice = torch.randperm(len(sampled), generator=direction_rng)[:critic_units]
+    return centers, sampled[choice].to(device)
+
+
+def run_trial(
+    seed: int,
+    *,
+    episodes: int = 800,
+    n_features: int = 64,
+    encoding_sigma: float = 0.5,
+    actor_learning_rate: float | None = None,
+    actor_normalize: bool | None = None,
+    critic_learning_rate: float | None = None,
+    critic_kind: str | None = None,
+    critic_units: int | None = None,
+    critic_value_scale: float | None = None,
+    trace_decay: float | None = None,
+    discount: float | None = None,
+    success_signal: str | None = None,
+    exploration_start: float = 0.3,
+    exploration_end: float = 0.02,
+    evaluation_episodes: int = 10,
+    evaluation_interval: int = 20,
+    device: torch.device | None = None,
+    verbose: bool = False,
+    return_agent: bool = False,
+):
+    """训练一个种子并做贪心评测。
+
+    ``None`` 表示"用 :class:`CartPoleAgent` 的构造默认值"——**不在这里重复写默认值**，
+    理由见 :data:`CLI_TO_AGENT_PARAM` 的说明：两份默认值一定会漂移。
+
+    Returns:
+        :class:`TrialResult`；``return_agent=True`` 时返回 ``(result, agent)``。
+    """
+    import gymnasium
+
+    book = SeedBook(base=seed)
+    device = device if device is not None else select_device(None)
+    defaults = {name: agent_default(name) for name in CLI_TO_AGENT_PARAM.values()}
+
+    resolved = {
+        "actor_learning_rate": actor_learning_rate,
+        "normalize_weights": actor_normalize,
+        "critic_learning_rate": critic_learning_rate,
+        "critic_kind": critic_kind,
+        "critic_units": critic_units,
+        "critic_value_scale": critic_value_scale,
+        "trace_decay": trace_decay,
+        "discount": discount,
+        "success_signal": success_signal,
+    }
+    for key, value in list(resolved.items()):
+        if value is None:
+            resolved[key] = defaults[key]
+
+    centers, init_directions = build_agent_inputs(
+        book,
+        n_features=n_features,
+        encoding_sigma=encoding_sigma,
+        critic_units=resolved["critic_units"],
+        device=device,
+    )
 
     agent = CartPoleAgent(
-        args.n_features,
-        actor_learning_rate=args.actor_learning_rate,
-        critic_learning_rate=args.critic_learning_rate,
-        critic_value_scale=args.critic_value_scale,
-        trace_decay=args.trace_decay,
-        discount=args.discount,
-        success_signal=args.success_signal,
-        critic_kind=args.critic_kind,
-        critic_units=args.critic_units,
+        n_features,
+        actor_learning_rate=resolved["actor_learning_rate"],
+        critic_learning_rate=resolved["critic_learning_rate"],
+        critic_value_scale=resolved["critic_value_scale"],
+        trace_decay=resolved["trace_decay"],
+        discount=resolved["discount"],
+        success_signal=resolved["success_signal"],
+        normalize_weights=resolved["normalize_weights"],
+        critic_kind=resolved["critic_kind"],
+        critic_units=resolved["critic_units"],
         critic_init_directions=init_directions,
         device=device,
         generator=torch.Generator().manual_seed(book.derive("Actor 与 Critic 初始权重")),
@@ -350,8 +511,8 @@ def main(argv: list[str] | None = None) -> int:
 
     env = gymnasium.make("CartPole-v1")
     # **必须给环境播种。** gymnasium 的 CartPole 有自己的 RNG，不播种的话每次运行的
-    # 初始状态与状态转移都不同——上面那一串种子就覆盖不到实验的一半，复现记录等于
-    # 缺了一块。这是实测发现的：同一个 seed 两次跑出 20.4 步与 9.3 步。
+    # 初始状态与状态转移都不同——上面那一串种子就覆盖不到实验的一半。实测发现过：
+    # 同一个 seed 两次跑出 20.4 步与 9.3 步。
     env.reset(seed=book.derive("环境随机种子"))
     env.action_space.seed(book.derive("环境动作空间种子"))
     explore_rng = torch.Generator().manual_seed(book.derive("动作探索"))
@@ -360,16 +521,14 @@ def main(argv: list[str] | None = None) -> int:
     started = time.perf_counter()
     history: list[int] = []
     with measure_peak_memory(device) as memory:
-        for episode in range(1, args.episodes + 1):
-            progress = episode / args.episodes
-            exploration = args.exploration_start + progress * (
-                args.exploration_end - args.exploration_start
-            )
+        for episode in range(1, episodes + 1):
+            progress = episode / episodes
+            exploration = exploration_start + progress * (exploration_end - exploration_start)
             steps, max_trace = run_episode(
                 env,
                 agent,
                 centers,
-                args.encoding_sigma,
+                encoding_sigma,
                 generator=explore_rng,
                 exploration=exploration,
                 learn=True,
@@ -377,40 +536,83 @@ def main(argv: list[str] | None = None) -> int:
             )
             history.append(steps)
 
-            if episode % args.evaluation_interval == 0:
-                mean_recent = sum(history[-args.evaluation_interval :]) / len(
-                    history[-args.evaluation_interval :]
-                )
+            if verbose and episode % evaluation_interval == 0:
+                recent = history[-evaluation_interval:]
                 print(
-                    f"episode {episode:4d}  近 {args.evaluation_interval} 回合平均步数 "
-                    f"{mean_recent:7.1f}  探索率 {exploration:.3f}  "
+                    f"episode {episode:4d}  近 {evaluation_interval} 回合平均步数 "
+                    f"{sum(recent) / len(recent):7.1f}  探索率 {exploration:.3f}  "
                     f"回合内痕迹峰值 {max_trace:.4f}",
                     flush=True,
                 )
 
-    # 验收：贪心策略下的平均存活步数（不再探索）
     evaluation = [
         run_episode(
             env,
             agent,
             centers,
-            args.encoding_sigma,
+            encoding_sigma,
             generator=explore_rng,
             exploration=0.0,
             learn=False,
         )[0]
-        for _ in range(args.evaluation_episodes)
+        for _ in range(evaluation_episodes)
     ]
     env.close()
     elapsed = time.perf_counter() - started
-    mean_steps = sum(evaluation) / len(evaluation)
 
-    print(f"\n验收评测（贪心，{args.evaluation_episodes} 个回合）：平均 {mean_steps:.1f} 步")
-    print(
-        f"训练末期平均（最后 {args.evaluation_interval} 个回合）："
-        f"{sum(history[-args.evaluation_interval :]) / args.evaluation_interval:.1f} 步"
+    result = TrialResult(
+        seed=seed,
+        mean_steps=sum(evaluation) / len(evaluation),
+        min_steps=min(evaluation),
+        max_steps=max(evaluation),
+        offset_ratio=tracker.tail.ratio,
+        offset=tracker.tail.offset,
+        sigma=tracker.tail.sigma,
+        elapsed_s=elapsed,
+        peak_mb=memory["peak_mb"],
+        seeds_used=book.render(),
     )
-    print(f"\n成功偏移：\n{tracker.render()}")
+    if return_agent:
+        return result, agent
+    return result
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    if args.smoke:
+        apply_smoke_overrides(args)
+
+    device = select_device(args.device)
+    result = run_trial(
+        args.seed,
+        episodes=args.episodes,
+        n_features=args.n_features,
+        encoding_sigma=args.encoding_sigma,
+        actor_learning_rate=args.actor_learning_rate,
+        actor_normalize=args.actor_normalize,
+        critic_learning_rate=args.critic_learning_rate,
+        critic_kind=args.critic_kind,
+        critic_units=args.critic_units,
+        critic_value_scale=args.critic_value_scale,
+        trace_decay=args.trace_decay,
+        discount=args.discount,
+        success_signal=args.success_signal,
+        exploration_start=args.exploration_start,
+        exploration_end=args.exploration_end,
+        evaluation_episodes=args.evaluation_episodes,
+        evaluation_interval=args.evaluation_interval,
+        device=device,
+        verbose=True,
+    )
+
+    print(
+        f"\n验收评测（贪心，{args.evaluation_episodes} 个回合）："
+        f"平均 {result.mean_steps:.1f} 步（最小 {result.min_steps} / 最大 {result.max_steps}）"
+    )
+    print(
+        f"成功偏移：偏移 {result.offset:+.5f}  σR {result.sigma:.5f}  "
+        f"|偏移|/σR {result.offset_ratio:.4f}（阈值 < {OFFSET_THRESHOLD}）"
+    )
 
     degradation = DegradationLog()
     if args.smoke:
@@ -419,14 +621,16 @@ def main(argv: list[str] | None = None) -> int:
 
     record = collect(
         "rstdp/cartpole",
-        seeds=book.render(),
-        elapsed_s=elapsed,
+        seeds=result.seeds_used,
+        elapsed_s=result.elapsed_s,
         gpu=describe_device(device).render(),
-        peak_mb=memory["peak_mb"],
+        peak_mb=result.peak_mb,
         degradation=degradation,
         notes=[
-            f"N={args.n_features}, sigma={args.encoding_sigma}, value_scale={args.critic_value_scale}, "
+            f"N={args.n_features}, sigma={args.encoding_sigma}, "
+            f"value_scale={args.critic_value_scale}, "
             f"eta_actor={args.actor_learning_rate}, eta_critic={args.critic_learning_rate}, "
+            f"actor_normalize={args.actor_normalize}, "
             f"trace_decay={args.trace_decay}, gamma={args.discount}, "
             f"success_signal={args.success_signal}",
             "状态编码：4 维连续状态的高斯群体编码（本项目自己的选择）",
@@ -438,12 +642,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.smoke:
         return 0
 
-    passed_steps = mean_steps >= ACCEPTANCE_STEPS
-    passed_bias = tracker.tail.passed
+    passed_steps = result.mean_steps >= ACCEPTANCE_STEPS
+    passed_bias = result.offset_ratio < OFFSET_THRESHOLD
     print(
-        f"\n验收（计划书 §七）：平均步数 {mean_steps:.1f} >= {ACCEPTANCE_STEPS} → "
+        f"\n验收（计划书 §七）：平均步数 {result.mean_steps:.1f} >= {ACCEPTANCE_STEPS} → "
         f"{'达到' if passed_steps else '未达到'}；"
-        f"成功偏移 |偏移|/σR {tracker.tail.ratio:.4f} < 0.10 → "
+        f"成功偏移 |偏移|/σR {result.offset_ratio:.4f} < {OFFSET_THRESHOLD} → "
         f"{'达到' if passed_bias else '未达到'}。"
     )
     return 0 if (passed_steps and passed_bias) else 1

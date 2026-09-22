@@ -25,7 +25,7 @@ import random
 import zlib
 from dataclasses import dataclass, field
 
-__all__ = ["SeedBook", "apply_seed", "derive_seed"]
+__all__ = ["SeedBook", "apply_seed", "derive_seed", "device_generator"]
 
 
 def derive_seed(base: int, purpose: str) -> int:
@@ -118,3 +118,34 @@ class SeedBook:
             return base
         items = "；".join(f"{purpose}={seed}" for purpose, seed in sorted(self._entries.items()))
         return f"{base}；{items}"
+
+
+def device_generator(generator, device):
+    """返回一个**在目标设备上**的 ``torch.Generator``，种子取自传入的那个。
+
+    起因是一个真实踩到的坑：``torch.randn(..., device="cuda", generator=<CPU generator>)``
+    会抛 ``Expected a 'cuda' device type for generator but found 'cpu'``。而调用方通常用
+    ``torch.Generator().manual_seed(seed)`` 造一个 CPU generator（那是唯一跨设备的默认），
+    于是一条本来能跑的路径在 CUDA 上直接崩。W3 的这个 bug 潜伏了很久——因为验收一直是显式
+    带 ``--device cpu`` 跑的，而**默认**设备是 CUDA。
+
+    做法是**从传入的 generator 抽一个种子**再在目标设备上重建，这样：
+    种子仍然来自那条已播种的链（可复现），设备也对得上。
+    **设备一致时原样返回**，所以 CPU 路径的行为逐位不变。
+
+    Args:
+        generator: 已有的 ``torch.Generator``，或 ``None``（那就直接建一个）。
+        device: 目标设备。
+
+    Returns:
+        设备正确的 ``torch.Generator``。
+    """
+    import torch
+
+    device = torch.device(device)
+    if generator is None:
+        return torch.Generator(device=device)
+    if generator.device == device:
+        return generator
+    seed = int(torch.randint(0, 2**31 - 1, (1,), generator=generator).item())
+    return torch.Generator(device=device).manual_seed(seed)
