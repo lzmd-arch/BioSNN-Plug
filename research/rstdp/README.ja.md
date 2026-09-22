@@ -62,9 +62,26 @@
 50 エピソードごとの貪欲評価：
 
 ```text
-frac=1.0 seed 3:  78 374 176 38 39 12 9 12 96 83 18 39 94 47 22 9
-frac=0.1 seed 0:  24 30 29 32 11 10 24 21 32 94 92 428 226 130 111 61
-frac=0.1 seed 9:  12 9 9 56 10 34 19 40 54 37 31 28 31 21 244 88
+実験名：rstdp/cartpole
+日付：2026-09-23 06:43:51 中国標準時
+Git commit：c0d4f4631693470c56665703f8153068dd5ae192
+Git 状態：クリーン
+Python：3.12.14
+OS / アーキテクチャ：Windows 11 / AMD64
+ハードウェア：CPU（Intel64 Family 6 Model 183 Stepping 1, GenuineIntel、GPU 不使用）
+乱数シード：base=0；Actor と Critic の初期重み=3589114572；Critic 受容野サンプリング=1786091376；行動探索=3138835151；受容野サンプリング環境=2269638270；環境行動空間シード=4106697854；環境乱数シード=2726622797；群体符号化中心=4160090208
+依存スナップショット：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+実行コマンド：cartpole.py --seed 0 --device cpu
+所要時間：48.7 s
+ピークメモリ：0.0 MiB（§6.2 の硬い制約 8GB）
+§6.2 の縮退経路：未発動
+備考：N=64, sigma=0.5, eta_actor=0.003, eta_critic=0.0005, trace_decay=0.9, gamma=0.99, success_signal=td_error
+備考：Actor：normalize=True, clip=None, polyak_tau=None, sampling=boltzmann, logit_scale=20.0, trace_center=sampling, lr_final_fraction=0.01
+備考：Critic：kind=population, units=64, value_scale=200.0, gain=8.0, threshold=0.4, output_bias=0.0, bias_lr=None, post_factor=rate
+備考：探索：start=0.3, end=0.02, エピソード数=800
+備考：logit アニーリング：2.0 → 40.0（log 空間の線形補間）
+備考：状態符号化：4 次元連続状態のガウス群体符号化（本プロジェクト自身の選択）
+備考：レート型ユニット：STDP 窓形状と TD-LTP/TD-STDP の違いはこの簡略化では表現できない
 ```
 
 二十本の曲線が**すべて**この形で、隣接チェックポイントの差は 5〜30 倍。したがって「最終重み

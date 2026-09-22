@@ -58,9 +58,26 @@
 **一、策略在全程游走，终值只是它停在哪一相的一个采样。** 每 50 回合评一次贪心策略：
 
 ```text
-frac=1.0 seed 3:  78 374 176 38 39 12 9 12 96 83 18 39 94 47 22 9
-frac=0.1 seed 0:  24 30 29 32 11 10 24 21 32 94 92 428 226 130 111 61
-frac=0.1 seed 9:  12 9 9 56 10 34 19 40 54 37 31 28 31 21 244 88
+实验名称：rstdp/cartpole
+日期：2026-09-23 06:43:51 中国标准时间
+Git commit：c0d4f4631693470c56665703f8153068dd5ae192
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：CPU（Intel64 Family 6 Model 183 Stepping 1, GenuineIntel，无 GPU 参与）
+随机种子：base=0；Actor 与 Critic 初始权重=3589114572；Critic 感受野采样=1786091376；动作探索=3138835151；感受野采样环境=2269638270；环境动作空间种子=4106697854；环境随机种子=2726622797；群体编码中心=4160090208
+依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+运行命令：cartpole.py --seed 0 --device cpu
+耗时：48.7 s
+显存峰值：0.0 MiB（§6.2 硬约束 8GB）
+§6.2 降级路径：未触发
+备注：N=64, sigma=0.5, eta_actor=0.003, eta_critic=0.0005, trace_decay=0.9, gamma=0.99, success_signal=td_error
+备注：Actor：normalize=True, clip=None, polyak_tau=None, sampling=boltzmann, logit_scale=20.0, trace_center=sampling, lr_final_fraction=0.01
+备注：Critic：kind=population, units=64, value_scale=200.0, gain=8.0, threshold=0.4, output_bias=0.0, bias_lr=None, post_factor=rate
+备注：探索：start=0.3, end=0.02, 回合数=800
+备注：logit 退火：2.0 → 40.0（log 空间线性插值）
+备注：状态编码：4 维连续状态的高斯群体编码（本项目自己的选择）
+备注：速率型单元：STDP 窗口形状与 TD-LTP/TD-STDP 的差别在此化简下无从体现
 ```
 
 二十条曲线**全部**如此，相邻检查点相差 5–30 倍。所以「最终权重的 10 个贪心回合均值」这个

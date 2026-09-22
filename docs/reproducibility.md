@@ -121,7 +121,7 @@ uv sync --locked      # lock 与 pyproject 必须一致
 | :--- | :--- | :--- |
 | W1 核化 IB-Hebbian 感知层 | [`research/ib_hebbian/README.md`](../research/ib_hebbian/README.md) | MNIST **98.01%**（监督 SGD 读出）/ **97.79%**（岭回归闭式解读出，现行默认）；阈值 70%。**两种读出都是监督的**——98.01% 是「局部学到的特征 + 监督读出」的联合结果，不是纯局部的精度，见 README 的「「局部」的准确表述」 |
 | W2 e-prop 认知层 | [`research/eprop/README.md`](../research/eprop/README.md) | sMNIST 77.48%；活跃神经元比例 1.0000（阈值 > 60%） |
-| W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.md`](../research/rstdp/README.md) | ✅ **达到 §七 判据**：CartPole 中位数 **260.0 步**（留出种子 25–44，20 个，阈值 ≥ 200）；偏移比最大 **0.0359**（全部种子 < 0.10 ✓）。**但最小值 74**，未达我们自加的「稳定」条件（≥ 100，20 个里 2 个低于 100）。配置与理由见 [ADR-0009](adr/ADR-0009-w3-behaviour-policy-and-trace-centring.md) |
+| W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.md`](../research/rstdp/README.md) | ✅ **三项判据全部达到**：CartPole 中位数 **237.8 步**（种子 45–64，20 个**全新**、从未参与任何选择；阈值 ≥ 200）；偏移比最大 **0.0403**（全部种子 < 0.10 ✓）；最小值 **121**（自加的「稳定」条件 ≥ 100 ✓，无种子低于 100）。用于调参的 25–44 上中位数 327.9、最小 109——**两批都过线**。配置与理由见 [ADR-0009](adr/ADR-0009-w3-behaviour-policy-and-trace-centring.md) |
 
 ## 后续阶段的记录位置
 
