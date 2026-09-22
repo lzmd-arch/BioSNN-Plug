@@ -151,6 +151,7 @@ class CartPoleAgent:
         next_features: torch.Tensor,
         *,
         terminated: bool,
+        truncated: bool = False,
         exploring: bool = False,
     ) -> tuple[float, float]:
         """一步学习：先算 δ 与 S，再更新 Critic 与 Actor。
@@ -160,16 +161,22 @@ class CartPoleAgent:
 
         **探索步不更新 Actor。** 那一步的动作不是 Actor 选的，用它去强化等于在训练噪声；
         这一点不写清楚很容易被当成"探索有助于探索"而留下。
+
+        **终止与截断必须分开**（``terminated`` / ``truncated``）。只有**终止**才把 ``V(s')``
+        置零；**截断**是「时间上限到了，回合没结束」，要照常自举。两者混为一谈时，一个
+        跑满 ``EPISODE_LIMIT`` 步的回合会在最后一步拿到
+
+            δ = r + γ·0 − V(s') ≈ 1 − 99.3 = **−98**
+
+        （``V≈(1−0.99⁵⁰⁰)/0.01``），而 Actor 的更新量 ``η·δ·e`` 在这一步约为 56 倍典型权重
+        ——**策略越好，这一下打得越狠**。实测到的「峰值 500 步 → 崩到 14 步」正是这个形状：
+        一旦够到上限，惩罚开始点火。所以这里不合并这两个标志。
         """
         value = self.critic.value(features)
-        if terminated:
-            next_value = torch.zeros_like(value)
-            bootstrap_reward = reward
-        else:
-            next_value = self.critic.value(next_features)
-            bootstrap_reward = reward
+        # 终止（真正结束）才置零；截断（撞上时间上限）照常自举。
+        next_value = torch.zeros_like(value) if terminated else self.critic.value(next_features)
 
-        delta = td_error(bootstrap_reward, value, next_value, discount=self.discount)
+        delta = td_error(reward, value, next_value, discount=self.discount)
         signal = delta if self.success_signal == "td_error" else float(reward - value)
 
         self.critic.update(features, value, delta)
@@ -225,7 +232,8 @@ def run_episode(
                 action,
                 float(reward),
                 next_features,
-                terminated=terminated or truncated,
+                terminated=terminated,
+                truncated=truncated,
                 exploring=explored,
             )
             if tracker is not None:

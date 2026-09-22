@@ -52,6 +52,7 @@ datasets/
 outputs/
 runs/
 wandb/
+sweep_results/
 *.ckpt
 *.pth
 *.pt
