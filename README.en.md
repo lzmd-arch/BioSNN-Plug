@@ -39,7 +39,8 @@ Three claims are under test:
 | Part | Status |
 | :--- | :--- |
 | `biosnn-bus` skeleton library | **0.1.0, usable** — plugin interface, registration and discovery, spike-bus skeleton |
-| Research code / cognitive core / LLM orchestration | **Not started** — see the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §7 |
+| Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **98.01%** ✓; W2 e-prop sequential sMNIST **77.48%** (active neurons 1.0000) ✓; W3 R-STDP CartPole **criterion not met** (≥ 200 steps). Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) |
+| Cognitive core / LLM orchestration | **Not started** — see the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §7 |
 
 Two boundaries worth stating plainly:
 
