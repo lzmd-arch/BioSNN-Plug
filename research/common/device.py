@@ -74,8 +74,12 @@ def describe_device(device: Any = None) -> DeviceInfo:
     if device.type != "cuda":
         import platform
 
-        return DeviceInfo(kind="cpu", name=platform.processor() or platform.machine(),
-                          total_memory_mb=None, capability=None)
+        return DeviceInfo(
+            kind="cpu",
+            name=platform.processor() or platform.machine(),
+            total_memory_mb=None,
+            capability=None,
+        )
 
     props = torch.cuda.get_device_properties(device)
     return DeviceInfo(

@@ -9,8 +9,6 @@ from __future__ import annotations
 
 import re
 
-import pytest
-
 from research.common.provenance import DegradationLog, ReproRecord, collect, uv_lock_hash
 
 

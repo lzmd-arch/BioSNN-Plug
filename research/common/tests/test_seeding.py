@@ -58,7 +58,9 @@ class TestDeriveSeed:
             check=False,
         )
         assert result.returncode == 0, result.stderr
-        assert result.stdout.strip() == f"{derive_seed(0, '权重初始化')} {derive_seed(7, '数据打乱')}"
+        assert (
+            result.stdout.strip() == f"{derive_seed(0, '权重初始化')} {derive_seed(7, '数据打乱')}"
+        )
 
 
 class TestApplySeed:
@@ -91,7 +93,7 @@ class TestSeedBook:
         """同名不同值说明有两处代码在抢同一件事的随机源，必须当场暴露。"""
         book = SeedBook(base=0)
         book.register("权重初始化", 1)
-        with pytest.raises(ValueError, match="同名不同值|已被登记"):
+        with pytest.raises(ValueError, match=r"同名不同值|已被登记"):
             book.register("权重初始化", 2)
 
     def test_apply_sets_the_registered_seed(self):

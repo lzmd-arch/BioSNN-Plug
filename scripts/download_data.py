@@ -156,7 +156,9 @@ def read_idx(raw: bytes) -> np.ndarray:
     # 但 IDX 也用于 int16/int32——按元素个数校验会把合法数据判成截断。
     expected = header_end + count * dtype.itemsize
     if len(raw) != expected:
-        raise ValueError(f"IDX 长度与形状不符：形状 {shape} 需要 {expected} 字节，实得 {len(raw)} 字节。")
+        raise ValueError(
+            f"IDX 长度与形状不符：形状 {shape} 需要 {expected} 字节，实得 {len(raw)} 字节。"
+        )
 
     array = np.frombuffer(raw, dtype=dtype, count=count, offset=header_end)
     return array.reshape(shape)
@@ -167,7 +169,7 @@ def read_idx(raw: bytes) -> np.ndarray:
 
 def md5_of(path: Path) -> str:
     """分块算 MD5，避免把大文件整个读进内存。"""
-    digest = hashlib.md5()  # noqa: S324 - 完整性校验，不是安全机制；见模块 docstring
+    digest = hashlib.md5()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1 << 20), b""):
             digest.update(chunk)
