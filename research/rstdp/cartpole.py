@@ -88,6 +88,9 @@ class CartPoleAgent:
         critic_units: int = 64,
         critic_output_bias: float = 0.0,
         critic_bias_learning_rate: float | None = None,
+        critic_trace_post_factor: str = "rate",
+        critic_gain: float = 8.0,
+        critic_threshold: float = 0.4,
         critic_init_directions: torch.Tensor | None = None,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
@@ -119,6 +122,9 @@ class CartPoleAgent:
                 value_scale=critic_value_scale,
                 output_bias=critic_output_bias,
                 bias_learning_rate=critic_bias_learning_rate,
+                trace_post_factor=critic_trace_post_factor,
+                gain=critic_gain,
+                bias=critic_threshold,
                 init_directions=critic_init_directions,
                 device=device,
                 generator=generator,
@@ -296,6 +302,9 @@ CLI_TO_AGENT_PARAM = {
     "critic_units": "critic_units",
     "critic_output_bias": "critic_output_bias",
     "critic_bias_learning_rate": "critic_bias_learning_rate",
+    "critic_trace_post_factor": "critic_trace_post_factor",
+    "critic_gain": "critic_gain",
+    "critic_threshold": "critic_threshold",
 }
 
 
@@ -385,6 +394,28 @@ def build_parser() -> argparse.ArgumentParser:
         default=agent_default("critic_value_scale"),
         help="Critic 输出的量程。群体版里它经**固定读出**换算成 V 的值域上限；"
         "CartPole 在 γ=0.99 下满分策略的值约 100，所以取 200 留余量",
+    )
+    parser.add_argument(
+        "--critic-gain",
+        type=float,
+        default=agent_default("critic_gain"),
+        help="群体单元 sigmoid 的增益 g。**与 critic-threshold 一起决定 V 的值域**："
+        "面积大（g 大）则单元饱和、V 挤在两端；g 小则更线性、能表达更细的梯度",
+    )
+    parser.add_argument(
+        "--critic-threshold",
+        type=float,
+        default=agent_default("critic_threshold"),
+        help="群体单元的输入阈值 b（``y = σ(g(cos − b))``）。**调高它才能让 V 落到低段**"
+        "——真值在临死那一步约 1，而默认 b=0.4 时 V 的下界是 7.83",
+    )
+    parser.add_argument(
+        "--critic-trace-post-factor",
+        default=agent_default("critic_trace_post_factor"),
+        choices=["rate", "gradient"],
+        help="Critic 痕迹的第二因子：'rate' 是 y_j（论文的 pre×post），'gradient' 是 "
+        "y_j(1−y_j)（真半梯度的逐单元形状）。后者把「最改不动 V 的饱和单元」的权重压下去。"
+        "**注意它同时约把有效学习率减半**，比较时要连 critic-learning-rate 一起看",
     )
     parser.add_argument(
         "--critic-output-bias",
@@ -562,6 +593,9 @@ def run_trial(
     critic_value_scale: float | None = None,
     critic_output_bias: float | None = None,
     critic_bias_learning_rate: float | None = None,
+    critic_trace_post_factor: str | None = None,
+    critic_gain: float | None = None,
+    critic_threshold: float | None = None,
     trace_decay: float | None = None,
     discount: float | None = None,
     success_signal: str | None = None,
@@ -618,6 +652,9 @@ def run_trial(
         "critic_value_scale": critic_value_scale,
         "critic_output_bias": critic_output_bias,
         "critic_bias_learning_rate": critic_bias_learning_rate,
+        "critic_trace_post_factor": critic_trace_post_factor,
+        "critic_gain": critic_gain,
+        "critic_threshold": critic_threshold,
         "trace_decay": trace_decay,
         "discount": discount,
         "success_signal": success_signal,
@@ -649,6 +686,9 @@ def run_trial(
         critic_units=resolved["critic_units"],
         critic_output_bias=resolved["critic_output_bias"],
         critic_bias_learning_rate=resolved["critic_bias_learning_rate"],
+        critic_trace_post_factor=resolved["critic_trace_post_factor"],
+        critic_gain=resolved["critic_gain"],
+        critic_threshold=resolved["critic_threshold"],
         critic_init_directions=init_directions,
         device=device,
         generator=torch.Generator().manual_seed(book.derive("Actor 与 Critic 初始权重")),
@@ -774,6 +814,9 @@ def main(argv: list[str] | None = None) -> int:
         critic_value_scale=args.critic_value_scale,
         critic_output_bias=args.critic_output_bias,
         critic_bias_learning_rate=args.critic_bias_learning_rate,
+        critic_trace_post_factor=args.critic_trace_post_factor,
+        critic_gain=args.critic_gain,
+        critic_threshold=args.critic_threshold,
         trace_decay=args.trace_decay,
         discount=args.discount,
         success_signal=args.success_signal,

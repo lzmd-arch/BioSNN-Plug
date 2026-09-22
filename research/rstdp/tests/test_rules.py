@@ -493,6 +493,47 @@ class TestPopulationCritic:
         critic.update(self._features(4), critic.value(self._features(4)), td_error=1.0)
         assert float(critic.value(self._features(4))) > before
 
+    def test_the_rate_factor_is_the_rate_itself(self):
+        critic = PopulationCritic(5, n_units=3)
+        rates = critic.rates(self._features())
+        torch.testing.assert_close(critic.trace_second_factor(rates), rates)
+
+    def test_the_gradient_factor_peaks_in_the_mid_range(self):
+        """``y(1−y)`` 在 ``y=0.5`` 处最大——「最能改 V 的单元拿到最大更新」。"""
+        critic = PopulationCritic(5, n_units=3, trace_post_factor="gradient")
+        factor = critic.trace_second_factor(torch.tensor([0.01, 0.5, 0.99]))
+        assert factor[1] > factor[0] and factor[1] > factor[2]
+
+    def test_the_gradient_factor_is_the_rate_times_one_minus_the_rate(self):
+        """比值恒为 ``1−y``，所以饱和单元被压得最狠——这正是换它的理由。"""
+        plain = PopulationCritic(5, n_units=3)
+        gradient = PopulationCritic(5, n_units=3, trace_post_factor="gradient")
+        rates = torch.tensor([0.05, 0.5, 0.99])
+        torch.testing.assert_close(
+            gradient.trace_second_factor(rates) / plain.trace_second_factor(rates), 1.0 - rates
+        )
+
+    def test_the_trace_actually_accumulates_the_gradient_factor(self):
+        critic = PopulationCritic(3, n_units=2, trace_decay=0.0, trace_post_factor="gradient")
+        with torch.no_grad():
+            critic.weights.copy_(torch.tensor([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]))
+        features = torch.tensor([1.0, 2.0, 0.0])
+        critic.update(features, critic.value(features), td_error=0.0)
+        rates = critic.rates(features)
+        torch.testing.assert_close(critic.trace, torch.outer(rates * (1.0 - rates), features))
+
+    def test_the_post_factor_does_not_change_the_readout_or_the_rows(self):
+        critic = PopulationCritic(6, n_units=4, trace_post_factor="gradient", learning_rate=1.0)
+        reference = PopulationCritic(
+            6, n_units=4, learning_rate=1.0, generator=torch.Generator().manual_seed(0)
+        )
+        for step in range(10):
+            features = self._features(6)
+            critic.update(features, critic.value(features), td_error=1.0 if step % 3 else -1.0)
+            norms = critic.weights.norm(dim=1)
+            torch.testing.assert_close(norms, torch.ones(4), rtol=1e-5, atol=1e-6)
+        torch.testing.assert_close(critic.readout, reference.readout)
+
     def test_rejects_mismatched_init_directions(self):
         with pytest.raises(ValueError, match="init_directions"):
             PopulationCritic(8, n_units=4, init_directions=torch.rand(3, 8))
@@ -523,6 +564,7 @@ class TestPopulationCritic:
             ({"n_units": 0}, "n_units"),
             ({"gain": 0.0}, "gain"),
             ({"value_scale": -1.0}, "value_scale"),
+            ({"trace_post_factor": "softmax"}, "trace_post_factor"),
         ],
     )
     def test_rejects_invalid_hyperparameters(self, kwargs, match):

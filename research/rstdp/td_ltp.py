@@ -251,6 +251,7 @@ class PopulationCritic:
         value_scale: float = 200.0,
         output_bias: float = 0.0,
         bias_learning_rate: float | None = None,
+        trace_post_factor: str = "rate",
         init_directions: torch.Tensor | None = None,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
@@ -261,6 +262,10 @@ class PopulationCritic:
             raise ValueError(f"n_units 必须 >= 1，收到 {n_units}。")
         if gain <= 0 or value_scale <= 0:
             raise ValueError(f"gain 与 value_scale 必须为正，收到 {gain}、{value_scale}。")
+        if trace_post_factor not in ("rate", "gradient"):
+            raise ValueError(
+                f"trace_post_factor 只能是 'rate' 或 'gradient'，收到 {trace_post_factor!r}。"
+            )
 
         self.n_features = int(n_features)
         self.n_units = int(n_units)
@@ -270,6 +275,7 @@ class PopulationCritic:
         self.bias = float(bias)
         self.value_scale = float(value_scale)
         self.bias_learning_rate = bias_learning_rate
+        self.trace_post_factor = trace_post_factor
         device = device or torch.device("cpu")
         # 加性偏置 ``V = Σ u_j y_j + out_bias``。零初始化，``x + 0.0`` 精确，所以**默认路径
         # 逐位不变**。它与 ``bias`` 不是一回事：``bias`` 是每个单元的**输入阈值**，影响的是
@@ -317,6 +323,23 @@ class PopulationCritic:
         norms = self.weights.norm(dim=1, keepdim=True).clamp_min(1e-12)
         self.weights.mul_(1.0 / norms)
 
+    def trace_second_factor(self, rates: torch.Tensor) -> torch.Tensor:
+        """资格痕迹的第二因子：``"rate"`` 用 ``y_j``，``"gradient"`` 用 ``y_j(1−y_j)``。
+
+        半梯度是 ``δ · u_j·g·y_j(1−y_j) · x_i``，而实现用的是 ``δ · y_j · x_i``。常数
+        ``u_j``（固定读出）与 ``g`` 的差别只是每个单元**同一个**倍率，会被学习率吸收；
+        真正的**逐单元**差别只有 ``(1−y_j)``：
+
+        * ``y_j`` 已饱和（≈1）的单元几乎改不动 ``V``（导数为 0），却按 ``y_j≈1`` 拿到大更新；
+        * ``y_j`` 在中段的单元最能改 ``V``（导数最大），却只按 ``y_j≈0.5`` 拿到一半的更新。
+
+        也就是这一版把**最没用的单元**加权得最重。``"gradient"`` 把它换回真实导数的形状。
+
+        **量级要注意**：``y(1−y) ≤ 0.25`` 而 ``y`` 典型约 0.5，所以切过去等于把 Critic 的
+        有效学习率大约减半——比较时必须把这一条一起看，不能只看中位数。
+        """
+        return rates if self.trace_post_factor == "rate" else rates * (1.0 - rates)
+
     def value_floor(self) -> float:
         """``V`` 在**权重非负**这一前提下的下界：``value_scale · σ(−gain · bias)``。
 
@@ -362,7 +385,9 @@ class PopulationCritic:
         第二因子取的是单元自己的发放率，不是值。这正是两个类关键的结构差别。
         """
         rates = self.rates(features)
-        self.trace.mul_(self.trace_decay).add_(torch.outer(rates, features))
+        self.trace.mul_(self.trace_decay).add_(
+            torch.outer(self.trace_second_factor(rates), features)
+        )
         self.weights.add_(self.learning_rate * td_error * self.trace)
         self._normalize()
         self._learn_bias(td_error)

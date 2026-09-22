@@ -215,6 +215,46 @@ class TestNewOptionsReachTheCritic:
         assert agent.critic.out_bias.item() == pytest.approx(-30.0)
 
 
+class TestCriticOperatingPoint:
+    """``gain`` / 阈值决定 ``V`` 的值域——默认那一组把 V 顶在 8 以上，而真值要低得多。"""
+
+    def test_gain_and_threshold_reach_the_critic(self):
+        agent = CartPoleAgent(
+            4,
+            critic_units=3,
+            critic_gain=4.0,
+            critic_threshold=0.9,
+            generator=torch.Generator().manual_seed(0),
+        )
+        assert agent.critic.gain == 4.0
+        assert agent.critic.bias == 0.9
+
+    def test_defaults_are_unchanged(self):
+        agent = _agent()
+        assert agent.critic.gain == 8.0
+        assert agent.critic.bias == 0.4
+
+    def test_a_higher_threshold_lowers_the_value_floor(self):
+        """调高阈值才让 ``V`` 落得到低段——真值在临死那一步约 1，而默认下界是 7.83。"""
+        low = CartPoleAgent(
+            4, critic_units=3, critic_threshold=0.4, generator=torch.Generator().manual_seed(0)
+        )
+        high = CartPoleAgent(
+            4, critic_units=3, critic_threshold=1.0, generator=torch.Generator().manual_seed(0)
+        )
+        assert high.critic.value_floor() < low.critic.value_floor()
+
+    def test_a_higher_threshold_makes_the_units_sparser(self):
+        agent = _agent()
+        sparse = CartPoleAgent(
+            4, critic_units=32, critic_threshold=1.0, generator=torch.Generator().manual_seed(0)
+        )
+        features = torch.tensor([1.0, 0.5, 0.25, 0.0])
+        assert float(sparse.critic.rates(features).mean()) < float(
+            agent.critic.rates(features).mean()
+        )
+
+
 class TestSignalClip:
     """裁剪只作用于 Actor 的成功信号，Critic 仍然学真正的 δ。"""
 

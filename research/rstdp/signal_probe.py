@@ -203,9 +203,19 @@ class ProbeReport:
     floor: float
     floor_hit_fraction: float
     negative_weight_fraction: float
-    true_value_min: float
     predicted_min: float
+    true_value_min: float
+    true_value_max: float
+    true_value_std: float
+    predicted_std: float
     value_min_gap: float
+    #: 只在 ``V* >= DANGER_VALUE`` 的那些状态上算的解释方差。
+    #:
+    #: **为什么要分开算**：探针集被危险区状态主导，如果 ``Var(V*)`` 本来就很小时，EV 会被
+    #: 残差方差主导，测出来的「Critic 很差」可能只是「这批状态上真值没什么变化」。
+
+    explained_variance_high: float
+    n_high: int
     terminal_delta: float
     interior_delta: float
     delta_advantage_slope: float
@@ -227,10 +237,16 @@ class ProbeReport:
                 f"  V 的取值区间               [{self.predicted_min:.2f}, …]"
                 f"    真值下界 {self.true_value_min:.2f}"
                 f"    够不着的差距 {self.value_min_gap:+.2f}",
+                f"  真值 V* 的区间 / 标准差     [{self.true_value_min:.2f}, "
+                f"{self.true_value_max:.2f}] / {self.true_value_std:.2f}",
+                f"  预测 V 的标准差            {self.predicted_std:.2f}",
+                f"  高价值子集上的 EV          {self.explained_variance_high:+.4f}"
+                f"（{self.n_high} 个状态，V* >= {DANGER_VALUE:.0f}）",
                 f"  终止步 δ 均值              {self.terminal_delta:+.4f}",
                 f"  内部步 δ 均值              {self.interior_delta:+.4f}",
-                f"  δ 对精确优势的斜率 / r     {self.delta_advantage_slope:+.4f} / "
+                f"  δ 对**另一动作**优势的斜率 / r  {self.delta_advantage_slope:+.4f} / "
                 f"{self.delta_advantage_r:+.4f}",
+                "    （策略是确定性的，所以 A(s, 贪心动作) ≡ 0，不能用它做回归）",
                 f"  危险区与启发式一致率       {self.danger_agreement:.4f}",
             ]
         )
@@ -407,8 +423,12 @@ def probe(
     true_value_min = float(np.min(true_values))
     predicted_min = float(np.min(predicted))
     value_min_gap = true_value_min - predicted_min
+    high_mask = true_values >= danger_value
 
-    # δ 对精确优势：δ 应当正比于优势（斜率 ≈ 1、r 高）。用贪心动作取 (s, a) 对。
+    # δ 对精确优势。**注意这里只能取「非贪心动作」的优势**：策略是确定性的，所以
+    # ``A(s, π(s)) ≡ 0`` 恒成立（强制走策略自己会走的动作、再按策略走，那就是 ``V^π`` 的定义），
+    # 拿它去回归会得到一个全零的自变量——第一版就是这么写的，斜率与 r 都是 NaN。
+    # 有意义的对照是**另一个动作**的优势：它问的是「δ 有没有区分开两个动作」。
     deltas, advantages_ = [], []
     for s in states:
         action = policy(torch.as_tensor(s, dtype=torch.float32))
@@ -430,8 +450,9 @@ def probe(
                 )
                 - value
             )
+        other = 1 - int(action)
         deltas.append(delta)
-        advantages_.append(action_value(env, s, action, policy) - state_value(env, s, policy))
+        advantages_.append(action_value(env, s, other, policy) - state_value(env, s, policy))
     slope, correlation = _linear_fit(advantages_, deltas)
 
     # 危险区按**真值**判定，而不是「终止前 N 步」这个代理——代理里混着一些其实还安全的
@@ -465,9 +486,14 @@ def probe(
         floor=floor,
         floor_hit_fraction=floor_hits,
         negative_weight_fraction=negative_weight_fraction,
-        true_value_min=true_value_min,
         predicted_min=predicted_min,
+        true_value_min=true_value_min,
+        true_value_max=float(np.max(true_values)),
+        true_value_std=float(np.std(true_values)),
+        predicted_std=float(np.std(predicted)),
         value_min_gap=value_min_gap,
+        explained_variance_high=explained_variance(predicted[high_mask], true_values[high_mask]),
+        n_high=int(high_mask.sum()),
         terminal_delta=term,
         interior_delta=interior,
         delta_advantage_slope=slope,
