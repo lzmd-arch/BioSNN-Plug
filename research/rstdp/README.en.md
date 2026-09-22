@@ -47,7 +47,7 @@ configuration, seeds differ by 5–30×, so single-seed conclusions are unusable
 | Critic semi-gradient post-factor `y(1−y)` | −7.2 | 5/10 | No effect |
 | Actor signal clip | — | — | **Wrong grid**: all three values sat below σR≈4.8, so it swept a smaller effective learning rate again |
 | Actor Polyak averaging τ=0.99 | −25.9 | 2/10 | No effect (flattens the wandering and the good excursions alike) |
-| Behaviour policy → Boltzmann + trace centring | −72 … +8 | ≤6/10 | No effect |
+| Behaviour policy → Boltzmann + trace centring | +204.0 | 9/10 | **adopted** (the earlier "no effect" was polluted by the evaluation defect, see defect 5) |
 | Critic fixed **signed** readout + semi-gradient | −50.7 | **0/10** | No effect — but it works at the mechanism level, see below |
 
 ### Two decisive measurements
@@ -98,20 +98,30 @@ intervention.
 
 ### What is now established
 
-- **The Actor's rule points the right way; its magnitude is wrong.** Against advantages computed
-  by exact rollout, the rule's own mean update direction has cosine **cos = 0.74** (0.65–0.91)
-  with the exact advantage-weighted direction, while the step ratio is **|U|/|T| = 20–36**.
+- **The Actor's rule never compares two actions, and the target it faces is identically zero.**
+  `learn_step` only updates the Actor on non-exploring steps, and on those `action = argmax` is a
+  deterministic function of the state — so the update lands on **the chosen column only** (measured
+  `U touches one column in 100% of states`; a discrete fact, no threshold involved). Deeper still,
+  `A(s, pi(s)) ≡ 0` is an **identity** under a deterministic policy, so the
+  "advantage-weighted direction" target is **identically zero at the states the policy visits**
+  (measured `per-state |T| median = 0.0000`) — because at the states a good policy visits the pole
+  is near upright and **the two actions are nearly equivalent**. So the rule does not face a wrong
+  direction; it faces **no target at all**: the chosen column receives drift from an action-blind
+  residual delta.
 - **The rule never compares actions.** `learn_step` only updates the Actor on non-exploring
   steps, and on those `action = argmax` is a deterministic function of the state — so it only ever
   reinforces the action it just happened to take. That is also why centring by `a_j − π_j`
   **on its own freezes the Actor completely** (`a_j − π_j ≡ 0`); an assertion in the code blocks it.
-- **Boltzmann + centring does not help, for a structural reason**: after centring, the update
-  magnitude is proportional to `a − π`, so it shrinks as the policy sharpens. logit 80 (near
-  deterministic) collapses to 12.4 steps.
+- **Boltzmann + centring is the only lever this phase to pass the adoption rule** — once the
+  evaluation defect is fixed. The earlier "no effect" record was polluted (see item 5 of "Five real
+  defects fixed this phase"): re-measured with a truly greedy evaluation, constant logit 20 gives
+  median 283.8 (selection seeds) / **177.3** (held-out 10–24), paired **+204.0**, 9/10 improved.
+  **It still falls short of 200, and roughly one seed in ten collapses** (peak only 10–12 steps: it
+  never starts, rather than learning and losing it).
 - **Capacity is not the bottleneck**: a supervised linear policy on the same encoding reaches 497 steps.
 - **The Critic's value range is not the bottleneck**: V's width is 0.73–0.84 of V*'s. The shape is wrong.
 
-### Four real defects fixed this phase
+### Five real defects fixed this phase
 
 1. **Truncation was treated as termination.** An episode reaching the 500-step cap took
    `δ ≈ 1 − 99.3 = −98` on its last step, about 56× a typical weight, and **the better the policy
@@ -126,6 +136,15 @@ intervention.
    `critic_units=1024` all ten seeds failed.
 4. **A sign argument of mine was wrong.** "The readout must be all-positive" only holds for the
    `rate` post-factor; with `gradient`, the sign is carried by `u_j` itself.
+5. **The `boltzmann` branch ignores `exploration`, so its "greedy" evaluation measured a stochastic
+   policy.** `select_action` samples from the softmax unconditionally under
+   `action_sampling="boltzmann"`, while `_greedy_score` (used by both the mid-training curve and the
+   final acceptance run) passes `exploration=0.0`. The ceiling of that scale is brutally low: a
+   **perfect** policy (the heuristic, 500 steps) is worth only 97.4 steps at 70% action accuracy and
+   36.3 at 60%. The cost was concrete — it made this phase's only effective lever read as "no effect"
+   and that reading went into the docs. The fix is `select_action(greedy=True)`, which returns
+   argmax **regardless of the sampling scheme**; under epsilon-greedy it is bit-identical to the old
+   path, so every recorded number stands.
 
 ### Before the change (single-unit Critic, kept as a control)
 
@@ -279,14 +298,18 @@ to guess which hyperparameter is more sensitive.
    (shrinking the effective Actor step by 3×), and after scaling the Actor learning rate by the
    same ratio to 9e-3 the paired median is still **−40.6, 4/10 improved**. **So "fix the Critic
    first" is ruled out, not merely untried.**
-7. **The Actor's rule points the right way, has the wrong magnitude, and never compares actions.**
-   Against exact-rollout advantages, the rule's own mean update direction has cosine 0.74 with the
-   exact advantage-weighted direction, while the step ratio is 20–36×. Separately, `learn_step` only
-   updates the Actor on non-exploring steps, and there `action = argmax` is a deterministic function
-   of the state, so the rule only reinforces the action it happened to take. **Switching to
-   Boltzmann + `a_j − π_j` centring does not help**, and for a structural reason: after centring the
-   update magnitude is proportional to `a − π`, so it shrinks as the policy sharpens (logit 80
-   collapses to 12.4 steps).
+7. **The Actor's rule never compares actions, and under a deterministic policy it has no target.**
+   `learn_step` only updates the Actor on non-exploring steps, and there `action = argmax` is a
+   deterministic function of the state, so the rule only reinforces the action it happened to take
+   (`U touches one column in 100% of states`). More fundamentally, `A(s, pi(s)) ≡ 0` is an identity,
+   so the advantage-weighted direction is **identically zero at the visited states**
+   (`per-state |T| median = 0.0000`) — at the states a good policy visits the two actions are nearly
+   equivalent. **Switching to Boltzmann + `a_j − pi_j` centring is the only lever this phase to pass
+   the adoption rule** (held-out 177.3, paired +204.0), but it does not yet meet the criterion and
+   has roughly a one-in-ten collapse rate. **Two claims formerly written here are retracted**: "the
+   rule's direction is fine, cos = 0.74" (that cosine is noise when the target is near zero — seed 1
+   gives 0.078) and "a step ratio of 20–36× means the step is too large" (it is a small denominator,
+   not a large numerator).
 8. **Retuning must be redone after environment seeding.** The earlier "hyperparameter-sensitive"
    conclusions (e.g. "critic learning rate 1e-3 versus 5e-4 is 44 steps versus 223 steps") **were
    measured before the environment was seeded and are therefore untrustworthy** — back then the
