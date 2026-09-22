@@ -4,38 +4,30 @@
 
 **⚠️ Breaking-change grace period: through 2027-09** (project plan §12.5, ADR-0005).
 
-## What claim is being tested
-
-The execution layer of project plan §3.2: **can R-STDP with a TD-LTP Critic reliably learn
-200+ steps on CartPole, with a success-signal offset below 10% of σR.**
-
-The Critic is not optional. §3.2 cites Frémaux et al. (2010): once the success-signal
-offset reaches about 25% of σR, R-STDP cannot learn, and below −0.4σR its performance
-drops below the pre-learning level. That sensitivity is a general property — tuning the
-STDP window or changing the weight-dependence model does not fix it; the only structural
-solution is stimulus-specific reward prediction.
-
 ## Current conclusion
 
-**Both criteria of §7 are met; the additional "stable" condition is not.**
+**All three criteria are met.**
 
-| Criterion | Measured (held-out seeds 25–44, twenty of them, **none involved in any selection**) | Verdict |
-| :--- | :--- | :--- |
-| CartPole, 200 steps or more | median **260.0** | **met** |
-| Success offset < 10% sigma_R | max **0.0359** | **met** (all seeds pass) |
-| (our own added "stable" condition) min >= 100 | min **74** | **not met** (2 of 20 below 100) |
+| Criterion | Seeds 45–64 (**fresh, never involved in any selection**) | Seeds 25–44 (used for tuning) | Threshold |
+| :--- | ---: | ---: | :--- |
+| CartPole, 200 steps or more | median **237.8** | 327.9 | ≥ 200 ✓ |
+| Success offset | max **0.0403** | 0.0359 | < 10% sigma_R ✓ |
+| (our own added "stable" condition) minimum | **121** | 109 | ≥ 100 ✓ |
 
-The selection set (seeds 0–9) gives median 250.4, close to the held-out set — **so this is not a
-seed-selection effect.** The two lagging seeds have **peaks of 90–124**, i.e. they are "not learning
-well enough" rather than collapsing (a genuine collapse under a constant temperature has a peak of
-only 10–12 steps) — the failure mode has changed kind.
+**Both seed batches pass**, and **no seed falls below 100**. To be honest about it, a gap of about
+27% remains between the two (327.9 → 237.8), so **a selection effect is real** — but both batches sit
+above 200 at the median and above 100 at the minimum, and that is the part that matters.
 
-**Acceptance configuration** (all four now defaults, see [ADR-0009](../../docs/adr/ADR-0009-w3-behaviour-policy-and-trace-centring.en.md)): Boltzmann behaviour
-policy + trace centred by the sampling probability + inverse temperature annealed in log space from
-2 to 20 + Actor learning rate decayed to 0.1x. So `cartpole.py --seed 0` runs **exactly that**.
+**Acceptance configuration** (now the defaults, see [ADR-0009](../../docs/adr/ADR-0009-w3-behaviour-policy-and-trace-centring.en.md)): Boltzmann behaviour policy +
+trace centred by the sampling probability + inverse temperature **annealed in log space from 2 to
+40** + Actor learning rate decayed to **0.01x**. So `cartpole.py --seed 0` runs **exactly that**.
 
-The sections below are kept as this phase's evidence chain — **including the directions that were
-refuted**, because "what does not work, and why" matters as much as "what does".
+Getting here, **most of the hypotheses along the way were refuted** — and those negative results are
+just as much a product of this phase: they pinned down "not this cause" one at a time, and what was
+left was the real one (the ledger is the table below and the "Known boundaries" section). The failure
+mode also changed twice: first **oscillation**, then, after the decay was added, **a mediocre fixed
+point**, and finally what remained was a "slow to learn" tail.
+
 
 ### Acceptance rule (fixed before measuring)
 
@@ -283,9 +275,10 @@ to guess which hyperparameter is more sensitive.
 
 ## Known boundaries
 
-1. **Acceptance is not met.** Median over ≥10 seeds is 100.0 steps against a criterion of 200.
-   Every lever tried this phase is in the table above, and **none passed the pre-registered
-   adoption rule**.
+1. **Acceptance is met** — both of §7's criteria and our own added stability condition; see
+   Current conclusion. But the boundaries below still hold, and the most valuable part of this
+   entry is **not the number** — it is the directions that were refuted one at a time: they ruled
+   out what was not the cause, and what was left was the real one.
 2. **The success signal's default was changed.** §3.2 writes `S = R − ⟨R⟩`, but CartPole pays a
    **dense, constant** reward of +1 per step, so `⟨R⟩ ≡ 1` and `S ≈ 0` — no contrast at all. That
    expression was written for **sparse terminal** rewards (Frémaux 2010's original setting). The
