@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import torch
 
-__all__ = ["eligibility_traces", "exp_convolve", "refractory_mask"]
+__all__ = ["eligibility_traces", "eprop_gradient", "exp_convolve", "refractory_mask"]
 
 
 def refractory_mask(z_post: torch.Tensor, n_refractory: int) -> torch.Tensor:
@@ -154,3 +154,72 @@ def exp_convolve(tensor: torch.Tensor, decay: float) -> torch.Tensor:
         running = decay * running + (1.0 - decay) * tensor[t]
         out[t] = running
     return out
+
+
+def eprop_gradient(
+    v_scaled: torch.Tensor,
+    z_pre: torch.Tensor,
+    z_post: torch.Tensor,
+    learning_signal: torch.Tensor,
+    *,
+    alpha: float,
+    rho: float,
+    beta: float,
+    threshold: float,
+    dampening_factor: float,
+    n_refractory: int = 0,
+    is_recurrent: bool = False,
+) -> torch.Tensor:
+    """**在线**累积权重梯度 ``Σ_t L_j^t·e_ij^t``，``(n_pre, n_post)``。
+
+    与 :func:`eligibility_traces` 数学上等价（有测试对照），但**不保存时间维**：
+
+        eligibility_traces 的内存  O(T · batch · n_pre · n_post)
+        eprop_gradient 的内存      O(batch · n_pre · n_post)
+
+    在 sMNIST 的验收配置（T=28、batch=64、n_rec=256）下，前者是约 470 MB **每个**中间
+    张量、且每次更新要建好几个；后者是约 33 MB。这不是微优化——按前者算，30 个 epoch
+    要跑一个多小时，按后者几分钟。
+
+    ## 与计划书 §3.1 的 Trace Propagation 是什么关系
+
+    这是**在线累积**，把时间维省掉了，但每个突触仍要存一份资格痕迹，所以内存仍是
+    **O(N²)** 量级（随连接数）。§3.1「关键修正 1」要求的 Trace Propagation 更进一步：
+    结合逐层对比损失、无需辅助逐层矩阵，把存储降到 **O(N)**。
+
+    **所以这一条还没有实现。** 本函数解决的是"能不能在 8GB 上跑完"（§6.2 的硬约束），
+    没有解决"痕迹存储随突触数增长"（§3.1 的要求）。两者的区别要写进结论的边界。
+    """
+    steps, batch, n_post = v_scaled.shape
+    if z_post.shape != v_scaled.shape:
+        raise ValueError(
+            f"z_post 与 v_scaled 的形状必须一致，收到 {tuple(z_post.shape)} 与 "
+            f"{tuple(v_scaled.shape)}。"
+        )
+    if learning_signal.shape[:2] != (steps, batch):
+        raise ValueError(
+            f"learning_signal 的前两维应是 (T, batch)=({steps}, {batch})，"
+            f"收到 {tuple(learning_signal.shape)}。"
+        )
+    n_pre = z_pre.shape[-1]
+
+    hard_refractory = refractory_mask(z_post, n_refractory)
+    psi_full = (dampening_factor / threshold) * torch.clamp(1.0 - v_scaled.abs(), min=0.0)
+    psi = torch.where(hard_refractory, torch.zeros_like(psi_full), psi_full)
+
+    gradients = torch.zeros(n_pre, n_post, device=v_scaled.device, dtype=v_scaled.dtype)
+    epsilon_v = z_pre[0][:, :, None].expand(batch, n_pre, n_post).clone()
+    epsilon_a = torch.zeros_like(epsilon_v)
+
+    for t in range(steps):
+        if t > 0:
+            epsilon_v = alpha * epsilon_v + z_pre[t][:, :, None]
+        psi_t = psi[t][:, None, :]  # (batch, 1, n_post)
+        epsilon_a = (rho - beta * psi_t) * epsilon_a + psi_t * epsilon_v
+        e_trace = psi_t * (epsilon_v - beta * epsilon_a)  # (batch, n_pre, n_post)
+        gradients += torch.einsum("bj,bij->ij", learning_signal[t], e_trace)
+
+    if is_recurrent:
+        identity = torch.eye(n_pre, device=gradients.device, dtype=gradients.dtype)
+        gradients = gradients * (1.0 - identity)
+    return gradients

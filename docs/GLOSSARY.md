@@ -236,6 +236,17 @@
 | 正交类中心 | orthogonal class center | 直交クラス中心 | 1 | PS-SNN 的归因数字之一，见 `docs/references.md` [7] |
 | 增量准确率 | incremental accuracy | 増分精度 | 1 | PS-SNN 的 76.42%，类增量学习场景 |
 | 神经元动力学 | neuron dynamics | ニューロンダイナミクス | — | 骨架库不做神经元动力学（ADR-0002）；认知核心与 SpikingJelly 的事 |
+| 学习信号 | learning signal | 学習信号 | — | 三因子规则里的第三因子中来自输出误差的那部分；每神经元每时刻一个标量。e-prop 里记作 L_j^t |
+| 伪导数 | pseudo-derivative | 擬似微分 | — | 脉冲函数反向用的替代导数（论文里是 ψ）；BPTT 基线靠它穿过脉冲，e-prop 路径不用它 |
+| 不应期 | refractory period | 不応期 | — | 发放后若干步内不再发放；其内 ψ 置 0，因而不产生资格痕迹 |
+| 适应变量 | adaptation variable | 適応変数 | — | ALIF 里累积脉冲的那个量（论文里的 a），阈值 A = thr + β·a |
+| 顺序任务 | sequential task | 順序タスク | — | 判别信息沿时间展开的任务；本项目主验收用 sMNIST |
+| 伯努利采样 | Bernoulli sampling | ベルヌーイサンプリング | — | 把模拟像素值当发放概率转成脉冲的编码方式。**本项目自己的选择**，非论文规定 |
+| 量化差距报告 | quantified gap report | ギャップの定量報告 | — | 计划书 §九 第二阶段的要求：e-prop 与代理梯度基线的量化差距。见「量化（数値化の意）」条 |
+| 代理梯度基线 | surrogate-gradient baseline | 代理勾配ベースライン | — | 同一架构用 BPTT + 伪导数训练出来的对照 |
+| 滤波后的脉冲 | filtered spikes | フィルタ後のスパイク | — | 脉冲经指数滤波后的量，是读出的输入；学习信号对它求（或按闭式算） |
+| 反馈对齐 | feedback alignment | フィードバックアラインメント | — | 用随机反馈权重代替 W^T 的做法；官方 e-prop 实现有 random/symmetric 两种模式 |
+| 对称反馈 | symmetric feedback | 対称フィードバック | — | 用读出权重的转置作反馈路径；本项目采用这一种 |
 | 核化信息瓶颈 | kernelized information bottleneck | カーネル化情報ボトルネック | — | Pogodin & Latham 2020 的方法；缩写 KB 不用。见「核化」条 |
 | 局部目标 | local objective | 局所目的 | — | 每层各自最小化的目标函数（这里是 pHSIC 瓶颈目标），与全局损失相对。见 `research/ib_hebbian/layers.py` |
 | 教学信号 | teaching signal | 教学信号 | — | 三因子规则里来自标签的那一项；类别均衡时是二值的（同类 1、异类 −1/(n−1)）。**不译作 teacher signal** |

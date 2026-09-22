@@ -17,7 +17,12 @@ from research.eprop.neurons import (
     pseudo_derivative,
     spike_function,
 )
-from research.eprop.traces import eligibility_traces, exp_convolve, refractory_mask
+from research.eprop.traces import (
+    eligibility_traces,
+    eprop_gradient,
+    exp_convolve,
+    refractory_mask,
+)
 
 
 class TestPseudoDerivative:
@@ -271,6 +276,74 @@ class TestEligibilityTraces:
                 torch.zeros(5, 2, 99),
                 alpha=0.9,
                 rho=0.99,
+                beta=0.07,
+                threshold=0.62,
+                dampening_factor=0.3,
+            )
+
+
+class TestStreamingGradient:
+    """``eprop_gradient`` 是 ``eligibility_traces`` 的省内存版本，两者必须逐元素相同。
+
+    它省掉的是**时间维**：前者只保留当前时刻的 ``ε_v``/``ε_a``，后者把整条痕迹堆起来。
+    在 sMNIST 的验收配置下这是 470 MB 与 33 MB 的差别——而这个替换若算错了不会报错，
+    只会让训练悄悄变差，所以必须有等价性测试盯着。
+    """
+
+    @pytest.mark.parametrize("is_recurrent", [False, True])
+    @pytest.mark.parametrize("beta", [0.0, 0.07])
+    def test_matches_the_full_trace_computation(self, is_recurrent, beta):
+        torch.manual_seed(0)
+        steps, batch, n_pre, n_post = 12, 3, 5, 5
+        generator = torch.Generator().manual_seed(1)
+        z_pre = (torch.rand(steps, batch, n_pre, generator=generator) < 0.4).float()
+        z_post = (torch.rand(steps, batch, n_post, generator=generator) < 0.3).float()
+        v_scaled = torch.randn(steps, batch, n_post, generator=generator) * 0.3
+        signal = torch.randn(steps, batch, n_post, generator=generator)
+
+        settings = {
+            "alpha": 0.95,
+            "rho": 0.998,
+            "beta": beta,
+            "threshold": 0.62,
+            "dampening_factor": 0.3,
+            "n_refractory": 2,
+            "is_recurrent": is_recurrent,
+        }
+        expected = torch.einsum(
+            "btj,btij->ij",
+            signal,
+            eligibility_traces(v_scaled, z_pre, z_post, **settings),
+        )
+        got = eprop_gradient(v_scaled, z_pre, z_post, signal, **settings)
+        torch.testing.assert_close(got, expected, rtol=1e-5, atol=1e-6)
+
+    def test_does_not_materialise_the_time_dimension(self):
+        """形状检查：返回值只有 (n_pre, n_post)，没有 T。"""
+        steps, batch, n = 20, 4, 6
+        gradient = eprop_gradient(
+            torch.randn(steps, batch, n),
+            torch.zeros(steps, batch, n),
+            torch.zeros(steps, batch, n),
+            torch.randn(steps, batch, n),
+            alpha=0.95,
+            rho=0.998,
+            beta=0.07,
+            threshold=0.62,
+            dampening_factor=0.3,
+        )
+        assert gradient.shape == (n, n)
+
+    def test_rejects_a_mismatched_learning_signal(self):
+        steps, batch, n = 5, 2, 3
+        with pytest.raises(ValueError, match="learning_signal"):
+            eprop_gradient(
+                torch.randn(steps, batch, n),
+                torch.zeros(steps, batch, n),
+                torch.zeros(steps, batch, n),
+                torch.randn(steps, batch + 1, n),
+                alpha=0.95,
+                rho=0.998,
                 beta=0.07,
                 threshold=0.62,
                 dampening_factor=0.3,

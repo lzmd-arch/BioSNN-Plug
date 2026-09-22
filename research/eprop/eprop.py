@@ -37,7 +37,7 @@ from dataclasses import dataclass
 import torch
 
 from research.eprop.neurons import ALIFCell, ALIFState
-from research.eprop.traces import eligibility_traces, exp_convolve
+from research.eprop.traces import eprop_gradient, exp_convolve
 
 __all__ = ["EPropLearner", "Rollout"]
 
@@ -205,10 +205,12 @@ class EPropLearner(torch.nn.Module):
             (inputs, self.cell.w_in, self.learning_rate_in, False),
             (z_prev, self.cell.w_rec, self.learning_rate_rec, True),
         ):
-            trace = eligibility_traces(
+            # 在线累积，不保存时间维——见 traces.eprop_gradient 的说明
+            gradient = eprop_gradient(
                 rollout.v_scaled,
                 z_pre,
                 rollout.spikes,
+                signal,
                 alpha=self.cell.alpha,
                 rho=self.cell.rho,
                 beta=self.cell.beta,
@@ -217,7 +219,6 @@ class EPropLearner(torch.nn.Module):
                 n_refractory=self.cell.n_refractory,
                 is_recurrent=recurrent,
             )
-            gradient = torch.einsum("btj,btij->ij", signal, trace)
             weight.add_(gradient, alpha=-rate)
 
         # 读出：普通的梯度下降（它是线性分类器，这是论文的做法）

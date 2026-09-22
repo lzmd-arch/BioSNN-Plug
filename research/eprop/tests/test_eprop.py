@@ -130,6 +130,57 @@ class TestNoAutogradInTheLearningPath:
         )
 
 
+class TestContrastWithBPTT:
+    """把"局部"这件事用**对照**钉死：同一架构，一个用因子分解，一个用反向传播。
+
+    单看 e-prop 侧"没有梯度"只能说明它没建图；两边一起看才说明差别在哪。
+    """
+
+    @staticmethod
+    def _task():
+        steps, batch, n_in, n_out = 8, 16, 6, 2
+        labels = torch.arange(batch) % n_out
+        inputs = torch.zeros(steps, batch, n_in)
+        inputs[steps // 2 :, :, 0] = (
+            (labels == 0).float().unsqueeze(0).expand(steps - steps // 2, batch)
+        )
+        inputs[steps // 2 :, :, 1] = (
+            (labels == 1).float().unsqueeze(0).expand(steps - steps // 2, batch)
+        )
+        return inputs, labels
+
+    def test_eprop_leaves_no_gradient_but_bptt_does(self):
+        from research.eprop.bptt_baseline import BPTTLearner
+
+        inputs, labels = self._task()
+
+        eprop = EPropLearner(
+            6,
+            16,
+            2,
+            learning_rate_rec=0.01,
+            learning_rate_in=0.01,
+            generator=torch.Generator().manual_seed(0),
+        )
+        eprop.update(inputs, labels)
+        assert eprop.cell.w_rec.grad is None
+
+        bptt = BPTTLearner(6, 16, 2, learning_rate=0.01, generator=torch.Generator().manual_seed(0))
+        bptt.update(inputs, labels)
+        assert bptt.cell.w_rec.grad is not None, "BPTT 基线应当留下跨时间的梯度"
+
+    def test_eprop_needs_no_computation_graph_while_bptt_does(self):
+        """e-prop 的前向在 ``no_grad`` 下就能跑；BPTT 的前向必须建图。"""
+        from research.eprop.bptt_baseline import BPTTLearner
+
+        inputs, _ = self._task()
+        learner = EPropLearner(6, 16, 2, generator=torch.Generator().manual_seed(0))
+        assert learner.simulate(inputs).spikes.grad_fn is None
+
+        bptt = BPTTLearner(6, 16, 2, generator=torch.Generator().manual_seed(0))
+        assert bptt(inputs).grad_fn is not None, "BPTT 的输出应当带着计算图"
+
+
 class TestLearningSignal:
     def test_is_zero_except_at_the_loss_timestep(self):
         """``loss_timesteps='last'`` 时，只有最后一步的学习信号非零。"""
