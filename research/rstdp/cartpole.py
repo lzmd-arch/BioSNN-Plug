@@ -896,11 +896,22 @@ def main(argv: list[str] | None = None) -> int:
         degradation=degradation,
         notes=[
             f"N={args.n_features}, sigma={args.encoding_sigma}, "
-            f"value_scale={args.critic_value_scale}, "
             f"eta_actor={args.actor_learning_rate}, eta_critic={args.critic_learning_rate}, "
-            f"actor_normalize={args.actor_normalize}, "
             f"trace_decay={args.trace_decay}, gamma={args.discount}, "
             f"success_signal={args.success_signal}",
+            # —— 下面这些以前没有记进复现记录。**每一个都会改变数字**，不记就等于那批
+            # 结果事后无法归因；加旋钮时忘了加这一行是很容易犯的错，所以单列一条写全。
+            f"Actor：normalize={args.actor_normalize}, clip={args.actor_signal_clip}, "
+            f"polyak_tau={args.actor_polyak_tau}, sampling={args.actor_action_sampling}, "
+            f"logit_scale={args.actor_logit_scale}, trace_center={args.actor_trace_center}, "
+            f"lr_final_fraction={args.actor_lr_final_fraction}",
+            f"Critic：kind={args.critic_kind}, units={args.critic_units}, "
+            f"value_scale={args.critic_value_scale}, gain={args.critic_gain}, "
+            f"threshold={args.critic_threshold}, output_bias={args.critic_output_bias}, "
+            f"bias_lr={args.critic_bias_learning_rate}, "
+            f"post_factor={args.critic_trace_post_factor}",
+            f"探索：start={args.exploration_start}, end={args.exploration_end}, "
+            f"回合数={args.episodes}",
             "状态编码：4 维连续状态的高斯群体编码（本项目自己的选择）",
             "速率型单元：STDP 窗口形状与 TD-LTP/TD-STDP 的差别在此化简下无从体现",
         ],

@@ -74,6 +74,7 @@ jobs:
         run: |
           uv run python -m research.ib_hebbian.train_mnist --smoke
           uv run python -m research.eprop.train_sequential --smoke
+          uv run python -m research.rstdp.cartpole --smoke
       - name: 骨架库的 torch 桥接测试（本地装了 torch 才会跑）
         # 这几条在 test job 里因为没装 torch 而被 importorskip 跳过；
         # 这里补上真正跑一遍——from_torch 的内存别名 bug 就是这么漏掉的。
