@@ -28,21 +28,21 @@
 再現記録（`research/common/provenance.py` が生成）：
 
 ```text
-实验名称：eprop/smnist
-日期：2026-09-22 21:40:21 中国标准时间
-Git commit：1124d1ea747ad30f5d81b362878e12f74164fa9b
-Git 状态：干净
+実験名：eprop/smnist
+日付：2026-09-23 06:59:54 中国標準時
+Git commit：75196c9094f01abe843c1530f5037c39f5e04d9a
+Git 状態：クリーン
 Python：3.12.14
-操作系统 / 架构：Windows 11 / AMD64
-硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
-随机种子：base=0；全局种子=1741413617；划分验证集=1435468909；权重初始化=3486733650；每批打乱=3990329895；脉冲编码=1681094898
-依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
-运行命令：train_sequential.py --epochs 30 --device cuda
-耗时：1481.9 s
-显存峰值：1,104.1 MiB（§6.2 硬约束 8GB）
-§6.2 降级路径：未触发
-备注：n_rec=256, beta=0.07, thr=0.62, eta_in=0.002, eta_rec=0.002, eta_out=0.05, decay_out=0.95
-备注：输入编码：像素值作发放概率的伯努利采样（本项目自己的选择）
+OS / アーキテクチャ：Windows 11 / AMD64
+ハードウェア：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+乱数シード：base=0；グローバルシード=1741413617；検証セット分割=1435468909；重み初期化=3486733650；バッチシャッフル=3990329895；スパイク符号化=1681094898
+依存スナップショット：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+実行コマンド：train_sequential.py --device cuda
+所要時間：1753.6 s
+ピークメモリ：1,104.1 MiB（§6.2 の硬い制約 8GB）
+§6.2 の縮退経路：未発動
+備考：n_rec=256, beta=0.07, thr=0.62, eta_in=0.002, eta_rec=0.002, eta_out=0.05, decay_out=0.95
+備考：入力符号化：画素値を発火確率とするベルヌーイサンプリング（本プロジェクト自身の選択）
 ```
 
 GPU メモリは 8 GB のうち 1.08 GB。§6.2 の三つの縮退パスはいずれも発動していません。
