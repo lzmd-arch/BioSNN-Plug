@@ -1010,6 +1010,14 @@ def main(argv: list[str] | None = None) -> int:
             f"post_factor={args.critic_trace_post_factor}",
             f"探索：start={args.exploration_start}, end={args.exploration_end}, "
             f"回合数={args.episodes}",
+            # **退火必须单独记。** `actor_logit_scale` 那个常量在退火启用时**被覆盖**，
+            # 只记它会让读记录的人以为训练用的是恒定的 20——而退火是最终配置的关键部分。
+            "logit 退火："
+            + (
+                f"{args.logit_scale_start} → {args.logit_scale_end}（log 空间线性插值）"
+                if args.logit_scale_start is not None and args.logit_scale_end is not None
+                else "未启用（logit_scale 恒定）"
+            ),
             "状态编码：4 维连续状态的高斯群体编码（本项目自己的选择）",
             "速率型单元：STDP 窗口形状与 TD-LTP/TD-STDP 的差别在此化简下无从体现",
         ],
