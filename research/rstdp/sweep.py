@@ -219,9 +219,12 @@ def main(argv: list[str] | None = None) -> int:
         (args.out_dir / f"{index:03d}_{slug}_seed{seed}.json").write_text(
             json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
         )
+        peak = (
+            f"  峰值 {result.peak_mean_steps:6.1f} @{result.peak_episode}" if result.curve else ""
+        )
         print(
             f"[{index:3d}/{len(cells)}] {slug} seed={seed}  → {result.mean_steps:6.1f} 步"
-            f"（{result.min_steps}–{result.max_steps}）  偏移比 {result.offset_ratio:.4f}",
+            f"（{result.min_steps}–{result.max_steps}）  偏移比 {result.offset_ratio:.4f}{peak}",
             flush=True,
         )
 
@@ -239,21 +242,30 @@ def main(argv: list[str] | None = None) -> int:
 
 def _print_summary(results: dict[str, list[TrialResult]], seeds: list[int]) -> None:
     print("\n" + "=" * 96)
-    print(
-        f"{'配置':<38}{'n':>3}{'中位数':>10}{'均值':>10}{'最小':>8}{'最大':>8}{'极差':>8}{'偏移比':>10}"
-    )
-    print("-" * 96)
+    show_peak = any(r.curve for rows in results.values() for r in rows)
+    header = f"{'配置':<34}{'n':>3}{'中位数':>10}{'均值':>10}{'最小':>8}{'最大':>8}{'极差':>8}{'偏移比':>10}"
+    print(header + ("{:>12}".format("峰值中位数") if show_peak else ""))
+    print("-" * (len(header) + (12 if show_peak else 0)))
     for slug, rows in sorted(
         results.items(), key=lambda kv: -summarize([r.mean_steps for r in kv[1]]).get("median", 0)
     ):
         stats = summarize([r.mean_steps for r in rows])
         offsets = [r.offset_ratio for r in rows]
-        print(
-            f"{slug:<38}{stats['n']:>3}{stats['median']:>10.1f}{stats['mean']:>10.1f}"
+        line = (
+            f"{slug:<34}{stats['n']:>3}{stats['median']:>10.1f}{stats['mean']:>10.1f}"
             f"{stats['min']:>8.0f}{stats['max']:>8.0f}{stats['spread']:>8.1f}"
             f"{statistics.median(offsets):>10.4f}"
         )
-    print("-" * 96)
+        if show_peak:
+            peaks = summarize([r.peak_mean_steps for r in rows if r.curve])
+            line += f"{peaks.get('median', float('nan')):>12.1f}"
+        print(line)
+    print("-" * (len(header) + (12 if show_peak else 0)))
+    if show_peak:
+        print(
+            "「峰值中位数」是训练途中贪心评测的最好一次，**只作诊断**：它把「搜索不到好解」与"
+            "「找到了但留不住」分开，这两者的修法不相交。验收数字仍取最终权重。"
+        )
     print(f"判据（计划书 §七）：中位数 >= {ACCEPTANCE_STEPS:.0f} 步")
     passed = [
         s

@@ -165,6 +165,56 @@ class TestRunEpisodeWiring:
         assert agent.calls == []
 
 
+class TestNewOptionsReachTheCritic:
+    """CLI/`run_trial` 的新旋钮必须真的传到 Critic 上——不然扫描扫的是空气。"""
+
+    def test_critic_output_bias_defaults_to_zero(self):
+        """默认 0 时 ``value()`` 逐位不变——新选项不许改变既有数字。"""
+        agent = _agent()
+        assert agent.critic.out_bias.item() == 0.0
+        assert agent.critic.bias_learning_rate is None
+
+    def test_output_bias_is_applied_to_the_value(self):
+        reference = _agent()
+        shifted = CartPoleAgent(
+            4,
+            critic_units=3,
+            critic_output_bias=-30.0,
+            generator=torch.Generator().manual_seed(0),
+        )
+        features = torch.tensor([1.0, 0.5, 0.25, 0.0])
+        assert shifted.critic.value(features).item() == pytest.approx(
+            reference.critic.value(features).item() - 30.0
+        )
+
+    def test_bias_learning_rate_moves_the_bias_during_a_step(self):
+        agent = CartPoleAgent(
+            4,
+            critic_units=3,
+            critic_bias_learning_rate=0.5,
+            generator=torch.Generator().manual_seed(0),
+        )
+        before = agent.critic.out_bias.item()
+        agent.learn_step(
+            torch.tensor([1.0, 0.5, 0.25, 0.0]),
+            0,
+            1.0,
+            torch.tensor([0.0, 1.0, 0.5, 0.25]),
+            terminated=True,
+        )
+        assert agent.critic.out_bias.item() != before
+
+    def test_the_single_unit_critic_also_takes_the_bias(self):
+        """两个类的签名要保持一致——诊断与 CLI 会按同一套参数名传值。"""
+        agent = CartPoleAgent(
+            4,
+            critic_kind="single",
+            critic_output_bias=-30.0,
+            generator=torch.Generator().manual_seed(0),
+        )
+        assert agent.critic.out_bias.item() == pytest.approx(-30.0)
+
+
 class TestIdenticalConstruction:
     def test_agent_can_be_constructed_twice_identically(self):
         """上头的成对比较全靠这条：同一个种子两次构造必须逐位相同。"""

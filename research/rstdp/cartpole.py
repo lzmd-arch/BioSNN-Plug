@@ -31,7 +31,8 @@ from __future__ import annotations
 import argparse
 import inspect
 import time
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
 
 import torch
 
@@ -82,6 +83,8 @@ class CartPoleAgent:
         normalize_weights: bool = True,
         critic_kind: str = "population",
         critic_units: int = 64,
+        critic_output_bias: float = 0.0,
+        critic_bias_learning_rate: float | None = None,
         critic_init_directions: torch.Tensor | None = None,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
@@ -110,6 +113,8 @@ class CartPoleAgent:
                 learning_rate=critic_learning_rate,
                 trace_decay=critic_trace_decay,
                 value_scale=critic_value_scale,
+                output_bias=critic_output_bias,
+                bias_learning_rate=critic_bias_learning_rate,
                 init_directions=critic_init_directions,
                 device=device,
                 generator=generator,
@@ -119,6 +124,8 @@ class CartPoleAgent:
                 n_features,
                 learning_rate=critic_learning_rate,
                 value_scale=critic_value_scale,
+                output_bias=critic_output_bias,
+                bias_learning_rate=critic_bias_learning_rate,
                 trace_decay=critic_trace_decay,
                 device=device,
                 generator=generator,
@@ -272,6 +279,8 @@ CLI_TO_AGENT_PARAM = {
     "actor_normalize": "normalize_weights",
     "critic_kind": "critic_kind",
     "critic_units": "critic_units",
+    "critic_output_bias": "critic_output_bias",
+    "critic_bias_learning_rate": "critic_bias_learning_rate",
 }
 
 
@@ -348,6 +357,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Critic 输出的量程。群体版里它经**固定读出**换算成 V 的值域上限；"
         "CartPole 在 γ=0.99 下满分策略的值约 100，所以取 200 留余量",
     )
+    parser.add_argument(
+        "--critic-output-bias",
+        type=float,
+        default=agent_default("critic_output_bias"),
+        help="Critic 值上的加性偏置初值（默认 0，不改行为）。真值在临死那一步约 1，而群体"
+        "读出够不到那么低——实测 V 的最低值 13.4。偏置就是把这个可达下界整体下移的旋钮",
+    )
+    parser.add_argument(
+        "--critic-bias-learning-rate",
+        type=float,
+        default=agent_default("critic_bias_learning_rate"),
+        help="偏置的学习率；不给就固定不动。**量级要比权重学习率大得多**：内部步里 δ 只通过"
+        "(1−γ) 依赖它，真正标定它的是每回合一次的终止步",
+    )
     parser.add_argument("--trace-decay", type=float, default=agent_default("trace_decay"))
     parser.add_argument("--discount", type=float, default=agent_default("discount"))
     parser.add_argument(
@@ -401,6 +424,52 @@ class TrialResult:
     elapsed_s: float
     peak_mb: float
     seeds_used: str
+    #: 训练途中贪心评测的**最好**一次（开 ``greedy_eval_every`` 才有）。
+    #:
+    #: **只作诊断。** 它把「搜索不到好解」与「找到了但留不住」分开——这两者的修法不相交。
+    #: 验收数字仍然是**最终权重**：不做「按评测指标挑检查点」，也不做「最后 N 轮平均后
+    #: 当成最终策略」，那是改协议把数字抬上去，不是改算法。
+    peak_mean_steps: float = 0.0
+    peak_episode: int = 0
+    #: 逐次贪心评测的曲线（每 ``greedy_eval_every`` 回合一个点）。
+    curve: list[float] = field(default_factory=list)
+
+
+@dataclass
+class AgentContext:
+    """一次 trial 的构造上下文：训练完的 agent、编码中心、种子簿、编码宽度。
+
+    抽出来是因为诊断模块需要**自己**再跑前向（探针、精确 rollout），而它必须走与训练
+    **完全相同**的那条构造路径。让诊断自己去重建 centers，就是在赌两条路径不漂移，
+    而那种错误不会报错——只会让「探针量的」和「训练用的」悄悄不是同一个东西。
+    """
+
+    agent: CartPoleAgent
+    centers: torch.Tensor
+    book: SeedBook
+    encoding_sigma: float
+
+
+def _greedy_score(
+    env,
+    agent: CartPoleAgent,
+    centers: torch.Tensor,
+    sigma: float,
+    generator: torch.Generator,
+    episodes: int,
+) -> float:
+    """跑 ``episodes`` 个**贪心**回合，返回平均存活步数。
+
+    途中评测与末次验收走的是同一个函数：两份实现一定会漂移，而漂移之后「曲线上的峰值」
+    与「验收数字」就不再是同一个量，那种错误不会报错。
+    """
+    lengths = [
+        run_episode(env, agent, centers, sigma, generator=generator, exploration=0.0, learn=False)[
+            0
+        ]
+        for _ in range(episodes)
+    ]
+    return sum(lengths) / len(lengths)
 
 
 def build_agent_inputs(
@@ -460,6 +529,8 @@ def run_trial(
     critic_kind: str | None = None,
     critic_units: int | None = None,
     critic_value_scale: float | None = None,
+    critic_output_bias: float | None = None,
+    critic_bias_learning_rate: float | None = None,
     trace_decay: float | None = None,
     discount: float | None = None,
     success_signal: str | None = None,
@@ -468,17 +539,28 @@ def run_trial(
     actor_lr_final_fraction: float = 1.0,
     evaluation_episodes: int = 10,
     evaluation_interval: int = 20,
+    greedy_eval_every: int | None = None,
+    greedy_eval_episodes: int = 3,
+    observer: Callable[[int, CartPoleAgent, torch.Tensor], None] | None = None,
+    observer_every: int | None = None,
     device: torch.device | None = None,
     verbose: bool = False,
     return_agent: bool = False,
+    return_context: bool = False,
 ):
     """训练一个种子并做贪心评测。
 
     ``None`` 表示"用 :class:`CartPoleAgent` 的构造默认值"——**不在这里重复写默认值**，
     理由见 :data:`CLI_TO_AGENT_PARAM` 的说明：两份默认值一定会漂移。
 
+    ``greedy_eval_every`` 与 ``observer`` 是**观测口**，默认全关——开了会多花时间、
+    也会多消耗探索用的随机数，所以默认路径的数字必须逐位不变。
+    ``observer(episode, agent, centers)`` 每 ``observer_every`` 回合被调一次，诊断逻辑
+    写在调用方（见 :mod:`research.rstdp.signal_probe`）：**训练循环只有一份**。
+
     Returns:
-        :class:`TrialResult`；``return_agent=True`` 时返回 ``(result, agent)``。
+        :class:`TrialResult`；``return_agent=True`` 时返回 ``(result, agent)``；
+        ``return_context=True`` 时返回 ``(result, AgentContext)``。
     """
     import gymnasium
 
@@ -498,6 +580,8 @@ def run_trial(
         "critic_kind": critic_kind,
         "critic_units": critic_units,
         "critic_value_scale": critic_value_scale,
+        "critic_output_bias": critic_output_bias,
+        "critic_bias_learning_rate": critic_bias_learning_rate,
         "trace_decay": trace_decay,
         "discount": discount,
         "success_signal": success_signal,
@@ -525,6 +609,8 @@ def run_trial(
         normalize_weights=resolved["normalize_weights"],
         critic_kind=resolved["critic_kind"],
         critic_units=resolved["critic_units"],
+        critic_output_bias=resolved["critic_output_bias"],
+        critic_bias_learning_rate=resolved["critic_bias_learning_rate"],
         critic_init_directions=init_directions,
         device=device,
         generator=torch.Generator().manual_seed(book.derive("Actor 与 Critic 初始权重")),
@@ -541,6 +627,8 @@ def run_trial(
 
     started = time.perf_counter()
     history: list[int] = []
+    curve: list[float] = []
+    peak_mean_steps, peak_episode = 0.0, 0
     with measure_peak_memory(device) as memory:
         actor_lr_base = agent.actor.learning_rate
         for episode in range(1, episodes + 1):
@@ -565,6 +653,16 @@ def run_trial(
             )
             history.append(steps)
 
+            if greedy_eval_every and episode % greedy_eval_every == 0:
+                score = _greedy_score(
+                    env, agent, centers, encoding_sigma, explore_rng, greedy_eval_episodes
+                )
+                curve.append(score)
+                if score > peak_mean_steps:
+                    peak_mean_steps, peak_episode = score, episode
+            if observer is not None and observer_every and episode % observer_every == 0:
+                observer(episode, agent, centers)
+
             if verbose and episode % evaluation_interval == 0:
                 recent = history[-evaluation_interval:]
                 print(
@@ -575,15 +673,7 @@ def run_trial(
                 )
 
     evaluation = [
-        run_episode(
-            env,
-            agent,
-            centers,
-            encoding_sigma,
-            generator=explore_rng,
-            exploration=0.0,
-            learn=False,
-        )[0]
+        _greedy_score(env, agent, centers, encoding_sigma, explore_rng, 1)
         for _ in range(evaluation_episodes)
     ]
     env.close()
@@ -600,7 +690,14 @@ def run_trial(
         elapsed_s=elapsed,
         peak_mb=memory["peak_mb"],
         seeds_used=book.render(),
+        peak_mean_steps=peak_mean_steps,
+        peak_episode=peak_episode,
+        curve=curve,
     )
+    if return_context:
+        return result, AgentContext(
+            agent=agent, centers=centers, book=book, encoding_sigma=encoding_sigma
+        )
     if return_agent:
         return result, agent
     return result
@@ -623,6 +720,8 @@ def main(argv: list[str] | None = None) -> int:
         critic_kind=args.critic_kind,
         critic_units=args.critic_units,
         critic_value_scale=args.critic_value_scale,
+        critic_output_bias=args.critic_output_bias,
+        critic_bias_learning_rate=args.critic_bias_learning_rate,
         trace_decay=args.trace_decay,
         discount=args.discount,
         success_signal=args.success_signal,

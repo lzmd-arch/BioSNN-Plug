@@ -15,5 +15,8 @@
 * :mod:`~research.rstdp.td_ltp` —— Critic 的学习规则（Frémaux et al. 2013, Eq. 17）；
 * :mod:`~research.rstdp.rstdp` —— Actor 的 R-STDP 规则与权重归一化；
 * :mod:`~research.rstdp.cartpole` —— 环境封装、群体编码与训练循环；
-* :mod:`~research.rstdp.measure_bias` —— 成功偏移 / σR 的测量。
+* :mod:`~research.rstdp.measure_bias` —— 成功偏移 / σR 的测量；
+* :mod:`~research.rstdp.capacity_probe` —— 编码的**线性容量**上限（否定性结果）；
+* :mod:`~research.rstdp.signal_probe` —— **学习信号的质量**：Critic 准不准、δ 是不是优势
+  估计、规则的方向对不对。
 """

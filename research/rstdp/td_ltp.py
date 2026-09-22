@@ -53,6 +53,8 @@ pre-before-post"这一条因此不再是可区分的结构（速率型下没有"
 
 from __future__ import annotations
 
+import math
+
 import torch
 
 from research.common.seeding import device_generator
@@ -85,6 +87,8 @@ class TDLCritic:
         init_scale: float = 0.01,
         weight_norm: float | None = 1.0,
         value_scale: float = 60.0,
+        output_bias: float = 0.0,
+        bias_learning_rate: float | None = None,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
     ) -> None:
@@ -103,7 +107,11 @@ class TDLCritic:
         self.weight_decay = float(weight_decay)
         self.weight_norm = None if weight_norm is None else float(weight_norm)
         self.value_scale = float(value_scale)
+        self.bias_learning_rate = bias_learning_rate
         device = device or torch.device("cpu")
+        # 加性偏置 ``V = … + out_bias``。零初始化，且 ``x + 0.0`` 是精确的，所以**默认路径
+        # 逐位不变**。它是「纯局部」的：一个标量，与 δ 同样广播，不含非局部向量。
+        self.out_bias = torch.tensor(float(output_bias), device=device)
 
         # **不能用零初始化。** 资格痕迹是 ``e ← λ·e + x·V``，即被 Critic 自己的输出
         # ``V`` 门控；若 ``V ≡ 0``（零初始化且不更新），痕迹恒为 0，权重更新量
@@ -137,7 +145,7 @@ class TDLCritic:
 
         ``features`` 是 ``(n_features,)`` 或 ``(batch, n_features)``。
         """
-        return self.value_scale * (features @ self.weights)
+        return self.value_scale * (features @ self.weights) + self.out_bias
 
     @torch.no_grad()
     def update(self, features: torch.Tensor, value: torch.Tensor, td_error: float) -> None:
@@ -156,6 +164,21 @@ class TDLCritic:
         if self.weight_decay:
             self.weights.mul_(1.0 - self.weight_decay)
         self._normalize()
+        self._learn_bias(td_error)
+
+    @torch.no_grad()
+    def _learn_bias(self, td_error: float) -> None:
+        """``out_bias += η_θ·δ``——线性值函数偏置项的教科书半梯度更新。
+
+        ``∂V/∂θ = 1``，半梯度只会经 ``V`` 回传（不含自举项 ``γV(s')``），所以更新就是
+        ``+η_θ·δ`` 这一行——与权重更新同号，也和「δ>0 说明 V 偏低、该把 V 抬上去」一致。
+
+        **要注意 η_θ 的量级**：内部步里 δ 只通过 ``(1−γ)`` 依赖 θ，所以那里偏置几乎不动；
+        真正把它标定住的是**终止步**（那里 ``V(s')`` 被强制为 0，``∂δ/∂θ = 1``）。而终止步
+        每回合只有一次，所以 η_θ 需要比 η_w 大得多才来得及。实测的比例在 10² 量级。
+        """
+        if self.bias_learning_rate is not None:
+            self.out_bias += self.bias_learning_rate * td_error
 
     @torch.no_grad()
     def reset_trace(self) -> None:
@@ -226,6 +249,8 @@ class PopulationCritic:
         gain: float = 8.0,
         bias: float = 0.4,
         value_scale: float = 200.0,
+        output_bias: float = 0.0,
+        bias_learning_rate: float | None = None,
         init_directions: torch.Tensor | None = None,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
@@ -244,7 +269,17 @@ class PopulationCritic:
         self.gain = float(gain)
         self.bias = float(bias)
         self.value_scale = float(value_scale)
+        self.bias_learning_rate = bias_learning_rate
         device = device or torch.device("cpu")
+        # 加性偏置 ``V = Σ u_j y_j + out_bias``。零初始化，``x + 0.0`` 精确，所以**默认路径
+        # 逐位不变**。它与 ``bias`` 不是一回事：``bias`` 是每个单元的**输入阈值**，影响的是
+        # 发放率；``out_bias`` 是**输出侧的一个平移**，影响的是值本身。
+        #
+        # 为什么需要它：真值在临死那一步约等于 1，而群体读出到不了那么低（实测 V 的最低值
+        # 13.4、真值 1.0）。够不着的后果是**每回合的终止步都稳定地拿到一个大负 δ**——实测
+        # −11.3，而内部步只有 +0.07，差 160 倍。那是整个回合里最大的一次 Actor 更新，打在
+        # 痕迹视野内「死前那几步」上，且与动作无关。
+        self.out_bias = torch.tensor(float(output_bias), device=device)
 
         # 单元的"偏好方向"（感受野）最好**铺开**，而不是取随机方向。调用方可以传入代表性
         # 状态的编码（``init_directions``），这是 RBF 中心的标准做法，也是论文里那群体靠
@@ -282,6 +317,25 @@ class PopulationCritic:
         norms = self.weights.norm(dim=1, keepdim=True).clamp_min(1e-12)
         self.weights.mul_(1.0 / norms)
 
+    def value_floor(self) -> float:
+        """``V`` 在**权重非负**这一前提下的下界：``value_scale · σ(−gain · bias)``。
+
+        权重与编码活动都非负时 ``cos ∈ [0, 1]``，于是每个单元至少贡献 ``u_j·σ(−g·b)``，
+        **旋转 ``w_j`` 学不动这个下界**。默认参数下是 ``200·σ(−3.2) = 7.83``。
+
+        **它不是绝对下界。** ``update()`` 做的是 ``w += η·δ·e``，δ 为负时权重会被推成
+        负数；此后 ``cos`` 可以一直到 −1，``V`` 也就能一路降到约 0（``200·σ(−11.2) ≈ 0.003``）。
+        所以「Critic 到底够不够得着真值的低段」是个**要测的问题**，不是能推的问题——
+        :mod:`research.rstdp.signal_probe` 报的负数权重占比与 ``V`` 的实际取值区间就是冲
+        这个来的。
+
+        真要紧的是它可能造成什么：一个还能活 ``T`` 步的策略，真值是 ``(1−γ^T)/(1−γ)``，
+        临死那一步约为 1。若 ``V`` 因为权重仍非负而卡在 7.83 之上，那么每回合的终止步都会
+        稳定地拿到 ``δ = 1 − V ≈ −6.8``，且**与动作无关**——那是整个回合里最大的一次 Actor
+        更新，打在痕迹视野内「死前那几步」上，恰恰是最需要知道「哪个动作能救回来」的地方。
+        """
+        return self.value_scale / (1.0 + math.exp(self.gain * self.bias))
+
     @torch.no_grad()
     def rates(self, features: torch.Tensor) -> torch.Tensor:
         """各单元的发放率 ``y_j``，``(n_units,)``。
@@ -297,8 +351,8 @@ class PopulationCritic:
 
     @torch.no_grad()
     def value(self, features: torch.Tensor) -> torch.Tensor:
-        """``V(s) = Σ_j u_j·y_j``，0 维张量。"""
-        return self.readout @ self.rates(features)
+        """``V(s) = Σ_j u_j·y_j + out_bias``，0 维张量。"""
+        return self.readout @ self.rates(features) + self.out_bias
 
     @torch.no_grad()
     def update(self, features: torch.Tensor, value: torch.Tensor, td_error: float) -> None:
@@ -311,6 +365,21 @@ class PopulationCritic:
         self.trace.mul_(self.trace_decay).add_(torch.outer(rates, features))
         self.weights.add_(self.learning_rate * td_error * self.trace)
         self._normalize()
+        self._learn_bias(td_error)
+
+    @torch.no_grad()
+    def _learn_bias(self, td_error: float) -> None:
+        """``out_bias += η_θ·δ``——线性值函数偏置项的教科书半梯度更新。
+
+        ``∂V/∂θ = 1``，半梯度只经 ``V`` 回传（不含自举项 ``γV(s')``），所以更新就是
+        ``+η_θ·δ`` 这一行——与权重更新同号，也和「δ>0 说明 V 偏低、该把 V 抬上去」一致。
+
+        **η_θ 的量级要注意**：内部步里 δ 只通过 ``(1−γ)`` 依赖 θ，偏置在那里几乎不动；
+        真正把它标定住的是**终止步**（那里 ``V(s')`` 被强制为 0，``∂δ/∂θ = 1``）。而终止步
+        每回合只有一次，所以 η_θ 需要比 η_w 大得多才来得及，实测比例在 10² 量级。
+        """
+        if self.bias_learning_rate is not None:
+            self.out_bias += self.bias_learning_rate * td_error
 
     @torch.no_grad()
     def reset_trace(self) -> None:

@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import math
+
 import pytest
 import torch
 
@@ -115,6 +117,12 @@ class TestTDLCritic:
         assert critic.trace.abs().sum().item() > 0
         critic.reset_trace()
         assert critic.trace.abs().sum().item() == 0
+
+    def test_output_bias_shifts_the_value(self):
+        critic = TDLCritic(4, value_scale=2.0, weight_norm=None, output_bias=7.0)
+        with torch.no_grad():
+            critic.weights.copy_(torch.tensor([1.0, 2.0, 3.0, 4.0]))
+        assert critic.value(torch.ones(4)).item() == pytest.approx(27.0)
 
     def test_rejects_a_bad_trace_decay(self):
         with pytest.raises(ValueError, match="trace_decay"):
@@ -326,6 +334,101 @@ class TestPopulationCritic:
         critic = PopulationCritic(64, n_units=4, init_directions=directions)
         expected = directions / directions.norm(dim=1, keepdim=True).clamp_min(1e-12)
         torch.testing.assert_close(critic.weights, expected, rtol=1e-5, atol=1e-7)
+
+    def test_value_floor_is_the_value_when_the_input_is_orthogonal(self):
+        """``cos = 0`` 时 ``V`` 正好落在下界上——这是「下界」这个说法的可测形式。"""
+        critic = PopulationCritic(4, n_units=3, gain=8.0, bias=0.4, value_scale=200.0)
+        with torch.no_grad():
+            critic.weights.copy_(torch.tensor([[1.0, 0.0, 0.0, 0.0]] * 3))
+        orthogonal = torch.tensor([0.0, 1.0, 0.0, 0.0])
+        assert float(critic.value(orthogonal)) == pytest.approx(critic.value_floor(), rel=1e-6)
+        assert critic.value_floor() == pytest.approx(200.0 / (1.0 + math.exp(3.2)))
+        assert critic.value_floor() == pytest.approx(7.83, abs=0.01)
+
+    def test_the_floor_only_holds_while_the_weights_stay_non_negative(self):
+        """反平行输入能压到地板**以下**——它是**条件**下界，不是绝对下界。
+
+        这条很要紧：``update()`` 做的是 ``w += η·δ·e``，δ 为负时权重会被推成负数，
+        此后 ``cos`` 可以一直到 −1，``V`` 也就能降到约 0。所以「Critic 够不够得着真值的
+        低段」是**要测的问题**，不能靠这条公式推。把它钉成测试，是为了防止有人（包括我）
+        再把它当成绝对下界用。
+        """
+        critic = PopulationCritic(4, n_units=3, gain=8.0, bias=0.4, value_scale=200.0)
+        with torch.no_grad():
+            critic.weights.copy_(torch.tensor([[1.0, 0.0, 0.0, 0.0]] * 3))
+        opposed = torch.tensor([-1.0, 0.0, 0.0, 0.0])
+        assert float(critic.value(opposed)) < critic.value_floor() * 1e-3
+
+    def test_the_floor_falls_as_the_threshold_rises(self):
+        """``value_floor = value_scale·σ(−g·b)``——阈值越高，下界越低。"""
+        permissive = PopulationCritic(4, gain=8.0, bias=-0.5, value_scale=200.0)
+        strict = PopulationCritic(4, gain=8.0, bias=1.0, value_scale=200.0)
+        assert strict.value_floor() < permissive.value_floor()
+
+    def test_training_can_push_the_weights_negative(self):
+        """负 δ 会把权重推成负数——这正是上一条那个条件会被打破的机制。"""
+        critic = PopulationCritic(6, n_units=4, learning_rate=0.5)
+        features = self._features(6)
+        for _ in range(50):
+            critic.update(features, critic.value(features), td_error=-1.0)
+        assert (critic.weights < 0).any(), "负 δ 应当能把权重推成负数，否则地板就是绝对的"
+
+    def test_zero_output_bias_leaves_the_value_bit_for_bit_unchanged(self):
+        """默认 0 时 ``value()`` 逐位不变——``x + 0.0`` 在浮点下是精确的。
+
+        这条是「新选项默认值不许改变既有数字」的可测形式。
+        """
+        critic = PopulationCritic(5, n_units=3)
+        features = self._features()
+        expected = critic.readout @ critic.rates(features)
+        assert critic.value(features).item() == expected.item()
+
+    def test_output_bias_shifts_the_value_and_nothing_else(self):
+        """偏置在**输出侧**：它平移 V，不碰发放率、不碰权重。"""
+        shifted = PopulationCritic(5, n_units=3, output_bias=-40.0)
+        reference = PopulationCritic(5, n_units=3)
+        features = self._features()
+        assert shifted.value(features).item() == pytest.approx(
+            reference.value(features).item() - 40.0
+        )
+        torch.testing.assert_close(shifted.rates(features), reference.rates(features))
+        torch.testing.assert_close(shifted.weights, reference.weights)
+
+    def test_the_bias_lets_the_value_reach_below_the_nonnegative_weight_floor(self):
+        """加性偏置把可达下界整体下移——这正是「够不着真值低段」的修法。"""
+        critic = PopulationCritic(
+            4, n_units=3, gain=8.0, bias=0.4, value_scale=200.0, output_bias=-40.0
+        )
+        with torch.no_grad():
+            critic.weights.copy_(torch.tensor([[1.0, 0.0, 0.0, 0.0]] * 3))
+        orthogonal = torch.tensor([0.0, 1.0, 0.0, 0.0])
+        assert float(critic.value(orthogonal)) == pytest.approx(
+            critic.value_floor() - 40.0, rel=1e-6
+        )
+
+    def test_the_bias_is_trained_to_absorb_a_constant_offset(self):
+        """恒定目标下 ``out_bias`` 收敛到把残差吃掉——这是它存在的理由。"""
+        critic = PopulationCritic(4, n_units=2, bias_learning_rate=0.5)
+        features = self._features(4)
+        target = -50.0
+        for _ in range(2000):
+            critic.update(
+                features, critic.value(features), td_error=target - float(critic.value(features))
+            )
+        assert critic.value(features).item() == pytest.approx(target, abs=1.0)
+
+    def test_no_bias_learning_rate_means_the_bias_never_moves(self):
+        critic = PopulationCritic(4, n_units=2, output_bias=3.0)
+        for _ in range(20):
+            critic.update(self._features(4), critic.value(self._features(4)), td_error=-5.0)
+        assert critic.out_bias.item() == pytest.approx(3.0)
+
+    def test_the_bias_update_has_the_same_sign_convention_as_the_weights(self):
+        """δ > 0（V 偏低）时两者都把 V 抬上去——偏置 ``+ηδ``，权重朝活动方向走。"""
+        critic = PopulationCritic(4, n_units=2, bias_learning_rate=1.0)
+        before = float(critic.value(self._features(4)))
+        critic.update(self._features(4), critic.value(self._features(4)), td_error=1.0)
+        assert float(critic.value(self._features(4))) > before
 
     def test_rejects_mismatched_init_directions(self):
         with pytest.raises(ValueError, match="init_directions"):
