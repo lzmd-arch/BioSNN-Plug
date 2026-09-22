@@ -138,6 +138,7 @@ research` が第 1 フェーズの実験環境です。したがってスケル�
 | 検証線 | 記録の場所 | 受入の数値 |
 | :--- | :--- | :--- |
 | W1 カーネル化 IB-Hebbian 知覚層 | [`research/ib_hebbian/README.ja.md`](../research/ib_hebbian/README.ja.md) | MNIST 98.01%（閾値 70%） |
+| W2 e-prop 認知層 | [`research/eprop/README.ja.md`](../research/eprop/README.ja.md) | sMNIST 77.48%；活動ニューロン比率 1.0000（閾値 > 60%） |
 
 ## 以降のフェーズでの記録場所
 

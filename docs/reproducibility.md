@@ -120,6 +120,7 @@ uv sync --locked      # lock 与 pyproject 必须一致
 | 验证线 | 记录位置 | 验收数字 |
 | :--- | :--- | :--- |
 | W1 核化 IB-Hebbian 感知层 | [`research/ib_hebbian/README.md`](../research/ib_hebbian/README.md) | MNIST 98.01%（阈值 70%） |
+| W2 e-prop 认知层 | [`research/eprop/README.md`](../research/eprop/README.md) | sMNIST 77.48%；活跃神经元比例 1.0000（阈值 > 60%） |
 
 ## 后续阶段的记录位置
 

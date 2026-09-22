@@ -138,6 +138,7 @@ date (to 2027-09).
 | Validation line | Where the record lives | Acceptance figure |
 | :--- | :--- | :--- |
 | W1 kernelized IB-Hebbian perception layer | [`research/ib_hebbian/README.en.md`](../research/ib_hebbian/README.en.md) | MNIST 98.01% (threshold 70%) |
+| W2 e-prop cognitive layer | [`research/eprop/README.en.md`](../research/eprop/README.en.md) | sMNIST 77.48%; active-neuron fraction 1.0000 (threshold > 60%) |
 
 ## Where later phases record this
 
