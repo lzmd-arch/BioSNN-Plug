@@ -215,6 +215,51 @@ class TestNewOptionsReachTheCritic:
         assert agent.critic.out_bias.item() == pytest.approx(-30.0)
 
 
+class TestSignalClip:
+    """裁剪只作用于 Actor 的成功信号，Critic 仍然学真正的 δ。"""
+
+    @staticmethod
+    def _features() -> tuple[torch.Tensor, torch.Tensor]:
+        return torch.tensor([1.0, 0.5, 0.25, 0.0]), torch.tensor([0.0, 1.0, 0.5, 0.25])
+
+    def _agent(self, **kwargs) -> CartPoleAgent:
+        # 偏置把 V 抬到 100 附近，于是终止步的 δ ≈ −100，远超任何合理的裁剪阈值
+        return CartPoleAgent(
+            4,
+            critic_units=3,
+            critic_output_bias=100.0,
+            generator=torch.Generator().manual_seed(0),
+            **kwargs,
+        )
+
+    def test_clip_bounds_the_signal_but_not_the_delta(self):
+        features, next_features = self._features()
+        delta, signal = self._agent(actor_signal_clip=1.0).learn_step(
+            features, 0, 1.0, next_features, terminated=True
+        )
+        assert delta < -50.0, "δ 本身没有被裁——它是 Critic 的回归目标"
+        assert signal == pytest.approx(-1.0)
+
+    def test_clip_keeps_the_sign(self):
+        features, next_features = self._features()
+        _, signal = self._agent(actor_signal_clip=1.0).learn_step(
+            features, 0, 1.0, next_features, terminated=True
+        )
+        assert signal < 0
+
+    def test_no_clip_leaves_the_signal_equal_to_the_delta(self):
+        features, next_features = self._features()
+        delta, signal = self._agent().learn_step(features, 0, 1.0, next_features, terminated=True)
+        assert signal == pytest.approx(delta)
+
+    def test_a_clip_above_the_delta_changes_nothing(self):
+        features, next_features = self._features()
+        delta, signal = self._agent(actor_signal_clip=1e6).learn_step(
+            features, 0, 1.0, next_features, terminated=True
+        )
+        assert signal == pytest.approx(delta)
+
+
 class TestIdenticalConstruction:
     def test_agent_can_be_constructed_twice_identically(self):
         """上头的成对比较全靠这条：同一个种子两次构造必须逐位相同。"""

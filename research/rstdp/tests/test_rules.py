@@ -233,11 +233,74 @@ class TestRSTDPActor:
 
     @pytest.mark.parametrize(
         ("kwargs", "match"),
-        [({"trace_decay": 1.0}, "trace_decay"), ({"weight_norm": 0.0}, "weight_norm")],
+        [
+            ({"trace_decay": 1.0}, "trace_decay"),
+            ({"weight_norm": 0.0}, "weight_norm"),
+            ({"polyak_tau": 1.0}, "polyak_tau"),
+        ],
     )
     def test_rejects_invalid_hyperparameters(self, kwargs, match):
         with pytest.raises(ValueError, match=match):
             RSTDPActor(3, 2, **kwargs)
+
+
+class TestPolyakDeployedWeights:
+    """参数平均只改**部署**那一份——学习与行为仍走在线权重。
+
+    起因是实测出来的失效模式：同一条轨迹里峰值中位数 218.8 步而终值中位数只有 78.2
+    （「找得到好策略，留不住」）。这几条钉住「平均」这件事的作用域与不变量。
+    """
+
+    def test_no_tau_shares_the_same_tensor_object(self):
+        """默认时部署权重**就是**在线权重那个对象——不是副本，所以不多占内存、逐位不变。"""
+        actor = RSTDPActor(5, 2)
+        assert actor.weights_deployed is actor.weights
+
+    def test_the_deployed_weights_lag_behind_the_online_ones(self):
+        actor = RSTDPActor(5, 2, learning_rate=1.0, trace_decay=0.0, polyak_tau=0.99)
+        start = actor.weights_deployed.clone()
+        features = torch.tensor([1.0, 0.0, 0.0, 0.0, 0.0])
+        for _ in range(20):
+            actor.update(features, action=0, success_signal=1.0)
+        online_move = (actor.weights - start).norm().item()
+        deployed_move = (actor.weights_deployed - start).norm().item()
+        assert 0.0 < deployed_move < 0.5 * online_move, "部署权重应当动了，但明显落后"
+
+    def test_the_online_weights_are_unaffected(self):
+        """EMA 不该改变学习本身——同一个种子下在线权重逐位相同。"""
+        features = torch.tensor([1.0, 0.0, 0.0, 0.0, 0.0])
+
+        def run(**kwargs) -> torch.Tensor:
+            actor = RSTDPActor(
+                5,
+                2,
+                learning_rate=1.0,
+                trace_decay=0.0,
+                generator=torch.Generator().manual_seed(3),
+                **kwargs,
+            )
+            for step in range(10):
+                actor.update(features, action=step % 2, success_signal=1.0 if step % 3 else -1.0)
+            return actor.weights.clone()
+
+        torch.testing.assert_close(run(polyak_tau=0.9), run())
+
+    def test_the_deployed_columns_stay_l1_normalised(self):
+        """平均之后两列各自的 L1 范数不再是常数，而 argmax 比较的是原始得分——
+        不重新归一化就会偏向范数大的那一列。"""
+        actor = RSTDPActor(6, 2, learning_rate=1.0, weight_norm=2.0, polyak_tau=0.9)
+        for step in range(20):
+            actor.update(
+                make_features(6), action=step % 2, success_signal=1.0 if step % 3 else -1.0
+            )
+            sums = actor.weights_deployed.abs().sum(dim=0)
+            torch.testing.assert_close(sums, torch.full_like(sums, 2.0), rtol=1e-5, atol=1e-6)
+
+    def test_scoring_uses_the_deployed_weights(self):
+        actor = RSTDPActor(4, 2, learning_rate=1.0, trace_decay=0.0, polyak_tau=0.999)
+        actor.update(torch.tensor([1.0, 0.0, 0.0, 0.0]), action=0, success_signal=1.0)
+        features = torch.tensor([1.0, 0.0, 0.0, 0.0])
+        torch.testing.assert_close(actor.scores(features), features @ actor.weights_deployed)
 
 
 def _bump(generator: torch.Generator, n: int = 64, k: int = 5) -> torch.Tensor:

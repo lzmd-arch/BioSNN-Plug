@@ -67,6 +67,7 @@ class RSTDPActor:
         trace_decay: float = 0.9,
         weight_norm: float = 1.0,
         normalize: bool = True,
+        polyak_tau: float | None = None,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
     ) -> None:
@@ -74,6 +75,8 @@ class RSTDPActor:
             raise ValueError(f"trace_decay 应在 [0, 1) 内，收到 {trace_decay}。")
         if weight_norm <= 0:
             raise ValueError(f"weight_norm 必须为正，收到 {weight_norm}。")
+        if polyak_tau is not None and not 0.0 <= polyak_tau < 1.0:
+            raise ValueError(f"polyak_tau 应在 [0, 1) 内或为 None，收到 {polyak_tau}。")
 
         device = device or torch.device("cpu")
         self.n_features = int(n_features)
@@ -87,23 +90,44 @@ class RSTDPActor:
         self.weights = torch.randn(n_features, n_actions, device=device, generator=generator)
         self.trace = torch.zeros(n_features, n_actions, device=device)
         if self.normalize:
-            self._normalize()
+            self._normalize_like_weights(self.weights)
+
+        # **部署权重**（决定动作的权重）。默认时它与 ``self.weights`` 是**同一个张量对象**，
+        # 不是副本——所以默认路径逐位不变、也不多占内存。给了 ``polyak_tau`` 才另开一份，
+        # 按 ``w_deployed ← τ·w_deployed + (1−τ)·w`` 追踪在线权重（见 :meth:`_normalize`）。
+        #
+        # 为什么需要它：实测这条线的失败模式是**游走**而不是学不动——同一条轨迹里峰值中位数
+        # 218.8 步而终值中位数只有 78.2。也就是「找得到好策略，留不住」。参数平均是这种情形
+        # 最便宜的修法，而且它只改**部署**用的那一份：行为策略与学习仍走在线权重，所以不会把
+        # 训练本身变成离策略的。
+        self.polyak_tau = None if polyak_tau is None else float(polyak_tau)
+        self.weights_deployed = self.weights if self.polyak_tau is None else self.weights.clone()
 
     @torch.no_grad()
-    def _normalize(self) -> None:
+    def _normalize_like_weights(self, weights: torch.Tensor) -> None:
         """把每个动作单元（每一列）的入权重 **L1 范数**归一到 ``weight_norm``。
 
         计划书 §3.2：「每个神经元层面保持权重总和恒定，防止突触动态失控」。取 L1 而不是
         L2：L1 约束的是"权重总和"，与原文措辞一致；L2 约束的是能量，在稀疏编码下会让
         个别权重吃掉全部预算。
         """
-        column_sums = self.weights.abs().sum(dim=0, keepdim=True).clamp_min(1e-12)
-        self.weights.mul_(self.weight_norm / column_sums)
+        column_sums = weights.abs().sum(dim=0, keepdim=True).clamp_min(1e-12)
+        weights.mul_(self.weight_norm / column_sums)
+
+    @torch.no_grad()
+    def _normalize(self) -> None:
+        """归一化在线权重，并把部署权重同步到最新的平均上。"""
+        self._normalize_like_weights(self.weights)
+        if self.polyak_tau is not None:
+            self.weights_deployed.lerp_(self.weights, 1.0 - self.polyak_tau)
+            # 平均之后再归一化一次：两列各自的 L1 范数在平均后不再是常数，而部署时
+            # ``argmax`` 比较的是两列的原始得分，尺度不一致就会偏向范数大的那一列。
+            self._normalize_like_weights(self.weights_deployed)
 
     @torch.no_grad()
     def scores(self, features: torch.Tensor) -> torch.Tensor:
-        """各动作的得分，``(n_actions,)``。"""
-        return features @ self.weights
+        """各动作的得分，``(n_actions,)``。**用的是部署权重**，不是在线权重。"""
+        return features @ self.weights_deployed
 
     @torch.no_grad()
     def select_action(

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import inspect
+import math
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -74,6 +75,8 @@ class CartPoleAgent:
         n_actions: int = 2,
         *,
         actor_learning_rate: float = 3e-3,
+        actor_signal_clip: float | None = None,
+        actor_polyak_tau: float | None = None,
         critic_learning_rate: float = 5e-4,
         critic_value_scale: float = 200.0,
         trace_decay: float = 0.9,
@@ -103,6 +106,7 @@ class CartPoleAgent:
             learning_rate=actor_learning_rate,
             trace_decay=trace_decay,
             normalize=normalize_weights,
+            polyak_tau=actor_polyak_tau,
             device=device,
             generator=generator,
         )
@@ -133,6 +137,7 @@ class CartPoleAgent:
         self.critic_kind = critic_kind
         self.discount = float(discount)
         self.success_signal = success_signal
+        self.actor_signal_clip = None if actor_signal_clip is None else float(actor_signal_clip)
 
     @torch.no_grad()
     def behave(
@@ -185,6 +190,14 @@ class CartPoleAgent:
 
         delta = td_error(reward, value, next_value, discount=self.discount)
         signal = delta if self.success_signal == "td_error" else float(reward - value)
+        if self.actor_signal_clip is not None:
+            # **只给 Actor 的成功信号设界，Critic 仍然学真正的 δ。** 两者要分开：δ 是 Critic
+            # 的回归目标，裁了它等于让 Critic 去拟合一个错的量；而 Actor 只关心更新量的量级。
+            #
+            # 实测的理由：终止步的 δ 是 −11.31 而内部步只有 +0.072，差 157 倍。于是每回合
+            # 最大的一次 Actor 更新来自那个**与动作无关**的终止惩罚，正好打在痕迹视野内
+            # 「死前那几步」上——最需要区分「哪个动作能救回来」的地方。
+            signal = math.copysign(min(abs(signal), self.actor_signal_clip), signal)
 
         self.critic.update(features, value, delta)
         if not exploring:
@@ -271,6 +284,8 @@ def run_episode(
 CLI_TO_AGENT_PARAM = {
     "n_features": "n_features",
     "actor_learning_rate": "actor_learning_rate",
+    "actor_signal_clip": "actor_signal_clip",
+    "actor_polyak_tau": "actor_polyak_tau",
     "critic_learning_rate": "critic_learning_rate",
     "critic_value_scale": "critic_value_scale",
     "trace_decay": "trace_decay",
@@ -322,6 +337,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--actor-learning-rate", type=float, default=agent_default("actor_learning_rate")
+    )
+    parser.add_argument(
+        "--actor-signal-clip",
+        type=float,
+        default=agent_default("actor_signal_clip"),
+        help="Actor 成功信号的绝对值上限；不给就不裁。**只裁 Actor，Critic 仍学真正的 δ**。"
+        "终止步的 δ 实测 −11.31 而内部步只有 +0.072，差了 157 倍，裁的就是那个尖峰",
+    )
+    parser.add_argument(
+        "--actor-polyak-tau",
+        type=float,
+        default=agent_default("actor_polyak_tau"),
+        help="Actor 部署权重的 EMA 系数；不给就用在线权重。**只影响部署，不影响学习与行为**。"
+        "这条线的失败模式是游走（峰值中位数 218.8 / 终值中位数 78.2），参数平均冲着它去",
     )
     parser.add_argument(
         "--actor-normalize",
@@ -524,6 +553,8 @@ def run_trial(
     n_features: int = 64,
     encoding_sigma: float = 0.5,
     actor_learning_rate: float | None = None,
+    actor_signal_clip: float | None = None,
+    actor_polyak_tau: float | None = None,
     actor_normalize: bool | None = None,
     critic_learning_rate: float | None = None,
     critic_kind: str | None = None,
@@ -553,10 +584,13 @@ def run_trial(
     ``None`` 表示"用 :class:`CartPoleAgent` 的构造默认值"——**不在这里重复写默认值**，
     理由见 :data:`CLI_TO_AGENT_PARAM` 的说明：两份默认值一定会漂移。
 
-    ``greedy_eval_every`` 与 ``observer`` 是**观测口**，默认全关——开了会多花时间、
-    也会多消耗探索用的随机数，所以默认路径的数字必须逐位不变。
-    ``observer(episode, agent, centers)`` 每 ``observer_every`` 回合被调一次，诊断逻辑
-    写在调用方（见 :mod:`research.rstdp.signal_probe`）：**训练循环只有一份**。
+    ``greedy_eval_every`` 与 ``observer`` 是**观测口**，默认全关，默认路径的数字逐位不变。
+    ``observer(episode, agent, centers)`` 每 ``observer_every`` 回合被调一次，诊断逻辑写在
+    调用方（见 :mod:`research.rstdp.signal_probe`）：**训练循环只有一份**。
+
+    中途的贪心评测**跑在另一个环境实例上**，好让它不推进训练环境的 RNG 流；但**末次验收
+    仍然跑在训练环境上**——那是既有数字的口径，换掉它等于把已记录的验收数字全部作废。
+    两者量的都是同一个策略的表现，只是初始状态的抽样流不同。
 
     Returns:
         :class:`TrialResult`；``return_agent=True`` 时返回 ``(result, agent)``；
@@ -575,6 +609,8 @@ def run_trial(
 
     resolved = {
         "actor_learning_rate": actor_learning_rate,
+        "actor_signal_clip": actor_signal_clip,
+        "actor_polyak_tau": actor_polyak_tau,
         "normalize_weights": actor_normalize,
         "critic_learning_rate": critic_learning_rate,
         "critic_kind": critic_kind,
@@ -601,6 +637,8 @@ def run_trial(
     agent = CartPoleAgent(
         n_features,
         actor_learning_rate=resolved["actor_learning_rate"],
+        actor_signal_clip=resolved["actor_signal_clip"],
+        actor_polyak_tau=resolved["actor_polyak_tau"],
         critic_learning_rate=resolved["critic_learning_rate"],
         critic_value_scale=resolved["critic_value_scale"],
         trace_decay=resolved["trace_decay"],
@@ -624,6 +662,16 @@ def run_trial(
     env.action_space.seed(book.derive("环境动作空间种子"))
     explore_rng = torch.Generator().manual_seed(book.derive("动作探索"))
     tracker = BiasTracker()
+
+    # **中途评测必须用独立的环境实例。** ``env.reset()`` 会推进环境**自己**的 RNG 流，所以
+    # 拿训练环境做中途评测会改变后面每一个训练回合的初始状态——观测污染了被观测的东西。
+    # 实测过：同配置同种子，开了曲线之后 seed 6 的终值从 107.3 变成 335.4，整条轨迹换了一条。
+    # （贪心回合本身**不消耗** ``torch`` 的 generator：``exploration=0`` 时
+    # ``select_action`` 里那个 ``torch.rand`` 被短路掉了。污染全在环境这一侧。）
+    eval_env = None
+    if greedy_eval_every:
+        eval_env = gymnasium.make("CartPole-v1")
+        eval_env.reset(seed=book.derive("评测环境种子"))
 
     started = time.perf_counter()
     history: list[int] = []
@@ -653,9 +701,9 @@ def run_trial(
             )
             history.append(steps)
 
-            if greedy_eval_every and episode % greedy_eval_every == 0:
+            if eval_env is not None and episode % greedy_eval_every == 0:
                 score = _greedy_score(
-                    env, agent, centers, encoding_sigma, explore_rng, greedy_eval_episodes
+                    eval_env, agent, centers, encoding_sigma, explore_rng, greedy_eval_episodes
                 )
                 curve.append(score)
                 if score > peak_mean_steps:
@@ -677,6 +725,8 @@ def run_trial(
         for _ in range(evaluation_episodes)
     ]
     env.close()
+    if eval_env is not None:
+        eval_env.close()
     elapsed = time.perf_counter() - started
 
     result = TrialResult(
@@ -715,6 +765,8 @@ def main(argv: list[str] | None = None) -> int:
         n_features=args.n_features,
         encoding_sigma=args.encoding_sigma,
         actor_learning_rate=args.actor_learning_rate,
+        actor_signal_clip=args.actor_signal_clip,
+        actor_polyak_tau=args.actor_polyak_tau,
         actor_normalize=args.actor_normalize,
         critic_learning_rate=args.critic_learning_rate,
         critic_kind=args.critic_kind,
