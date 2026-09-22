@@ -352,6 +352,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--exploration-start", type=float, default=0.3)
     parser.add_argument("--exploration-end", type=float, default=0.02)
+    parser.add_argument(
+        "--actor-lr-final-fraction",
+        type=float,
+        default=1.0,
+        help="Actor 学习率在训练末降到初始值的这个比例（1.0 = 不衰减）。"
+        "实测贪心策略在恒定学习率下剧烈震荡，衰减是冲着这个去的",
+    )
     parser.add_argument("--evaluation-interval", type=int, default=20)
     parser.add_argument("--evaluation-episodes", type=int, default=10)
     parser.add_argument("--seed", type=int, default=0)
@@ -450,6 +457,7 @@ def run_trial(
     success_signal: str | None = None,
     exploration_start: float = 0.3,
     exploration_end: float = 0.02,
+    actor_lr_final_fraction: float = 1.0,
     evaluation_episodes: int = 10,
     evaluation_interval: int = 20,
     device: torch.device | None = None,
@@ -469,6 +477,11 @@ def run_trial(
     book = SeedBook(base=seed)
     device = device if device is not None else select_device(None)
     defaults = {name: agent_default(name) for name in CLI_TO_AGENT_PARAM.values()}
+
+    if not 0.0 < actor_lr_final_fraction <= 1.0:
+        raise ValueError(
+            f"actor_lr_final_fraction 应在 (0, 1] 内，收到 {actor_lr_final_fraction}。"
+        )
 
     resolved = {
         "actor_learning_rate": actor_learning_rate,
@@ -521,9 +534,17 @@ def run_trial(
     started = time.perf_counter()
     history: list[int] = []
     with measure_peak_memory(device) as memory:
+        actor_lr_base = agent.actor.learning_rate
         for episode in range(1, episodes + 1):
             progress = episode / episodes
             exploration = exploration_start + progress * (exploration_end - exploration_start)
+            # **Actor 学习率线性衰减。** 此前它全程恒定，而实测贪心策略在训练中剧烈震荡
+            # （一条种子 150 → 73 → 16 → 13 → 500 → 14），说明过程根本不收敛：恒定步长
+            # 下它反复找到好解又丢掉，终值只取决于震荡停在哪一相。衰减是直接针对这个的
+            # 标准做法——让后期的更新幅度小到能把好的解留住。
+            agent.actor.learning_rate = actor_lr_base * (
+                1.0 - progress * (1.0 - actor_lr_final_fraction)
+            )
             steps, max_trace = run_episode(
                 env,
                 agent,
@@ -599,6 +620,7 @@ def main(argv: list[str] | None = None) -> int:
         success_signal=args.success_signal,
         exploration_start=args.exploration_start,
         exploration_end=args.exploration_end,
+        actor_lr_final_fraction=args.actor_lr_final_fraction,
         evaluation_episodes=args.evaluation_episodes,
         evaluation_interval=args.evaluation_interval,
         device=device,

@@ -204,7 +204,11 @@ def main(argv: list[str] | None = None) -> int:
     for index, (config, seed) in enumerate(cells, 1):
         slug = config_slug(config)
         try:
-            result = run_trial(seed, episodes=args.episodes or 800, device=device, **config)
+            # 先铺默认值再让 config 覆盖：否则 --grid episodes=... 会与这里的显式
+            # episodes 撞车（got multiple values for keyword argument）。
+            kwargs = {"episodes": args.episodes or 800, "device": device}
+            kwargs.update(config)
+            result = run_trial(seed, **kwargs)
         except Exception as exc:
             failures.append((config, seed, f"{type(exc).__name__}: {exc}"))
             print(f"[{index:3d}/{len(cells)}] {slug} seed={seed}  ✗ 失败：{exc}", flush=True)
