@@ -133,6 +133,12 @@ torch" claim (ADR-0002) therefore remains verifiable locally as well.
 Every module's docstring carries the 12-month breaking-change grace period and its expiry
 date (to 2027-09).
 
+### Experiment records completed so far
+
+| Validation line | Where the record lives | Acceptance figure |
+| :--- | :--- | :--- |
+| W1 kernelized IB-Hebbian perception layer | [`research/ib_hebbian/README.en.md`](../research/ib_hebbian/README.en.md) | MNIST 98.01% (threshold 70%) |
+
 ## Where later phases record this
 
 From Phase 1 (single-rule validation) onward, every experiment record must carry the full

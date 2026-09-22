@@ -115,6 +115,12 @@ uv sync --locked      # lock 与 pyproject 必须一致
 
 每个模块的 docstring 顶部带 12 个月破坏性变更免责期与到期日（至 2027-09）。
 
+### 已完成的实验记录
+
+| 验证线 | 记录位置 | 验收数字 |
+| :--- | :--- | :--- |
+| W1 核化 IB-Hebbian 感知层 | [`research/ib_hebbian/README.md`](../research/ib_hebbian/README.md) | MNIST 98.01%（阈值 70%） |
+
 ## 后续阶段的记录位置
 
 从第一阶段（单规则验证）起，每篇实验记录都要带上完整模板。这一段由

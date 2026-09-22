@@ -236,6 +236,15 @@
 | 正交类中心 | orthogonal class center | 直交クラス中心 | 1 | PS-SNN 的归因数字之一，见 `docs/references.md` [7] |
 | 增量准确率 | incremental accuracy | 増分精度 | 1 | PS-SNN 的 76.42%，类增量学习场景 |
 | 神经元动力学 | neuron dynamics | ニューロンダイナミクス | — | 骨架库不做神经元动力学（ADR-0002）；认知核心与 SpikingJelly 的事 |
+| 核化信息瓶颈 | kernelized information bottleneck | カーネル化情報ボトルネック | — | Pogodin & Latham 2020 的方法；缩写 KB 不用。见「核化」条 |
+| 局部目标 | local objective | 局所目的 | — | 每层各自最小化的目标函数（这里是 pHSIC 瓶颈目标），与全局损失相对。见 `research/ib_hebbian/layers.py` |
+| 教学信号 | teaching signal | 教学信号 | — | 三因子规则里来自标签的那一项；类别均衡时是二值的（同类 1、异类 −1/(n−1)）。**不译作 teacher signal** |
+| 分组 | grouping | グループ化 | — | 把一层神经元分成 c_k 组，各组算自己的方差。与「分组数」区分——后者是组的个数 |
+| 分组数 | number of groups | グループ数 | — | c_k；论文 Table 3 的 MNIST 行给 16 或 32 |
+| 平滑偏移 | smoothing offset | 平滑オフセット | — | 分组方差里的 δ，防止方差为零时除零；论文 D.5 取 1 |
+| 瓶颈平衡参数 | bottleneck balance parameter | ボトルネック平衡パラメータ | — | 目标里的 γ，平衡 pHSIC(Z,Z) 与 pHSIC(Y,Z)；论文取 2 |
+| 读出 | readout | 読み出し | — | 接在隐藏层之后的线性分类器。本项目里它用交叉熵训练，与隐藏层的局部规则不同 |
+| 弱消融 | weak ablation | 弱いアブレーション | — | 只说明某一项在起作用、不足以构成对原论文断言的独立验证的那种消融。README 里明确标注 |
 
 ## 四、不翻译的内容
 
