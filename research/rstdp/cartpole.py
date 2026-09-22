@@ -505,6 +505,19 @@ def build_parser() -> argparse.ArgumentParser:
         "此时 S = R − ⟨R⟩ 恒为 0 附近、毫无对比度——计划书 §3.2 那个式子是给"
         "稀疏终末奖励的设定写的（Frémaux 2010 的原始场景）",
     )
+    parser.add_argument(
+        "--logit-scale-start",
+        type=float,
+        default=None,
+        help="Boltzmann 逆温度的**起点**；与 --logit-scale-end 一起给出才启用退火（log 空间"
+        "线性插值）。先用近均匀把策略学起来，再收紧拿决策边际——恒定值两端各丢一半",
+    )
+    parser.add_argument(
+        "--logit-scale-end",
+        type=float,
+        default=None,
+        help="Boltzmann 逆温度的**终点**",
+    )
     parser.add_argument("--exploration-start", type=float, default=0.3)
     parser.add_argument("--exploration-end", type=float, default=0.02)
     parser.add_argument(
@@ -689,6 +702,8 @@ def run_trial(
     success_signal: str | None = None,
     exploration_start: float = 0.3,
     exploration_end: float = 0.02,
+    logit_scale_start: float | None = None,
+    logit_scale_end: float | None = None,
     actor_lr_final_fraction: float = 1.0,
     evaluation_episodes: int = 10,
     evaluation_interval: int = 20,
@@ -827,6 +842,23 @@ def run_trial(
             agent.actor.learning_rate = actor_lr_base * (
                 1.0 - progress * (1.0 - actor_lr_final_fraction)
             )
+            # **Boltzmann 的逆温度退火**。与 ε 调度是同一件事，但作用在采样分布的形状上。
+            #
+            # 为什么需要它：恒定 logit 的两端各丢一半。logit 5（近均匀）探索足、学得起来，
+            # 但策略一直很钝，实测中位数 141.4；logit 20（较尖锐）上限高得多（留出集中位数
+            # 177.3、最大 434），可是**约十分之一的种子从头到尾学不起来**——峰值只有 10–12
+            # 步，说明那几条轨迹压根没启动：策略一开始就太尖，智能体在随机初始权重上几乎
+            # 总走同一个动作、只访问很窄的状态分布。退火正好各取一半：先钝后尖。
+            #
+            # **在 log 空间插值**（等价于温度线性退火）——logit_scale 是温度的倒数，
+            # 线性插值它等于对温度做双曲退火，前期过慢、后期过快。
+            if logit_scale_start is not None and logit_scale_end is not None:
+                agent.actor.logit_scale = float(
+                    math.exp(
+                        math.log(logit_scale_start)
+                        + progress * (math.log(logit_scale_end) - math.log(logit_scale_start))
+                    )
+                )
             steps, max_trace = run_episode(
                 env,
                 agent,
@@ -928,6 +960,8 @@ def main(argv: list[str] | None = None) -> int:
         success_signal=args.success_signal,
         exploration_start=args.exploration_start,
         exploration_end=args.exploration_end,
+        logit_scale_start=args.logit_scale_start,
+        logit_scale_end=args.logit_scale_end,
         actor_lr_final_fraction=args.actor_lr_final_fraction,
         evaluation_episodes=args.evaluation_episodes,
         evaluation_interval=args.evaluation_interval,

@@ -279,6 +279,74 @@ class TestGreedyScoreIsActuallyGreedy:
         assert score < 40.0, "贪心评测下未训练的策略不该有高分；分数高说明还在采样"
 
 
+class TestLogitScaleAnnealing:
+    """Boltzmann 逆温度的退火：``logit_scale`` 应当在训练过程中从起点走到终点。
+
+    动机是实测出来的双峰：恒定 logit 的两端各丢一半——近均匀（logit 5）学得起来但钝
+    （中位数 141.4），较尖锐（logit 20）上限高（留出集 177.3、最大 434）但**约十分之一的
+    种子从头到尾学不起来**（峰值只有 10–12 步）。退火先钝后尖，两头都要。
+    """
+
+    @staticmethod
+    def _run(**kwargs):
+        pytest.importorskip("gymnasium")
+        from research.rstdp.cartpole import run_trial
+
+        _, context = run_trial(
+            0,
+            episodes=kwargs.pop("episodes", 6),
+            n_features=16,
+            actor_action_sampling="boltzmann",
+            actor_logit_scale=1.0,
+            actor_trace_center="sampling",
+            device=torch.device("cpu"),
+            return_context=True,
+            **kwargs,
+        )
+        return context.agent.actor.logit_scale
+
+    def test_no_schedule_leaves_the_constant_alone(self):
+        assert self._run() == pytest.approx(1.0)
+
+    def test_the_schedule_ends_at_the_end_value(self):
+        """最后一个回合结束后应当落在 ``logit_scale_end`` 上（线性 progress 走到 1）。"""
+        assert self._run(logit_scale_start=2.0, logit_scale_end=20.0) == pytest.approx(20.0)
+
+    def test_the_schedule_interpolates_in_log_space(self):
+        """中途的值应当落在**几何**插值上，而不是算术插值。
+
+        ``logit_scale`` 是温度的倒数，线性插值它等于对温度做双曲退火（前期过慢、后期过快）。
+        **必须用 ``observer`` 在训练途中取**：循环最后一轮会把 progress 推到 1.0，
+        跑完之后读到的永远是终点值。
+        """
+        import math
+
+        from research.rstdp.cartpole import run_trial
+
+        pytest.importorskip("gymnasium")
+        seen: dict[int, float] = {}
+
+        def observer(episode, agent, centers):
+            seen[episode] = agent.actor.logit_scale
+
+        run_trial(
+            0,
+            episodes=5,
+            n_features=16,
+            actor_action_sampling="boltzmann",
+            actor_logit_scale=1.0,
+            actor_trace_center="sampling",
+            logit_scale_start=1.0,
+            logit_scale_end=100.0,
+            observer=observer,
+            observer_every=4,
+            device=torch.device("cpu"),
+        )
+        assert 4 in seen, "observer 没被调用"
+        assert seen[4] == pytest.approx(math.exp(0.8 * math.log(100.0)), rel=1e-6)
+        assert seen[4] < 50.0, "几何插值应当明显低于算术中点 50.5"
+
+
 class TestStructuralOptionsReachTheActor:
     """结构性那一组选项必须真的传到 Actor 上。"""
 
