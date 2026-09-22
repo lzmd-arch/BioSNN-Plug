@@ -121,7 +121,7 @@ uv sync --locked      # lock 与 pyproject 必须一致
 | :--- | :--- | :--- |
 | W1 核化 IB-Hebbian 感知层 | [`research/ib_hebbian/README.md`](../research/ib_hebbian/README.md) | MNIST 98.01%（阈值 70%） |
 | W2 e-prop 认知层 | [`research/eprop/README.md`](../research/eprop/README.md) | sMNIST 77.48%；活跃神经元比例 1.0000（阈值 > 60%） |
-| W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.md`](../research/rstdp/README.md) | ⚠️ **未达到**：CartPole 9.3–37.3 步（阈值 ≥ 200）；偏移比 0.05–1.37（阈值 < 0.10，五种子里仅 1 个达标） |
+| W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.md`](../research/rstdp/README.md) | ⚠️ **未达到**：CartPole 中位数 **100.0 步**（10 种子，阈值 ≥ 200；最小 63 / 最大 173）；偏移比中位数 0.012（全部种子 < 0.10 ✓）。本阶段试过的 18 组杠杆**全部**未通过预登记的采纳规则，详见 README 的结论与边界 |
 
 ## 后续阶段的记录位置
 

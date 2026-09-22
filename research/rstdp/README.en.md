@@ -17,36 +17,121 @@ solution is stimulus-specific reward prediction.
 
 ## Current conclusion
 
-**Acceptance is still not met, but for a different reason now.** The Critic side is fixed;
-what remains is on the Actor side.
+**The acceptance criterion is still not met.** Median over ≥10 seeds: **100.0 steps**
+(criterion ≥ 200), min 63, max 173. Stated more fully: **every lever tried this phase failed the
+pre-registered adoption rule** — but the failure mode has now been measured precisely enough to
+rule things out one at a time.
 
-### After the change (population + fixed readout Critic)
+### Acceptance rule (fixed before measuring)
 
-Measured over five seeds (`--seed 0..4`, everything else identical):
+Per-seed paired difference: **median > 0 and ≥7/10 seeds improve**. Baseline is
+`actor_lr_final_fraction=0.1` (10-seed median 100.0). Multiple seeds are mandatory: within one
+configuration, seeds differ by 5–30×, so single-seed conclusions are unusable here.
 
-| seed | Mean greedy episode length | \|offset\|/σR (tail) |
-| ---: | ---: | ---: |
-| 0 | 114.6 | 0.0076 ✓ |
-| 1 | 61.1 | 0.0127 ✓ |
-| 2 | 60.2 | 0.0142 ✓ |
-| 3 | 119.9 | 0.0290 ✓ |
-| 4 | 81.6 | 0.0162 ✓ |
-| **criterion** | **≥ 200** | **< 0.10** |
+### What was tried, and what happened
 
-**The offset criterion now passes 5/5**, with steps in the 60–120 range. Against the
-before numbers (offset 1/5, steps 9–37) this is a **structural** improvement: the Critic
-actually converges and `δ` no longer carries a DC offset — which is precisely what the
-population structure was for.
+| Lever | Paired median | Improved | Verdict |
+| :--- | ---: | ---: | :--- |
+| **Actor learning rate 3e-3 → 1e-3** | — | — | Works, but only reaches 93.7 |
+| Actor learning rate 3e-4 / 1e-4 / 3e-5 / 1e-5 / 3e-6 | −26 … −65 | ≤4/10 | No effect |
+| Encoding width σ ≥ 1.0 | — | — | Catastrophic (median 9.4) |
+| Training budget 2400 / 400 / 200 / 100 | −23 … −55 | ≤3/10 | No effect (less is worse) |
+| Actor L1 normalisation off (scale-matched) | −1.6 | 5/10 | No effect |
+| Trace second factor → softmax | −88% | 0/5 | Catastrophic |
+| Trace second factor → `a_j − 1/n` | — | — | No effect by construction (row-common vector, argmax-invariant) |
+| Critic learning rate 2e-3 / 8e-3 / 3e-2 | −69 … −66 | **0/10** | Catastrophic |
+| Critic learning rate 1e-4 | −2.4 | 5/10 | No effect |
+| Critic units 256 / 1024 | −3.9 / +2.2 | 3/10 / 5/10 | No effect |
+| Critic gain 4; threshold 0.6 / 0.8 / 1.0 | −37 … +6 | ≤5/10 | No effect |
+| Critic output bias (learnable / fixed −20) | −6.3 / +0.3 | 4/10 / 5/10 | No effect |
+| Critic semi-gradient post-factor `y(1−y)` | −7.2 | 5/10 | No effect |
+| Actor signal clip | — | — | **Wrong grid**: all three values sat below σR≈4.8, so it swept a smaller effective learning rate again |
+| Actor Polyak averaging τ=0.99 | −25.9 | 2/10 | No effect (flattens the wandering and the good excursions alike) |
+| Behaviour policy → Boltzmann + trace centring | −72 … +8 | ≤6/10 | No effect |
+| Critic fixed **signed** readout + semi-gradient | −50.7 | **0/10** | No effect — but it works at the mechanism level, see below |
 
-**But 200 steps is still out of reach.** The best seed reaches 119.9, still about 40% short.
-The "before and after" section below analyses why: the bottleneck is now clearly the
-Actor's credit assignment, not the Critic.
+### Two decisive measurements
+
+**One: the policy wanders throughout; the final value is one phase sample of that wander.**
+Greedy evaluation every 50 episodes:
+
+```text
+frac=1.0 seed 3:  78 374 176 38 39 12 9 12 96 83 18 39 94 47 22 9
+frac=0.1 seed 0:  24 30 29 32 11 10 24 21 32 94 92 428 226 130 111 61
+frac=0.1 seed 9:  12 9 9 56 10 34 19 40 54 37 31 28 31 21 244 88
+```
+
+**All twenty** curves look like this, with adjacent checkpoints differing by 5–30×. So the
+acceptance statistic — the mean of 10 greedy episodes on the final weights — largely measures
+**which phase the wander stopped in**, not the level learned. The median peak is 158.0, **also
+short of 200**.
+
+**Two: making the Critic genuinely more accurate makes the policy worse.** The pre-registered
+fork rule said "EV < 0.5 ⇒ the Critic is the bottleneck". That inference **was refuted by its own
+intervention** — see below.
+
+### Why the Critic cannot fit, localised to the readout
+
+Setting the actor learning rate to 0 gives a **completely stationary** target, which rules out
+non-stationarity: EV(V, V\*) is still −1.00 / −0.51 / −0.81. Nor is it step size — lowering the
+critic learning rate makes EV monotonically worse (5e-4 → 1e-4 → 2e-5 gives −0.75 → −1.30 → −6.45).
+
+Replacing the fixed readout with a **least-squares solution**, changing nothing else, moves EV on
+the **same unit activities** from −0.9 to **+0.6**: the features carry the information, and the
+"fixed, all-positive, uniform" readout throws it away. (Control: **untrained** random directions
+already score +0.53, so training the unit directions buys very little.)
+
+So I added `critic_readout="random"` (fixed but **signed**) together with the complete
+semi-gradient post-factor `u_j·g·y_j(1−y_j)`. **It works at the mechanism level**: EV −1.00 →
+−0.21, mean absolute error 10.8 → 5.4.
+
+**But 0/10 seeds improved** (paired median −50.7). The reason is a measurable confound: a signed
+readout turns `V = Σu_j y_j` into a cancelling difference, dropping **σR from 4.30 to 1.40** —
+which shrinks the calibrated Actor step by 3×.
+
+**The step-compensated control has now finished, and the conclusion holds.** Scaling the Actor
+learning rate by the σR ratio to 9e-3 (`3e-3 × 4.30 ≈ 9e-3 × 1.40`, whose product is the
+effective step) still gives a paired median of **−40.6, 4/10 improved**, median 45.9. **So
+"making δ more accurate does not make the policy better" survives the compensation** — the
+pre-registered fork inference (EV < 0.5 ⇒ the Critic is the bottleneck) was refuted by its own
+intervention.
+
+### What is now established
+
+- **The Actor's rule points the right way; its magnitude is wrong.** Against advantages computed
+  by exact rollout, the rule's own mean update direction has cosine **cos = 0.74** (0.65–0.91)
+  with the exact advantage-weighted direction, while the step ratio is **|U|/|T| = 20–36**.
+- **The rule never compares actions.** `learn_step` only updates the Actor on non-exploring
+  steps, and on those `action = argmax` is a deterministic function of the state — so it only ever
+  reinforces the action it just happened to take. That is also why centring by `a_j − π_j`
+  **on its own freezes the Actor completely** (`a_j − π_j ≡ 0`); an assertion in the code blocks it.
+- **Boltzmann + centring does not help, for a structural reason**: after centring, the update
+  magnitude is proportional to `a − π`, so it shrinks as the policy sharpens. logit 80 (near
+  deterministic) collapses to 12.4 steps.
+- **Capacity is not the bottleneck**: a supervised linear policy on the same encoding reaches 497 steps.
+- **The Critic's value range is not the bottleneck**: V's width is 0.73–0.84 of V*'s. The shape is wrong.
+
+### Four real defects fixed this phase
+
+1. **Truncation was treated as termination.** An episode reaching the 500-step cap took
+   `δ ≈ 1 − 99.3 = −98` on its last step, about 56× a typical weight, and **the better the policy
+   the harder it hit** — the most direct explanation of "peak 500 → collapse to 14". After the fix,
+   the first 5 seeds of the undecayed arm are **bit-identical** to before, so the change is scoped
+   exactly to the truncation path.
+2. **The observation perturbed the observed.** Mid-training greedy evaluation advanced the
+   training environment's own RNG stream, changing the initial state of every later episode
+   (same config and seed: seed 6 went from 107.3 to 335.4). Fixed by using a separate env instance;
+   now bit-identical.
+3. **The Critic's direction-sampling pool silently capped `critic_units`** (~850–960): with
+   `critic_units=1024` all ten seeds failed.
+4. **A sign argument of mine was wrong.** "The readout must be all-positive" only holds for the
+   `rate` post-factor; with `gradient`, the sign is carried by `u_j` itself.
 
 ### Before the change (single-unit Critic, kept as a control)
 
 `--critic-kind single` reproduces the earlier behaviour:
 
-| seed | Steps | \|offset\|/σR |
+| seed | steps | \|offset\|/σR |
 | ---: | ---: | ---: |
 | 0 | 9.3 | 0.9676 ✗ |
 | 1 | 23.1 | 0.4364 ✗ |
@@ -54,48 +139,33 @@ Actor's credit assignment, not the Critic.
 | 3 | 9.4 | 0.7571 ✗ |
 | 4 | 9.5 | 1.3705 ✗ |
 
-**No seed** reaches 200 steps, and only one meets the offset criterion. A random policy
-survives about 9–10 steps on CartPole, so seeds 0/3/4 effectively learned nothing.
+No seed reached 200 steps; a random policy gets about 9–10 steps on CartPole. **The seeds with the
+largest offset were exactly the ones that failed to learn** (0.97 / 0.76 / 1.37 → 9 steps) —
+directionally consistent with §3.2, though the quantitative threshold boundary was not reproduced.
 
-### There is a signal in the before table pointing the way the paper predicts
-
-Read the two columns together: **the seeds with a large offset are exactly the ones that
-fail to learn.**
-
-- seeds 0/3/4: offsets 0.97 / 0.76 / 1.37 → 9.3 / 9.4 / 9.5 steps (i.e. a random policy)
-- seed 2: offset 0.053 (the only one that passes) → 37.3 steps (the best of the five)
-
-That is the direction of §3.2's claim: **once the success signal carries a DC offset, the
-Actor cannot learn.** This entry does **not** reproduce the quantitative boundary ("fails
-at ~25%σR") — that needs a task whose action distribution stays mixed in order to be
-measured cleanly — but the qualitative direction agrees with the paper. This correlation
-is the most valuable part of this entry.
-
-Reproducibility record (`--seed 0`, generated by `research/common/provenance.py`):
+Provenance record (`--seed 0`, generated by `research/common/provenance.py`):
 
 ```text
 实验名称：rstdp/cartpole
-日期：2026-09-22 22:12:47 中国标准时间
-Git commit：6522e9026d79712496dce4e2ea3b4ac84a1d4559
+日期：2026-09-23 03:05:37 中国标准时间
+Git commit：5e64247ef9bc08931b225ba8ae100f3968dacc9f
 Git 状态：干净
 Python：3.12.14
 操作系统 / 架构：Windows 11 / AMD64
 硬件：CPU（Intel64 Family 6 Model 183 Stepping 1, GenuineIntel，无 GPU 参与）
-随机种子：base=0；Actor 与 Critic 初始权重=3589114572；动作探索=3138835151；群体编码中心=4160090208
+随机种子：base=0；Actor 与 Critic 初始权重=3589114572；Critic 感受野采样=1786091376；动作探索=3138835151；感受野采样环境=2269638270；环境动作空间种子=4106697854；环境随机种子=2726622797；群体编码中心=4160090208
 依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
-运行命令：cartpole.py --device cpu
-耗时：3.4 s
+运行命令：cartpole.py --seed 0 --device cpu
+耗时：27.6 s
 显存峰值：0.0 MiB（§6.2 硬约束 8GB）
 §6.2 降级路径：未触发
-备注：N=64, sigma=0.5, value_scale=60.0, eta_actor=0.003, eta_critic=0.0005, trace_decay=0.9, gamma=0.99, success_signal=td_error
+备注：N=64, sigma=0.5, eta_actor=0.003, eta_critic=0.0005, trace_decay=0.9, gamma=0.99, success_signal=td_error
+备注：Actor：normalize=True, clip=None, polyak_tau=None, sampling=epsilon_greedy, logit_scale=1.0, trace_center=none, lr_final_fraction=1.0
+备注：Critic：kind=population, units=64, value_scale=200.0, gain=8.0, threshold=0.4, output_bias=0.0, bias_lr=None, post_factor=rate
+备注：探索：start=0.3, end=0.02, 回合数=800
 备注：状态编码：4 维连续状态的高斯群体编码（本项目自己的选择）
 备注：速率型单元：STDP 窗口形状与 TD-LTP/TD-STDP 的差别在此化简下无从体现
 ```
-
-**That record predates the environment-seeding fix** (see below), so its reproducibility
-information is **incomplete** — `env.reset()` was unseeded at the time. The five-seed table
-was measured after the fix and is the trustworthy set of numbers. The record is kept here to
-show what the state was then, not as reproducible evidence.
 
 ## How to reproduce it
 
@@ -179,45 +249,84 @@ to guess which hyperparameter is more sensitive.
 
 ## Known boundaries
 
-1. **Acceptance is not met** — no seed reaches 200 steps.
-2. **The success signal's default was changed.** §3.2 writes `S = R − ⟨R⟩`, but CartPole
-   gives a **dense, constant reward** of +1 per step, so `⟨R⟩ ≡ 1` and `S ≈ 0` — no contrast
-   at all. That formula was written for **sparse terminal rewards** (Frémaux 2010's original
-   setting). The default is now the TD error, with both available. So this entry does not
-   test the success signal as literally written in the project plan.
-3. **Rate-based, not spiking.** There is no spike ordering in a rate model, so the shape of
-   `STDP(Δt)` degenerates into a same-instant product, and **TD-LTP's difference from
-   TD-STDP (the presence of a post-before-pre component) cannot be expressed here**.
+1. **Acceptance is not met.** Median over ≥10 seeds is 100.0 steps against a criterion of 200.
+   Every lever tried this phase is in the table above, and **none passed the pre-registered
+   adoption rule**.
+2. **The success signal's default was changed.** §3.2 writes `S = R − ⟨R⟩`, but CartPole pays a
+   **dense, constant** reward of +1 per step, so `⟨R⟩ ≡ 1` and `S ≈ 0` — no contrast at all. That
+   expression was written for **sparse terminal** rewards (Frémaux 2010's original setting). The
+   default is now the TD error; both remain selectable. So this entry does **not** test the success
+   signal written literally in the plan.
+3. **Rate-based, not spiking.** With rates there is no "spike ordering", so the `STDP(Δt)` window
+   shape degenerates into a same-instant product, and **the one substantive difference between
+   TD-LTP and TD-STDP — whether there is a post-before-pre component — cannot be expressed here**.
    ADR-0007's alternative C (falling back to TD-STDP) is therefore not a switch in this
-   implementation — it would require going back to a spiking model. **That fallback was not
-   tried.**
-4. **The tuning has to be redone after seeding the environment.** The "sensitivity"
-   conclusions I scanned earlier (for instance a Critic learning rate of 1e-3 versus 5e-4
-   giving 44 vs 223 steps) **were all measured before the environment was seeded and are
-   therefore untrustworthy** — back then the same configuration could differ twofold between
-   two runs. Re-scanning after seeding gives a different picture (boundary 6 below): every
-   configuration lands between 9 and 59 steps and ends with the Critic saturated. **Most of
-   the tuning judgement this entry made on that earlier data has to be discarded.**
-5. **The "the Actor lacks capacity" hypothesis is refuted.** See the capacity probe: on
-   **the same encoding**, a linear policy reaches 497 steps. So capacity is not the bottleneck.
-6. **Changing the Critic structure fixed the biased signal but not the step count.** The
-   offset went from 1/5 to 5/5 passing and steps from 9–37 to 60–120, but 200 steps is still
-   out of reach. **The bottleneck is now clearly on the Actor side:**
-   - the Actor is still a linear policy with L1 normalization (this was **not** re-examined as
-     part of this change and remains a candidate interference source);
-   - its eligibility trace takes the chosen action's indicator as the second factor, which is
-     a rather coarse credit assignment;
-   - the learning signal is the TD error while the Critic is learning simultaneously (not
-     two-phase).
-   None of these three has been ablated individually.
-7. **The single-unit Critic's two defects are located and fixed, but they only explain part of
-   the "before" numbers.** Its eligibility trace was gated by its own output (zero-lock), its
-   update scaled with `V` (positive feedback → divergence), and the normalization I added took
-   away its scale freedom (`V` pinned to the ceiling → `δ` became constant). All three vanish
-   with the population. But swapping the single unit for standard TD(λ) also only reached
-   21–40 steps — **so something else was at work then, and that something is very likely still
-   at work.**
-8. **§3.2's quantitative boundary was not reproduced.** Measuring "fails at ~25%σR" requires
-   a task whose action distribution stays mixed; `examples/paper_fremaux2013.py`
-   deliberately does **not** demonstrate it, because my first version was actually measuring
-   "which action the actor happens to pick" rather than the bias structure.
+   implementation; falling back would first require a spiking implementation. **That fallback has
+   not been tried.**
+4. **The policy does not converge, and this is the most important boundary.** Greedy evaluation
+   every 50 episodes shows **all twenty** trajectories oscillating over the whole run (adjacent
+   checkpoints differ by 5–30×). So the acceptance statistic — the mean of 10 greedy episodes on
+   the final weights — largely measures **a phase**, not a level; and the **median peak is 158.0,
+   also short of 200**. Any conclusion here that reports a single final number should be discounted.
+5. **"Actor capacity is insufficient" is refuted.** On the **same encoding**, a supervised linear
+   policy reaches 497 steps.
+6. **Making the Critic more accurate does not improve the step count — this refutes this phase's
+   own pre-registered fork.** The rule said "EV < 0.5 ⇒ the Critic is the bottleneck"; EV was in
+   fact negative (−1.0 … −2.0), so I fixed the Critic: a fixed signed readout plus the complete
+   semi-gradient post-factor took **EV from −1.00 to −0.21 and the mean absolute error from 10.8 to
+   5.4** — a mechanism-level success. **The result was 0/10 seeds improved** (paired median −50.7).
+   **The confound is measured and compensated**: the signed readout drops `σR` from 4.30 to 1.40
+   (shrinking the effective Actor step by 3×), and after scaling the Actor learning rate by the
+   same ratio to 9e-3 the paired median is still **−40.6, 4/10 improved**. **So "fix the Critic
+   first" is ruled out, not merely untried.**
+7. **The Actor's rule points the right way, has the wrong magnitude, and never compares actions.**
+   Against exact-rollout advantages, the rule's own mean update direction has cosine 0.74 with the
+   exact advantage-weighted direction, while the step ratio is 20–36×. Separately, `learn_step` only
+   updates the Actor on non-exploring steps, and there `action = argmax` is a deterministic function
+   of the state, so the rule only reinforces the action it happened to take. **Switching to
+   Boltzmann + `a_j − π_j` centring does not help**, and for a structural reason: after centring the
+   update magnitude is proportional to `a − π`, so it shrinks as the policy sharpens (logit 80
+   collapses to 12.4 steps).
+8. **Retuning must be redone after environment seeding.** The earlier "hyperparameter-sensitive"
+   conclusions (e.g. "critic learning rate 1e-3 versus 5e-4 is 44 steps versus 223 steps") **were
+   measured before the environment was seeded and are therefore untrustworthy** — back then the
+   same configuration run twice could differ by a factor of two. Most of this entry's earlier
+   tuning judgements have been retracted.
+9. **One grid-design mistake, recorded here.** The Actor signal-clip values were {0.3, 1.0, 3.0}
+   while the measured median `σR` is 4.78 — so all three sat **below the signal's own standard
+   deviation**, and that round actually swept a smaller effective learning rate rather than
+   trimming the tail. To test the latter, the threshold must sit above `σR`.
+10. **The single-unit Critic's two pathologies are located and fixed, but they only explain part of
+    the earlier behaviour.** Its eligibility trace was gated by its own output (zero lock), its
+    update was proportional to `V` (positive feedback → divergence), and the normalisation I added
+    to stop that removed its scale freedom (`V` pinned to its ceiling → `δ` became a constant).
+    The population structure removes all three. But replacing the single-unit version with standard
+    TD(λ) also only reached 21–40 steps — so **other factors were already at work then, and those
+    factors are most likely still present**.
+11. **§3.2's quantitative boundary was not reproduced.** "An offset of ~25% σR prevents learning"
+    requires a task designed to keep the action distribution mixed in order to measure cleanly;
+    `examples/paper_fremaux2013.py` deliberately does **not** demonstrate it, because my first
+    version was actually measuring "which action the actor happened to pick", not the bias structure.
+12. **Seed variance is enormous, and it is dynamical rather than statistical.** CartPole's dynamics
+    are deterministic; the randomness comes only from the initial state, exploration, and the
+    initial weights. A 10-seed median still has a wide confidence interval, so every
+    pass/fail here is reported over ≥10 seeds with **min and max always given**.
+13. **CPU and CUDA numbers are not comparable** (different floating point and random streams), so
+    every sweep is pinned to CPU.
+
+### Structural directions not yet tried
+
+Ordered by strength of evidence; all remain within "no surrogate gradients, purely local":
+
+1. **Split the Critic by action** (two populations giving `Q(s,0)` and `Q(s,1)`, driving the Actor
+   with `A = Q − V`). A single **state-value** Critic can only ever give a state-level advantage,
+   while CartPole's failures are action-specific. This is the classical fix and the one structural
+   piece this entry has not touched. **But note boundary 6**: making the Critic more accurate has
+   already been refuted once, so the prior on this should be lowered accordingly.
+2. **Let local plasticity shape the encoding itself** (currently a fixed random encoding plus a
+   linear readout). The capacity probe shows the *ceiling* of that combination is high (497 steps),
+   but the learning rule may not reach it.
+3. **Stimulus-specific reward prediction** — the structural fix §3.2 itself names: replace "one
+   global δ" with per-stimulus-channel predictions.
+4. **Trace Propagation** (Pes 2025) — the mechanism cited by the plan's phase-1 cognitive line, not
+   implemented this phase.
