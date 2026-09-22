@@ -175,13 +175,22 @@ def run_episode(
     exploration: float,
     learn: bool,
     tracker: BiasTracker | None = None,
-) -> int:
-    """跑一个回合，返回存活步数。"""
+) -> tuple[int, float]:
+    """跑一个回合。
+
+    Returns:
+        ``(存活步数, 回合内 Actor 资格痕迹的最大幅值)``。
+
+        痕迹必须在**回合进行中**取最大值：``end_episode()`` 会清空它，回合一结束再读就
+        恒为 0——第一版就是这么打印的，日志里那一列永远是 0.0000，看起来像"痕迹没在动"，
+        实际是测量时机错了。
+    """
     raw_state, _ = env.reset()
     state = torch.tensor(raw_state, dtype=torch.float32)
     features = encode_state(state, centers, sigma)
 
     steps = 0
+    max_trace = 0.0
     for _ in range(EPISODE_LIMIT):
         action, explored = agent.behave(features, generator=generator, exploration=exploration)
         raw_next, reward, terminated, truncated, _ = env.step(action)
@@ -199,6 +208,7 @@ def run_episode(
             )
             if tracker is not None:
                 tracker.record(signal)
+            max_trace = max(max_trace, agent.actor.trace.abs().max().item())
             _ = delta
 
         features = next_features
@@ -208,7 +218,7 @@ def run_episode(
 
     if learn:
         agent.end_episode()
-    return steps
+    return steps, max_trace
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -290,6 +300,11 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     env = gymnasium.make("CartPole-v1")
+    # **必须给环境播种。** gymnasium 的 CartPole 有自己的 RNG，不播种的话每次运行的
+    # 初始状态与状态转移都不同——上面那一串种子就覆盖不到实验的一半，复现记录等于
+    # 缺了一块。这是实测发现的：同一个 seed 两次跑出 20.4 步与 9.3 步。
+    env.reset(seed=book.derive("环境随机种子"))
+    env.action_space.seed(book.derive("环境动作空间种子"))
     explore_rng = torch.Generator().manual_seed(book.derive("动作探索"))
     tracker = BiasTracker()
 
@@ -301,7 +316,7 @@ def main(argv: list[str] | None = None) -> int:
             exploration = args.exploration_start + progress * (
                 args.exploration_end - args.exploration_start
             )
-            steps = run_episode(
+            steps, max_trace = run_episode(
                 env,
                 agent,
                 centers,
@@ -320,7 +335,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(
                     f"episode {episode:4d}  近 {args.evaluation_interval} 回合平均步数 "
                     f"{mean_recent:7.1f}  探索率 {exploration:.3f}  "
-                    f"痕迹 rms {agent.actor.trace_rms():.4f}",
+                    f"回合内痕迹峰值 {max_trace:.4f}",
                     flush=True,
                 )
 
@@ -334,7 +349,7 @@ def main(argv: list[str] | None = None) -> int:
             generator=explore_rng,
             exploration=0.0,
             learn=False,
-        )
+        )[0]
         for _ in range(args.evaluation_episodes)
     ]
     env.close()
