@@ -77,6 +77,9 @@ class CartPoleAgent:
         actor_learning_rate: float = 3e-3,
         actor_signal_clip: float | None = None,
         actor_polyak_tau: float | None = None,
+        actor_action_sampling: str = "epsilon_greedy",
+        actor_logit_scale: float = 1.0,
+        actor_trace_center: str = "none",
         critic_learning_rate: float = 5e-4,
         critic_value_scale: float = 200.0,
         trace_decay: float = 0.9,
@@ -109,6 +112,9 @@ class CartPoleAgent:
             learning_rate=actor_learning_rate,
             trace_decay=trace_decay,
             normalize=normalize_weights,
+            action_sampling=actor_action_sampling,
+            logit_scale=actor_logit_scale,
+            trace_center=actor_trace_center,
             polyak_tau=actor_polyak_tau,
             device=device,
             generator=generator,
@@ -292,6 +298,9 @@ CLI_TO_AGENT_PARAM = {
     "actor_learning_rate": "actor_learning_rate",
     "actor_signal_clip": "actor_signal_clip",
     "actor_polyak_tau": "actor_polyak_tau",
+    "actor_action_sampling": "actor_action_sampling",
+    "actor_logit_scale": "actor_logit_scale",
+    "actor_trace_center": "actor_trace_center",
     "critic_learning_rate": "critic_learning_rate",
     "critic_value_scale": "critic_value_scale",
     "trace_decay": "trace_decay",
@@ -346,6 +355,29 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--actor-learning-rate", type=float, default=agent_default("actor_learning_rate")
+    )
+    parser.add_argument(
+        "--actor-action-sampling",
+        default=agent_default("actor_action_sampling"),
+        choices=["epsilon_greedy", "boltzmann"],
+        help="行为策略。'epsilon_greedy' 是现状；'boltzmann' 按 softmax(logit_scale·得分) 采样，"
+        "**每一步都拿去更新 Actor**（没有「探索步」这回事了）。换它的理由是：当前规则在更新步上"
+        "的动作是确定性的 argmax，于是它**只强化当时选的那个动作、从不做动作之间的比较**",
+    )
+    parser.add_argument(
+        "--actor-logit-scale",
+        type=float,
+        default=agent_default("actor_logit_scale"),
+        help="Boltzmann 的 logit 缩放（温度的倒数）。**必须有**：L1 归一化后两列得分差只有 "
+        "0.05–0.5 量级，不放大 softmax 几乎是均匀的",
+    )
+    parser.add_argument(
+        "--actor-trace-center",
+        default=agent_default("actor_trace_center"),
+        choices=["none", "sampling"],
+        help="痕迹第二因子。'sampling' 用 a_j − π_j（π 是采样分布），即策略梯度的得分函数项："
+        "它把「需要 Critic 逐状态无偏」的偏置项精确消掉，并补上未选中动作被削弱这一项。"
+        "**只在 boltzmann 下有意义**——ε-贪心下 a_j − π_j ≡ 0，Actor 会完全停摆（有断言挡着）",
     )
     parser.add_argument(
         "--actor-signal-clip",
@@ -586,6 +618,9 @@ def run_trial(
     actor_learning_rate: float | None = None,
     actor_signal_clip: float | None = None,
     actor_polyak_tau: float | None = None,
+    actor_action_sampling: str | None = None,
+    actor_logit_scale: float | None = None,
+    actor_trace_center: str | None = None,
     actor_normalize: bool | None = None,
     critic_learning_rate: float | None = None,
     critic_kind: str | None = None,
@@ -645,6 +680,9 @@ def run_trial(
         "actor_learning_rate": actor_learning_rate,
         "actor_signal_clip": actor_signal_clip,
         "actor_polyak_tau": actor_polyak_tau,
+        "actor_action_sampling": actor_action_sampling,
+        "actor_logit_scale": actor_logit_scale,
+        "actor_trace_center": actor_trace_center,
         "normalize_weights": actor_normalize,
         "critic_learning_rate": critic_learning_rate,
         "critic_kind": critic_kind,
@@ -676,6 +714,9 @@ def run_trial(
         actor_learning_rate=resolved["actor_learning_rate"],
         actor_signal_clip=resolved["actor_signal_clip"],
         actor_polyak_tau=resolved["actor_polyak_tau"],
+        actor_action_sampling=resolved["actor_action_sampling"],
+        actor_logit_scale=resolved["actor_logit_scale"],
+        actor_trace_center=resolved["actor_trace_center"],
         critic_learning_rate=resolved["critic_learning_rate"],
         critic_value_scale=resolved["critic_value_scale"],
         trace_decay=resolved["trace_decay"],
@@ -807,6 +848,9 @@ def main(argv: list[str] | None = None) -> int:
         actor_learning_rate=args.actor_learning_rate,
         actor_signal_clip=args.actor_signal_clip,
         actor_polyak_tau=args.actor_polyak_tau,
+        actor_action_sampling=args.actor_action_sampling,
+        actor_logit_scale=args.actor_logit_scale,
+        actor_trace_center=args.actor_trace_center,
         actor_normalize=args.actor_normalize,
         critic_learning_rate=args.critic_learning_rate,
         critic_kind=args.critic_kind,

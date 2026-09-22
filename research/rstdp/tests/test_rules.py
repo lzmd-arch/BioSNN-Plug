@@ -303,6 +303,138 @@ class TestPolyakDeployedWeights:
         torch.testing.assert_close(actor.scores(features), features @ actor.weights_deployed)
 
 
+class TestBoltzmannAndCentering:
+    """结构性的那一步：把行为策略换成 Boltzmann，并按**采样分布**中心化痕迹。
+
+    起因是一条算术：ε-贪心下真正更新 Actor 的那些步里 ``action = argmax`` 是状态的确定性
+    函数，于是 ``a_j ≡ π_j``、``a_j − π_j ≡ 0``——**中心化会把 Actor 完全停掉**。所以
+    「中心化」与「换采样方案」必须一起做，不能只做一半。
+    """
+
+    def test_centering_requires_boltzmann(self):
+        """把那条算术写成断言：不是洁癖，是防止 Actor 静默停摆。"""
+        with pytest.raises(ValueError, match="boltzmann"):
+            RSTDPActor(3, 2, trace_center="sampling")
+
+    def test_the_epsilon_greedy_sampling_distribution_is_the_argmax(self):
+        actor = RSTDPActor(3, 2, normalize=False)
+        with torch.no_grad():
+            actor.weights.copy_(torch.tensor([[2.0, -2.0]] * 3))
+        probabilities = actor.action_probabilities(torch.ones(3))
+        torch.testing.assert_close(probabilities, torch.tensor([1.0, 0.0]))
+
+    def test_the_deterministic_case_would_freeze_the_actor(self):
+        """把「会停摆」直接量出来：``indicator − π`` 逐位为零，痕迹恒零。"""
+        actor = RSTDPActor(3, 2, normalize=False)
+        with torch.no_grad():
+            actor.weights.copy_(torch.tensor([[2.0, -2.0]] * 3))
+        features = torch.ones(3)
+        probabilities = actor.action_probabilities(features)
+        indicator = torch.tensor([1.0, 0.0])  # 选了 argmax
+        torch.testing.assert_close(indicator - probabilities, torch.zeros(2))
+
+    def test_boltzmann_probabilities_sum_to_one_and_favour_the_better_action(self):
+        actor = RSTDPActor(3, 2, normalize=False, action_sampling="boltzmann", logit_scale=5.0)
+        with torch.no_grad():
+            actor.weights.copy_(torch.tensor([[1.0, -1.0]] * 3))
+        probabilities = actor.action_probabilities(torch.ones(3))
+        assert float(probabilities.sum()) == pytest.approx(1.0)
+        assert probabilities[0] > probabilities[1]
+
+    def test_a_larger_logit_scale_sharpens_the_distribution(self):
+        def peak(scale: float) -> float:
+            actor = RSTDPActor(
+                3, 2, normalize=False, action_sampling="boltzmann", logit_scale=scale
+            )
+            with torch.no_grad():
+                actor.weights.copy_(torch.tensor([[1.0, -1.0]] * 3))
+            return float(actor.action_probabilities(torch.ones(3)).max())
+
+        assert peak(20.0) > peak(1.0), "放大 logit 应当更接近确定性"
+
+    def test_boltzmann_never_reports_an_exploration_step(self):
+        """被采样的动作就是策略自己的选择，所以每一步都该更新 Actor。"""
+        actor = RSTDPActor(3, 2, normalize=False, action_sampling="boltzmann", logit_scale=2.0)
+        generator = torch.Generator().manual_seed(0)
+        explored = [
+            actor.select_action(
+                torch.ones(3), generator=generator, exploration=1.0, return_explored=True
+            )[1]
+            for _ in range(20)
+        ]
+        assert not any(explored)
+
+    def test_boltzmann_actually_samples_both_actions(self):
+        actor = RSTDPActor(3, 2, normalize=False, action_sampling="boltzmann", logit_scale=0.5)
+        generator = torch.Generator().manual_seed(0)
+        actions = {actor.select_action(torch.ones(3), generator=generator) for _ in range(50)}
+        assert actions == {0, 1}
+
+    def test_centering_zeros_the_sum_over_actions(self):
+        """``Σ_j (a_j − π_j) = 0``——这条恒等式正是偏置项被消掉的原因。"""
+        actor = RSTDPActor(
+            5,
+            2,
+            normalize=False,
+            action_sampling="boltzmann",
+            logit_scale=2.0,
+            trace_center="sampling",
+            trace_decay=0.0,
+        )
+        features = make_features(5)
+        actor.update(features, action=0, success_signal=1.0)
+        torch.testing.assert_close(actor.trace[:, 0], -actor.trace[:, 1], rtol=1e-6, atol=1e-7)
+
+    def test_centering_uses_the_sampling_probability_not_a_constant(self):
+        """中心是 ``π`` 本身，不是 ``1/n``——后者只在策略均匀时才对。"""
+        actor = RSTDPActor(
+            5,
+            2,
+            normalize=False,
+            action_sampling="boltzmann",
+            logit_scale=5.0,
+            trace_center="sampling",
+            trace_decay=0.0,
+        )
+        with torch.no_grad():
+            actor.weights.copy_(torch.tensor([[1.0, -1.0]] * 5))
+        features = make_features(5)
+        probabilities = actor.action_probabilities(features)
+        actor.update(features, action=0, success_signal=1.0)
+        expected = torch.outer(features, torch.tensor([1.0, 0.0]) - probabilities)
+        torch.testing.assert_close(actor.trace, expected)
+        assert abs(float(probabilities[0]) - 0.5) > 0.1, "这一格要的是不均匀的策略"
+
+    def test_centering_leaves_the_online_weights_movable(self):
+        """中心化之后 Actor 仍然学得动——这是它没停摆的可测形式。"""
+        actor = RSTDPActor(
+            5,
+            2,
+            action_sampling="boltzmann",
+            logit_scale=2.0,
+            trace_center="sampling",
+            learning_rate=0.5,
+            trace_decay=0.0,
+        )
+        before = actor.weights.clone()
+        features = make_features(5)
+        for step in range(10):
+            actor.update(features, action=step % 2, success_signal=1.0)
+        assert not torch.allclose(actor.weights, before)
+
+    @pytest.mark.parametrize(
+        ("kwargs", "match"),
+        [
+            ({"action_sampling": "softmax"}, "action_sampling"),
+            ({"trace_center": "uniform"}, "trace_center"),
+            ({"logit_scale": 0.0}, "logit_scale"),
+        ],
+    )
+    def test_rejects_bad_sampling_hyperparameters(self, kwargs, match):
+        with pytest.raises(ValueError, match=match):
+            RSTDPActor(3, 2, **kwargs)
+
+
 def _bump(generator: torch.Generator, n: int = 64, k: int = 5) -> torch.Tensor:
     """模拟真实的状态编码：少数几个局域凸起，而不是稠密的随机向量。"""
     vector = torch.zeros(n)

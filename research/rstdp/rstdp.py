@@ -67,6 +67,9 @@ class RSTDPActor:
         trace_decay: float = 0.9,
         weight_norm: float = 1.0,
         normalize: bool = True,
+        action_sampling: str = "epsilon_greedy",
+        logit_scale: float = 1.0,
+        trace_center: str = "none",
         polyak_tau: float | None = None,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
@@ -77,6 +80,23 @@ class RSTDPActor:
             raise ValueError(f"weight_norm 必须为正，收到 {weight_norm}。")
         if polyak_tau is not None and not 0.0 <= polyak_tau < 1.0:
             raise ValueError(f"polyak_tau 应在 [0, 1) 内或为 None，收到 {polyak_tau}。")
+        if action_sampling not in ("epsilon_greedy", "boltzmann"):
+            raise ValueError(
+                f"action_sampling 只能是 'epsilon_greedy' 或 'boltzmann'，收到 {action_sampling!r}。"
+            )
+        if trace_center not in ("none", "sampling"):
+            raise ValueError(f"trace_center 只能是 'none' 或 'sampling'，收到 {trace_center!r}。")
+        if logit_scale <= 0:
+            raise ValueError(f"logit_scale 必须为正，收到 {logit_scale}。")
+        if trace_center == "sampling" and action_sampling != "boltzmann":
+            # **这条不是洁癖，是算术。** ε-贪心下真正更新 Actor 的那些步的动作是确定性的
+            # ``argmax``，于是 ``a_j ≡ π_j``、``a_j − π_j ≡ 0``——痕迹恒为零，Actor 一步都
+            # 不更新。让它静默停机比报错危险得多。
+            raise ValueError(
+                "trace_center='sampling' 只在 action_sampling='boltzmann' 下有意义："
+                "ε-贪心时更新步的动作是确定性的 argmax，a_j − π_j ≡ 0，痕迹会恒为零、"
+                "Actor 完全停摆。"
+            )
 
         device = device or torch.device("cpu")
         self.n_features = int(n_features)
@@ -85,6 +105,9 @@ class RSTDPActor:
         self.trace_decay = float(trace_decay)
         self.weight_norm = float(weight_norm)
         self.normalize = bool(normalize)
+        self.action_sampling = action_sampling
+        self.logit_scale = float(logit_scale)
+        self.trace_center = trace_center
 
         generator = device_generator(generator, device)
         self.weights = torch.randn(n_features, n_actions, device=device, generator=generator)
@@ -130,6 +153,23 @@ class RSTDPActor:
         return features @ self.weights_deployed
 
     @torch.no_grad()
+    def action_probabilities(self, features: torch.Tensor) -> torch.Tensor:
+        """**采样**动作的分布 ``π``，``(n_actions,)``。
+
+        * ``boltzmann``：``softmax(logit_scale · scores)``。需要 ``logit_scale`` 是因为
+          L1 归一化之后两列的得分差很小（量级 0.05–0.5），不放大的话 softmax 几乎是均匀的，
+          等于没有策略。
+        * ``epsilon_greedy``：``onehot(argmax)``——**注意这是「真正更新 Actor 的那一步」上
+          的分布**，与带 ε 的行为分布不同（探索步压根不更新 Actor）。
+        """
+        scores = self.scores(features)
+        if self.action_sampling == "boltzmann":
+            return torch.softmax(self.logit_scale * scores, dim=-1)
+        indicator = torch.zeros_like(scores)
+        indicator[int(scores.argmax().item())] = 1.0
+        return indicator
+
+    @torch.no_grad()
     def select_action(
         self,
         features: torch.Tensor,
@@ -145,7 +185,13 @@ class RSTDPActor:
         外面无法复现。
         """
         explored = False
-        if exploration > 0 and float(torch.rand(1, generator=generator).item()) < exploration:
+        if self.action_sampling == "boltzmann":
+            # **没有「探索步」这回事了**：被采样的动作就是策略自己的选择，所以每一步都该
+            # 拿去更新 Actor（``explored`` 恒为 False）。``exploration`` 参数在这个方案下
+            # 不使用——探索由 ``logit_scale``（温度的倒数）决定。
+            probabilities = self.action_probabilities(features)
+            action = int(torch.multinomial(probabilities, 1, generator=generator).item())
+        elif exploration > 0 and float(torch.rand(1, generator=generator).item()) < exploration:
             action = int(torch.randint(self.n_actions, (1,), generator=generator).item())
             explored = True
         else:
@@ -163,7 +209,14 @@ class RSTDPActor:
         """
         indicator = torch.zeros(self.n_actions, device=self.weights.device)
         indicator[action] = 1.0
-        self.trace.mul_(self.trace_decay).add_(torch.outer(features, indicator))
+        second_factor = indicator
+        if self.trace_center == "sampling":
+            # ``a_j − π_j``：这就是策略梯度的得分函数项。它的期望是 0，因此
+            # ``E[Δw] = η·E[x·(a−π)·S]`` 里那个「需要 Critic 逐状态无偏」的偏置项
+            # ``E[S|s]·x·π`` 被精确消掉；而且未选中的那一列会被**削弱**，这正是当前规则
+            # 结构上缺失的「动作比较」。
+            second_factor = indicator - self.action_probabilities(features)
+        self.trace.mul_(self.trace_decay).add_(torch.outer(features, second_factor))
         self.weights.add_(self.learning_rate * success_signal * self.trace)
         if self.normalize:
             self._normalize()

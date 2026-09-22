@@ -215,6 +215,44 @@ class TestNewOptionsReachTheCritic:
         assert agent.critic.out_bias.item() == pytest.approx(-30.0)
 
 
+class TestStructuralOptionsReachTheActor:
+    """结构性那一组选项必须真的传到 Actor 上。"""
+
+    def test_defaults_are_the_current_scheme(self):
+        actor = _agent().actor
+        assert actor.action_sampling == "epsilon_greedy"
+        assert actor.trace_center == "none"
+        assert actor.logit_scale == 1.0
+
+    def test_boltzmann_and_centering_reach_the_actor(self):
+        agent = CartPoleAgent(
+            4,
+            critic_units=3,
+            actor_action_sampling="boltzmann",
+            actor_logit_scale=3.0,
+            actor_trace_center="sampling",
+            generator=torch.Generator().manual_seed(0),
+        )
+        assert agent.actor.action_sampling == "boltzmann"
+        assert agent.actor.logit_scale == 3.0
+        assert agent.actor.trace_center == "sampling"
+
+    def test_the_agent_updates_the_actor_on_every_boltzmann_step(self):
+        """Boltzmann 下没有「探索步」，所以每一步都更新 Actor。"""
+        agent = CartPoleAgent(
+            4,
+            critic_units=3,
+            actor_action_sampling="boltzmann",
+            actor_logit_scale=2.0,
+            generator=torch.Generator().manual_seed(0),
+        )
+        features = torch.tensor([1.0, 0.5, 0.25, 0.0])
+        next_features = torch.tensor([0.0, 1.0, 0.5, 0.25])
+        before = agent.actor.trace.clone()
+        agent.learn_step(features, 0, 1.0, next_features, terminated=True)
+        assert not torch.allclose(agent.actor.trace, before)
+
+
 class TestCriticOperatingPoint:
     """``gain`` / 阈值决定 ``V`` 的值域——默认那一组把 V 顶在 8 以上，而真值要低得多。"""
 
