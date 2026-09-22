@@ -3,7 +3,7 @@ name = "biosnn-plug"
 version = "0.0.0"
 description = "BioSNN-Plug：纯局部学习驱动的可扩展全模态脉冲神经网络认知原型（研究原型，非生产框架）"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [{ name = "离中梦蝶", email = "269058959+lzmd-arch@users.noreply.github.com" }]
@@ -12,9 +12,9 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: Apache Software License",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = []
@@ -36,6 +36,18 @@ dev = [
   "nbformat>=5.10",
   "numpy>=1.24",
 ]
+research = [
+  # 第一阶段的三条验证线都要 torch。三条线都自实现学习规则，SpikingJelly 只提供
+  # LIF/ALIF 神经元原语与代理梯度 BPTT 对照基线（见 ADR-0008）。
+  "torch>=2.6",
+  "torchvision",
+  "torchaudio",
+  # 2.0.0rc1 是唯一支持 torch 2.6+ 的版本线；0.0.0.0.14 停在 2023-03，早于 numpy 2。
+  # 精确锁定，因为 uv 默认不选预发布版。
+  "spikingjelly==2.0.0rc1",
+  # CartPole（W3 执行层）。gym 已停止维护，用它的官方继任者。
+  "gymnasium>=1.0",
+]
 
 [tool.uv.workspace]
 members = ["packages/*"]
@@ -44,13 +56,55 @@ members = ["packages/*"]
 [tool.uv.sources]
 biosnn-bus = { workspace = true }
 
+# ── PyTorch 生态的按平台换源 ──────────────────────────────────────────────────
+#
+# 需求是「本机（Windows + RTX 5060）要 CUDA 构建、CI（Linux）要 CPU 构建」，而
+# 二者共用同一份 uv.lock。`uv sync` / `uv lock` 没有 --torch-backend——uv 官方
+# PyTorch 集成页写得很直接：
+#
+#   At present, --torch-backend is only available in the uv pip interface.
+#
+# 所以分流只能靠「按平台声明源」：同一个包在不同平台解析到不同的 index。
+# 两个 index 都标 explicit，意思是它们只服务下面显式指向它们的包，不会变成全局
+# 额外索引去干扰其它依赖的解析。
+#
+# torchvision / torchaudio 是 spikingjelly 的传递依赖，**必须一并声明**：explicit
+# 索引只对显式指向它的包生效，不写就会退回 PyPI 默认源，拿到与 torch 不匹配的
+# 构建（PyPI 上的 torch 带 CUDA，而 cpu index 的 torch 不带，混装会在 import 时炸）。
+#
+# 为什么是 cu130 而不是 cu128：本机是 RTX 5060（sm_120），cu128 也支持它，但
+# download.pytorch.org/whl/cu128 的 torch 最高只到 2.11.0，没有本仓库要用的 2.14.0。
+# cu130 有 2.14.0，且 CUDA 13.0 覆盖 sm_120。
+torch = [
+  { index = "pytorch-cpu", marker = "sys_platform != 'win32'" },
+  { index = "pytorch-cu130", marker = "sys_platform == 'win32'" },
+]
+torchvision = [
+  { index = "pytorch-cpu", marker = "sys_platform != 'win32'" },
+  { index = "pytorch-cu130", marker = "sys_platform == 'win32'" },
+]
+torchaudio = [
+  { index = "pytorch-cpu", marker = "sys_platform != 'win32'" },
+  { index = "pytorch-cu130", marker = "sys_platform == 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
 # 根工程本身不打包：它只承载 workspace 声明、开发依赖与工具配置。
 [tool.uv]
 package = false
 
 [tool.pytest.ini_options]
 # packages/... 是骨架库自己的测试；tests/ 是仓库工具链（检查脚本等）的测试
-testpaths = ["packages/biosnn-bus/tests", "tests"]
+testpaths = ["packages/biosnn-bus/tests", "tests", "research"]
 # 目录名 biosnn-bus 含连字符、不能作为包，因此把 tests/ 挂进 sys.path，
 # 让测试文件能 `from helpers import ...`。
 pythonpath = ["packages/biosnn-bus/tests"]

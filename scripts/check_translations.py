@@ -47,6 +47,7 @@ SCOPE_PATTERNS = [
     "docs/**/*.md",
     "packages/*/README.md",
     "research/README.md",
+    "research/**/README.md",
 ]
 
 #: 语言后缀。基准语言（中文）不带后缀。

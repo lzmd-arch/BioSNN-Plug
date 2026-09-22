@@ -68,6 +68,12 @@ nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
 - 插件自己的随机性由插件自己负责。写插件时请把 `seed` 暴露成构造参数，
   不要直接调用 `np.random.random()`。
 
+**研究代码（`research/`）的随机性**走
+[`research/common/seeding.py`](../research/common/seeding.py)：先登记用途、再施加。
+那里的 `derive_seed` 用 `zlib.crc32` 而非内置 `hash()`，理由与骨架库相同（后者按
+进程加盐，跨进程就不可复现），并且有同样的跨进程回归测试盯着。各验证线**不应**
+直接 `np.random.seed(...)`——那样种子不会出现在复现记录里。
+
 ## 提交前自检
 
 除 [`CONTRIBUTING.md`](../CONTRIBUTING.md) 的通用清单外，复现相关还要确认这一条：
@@ -90,17 +96,74 @@ uv sync --locked      # lock 与 pyproject 必须一致
 | 运行时依赖 | 仅 `numpy>=1.24` |
 | 硬件要求 | 无。CPU 即可 |
 
+## 第一阶段（单规则验证）的环境记录
+
+这一阶段的实验**有 GPU 参与**，因此不再是纯确定性的：同一个配置在 CPU 与 CUDA 上
+可能给出不同的浮点结果。所以除了依赖版本，还必须记录硬件与显存。
+
+| 项目 | 值 |
+| :--- | :--- |
+| Python | **>= 3.11**（SpikingJelly 2.0.0rc1 的下限，见 `docs/adr/ADR-0008`） |
+| 关键依赖 | `torch`、`torchvision`、`torchaudio`、`spikingjelly==2.0.0rc1`、`gymnasium`（`research` 依赖组） |
+| torch 来源 | 按平台换源：Windows → `download.pytorch.org/whl/cu130`（覆盖 sm_120）；其它平台 → `whl/cpu`。理由见 `pyproject.toml` 的 `[tool.uv.sources]` 注释 |
+| 硬件 | NVIDIA GeForce RTX 5060，8,151 MiB，sm_120 |
+| 骨架库 | 不受影响：仍只依赖 numpy，仍是 `requires-python >=3.10`（CI 的 `package` job 用 3.10 腿覆盖） |
+
+**依赖组的隔离**：`research` 组默认**不装**。`uv sync --locked` 得到的是第零阶段那个
+无 torch 的环境，`uv sync --locked --group research` 才是第一阶段的实验环境。骨架库
+"不依赖 torch"（ADR-0002）这句声明因此在本地也仍然可验证。
+
+每个模块的 docstring 顶部带 12 个月破坏性变更免责期与到期日（至 2027-09）。
+
 ## 后续阶段的记录位置
 
-从第一阶段（单规则验证）起，每篇实验记录都要带上完整模板。GPU 实验另外需要记录：
+从第一阶段（单规则验证）起，每篇实验记录都要带上完整模板。这一段由
+[`research/common/provenance.py`](../research/common/provenance.py) 生成，用法是：
 
-- 显存峰值（计划书 §6.2 把 8GB 列为硬约束）
-- 是否触发了计划书 §6.2 的降级路径（规模降级 / 分块训练 / INT8 痕迹量化）
+```python
+from research.common.provenance import DegradationLog, collect
+from research.common.seeding import SeedBook
+
+book = SeedBook(base=0)
+book.derive("权重初始化")
+
+record = collect(
+    "ib_hebbian/mnist",
+    seeds=book.render(),
+    elapsed_s=123.4,
+    peak_mb=None,  # 真实实验里传 measure_peak_memory() 给出的 stats["peak_mb"]
+    degradation=DegradationLog(scale_reduction=True, notes=["5 万 → 1 万神经元"]),
+)
+print(record.render_block())  # 可直接粘进 Markdown 的 text 围栏块
+```
+
+它自动读出四个**人工填不对**的字段：`git rev-parse HEAD`、`git status --porcelain`
+（非空即标"工作区不干净，本结论不可信"）、`uv.lock` 的 SHA-256、以及硬件与显存。
+
+GPU 实验另外需要记录：
+
+- 显存峰值（计划书 §6.2 把 8GB 列为硬约束）——由 `research/common/device.py` 的
+  `measure_peak_memory()` 测，取 PyTorch 分配器口径而非 `nvidia-smi`
+- 是否触发了计划书 §6.2 的降级路径（规模降级 / 分块训练 / INT8 痕迹量化）——
+  `DegradationLog` 登记；**没触发是常态**，所以只有显式登记过的才算数
 - 训练时长与能耗相关量（§9 的能效指标以"调用频率-能耗曲线"形式报告）
 
 ## 数据
 
-按计划书 §12.1，本仓库**不提供数据镜像**。下载与预处理脚本将随第一阶段提供——
-目前 `scripts/` 下只有仓库自身的检查脚本，还没有任何数据脚本。
+按计划书 §12.1，本仓库**不提供数据镜像**。
 
-约定：数据脚本会把数据落到 `.gitignore` 忽略的 `data/` 下，并校验哈希。
+下载与预处理脚本是 [`scripts/download_data.py`](../scripts/download_data.py)：
+
+```bash
+uv run python scripts/download_data.py --list        # 看已登记的数据集
+uv run python scripts/download_data.py mnist         # 下载 + 校验 + 转成 .npy
+uv run python scripts/download_data.py --verify-only # 只校验已有文件，不联网
+```
+
+数据落到 `.gitignore` 忽略的 `data/` 下，每个文件**逐个校验哈希**后才算可用，并把
+通过校验的 SHA-256 打印出来供复现记录留档。
+
+**校验值用的是 MD5，这是刻意的**：它不是安全机制，是完整性校验（防下载截断与镜像
+漂移）。选 MD5 是因为对 MNIST 而言它是**唯一有独立第三方公布**的校验值——
+`torchvision.datasets.MNIST` 把四个文件的 MD5 硬编码在自己的源码里，本脚本钉的就是
+那四个值，可以交叉核对。自己算一个 SHA-256 钉上去只是自己给自己背书。

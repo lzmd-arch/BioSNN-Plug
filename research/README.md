@@ -31,6 +31,7 @@
 
 ```text
 research/
+├─ common/                  # 三条线共用的基础设施（种子 / 设备 / 指标 / 复现记录）
 ├─ <阶段或主题>/
 │  ├─ README.md
 │  ├─ <实现>.py
@@ -40,6 +41,19 @@ research/
 
 每个主题一份 README，写清三件事：**在验证什么命题**、**当前结论**、
 **怎么跑出来**。计划书 §9 的评估指标表是这些结论的验收标准。
+
+`research/` 是一个**包**，不是一堆散脚本——这样三条线才能共用 `common/` 里那套
+口径必须一致的东西。所以入口脚本一律用**模块方式**跑：
+
+```bash
+uv run python -m research.<topic>.<script>
+```
+直接 `python research/<主题>/<脚本>.py` 也能跑，但那样 `sys.path` 上是脚本所在
+目录而不是仓库根，`research.common` 就 import 不到了。
+
+测试放在各主题的 `tests/` 下。`pyproject.toml` 的 `testpaths` 已包含 `research`，
+所以本地 `uv run pytest` 会一并跑到；CI 上它们归 `research-smoke` job（要 torch），
+骨架库与仓库工具链的测试归 `test` job，两个 job 各自跑得动的部分。
 
 ## 最小复现脚本
 

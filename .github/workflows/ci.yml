@@ -25,7 +25,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        # 3.10 不在矩阵里：root 工程的 requires-python 是 >=3.11（SpikingJelly
+        # 2.0.0rc1 的下限，见 ADR-0008）。骨架库自己的 >=3.10 声明改由下面的
+        # package job 用 3.10 腿覆盖——那里装的是 wheel，不是源码树。
+        python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -33,8 +36,40 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
       - run: uv sync --locked
-      - name: 跑测试（骨架库全 CPU，无 GPU 依赖）
-        run: uv run pytest -q
+      - name: 跑测试（骨架库与仓库工具链，全 CPU、无 torch）
+        # 刻意写出路径而不是光跑 pytest：testpaths 里还有 research/，而那部分
+        # 需要 torch，由下面的 research-smoke job 负责（装 CPU 版 torch）。
+        # 这样两个 job 各自跑自己能跑的那半，谁都不必假装另一个不存在。
+        run: uv run pytest -q packages/biosnn-bus/tests tests
+
+  # ── 计划书 §七 第一阶段：研究代码的 CPU 冒烟测试 ──────────────────────────
+  # 三条验证线（IB-Hebbian / e-prop / R-STDP）的验收实验在本机 GPU 上跑，
+  # 这里只跑缩小规模、能在 CPU 上快速跑完的那部分：张量形状、学习规则的
+  # 局部性断言、种子可复现性，以及 examples/paper_*.py 的冒烟模式。
+  #
+  # torch 走 CPU 索引（pyproject.toml 的 [[tool.uv.index]]，按平台换源），
+  # 所以这个 job 不会拖下几百 MB 的 CUDA 轮子。
+  research-smoke:
+    name: research 冒烟测试（CPU）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --locked --group research
+      - name: 跑 research 测试（跳过标了 gpu / slow 的）
+        run: uv run pytest -q research -m "not gpu and not slow"
+      - name: 跑每条验证线的最小复现脚本（冒烟模式）
+        run: |
+          for script in examples/paper_*.py; do
+            echo "── $script"
+            uv run python "$script"
+          done
+      - name: 骨架库的 torch 桥接测试（本地装了 torch 才会跑）
+        # 这几条在 test job 里因为没装 torch 而被 importorskip 跳过；
+        # 这里补上真正跑一遍——from_torch 的内存别名 bug 就是这么漏掉的。
+        run: uv run pytest -q packages/biosnn-bus/tests/test_types.py -k torch
 
   # ── 计划书 §12.3：风格 ────────────────────────────────────────────────────
   lint:
@@ -131,13 +166,15 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-      - run: uv sync --locked
+      - run: uv sync --locked --group research
       - name: 导出依赖许可证清单
+        # 必须带上 --group research：不带的话 torch / SpikingJelly / gymnasium
+        # 根本不进环境，审计报告里没有它们，等于没审。
         run: |
           uv run --with pip-licenses pip-licenses --format=json > licenses.json
           uv run --with pip-licenses pip-licenses --format=markdown --with-urls > dependency-licenses.md
           cat dependency-licenses.md
-      - name: 拒绝强 copyleft 依赖
+      - name: 拒绝强 copyleft 依赖，并要求许可证不明的依赖被显式登记
         # 用脚本而不是内联 grep。第一版是内联的
         #   grep -Ei '\| *(A?GPL|SSPL|BUSL)' dependency-licenses.md
         # 它在首次 CI 运行时就误报了：--with-license-file 会把许可证**正文**整段灌进
@@ -145,7 +182,12 @@ jobs:
         # to combine Python with ..."，整行 grep 直接命中。
         # 纯文本 grep 分不清"许可证名称"与"正文里提到 GPL"。脚本只比对名称字段，
         # 而且能本地跑——这一条本地跑一次就能发现，不该由 CI 来发现。
-        run: uv run python scripts/check_licenses.py licenses.json
+        #
+        # --strict-unknown 是后加的：按前缀比对认不出**没有名字**的许可证。
+        # SpikingJelly 的 License 字段是空的，于是它落进 unknown 桶，而 unknown
+        # 默认只打印不失败——它的 OIOSL 1.0（非 Apache-2.0）就这样一路静默通过。
+        # 现在要放行必须在脚本的 ACCEPTED_NON_STANDARD 里登记并写明理由。
+        run: uv run python scripts/check_licenses.py licenses.json --strict-unknown
       - uses: actions/upload-artifact@v4
         with:
           name: dependency-licenses
@@ -155,18 +197,26 @@ jobs:
 
   # ── 计划书 §七 第零阶段成功标准：「骨架库可 pip install」 ─────────────────
   package:
-    name: 构建 wheel 并在干净环境安装
+    name: 构建 wheel 并在干净环境安装（Python ${{ matrix.python-version }}）
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 骨架库自己的 requires-python 是 >=3.10，与 root 工程的 >=3.11 无关
+        # （root 那个下限是 SpikingJelly 逼出来的，见 ADR-0008）。3.10 这一腿
+        # 就是那句对外声明的实际覆盖——没有它，改 root 下限会把这句话一起架空。
+        python-version: ["3.10", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-      - run: uv sync --locked
+      # 刻意不跑 uv sync：root 的 requires-python 是 >=3.11，在 3.10 腿上同步会失败，
+      # 而构建 wheel 本来就不需要同步过的环境。
       - run: uv build --package biosnn-bus --out-dir dist
       - name: 在全新 venv 里安装并导入（证明对外可用）
         run: |
-          uv venv /tmp/clean --python 3.12
+          uv venv /tmp/clean --python ${{ matrix.python-version }}
           uv pip install --python /tmp/clean/bin/python dist/*.whl
           /tmp/clean/bin/python -c "
           import biosnn_bus
@@ -181,7 +231,16 @@ jobs:
           assert importlib.util.find_spec('torch') is None, '骨架库不应依赖 torch（见 ADR-0002）'
           print('未安装 torch，符合预期')
           "
+      - name: 在干净环境里跑骨架库测试套件
+        # 这一段才是 3.10 腿存在的理由。装的是 wheel 而非源码树，所以验证的是
+        # 分发包本身在 3.10 上可用。这里没有 torch，于是 torch 桥接那几条被
+        # importorskip 跳过、而 test_helpful_error_without_torch 被执行；
+        # research-smoke job 里则是反过来。两条路径互补，合起来才算覆盖完整。
+        run: |
+          uv pip install --python /tmp/clean/bin/python pytest
+          PYTHONPATH="$PWD/packages/biosnn-bus/tests" \
+            /tmp/clean/bin/python -m pytest -q packages/biosnn-bus/tests
       - uses: actions/upload-artifact@v4
         with:
-          name: biosnn-bus-wheel
+          name: biosnn-bus-wheel-py${{ matrix.python-version }}
           path: dist/*.whl

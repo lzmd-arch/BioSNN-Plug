@@ -35,6 +35,7 @@ The docstring header of every module must state the grace period and its expiry 
 
 ```text
 research/
+├─ common/                  # shared infrastructure (seeding / device / metrics / record)
 ├─ <phase-or-topic>/
 │  ├─ README.md
 │  ├─ <implementation>.py
@@ -45,6 +46,22 @@ research/
 One README per topic, stating three things plainly: **what claim is being tested**,
 **the current conclusion**, and **how to reproduce it**. The evaluation-metrics table in
 the project plan §9 is the acceptance criterion for those conclusions.
+
+`research/` is a **package**, not a pile of loose scripts — that is what lets the three
+lines share the things in `common/` whose definitions must not drift. So entry-point
+scripts are always run as **modules**:
+
+```bash
+uv run python -m research.<topic>.<script>
+```
+Running `python research/<topic>/<script>.py` directly also works, but then `sys.path`
+holds the script's directory rather than the repository root, and `research.common`
+cannot be imported.
+
+Tests live under each topic's `tests/`. The `testpaths` in `pyproject.toml` already
+includes `research`, so a local `uv run pytest` picks them up; in CI they belong to the
+`research-smoke` job (which needs torch), while the skeleton library and the repository
+toolchain belong to the `test` job — each job runs the half it can.
 
 ## Minimal reproduction scripts
 

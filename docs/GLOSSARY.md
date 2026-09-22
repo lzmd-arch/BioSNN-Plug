@@ -50,6 +50,12 @@
 | 调度与协同 | orchestration | オーケストレーション | 2 | 架构图 L5；LLM 调度与协同层 = LLM orchestration layer。**不译作 collaboration**（那是「协同」在「双规则协同」里的意思，见工程节） |
 | 推理引擎 | inference engine | 推論エンジン | 8 | LLM 作为可替换的推理引擎。**不译作 reasoning engine** |
 | 双通道 | dual-channel | 二重チャネル | 8 | 脉冲总线 `temporal` / `semantic` 两条；与「双通道融合」同源 |
+| 依赖组 | dependency group | 依存グループ | — | `pyproject.toml` 的 `[dependency-groups]`；`dev` 与 `research` 两组 |
+| 复现记录 | reproducibility record | 再現記録 | — | 一次实验按 §12.4 模板填出的那段文本；由 `research/common/provenance.py` 生成。「复现清单」是本表的另一条，指 `docs/reproducibility.md` 那份文档 |
+| 论文复现脚本 | paper reproduction script | 論文再現スクリプト | — | 计划书 §12.3 要求的 `examples/paper_<name>.py`：每篇核心文献一个最小可跑示例，用来拦"论文说能跑但仓库跑不通"。**与「最小复现脚本」区分**——后者指报 bug 时附的那个 |
+| 启智开源许可证 1.0 | Open-Intelligence Open Source License 1.0 (OIOSL) | 啓智オープンソースライセンス 1.0 | — | SpikingJelly 使用的许可证。**不是 Apache-2.0**，计划书 §12.1 曾误记为与本项目同一许可证。见 `docs/adr/ADR-0008`。缩写 OIOSL 三语均保留原文 |
+| 商业使用披露义务 | commercial-use disclosure obligation | 商業利用の開示義務 | — | OIOSL 1.0 的条件之一：商业目的的使用或再发布前，须在 AITISA 官网声明相关信息 |
+| 预发布版 | pre-release | プレリリース | — | `spikingjelly==2.0.0rc1` 即预发布版；uv 默认不选预发布版，因此必须精确锁定 |
 
 ## 二、工程与协作
 
@@ -175,6 +181,12 @@
 | 符号体系 | notation | 記法体系 | 1 | 论文的方程符号约定；ADR-0007 未逐字核验期刊版的记法 |
 | 插件化 | pluginization | プラグイン化 | — | 把某层能力交给插件实现的设计取向；「插件化的边界」= the pluginization boundary |
 | 适配层 | adapter layer | アダプタ層 | — | 为桥接不兼容接口而写的中间层；与「结构化协议」相对——后者不需要显式继承 |
+| 活跃神经元比例 | active neuron fraction | 活動ニューロン比率 | — | 计划书 §9 的网络健康指标；口径见 `research/common/metrics.py`——观察窗内**至少发放过一次**的神经元占比。§3.1 规定低于 60% 触发阈值调整 |
+| 脉冲稀疏度 | spike sparsity | スパイク疎度 | — | 计划书 §9 指标；零元素占比，即 `SpikeTrain.density` 的补数。与「稀疏随机投影」区分——后者是骨架库的一个组件 |
+| 死亡神经元 | dead neuron | 死んだニューロン | — | 从不发放的神经元；§3.1「死亡神经元防护」把放电阈值提升为可训练参数来应对 |
+| 迹传播 | Trace Propagation (TP) | トレース伝播 | — | Pes et al. 2025 的方法；把资格痕迹存储从按突触的 O(N²) 降到 O(N)。**不译作「痕迹传播」**，与「资格痕迹」区分 |
+| 成功偏移 | success-signal offset | 成功信号のオフセット | — | R-STDP 的失败模式：成功信号的平均值偏离零。§七 第一阶段要求 < 10%σR，测量见 `research/rstdp/measure_bias.py` |
+| 显存峰值 | peak GPU memory | GPU メモリのピーク | — | §12.4 要求 GPU 实验记录；§6.2 把 8GB 列为硬约束，峰值是判断有无踩线的依据 |
 
 ## 三、神经科学与模型
 

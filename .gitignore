@@ -20,6 +20,11 @@ ENV/
 # uv.lock 需要提交（复现清单要求精确依赖版本）
 # 见 docs/reproducibility.md
 
+# ---- 数据 ----
+# 计划书 §12.1：本仓库不提供数据镜像。scripts/download_data.py 把数据集落到这里，
+# 并校验哈希。不下发，因为再分发要另看各数据源自己的许可。
+data/
+
 # ---- 测试与覆盖率 ----
 .pytest_cache/
 .coverage

@@ -407,8 +407,53 @@ class TestLicenses:
         path = self._json(tmp_path, [{"Name": "mystery", "Version": "1.0", "License": "UNKNOWN"}])
         result = run(LICENSES, str(path))
         assert result.returncode == 0
-        assert "许可证未知" in result.stdout
+        assert "未登记的未知许可证" in result.stdout
         assert run(LICENSES, str(path), "--strict").returncode == 1
+
+    def test_strict_unknown_rejects_an_unregistered_unknown(self, tmp_path):
+        """CI 用的就是这个开关：许可证不明的依赖必须被显式登记，否则失败。"""
+        path = self._json(tmp_path, [{"Name": "mystery", "Version": "1.0", "License": "UNKNOWN"}])
+        result = run(LICENSES, str(path), "--strict-unknown")
+        assert result.returncode == 1
+        assert "ACCEPTED_NON_STANDARD" in result.stderr
+
+    def test_strict_unknown_tolerates_caution(self, tmp_path):
+        """``--strict-unknown`` 只管 unknown。弱 copyleft 在 Python 生态里太常见，
+        连带判死会把审计变成噪声，所以它仍然只是提醒。"""
+        path = self._json(tmp_path, [{"Name": "weak", "Version": "1.0", "License": "MPL-2.0"}])
+        assert run(LICENSES, str(path), "--strict-unknown").returncode == 0
+
+    def test_registered_unknown_license_passes(self, tmp_path):
+        """回归测试：SpikingJelly 的 License 字段是空的，前缀比对认不出它。
+
+        它的许可证是启智开源许可证 1.0（OIOSL），且计划书 §12.1 一度以为它同为
+        Apache-2.0（见 docs/adr/ADR-0008）。登记进白名单后，``--strict-unknown``
+        必须放行，并且**把理由打印出来**——接受一件事就要看得见接受的代价。
+        """
+        path = self._json(
+            tmp_path, [{"Name": "spikingjelly", "Version": "2.0.0rc1", "License": ""}]
+        )
+        result = run(LICENSES, str(path), "--strict-unknown")
+        assert result.returncode == 0
+        assert "已登记的非标准许可证" in result.stdout
+        assert "ADR-0008" in result.stdout
+
+    def test_allowlist_does_not_rescue_strong_copyleft(self, tmp_path):
+        """白名单只救 unknown。上了白名单的包哪天换成强 copyleft，仍必须被拦住。"""
+        path = self._json(
+            tmp_path, [{"Name": "spikingjelly", "Version": "9.9", "License": "GPL-3.0"}]
+        )
+        assert run(LICENSES, str(path)).returncode == 1
+        assert run(LICENSES, str(path), "--strict-unknown").returncode == 1
+
+    def test_stale_allowlist_entry_is_reported(self, tmp_path):
+        """登记了却不在依赖里的条目要报出来，免得白名单腐烂成一句无人在意的旧话。"""
+        path = self._json(
+            tmp_path, [{"Name": "numpy", "Version": "2.5.3", "License": "BSD-3-Clause"}]
+        )
+        result = run(LICENSES, str(path))
+        assert result.returncode == 0
+        assert "白名单已失效" in result.stdout
 
     def test_empty_dependency_list_fails(self, tmp_path):
         """空清单意味着这次审计什么都没查——那本身就该失败，不能算"通过"。"""

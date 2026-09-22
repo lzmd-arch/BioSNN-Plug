@@ -36,3 +36,4 @@
 | [ADR-0005](ADR-0005-versioning-policy.md) | 版本策略：骨架库 semver，研究代码 12 个月免责期 | 已采纳 |
 | [ADR-0006](ADR-0006-plugin-interface-fidelity.md) | `ModalityPlugin` 保持计划书 §2.3 的原始签名 | 已采纳 |
 | [ADR-0007](ADR-0007-td-ltp-critic-provenance.md) | Critic 采用 TD-LTP，出处为 Frémaux et al. (2013) | 已采纳 |
+| [ADR-0008](ADR-0008-spikingjelly-license-and-python-floor.md) | SpikingJelly 采用 OIOSL 1.0，并据此提升开发环境 Python 下限 | 已采纳 |

@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -54,6 +55,7 @@ DEFAULT_TARGETS = [
     "docs/**/*.md",
     "packages/*/README*.md",
     "research/README*.md",
+    "research/**/README*.md",
 ]
 
 FENCE_RE = re.compile(r"^\s*(`{3,}|~{3,})\s*(?P<info>.*?)\s*$")
@@ -182,6 +184,13 @@ def syntax_problems(block: CodeBlock) -> list[Problem]:
     return []
 
 
+def _with_repo_root_on_path() -> dict[str, str]:
+    """当前环境变量，外加把仓库根放进 ``PYTHONPATH``。"""
+    existing = os.environ.get("PYTHONPATH", "")
+    parts = [str(REPO_ROOT), *(p for p in existing.split(os.pathsep) if p)]
+    return {**os.environ, "PYTHONPATH": os.pathsep.join(parts)}
+
+
 def execution_problems(blocks: list[CodeBlock], *, python: str) -> list[Problem]:
     """在同一命名空间里按顺序执行可运行块，返回执行期错误。"""
     runnable = [b for b in blocks if b.runnable]
@@ -203,6 +212,12 @@ def execution_problems(blocks: list[CodeBlock], *, python: str) -> list[Problem]
                 capture_output=True,
                 text=True,
                 cwd=REPO_ROOT,
+                # 把仓库根放进 PYTHONPATH。驱动脚本在临时目录里，它的 sys.path[0]
+                # 是那个临时目录，于是文档里 `import research` 这类**仓库内**的导入
+                # 会失败——而读者在仓库根用 Jupyter 或 python 跑同一段代码时，
+                # 当前目录本来就在 sys.path 上。检查器该复现读者的环境，不该比它更严。
+                # （`biosnn_bus` 不在此列：它是装进虚拟环境的分发包，与路径无关。）
+                env=_with_repo_root_on_path(),
                 timeout=EXEC_TIMEOUT_SECONDS,
                 check=False,
             )

@@ -183,4 +183,22 @@ class TestTorchBridge:
         torch = pytest.importorskip("torch")
         leaf = torch.zeros((3, 2), dtype=torch.float32, requires_grad=True)
         restored = SpikeTrain.from_torch(leaf * 1.0)
-        assert not restored.data.flags.writeable or restored.data.base is None
+        assert restored.data.base is None
+
+    def test_from_torch_does_not_alias_the_source_tensor(self):
+        """回归测试：入参张量本来就在 CPU 上时，``from_torch`` 曾返回共享缓冲区的视图。
+
+        那条路径上 ``.to("cpu")`` 是空操作，紧随的 ``.numpy()`` 返回视图，于是改写
+        ``train.data`` 会静默改写调用方的张量。原先那条
+        ``not writeable or base is None`` 的断言抓不住它——它只看新数组自己的 flags，
+        没有验证"改写一个会不会动到另一个"。
+        """
+        torch = pytest.importorskip("torch")
+        source = torch.zeros((2, 3), dtype=torch.float32)
+        train = SpikeTrain.from_torch(source)
+
+        train.data[0, 0] = 1.0
+        assert float(source[0, 0]) == 0.0, "改写 SpikeTrain.data 污染了调用方的张量"
+
+        source[1, 1] = 2.0
+        assert float(train.data[1, 1]) == 0.0, "改写调用方的张量污染了 SpikeTrain.data"

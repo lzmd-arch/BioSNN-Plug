@@ -216,9 +216,22 @@ class SpikeTrain:
         temporal_scale: float = 10.0,
         channel: str | FusionChannel = FusionChannel.TEMPORAL,
     ) -> SpikeTrain:
-        """从 ``torch.Tensor`` 构造。会自动 ``detach`` 并搬到 CPU。"""
+        """从 ``torch.Tensor`` 构造。会自动 ``detach`` 并搬到 CPU。
+
+        返回的 ``SpikeTrain`` **不与入参张量共享内存**。这一点必须显式保证：张量本来
+        就在 CPU 上时，``.to("cpu")`` 是空操作，紧随其后的 ``.numpy()`` 会返回一个
+        与张量共享缓冲区的视图——于是 ``train.data[0, 0] = 1`` 会静默改写调用方的
+        张量，而 ``SpikeTrain`` 是**按值**比较的不可变数据类型，共享缓冲区与它的值
+        语义直接矛盾。
+        """
         _import_torch()
         array = tensor.detach().to("cpu").numpy()
+        if array.base is not None:
+            # 与入参张量（或它的某个视图）共享内存，复制出来切断这层关系。
+            # 只在真的共享时才复制——GPU 张量经 .to("cpu") 已经拿到独立缓冲，
+            # 那一路上 .numpy() 的 base 是那个新建的 CPU 张量，会走到这里多复制一次，
+            # 但这条路径本来就绕不开一次拷贝，代价可以接受。
+            array = array.copy()
         return cls(data=array, dt=dt, temporal_scale=temporal_scale, channel=channel)
 
     # ---------------------------------------------------------------- 展示
