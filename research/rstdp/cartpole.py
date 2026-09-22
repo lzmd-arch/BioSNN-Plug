@@ -391,8 +391,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--actor-logit-scale",
         type=float,
         default=agent_default("actor_logit_scale"),
-        help="Boltzmann 的 logit 缩放（温度的倒数）。**必须有**：L1 归一化后两列得分差只有 "
-        "0.05–0.5 量级，不放大 softmax 几乎是均匀的",
+        help="Boltzmann 的 logit 缩放（温度的倒数），**只在退火关闭时生效**（见 "
+        "--logit-scale-start/end）。**必须有**：L1 归一化后两列得分差只有 0.05–0.5 量级，"
+        "不放大 softmax 几乎是均匀的",
     )
     parser.add_argument(
         "--actor-trace-center",
@@ -510,12 +511,13 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=2.0,
         help="Boltzmann 逆温度的**起点**；与 --logit-scale-end 一起给出才启用退火（log 空间"
-        "线性插值）。先用近均匀把策略学起来，再收紧拿决策边际——恒定值两端各丢一半",
+        "线性插值）。先用近均匀把策略学起来，再收紧拿决策边际——恒定值两端各丢一半。"
+        "**两者都给了才启用退火，届时 --actor-logit-scale 被覆盖**",
     )
     parser.add_argument(
         "--logit-scale-end",
         type=float,
-        default=20.0,
+        default=40.0,
         help="Boltzmann 逆温度的**终点**",
     )
     parser.add_argument("--exploration-start", type=float, default=0.3)
@@ -523,7 +525,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--actor-lr-final-fraction",
         type=float,
-        default=0.1,
+        default=0.01,
         help="Actor 学习率在训练末降到初始值的这个比例（1.0 = 不衰减）。"
         "实测贪心策略在恒定学习率下剧烈震荡，衰减是冲着这个去的",
     )
@@ -703,8 +705,8 @@ def run_trial(
     exploration_start: float = 0.3,
     exploration_end: float = 0.02,
     logit_scale_start: float | None = 2.0,
-    logit_scale_end: float | None = 20.0,
-    actor_lr_final_fraction: float = 0.1,
+    logit_scale_end: float | None = 40.0,
+    actor_lr_final_fraction: float = 0.01,
     evaluation_episodes: int = 10,
     evaluation_interval: int = 20,
     greedy_eval_every: int | None = None,

@@ -380,9 +380,9 @@ class TestStructuralOptionsReachTheActor:
         from research.rstdp.cartpole import run_trial
 
         parameters = inspect.signature(run_trial).parameters
-        assert parameters["actor_lr_final_fraction"].default == pytest.approx(0.1)
+        assert parameters["actor_lr_final_fraction"].default == pytest.approx(0.01)
         assert parameters["logit_scale_start"].default == pytest.approx(2.0)
-        assert parameters["logit_scale_end"].default == pytest.approx(20.0)
+        assert parameters["logit_scale_end"].default == pytest.approx(40.0)
 
         # **CLI 的默认值也必须跟上**：这两个不是 agent 构造参数，走的是独立字面量，
         # 所以它们会与 run_trial 的默认值漂移——实测就漏过一次（CLI 还是 None ⇒ 默认不退火，
@@ -391,7 +391,7 @@ class TestStructuralOptionsReachTheActor:
 
         cli = {action.dest: action.default for action in build_parser()._actions}
         assert cli["logit_scale_start"] == pytest.approx(2.0)
-        assert cli["logit_scale_end"] == pytest.approx(20.0)
+        assert cli["logit_scale_end"] == pytest.approx(40.0)
 
     def test_boltzmann_and_centering_reach_the_actor(self):
         agent = CartPoleAgent(
