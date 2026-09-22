@@ -105,7 +105,10 @@ class IBHebbianPerceptron(nn.Module):
             for i in range(n_layers)
         )
 
-        # 读出层有偏置（论文 D.1），且用交叉熵训练。
+        # 读出层有偏置（论文 D.1）。**它怎么训练有两种，由 `--readout-kind` 选**：默认 `ridge`
+        # 是闭式解（`readout.RidgeReadout`：累积 `XᵀX`/`XᵀY` 后一次解出，无交叉熵、无优化器、
+        # 无反向传播）；`sgd` 才是论文原路径（交叉熵 + SGD）。下面这个 `readout_optimizer`
+        # 只在 `sgd` 下被用到。
         self.readout = nn.Linear(width, n_classes, bias=True)
         self.readout_optimizer = torch.optim.SGD(
             self.readout.parameters(), lr=readout_learning_rate, momentum=readout_momentum

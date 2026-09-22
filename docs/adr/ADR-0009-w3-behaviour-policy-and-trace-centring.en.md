@@ -58,7 +58,7 @@ and that reading went into the tri-lingual README.
    rather than let that happen silently.
 3. **Inverse-temperature annealing**: `logit_scale` interpolates in **log space** from **2** to
    20 (or 40). A constant value loses at both ends: near-uniform (5) learns but stays blunt (median
-   141.4); sharper (20) reaches higher (held-out 177.3, max 494) but **roughly one trajectory in
+   141.4); sharper (20) reaches higher (held-out 177.3, max 434) but **roughly one trajectory in
    ten never starts at all** (peak only 10–12 steps). Annealing goes blunt-then-sharp and lifts the
    minimum from 9 to 90–123. Log-space interpolation because `logit_scale` is the inverse
    temperature: interpolating it linearly is a hyperbolic temperature schedule (too slow early, too
@@ -90,6 +90,17 @@ and that reading went into the tri-lingual README.
 - Default behaviour changes, so historical numbers such as 114.6 for `--seed 0` correspond to the
   **old default**; they remain in the README's ledger as a control but are no longer "what the
   default configuration produces".
+
+- **Later update (2026-09-23, numeric retuning under the same decision)**: the figures recorded
+  above belong to the configuration as of the decision — annealing 2 -> 20, learning-rate final
+  fraction 0.1, and 260.0 / minimum 74 measured on seeds 10–24. Retuning continued on **held-out
+  seeds**, and the final configuration is **annealing 2 -> 40, learning-rate final fraction 0.01**,
+  giving median 237.8 and minimum 121 on the fresh seeds 45–64 (both seed batches pass). The
+  **decision** in this ADR — Boltzmann sampling, trace centred by the sampling probability, inverse
+  temperature annealing — is unchanged; only two of its numbers were retuned. By repository
+  convention (`docs/adr/README.md`: an ADR's body is not edited once recorded) the body stays as
+  written and this note carries the update; current numbers are the README's conclusion and the
+  code's defaults.
 
 ## Alternatives
 

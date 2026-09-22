@@ -10,12 +10,12 @@
 
 | Criterion | Seeds 45–64 (**fresh, never involved in any selection**) | Seeds 25–44 (used for tuning) | Threshold |
 | :--- | ---: | ---: | :--- |
-| CartPole, 200 steps or more | median **237.8** | 327.9 | ≥ 200 ✓ |
-| Success offset | max **0.0403** | 0.0359 | < 10% sigma_R ✓ |
+| CartPole, 200 steps or more | median **237.8** | 319.8 | ≥ 200 ✓ |
+| Success offset | max **0.0403** | 0.0328 | < 10% sigma_R ✓ |
 | (our own added "stable" condition) minimum | **121** | 109 | ≥ 100 ✓ |
 
 **Both seed batches pass**, and **no seed falls below 100**. To be honest about it, a gap of about
-27% remains between the two (327.9 → 237.8), so **a selection effect is real** — but both batches sit
+27% remains between the two (319.8 → 237.8), so **a selection effect is real** — but both batches sit
 above 200 at the median and above 100 at the minimum, and that is the part that matters.
 
 **Acceptance configuration** (now the defaults, see [ADR-0009](../../docs/adr/ADR-0009-w3-behaviour-policy-and-trace-centring.en.md)): Boltzmann behaviour policy +
@@ -87,8 +87,9 @@ Python：3.12.14
 
 **All twenty** curves look like this, with adjacent checkpoints differing by 5–30×. So the
 acceptance statistic — the mean of 10 greedy episodes on the final weights — largely measures
-**which phase the wander stopped in**, not the level learned. The median peak is 158.0, **also
-short of 200**.
+**which phase the wander stopped in**, not the level learned. **Under the acceptance
+configuration the median peak is** 389.8 (fresh seeds 45–64) / 441.7 (tuning seeds 25–44) —
+well above the final medians, which is exactly what says the wandering is still there.
 
 **Two: making the Critic genuinely more accurate makes the policy worse.** The pre-registered
 fork rule said "EV < 0.5 ⇒ the Critic is the bottleneck". That inference **was refuted by its own
@@ -310,8 +311,9 @@ to guess which hyperparameter is more sensitive.
 4. **The policy does not converge, and this is the most important boundary.** Greedy evaluation
    every 50 episodes shows **all twenty** trajectories oscillating over the whole run (adjacent
    checkpoints differ by 5–30×). So the acceptance statistic — the mean of 10 greedy episodes on
-   the final weights — largely measures **a phase**, not a level; and the **median peak is 158.0,
-   also short of 200**. Any conclusion here that reports a single final number should be discounted.
+   the final weights — largely measures **a phase**, not a level; and the **median peak under the
+   acceptance configuration is 389.8 (fresh 45–64) / 441.7 (tuning 25–44)**, well above the
+   final medians. Any conclusion here that reports a single final number should be discounted.
 5. **"Actor capacity is insufficient" is refuted.** On the **same encoding**, a supervised linear
    policy reaches 497 steps.
 6. **Making the Critic more accurate does not improve the step count — this refutes this phase's

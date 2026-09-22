@@ -55,7 +55,8 @@ __all__ = ["expand_grid", "parse_seeds", "summarize"]
 
 #: 计划书 §七 的验收判据。
 ACCEPTANCE_STEPS = 200.0
-RUNS_PER_SECOND = 0.25  # 单次约 4 秒，仅用于给用户一个量级估计
+RUNS_PER_SECOND = 0.03  # 单次约 33 秒。**这个数随配置差得很远**：策略差时一回合只有几十步、
+# 整次几秒；策略好时一回合跑满 500 步、整次可以到一分钟以上。它只用于给量级，不是承诺。
 
 
 def parse_seeds(spec: str) -> list[int]:

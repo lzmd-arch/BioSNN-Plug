@@ -24,7 +24,10 @@ plan lists as P0.
 
 ## Current conclusion
 
-**Met. Test accuracy 98.01% (threshold 70%).**
+**Met.** The criterion is 70% and **both readouts clear it**: the **ridge closed-form readout
+(the current default) at 97.79%** and cross-entropy + SGD at **98.01%**. Both numbers are the
+**joint result** of locally learned features plus a supervised readout, not an accuracy the local
+rule reaches on its own — stated up front before anything else.
 
 **But that number is two pieces bolted together, and that must be stated plainly**: the hidden
 layers learn features with a **local rule**, and the classification is then done by a **supervised
@@ -44,7 +47,8 @@ requires **every training sample** to accumulate. See the "Accurate statement of
 
 The hidden-layer side is unaffected by the readout choice: it optimises **its own** objective
 (Eq. 35's binary teaching signal) and never sees the readout during training. Its local objective
-was measured falling monotonically from −0.1299 to −0.2918, so **the 0.22-point gap comes only from
+was measured falling from −0.1299 to −0.2931 (**lowest at epoch 90**; epoch 100 ends at
+−0.2929, so the tail rises slightly — it is **not strictly monotone**), so **the 0.22-point gap comes only from
 swapping the algorithm in the classification step**, not from worse features.
 
 The paper's MNIST figure for a 3-layer × 1024 fully connected net with the Gaussian kernel

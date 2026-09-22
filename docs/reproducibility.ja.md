@@ -139,7 +139,7 @@ research` が第 1 フェーズの実験環境です。したがってスケル�
 | :--- | :--- | :--- |
 | W1 カーネル化 IB-Hebbian 知覚層 | [`research/ib_hebbian/README.ja.md`](../research/ib_hebbian/README.ja.md) | MNIST **98.01%**（教師あり SGD 読み出し）/ **97.79%**（リッジ回帰の閉形式解の読み出し、現在の既定）；基準 70%。**どちらの読み出しも教師あり**——98.01% は「局所的に学んだ特徴 + 教師あり読み出し」の共同の結果であり、純局所的な精度ではない。README の「『局所』の正確な表現」を参照 |
 | W2 e-prop 認知層 | [`research/eprop/README.ja.md`](../research/eprop/README.ja.md) | sMNIST 77.48%；活動ニューロン比率 1.0000（閾値 > 60%） |
-| W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.ja.md`](../research/rstdp/README.ja.md) | ✅ **三つの基準すべて達成**：CartPole 中央値 **237.8 歩**（シード 45–64、二十個の**新品**、いかなる選択にも関与していない；基準 ≥ 200）；偏移比の最大 **0.0403**（全シード < 0.10 ✓）；最小値 **121**（自ら加えた「安定」条件 ≥ 100 ✓、100 未満のシードなし）。調整に用いた 25–44 では中央値 327.9・最小 109——**二批とも合格**。設定と根拠は [ADR-0009](adr/ADR-0009-w3-behaviour-policy-and-trace-centring.ja.md) 参照 |
+| W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.ja.md`](../research/rstdp/README.ja.md) | ✅ **三つの基準すべて達成**：CartPole 中央値 **237.8 歩**（シード 45–64、二十個の**新品**、いかなる選択にも関与していない；基準 ≥ 200）；偏移比の最大 **0.0403**（全シード < 0.10 ✓）；最小値 **121**（自ら加えた「安定」条件 ≥ 100 ✓、100 未満のシードなし）。調整に用いた 25–44 では中央値 319.8・最小 109——**二批とも合格**。設定と根拠は [ADR-0009](adr/ADR-0009-w3-behaviour-policy-and-trace-centring.ja.md) 参照 |
 
 ## 以降のフェーズでの記録場所
 

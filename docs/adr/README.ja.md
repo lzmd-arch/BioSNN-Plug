@@ -39,4 +39,6 @@ Michael Nygard の古典的な 4 段構成を採用します：
 | [ADR-0005](ADR-0005-versioning-policy.ja.md) | バージョン方針：スケルトンライブラリは semver、研究コードは 12 か月の免責期間 | 承認済み |
 | [ADR-0006](ADR-0006-plugin-interface-fidelity.ja.md) | `ModalityPlugin` はプロジェクト計画書 §2.3 の元のシグネチャを維持 | 承認済み |
 | [ADR-0007](ADR-0007-td-ltp-critic-provenance.ja.md) | Critic は TD-LTP を採用、出典は Frémaux et al. (2013) | 承認済み |
+| [ADR-0008](ADR-0008-spikingjelly-license-and-python-floor.ja.md) | SpikingJelly は OIOSL 1.0 を採用、それに伴い開発環境の Python 下限を引き上げ | 承認済み |
+| [ADR-0009](ADR-0009-w3-behaviour-policy-and-trace-centring.ja.md) | W3 の行動方策を Boltzmann サンプリングにし、サンプリング確率で痕跡を中心化する | 承認済み |
 | [ADR-0010](ADR-0010-eprop-quadratic-storage-and-trace-propagation.ja.md) | e-prop の二次記憶量は成立するが、§3.1 の是正措置（Trace Propagation の採用）は採用しない | 承認済み |

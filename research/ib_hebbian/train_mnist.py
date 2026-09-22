@@ -118,8 +118,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--readout-ridge",
         type=float,
-        default=1e-2,
-        help="岭回归的正则系数 λ（仅 --readout-kind ridge）。偏置项不正则化",
+        default=None,
+        help="岭回归的正则系数 λ（仅 --readout-kind ridge）。**不给就在验证集上选**"
+        "（候选 {0, 1e-4, 1e-3, 1e-2, 1e-1}）；给了就用它、跳过选择。偏置项不正则化",
     )
     parser.add_argument("--dropout", type=float, default=0.01)
     parser.add_argument("--seed", type=int, default=0)
@@ -247,7 +248,13 @@ def train(args: argparse.Namespace, device: torch.device):
         # **λ 用验证集选，不拍一个数。** Gram 矩阵只累积一次，多解几个几乎不花时间；
         # 而原来的做法是手写一个 1e-2 就去读测试准确率——那既没有依据，也是在测试集上
         # 选超参。候选集覆盖 0（无正则）到 1e-1，选验证准确率最高的那个。
-        candidates = (0.0, 1e-4, 1e-3, 1e-2, 1e-1)
+        # **显式给了 λ 就用它**，否则在验证集上选。原来两个 solve() 调用都传硬编码的候选值，
+        # `--readout-ridge` 因此是个从不被读的死参数（审查抓到的）。
+        candidates = (
+            (args.readout_ridge,)
+            if args.readout_ridge is not None
+            else (0.0, 1e-4, 1e-3, 1e-2, 1e-1)
+        )
         best_ridge, best_accuracy = None, -1.0
         for candidate in candidates:
             weight, bias = accumulator.solve(candidate)
@@ -257,11 +264,14 @@ def train(args: argparse.Namespace, device: torch.device):
             if accuracy > best_accuracy:
                 best_ridge, best_accuracy = candidate, accuracy
 
+        # λ 是显式给的还是在验证集上选的，打印与备注里要分得开——否则读记录的人会以为
+        # 那个数经过了一轮选择。
+        lambda_source = "显式指定" if args.readout_ridge is not None else "由验证集选出"
         model.set_readout(*accumulator.solve(best_ridge))
         print()
         print(
             f"闭式解读出：累积 {accumulator.count} 个训练样本的 (XᵀX, XᵀY)，"
-            f"λ 由验证集选出 ={best_ridge:g}（验证准确率 {best_accuracy:.4f}），"
+            f"λ = {best_ridge:g}（{lambda_source}，验证准确率 {best_accuracy:.4f}），"
             f"全程耗时 {time.perf_counter() - readout_started:.1f} s",
             flush=True,
         )
@@ -296,7 +306,7 @@ def train(args: argparse.Namespace, device: torch.device):
             f"eta_local={args.hidden_lr}, dropout={args.dropout}",
             f"读出：kind={args.readout_kind}"
             + (
-                f", ridge_lambda={best_ridge:g}（验证集选出；累积 XᵀX / XᵀY 后一次解出，无反向传播、无迭代）"
+                f", ridge_lambda={best_ridge:g}（{lambda_source}；累积 XᵀX / XᵀY 后一次解出，无反向传播、无迭代）"
                 if args.readout_kind == "ridge"
                 else f", eta_readout={args.readout_lr}（交叉熵 + SGD）"
             ),
