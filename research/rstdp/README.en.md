@@ -366,5 +366,7 @@ Ordered by strength of evidence; all remain within "no surrogate gradients, pure
    but the learning rule may not reach it.
 3. **Stimulus-specific reward prediction** — the structural fix §3.2 itself names: replace "one
    global δ" with per-stimulus-channel predictions.
-4. **Trace Propagation** (Pes 2025) — the mechanism cited by the plan's phase-1 cognitive line, not
-   implemented this phase.
+4. **Trace Propagation** (Pes 2025) — not implemented this phase, **and this is the same question as
+   the W2 line's**: on investigation, the plan's §3.1 treatment of it as "a memory optimisation of
+   e-prop" **does not hold** (it is a different rule, covers LIF only, and is worse than e-prop on
+   the paper's own N-MNIST). Verdict: [ADR-0010](../../docs/adr/ADR-0010-eprop-quadratic-storage-and-trace-propagation.en.md).

@@ -37,4 +37,4 @@
 | [ADR-0006](ADR-0006-plugin-interface-fidelity.md) | `ModalityPlugin` 保持计划书 §2.3 的原始签名 | 已采纳 |
 | [ADR-0007](ADR-0007-td-ltp-critic-provenance.md) | Critic 采用 TD-LTP，出处为 Frémaux et al. (2013) | 已采纳 |
 | [ADR-0008](ADR-0008-spikingjelly-license-and-python-floor.md) | SpikingJelly 采用 OIOSL 1.0，并据此提升开发环境 Python 下限 | 已采纳 |
-| [ADR-0009](ADR-0009-w3-behaviour-policy-and-trace-centring.md) | W3 的行为策略改为 Boltzmann 采样，并按采样概率中心化资格痕迹 | 已采纳 |
+| [ADR-0010](ADR-0010-eprop-quadratic-storage-and-trace-propagation.md) | e-prop 的二次存储成立，但 §3.1 的补救措施（上 Trace Propagation）不采纳 | 已采纳 |

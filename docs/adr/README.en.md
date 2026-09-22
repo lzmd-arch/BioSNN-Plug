@@ -40,4 +40,4 @@ and link the two to each other.
 | [ADR-0005](ADR-0005-versioning-policy.en.md) | Versioning policy: semver for the skeleton library, a 12-month grace period for research code | Accepted |
 | [ADR-0006](ADR-0006-plugin-interface-fidelity.en.md) | `ModalityPlugin` keeps the original signature from §2.3 of the project plan | Accepted |
 | [ADR-0007](ADR-0007-td-ltp-critic-provenance.en.md) | Critic uses TD-LTP, with provenance in Frémaux et al. (2013) | Accepted |
-| [ADR-0009](ADR-0009-w3-behaviour-policy-and-trace-centring.en.md) | W3's behaviour policy becomes Boltzmann sampling, with the trace centred by the sampling probability | Accepted |
+| [ADR-0010](ADR-0010-eprop-quadratic-storage-and-trace-propagation.en.md) | e-prop's quadratic storage holds, but §3.1's remedy (adopting Trace Propagation) is not adopted | Accepted |

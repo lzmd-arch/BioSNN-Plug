@@ -118,13 +118,30 @@ that the learning path contains no autograd.
 
 This section matters more than the conclusion.
 
-1. **Trace Propagation is not implemented.** §3.1's "key correction 1" requires reducing
-   eligibility-trace storage from O(N²) to O(N). This implementation uses **online
-   accumulation** (`traces.eprop_gradient`): what it removes is the **time dimension**
-   (`O(T·batch·N²)` → `O(batch·N²)`), while a trace is still kept per synapse, so the
-   memory remains of order **O(N²)**. That step solves "can it finish within 8GB" (§6.2's
-   hard constraint) but **not** §3.1's requirement. Measured before and after: the old
-   shape could not finish even one epoch at n_rec=256; it is now 50 s/epoch.
+1. **Trace Propagation is not implemented here — and that is an investigated conclusion, not a
+   debt.** §3.1's "key correction 1" asks for eligibility-trace storage to be reduced to O(N).
+   After checking the source (arXiv:2509.13053):
+   - **The plan's premise holds.** Table 3 has its own `E-prop [2]` row with Space Complexity =
+     `LH²`, and §1.3.1 names e-prop as an instance of the "stored per synapse" family property.
+     So attributing that complexity to e-prop specifically is **not** an extrapolation (the
+     earlier finding in `docs/references.md` is retracted).
+   - **But the "adopt TP" remedy does not apply.** TP is not a memory-saving version of e-prop;
+     it is **a different rule that replaces the spatial credit assignment** (the paper lists the
+     two as separate rows on separate axes and never says TP optimises e-prop). Every TP result
+     is **LIF**, while this line's acceptance configuration is **ALIF (β=0.07)**. And on the
+     paper's own N-MNIST, **e-prop 97.90 > TP 97.33 ± 0.06** — e-prop is marked
+     `Partial (time)` local and is not even in the "fully local" comparison set. Verdict:
+     `docs/adr/ADR-0010`.
+   - **The one thing this implementation actually should do has been done.** `epsilon_v` was
+     allocated as `(batch, n_pre, n_post)`, but its recursion **contains no postsynaptic index
+     j**; allocating `(batch, n_pre, 1)` is **bit-identical** (`torch.equal=True`,
+     `max|diff|=0`) and gives **−18.2%** wall clock at the acceptance shape. `epsilon_a`'s
+     coefficient contains `(ρ − β·ψ_j)` and **does not factorise**, so the bulk of the memory is
+     set by the ALIF adaptation term; for LIF (β=0) both degenerate to outer products and the
+     whole trace state drops to O(batch·N).
+   - The online-accumulation step remains worthwhile: what it removes is the **time dimension**
+     (`O(T·batch·N²)` → `O(batch·N²)`), measured going from "not even one epoch finishes at
+     n_rec=256" to 50 s/epoch.
 2. **This is a 30-epoch result and has not converged.** Validation accuracy was still
    rising in the final epoch.
 3. **A single run, not an average.** One seed only (`base=0`).
