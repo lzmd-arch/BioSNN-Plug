@@ -338,6 +338,45 @@ class TestSignalClip:
         assert signal == pytest.approx(delta)
 
 
+class TestCriticDirectionPool:
+    """``build_agent_inputs`` 的采样池大小曾经**静默地**给 ``critic_units`` 封了顶。"""
+
+    @staticmethod
+    def _inputs(critic_units: int, seed: int = 0):
+        pytest.importorskip("gymnasium")
+        from research.common.seeding import SeedBook
+        from research.rstdp.cartpole import build_agent_inputs
+
+        return build_agent_inputs(
+            SeedBook(base=seed),
+            n_features=64,
+            encoding_sigma=0.5,
+            critic_units=critic_units,
+            device=torch.device("cpu"),
+        )
+
+    def test_more_units_than_sampled_states_is_supported(self):
+        """池子只有 ~850–960 个状态，而 ``critic_units`` 可以比它大。
+
+        实测踩到过：``critic_units=1024`` 抛「init_directions 的形状应为 (1024, 64)，收到
+        (892, 64)」——默认的 64 让这个上限一直没露出来。缺采样时按有放回取，而不是报错。
+        """
+        centers, directions = self._inputs(1024)
+        assert centers.shape == (64, 4)
+        assert directions.shape == (1024, 64)
+
+    def test_the_pool_is_reused_rather_than_padded_with_zeros(self):
+        """有放回取出来的方向必须都是**真状态**的编码，不能混进零向量。"""
+        _, directions = self._inputs(1024)
+        assert float(directions.norm(dim=1).min()) > 0.0, "不该有零方向"
+
+    def test_the_within_pool_path_is_deterministic(self):
+        """够用时走无放回采样，同一本书两次调用逐位相同。"""
+        _, first = self._inputs(64)
+        _, second = self._inputs(64)
+        torch.testing.assert_close(first, second)
+
+
 class TestIdenticalConstruction:
     def test_agent_can_be_constructed_twice_identically(self):
         """上头的成对比较全靠这条：同一个种子两次构造必须逐位相同。"""

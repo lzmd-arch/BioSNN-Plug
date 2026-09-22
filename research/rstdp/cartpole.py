@@ -605,7 +605,14 @@ def build_agent_inputs(
                 break
     sample_env.close()
     sampled = torch.stack(sampled)
-    choice = torch.randperm(len(sampled), generator=direction_rng)[:critic_units]
+    # **采样池不够时要允许重复取**，否则 ``critic_units`` 会被这个池子的大小静默卡住。
+    # 实测踩到过：``critic_units=1024`` 时这里抛「init_directions 的形状应为 (1024, 64)，
+    # 收到 (892, 64)」——40 个回合 × 500 步只采到 ~850–960 个状态，而默认的 64 让这个上限
+    # 一直没露出来。**默认路径逐位不变**：够用时仍走 ``randperm`` 那条分支。
+    if critic_units <= len(sampled):
+        choice = torch.randperm(len(sampled), generator=direction_rng)[:critic_units]
+    else:
+        choice = torch.randint(len(sampled), (critic_units,), generator=direction_rng)
     return centers, sampled[choice].to(device)
 
 
