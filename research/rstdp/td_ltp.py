@@ -55,7 +55,7 @@ from __future__ import annotations
 
 import torch
 
-__all__ = ["TDLCritic"]
+__all__ = ["PopulationCritic", "TDLCritic", "td_error"]
 
 
 class TDLCritic:
@@ -173,3 +173,149 @@ def td_error(
     ``value`` 与 ``next_value`` 是标量张量。回合终止时 ``V(s')`` 应传 0。
     """
     return float(reward + discount * float(next_value) - float(value))
+
+
+class PopulationCritic:
+    """**群体 + 固定读出**的 Critic——照论文的结构（Frémaux 2013）。
+
+    论文里的 Critic 是一**群**脉冲神经元，值由它们的活动经**固定**权重读出
+    （"Its activity, together with actual rewards, conditions the delivery of a
+    neuromodulatory TD signal to itself and to the actor"）。本类是它的速率型对应：
+
+        y_j      = σ( g · (w_j · x − b) )        第 j 个单元的发放率 ∈ (0, 1)，b 固定
+        V(s)     = Σ_j u_j · y_j                 读出 u 固定
+        e_ji     ← λ·e_ji + x_i · y_j            第二因子是**单元自己的发放率**
+        w_ji     ← w_ji + η·δ·e_ji               TD-LTP
+
+    ## 为什么这个结构能修掉单单元版的两个病
+
+    :class:`TDLCritic` 把"单元输出"与"值"当成了同一个量，于是：
+
+    1. **正值反馈**：`e = x·V` 且 `V = w·x` → `V` 变大、痕迹变大、更新变大、`V` 更大。
+       实测权重发散成 NaN。
+    2. **尺度自由度被归一化抹掉**：为了堵住上一条我加了 `‖w‖₂ = 1`，结果 Critic 只能
+       旋转、不能设定自己的输出尺度，于是 `V` 永远顶到上界 `value_scale·‖x‖`，
+       `δ` 退化成常数（实测：scale=60 时 `V` 到 ~50，scale=500 时到 ~500）。
+
+    群体结构两个都治：第二因子是 `y_j ∈ (0,1)`——**有界且非负**，正值反馈断掉；
+    而值的尺度由固定的 `u_j` 承担，`w_j` 只管形状，所以归一化 `‖w_j‖₂ = 1` 不再
+    夺走任何它需要的自由度。
+
+    ## 读数不是调参旋钮
+
+    ``gain`` 与 ``value_scale`` 一起决定 `V` 的值域：`‖x‖ ≤ 1.11`、`‖w_j‖ = 1` 时，
+    `g·(w_j·x) ∈ [−4.4, 4.4]`（取 g=4），所以 `y_j ∈ (0.012, 0.988)`，
+    `V ∈ (0.012·value_scale, 0.988·value_scale)`。取 `value_scale = 200` 覆盖 CartPole
+    的值域（γ=0.99 下满分约 100）。**这两者设一次就固定，不靠调。**
+
+    Attributes:
+        weights: ``(n_units, n_features)``，每行是一个单元的 ``w_j``。
+        trace: 同形状的资格痕迹 ``e_ji``。
+        readout: ``(n_units,)`` 固定读出 ``u``，构造后不再改变。
+    """
+
+    def __init__(
+        self,
+        n_features: int,
+        n_units: int = 64,
+        *,
+        learning_rate: float = 5e-3,
+        trace_decay: float = 0.9,
+        gain: float = 8.0,
+        bias: float = 0.4,
+        value_scale: float = 200.0,
+        init_directions: torch.Tensor | None = None,
+        device: torch.device | None = None,
+        generator: torch.Generator | None = None,
+    ) -> None:
+        if not 0.0 <= trace_decay < 1.0:
+            raise ValueError(f"trace_decay 应在 [0, 1) 内，收到 {trace_decay}。")
+        if n_units < 1:
+            raise ValueError(f"n_units 必须 >= 1，收到 {n_units}。")
+        if gain <= 0 or value_scale <= 0:
+            raise ValueError(f"gain 与 value_scale 必须为正，收到 {gain}、{value_scale}。")
+
+        self.n_features = int(n_features)
+        self.n_units = int(n_units)
+        self.learning_rate = float(learning_rate)
+        self.trace_decay = float(trace_decay)
+        self.gain = float(gain)
+        self.bias = float(bias)
+        self.value_scale = float(value_scale)
+        device = device or torch.device("cpu")
+
+        # 单元的"偏好方向"（感受野）最好**铺开**，而不是取随机方向。调用方可以传入代表性
+        # 状态的编码（``init_directions``），这是 RBF 中心的标准做法，也是论文里那群体靠
+        # 学习形成的调谐的初始化对应物。
+        #
+        # **但这条的收益取决于特征分布，据实记录**：在**稠密均匀**特征下随机方向几乎无
+        # 分辨力（``V`` 的跨度只有 10，而感受野约 30）；换成**稀疏局域凸起**特征后差别就
+        # 基本消失（28.2 vs 29.9）。所以 ``init_directions`` 是建议而非必需——别把
+        # "随机方向一定不行"当成普遍结论，它只在我最初那个特征分布下成立。
+        #
+        # 确有一条稳定成立：感受野让**同一输入**下的群体响应铺得更开（实测组内发放率范围
+        # 0.039–0.712 vs 0.075–0.348），也就是每个输入有更独特的群体编码。
+        generator = generator or torch.Generator(device=device)
+        if init_directions is not None:
+            if init_directions.shape != (n_units, n_features):
+                raise ValueError(
+                    f"init_directions 的形状应为 ({n_units}, {n_features})，"
+                    f"收到 {tuple(init_directions.shape)}。"
+                )
+            self.weights = init_directions.detach().clone().to(device)
+        else:
+            self.weights = torch.rand(n_units, n_features, device=device, generator=generator)
+        self.trace = torch.zeros(n_units, n_features, device=device)
+        self._normalize()
+        # 固定且**非负**的读出。u_j 若取负号，更新方向对那一族单元就反了——
+        # 因为规则给的是 δ·y_j·x，而 TD 梯度是 δ·u_j·y_j(1−y_j)·x，两者同号要求 u_j > 0。
+        self.readout = torch.full((n_units,), value_scale / n_units, device=device)
+
+    @torch.no_grad()
+    def _normalize(self) -> None:
+        """把每个单元的权重行归一到单位 L2 范数。
+
+        有了它，``g·(w_j·x)`` 就落在有界区间里，sigmoid 不会饱和、也不会退化成常数。
+        """
+        norms = self.weights.norm(dim=1, keepdim=True).clamp_min(1e-12)
+        self.weights.mul_(1.0 / norms)
+
+    @torch.no_grad()
+    def rates(self, features: torch.Tensor) -> torch.Tensor:
+        """各单元的发放率 ``y_j``，``(n_units,)``。
+
+        ``y_j = σ( g · (cos(w_j, x) − b) )``。**对特征做归一化**（用余弦而不是内积）是
+        必需的：输入活动的模长随状态起伏（实测 ``‖x‖ ∈ [0, 0.65, 1.11]``），而 ``b`` 是一个
+        固定常数——不做归一化的话同一个 ``b`` 在不同状态下含义不同，单元会整体饱和。
+        实测过：不归一化时 ``V`` 恒等于其上限。归一化之后 ``cos ∈ [0, 1]``（权重与活动都
+        非负），``b = 0.5`` 是真正居中的操作点。
+        """
+        normalized = features / features.norm().clamp_min(1e-12)
+        return torch.sigmoid(self.gain * ((self.weights @ normalized) - self.bias))
+
+    @torch.no_grad()
+    def value(self, features: torch.Tensor) -> torch.Tensor:
+        """``V(s) = Σ_j u_j·y_j``，0 维张量。"""
+        return self.readout @ self.rates(features)
+
+    @torch.no_grad()
+    def update(self, features: torch.Tensor, value: torch.Tensor, td_error: float) -> None:
+        """三因子更新：``e_ji ← λe_ji + x_i·y_j``，``w_ji ← w_ji + η·δ·e_ji``。
+
+        ``value`` 参数保留是为了与 :class:`TDLCritic` 的签名一致；本类不用它——
+        第二因子取的是单元自己的发放率，不是值。这正是两个类关键的结构差别。
+        """
+        rates = self.rates(features)
+        self.trace.mul_(self.trace_decay).add_(torch.outer(rates, features))
+        self.weights.add_(self.learning_rate * td_error * self.trace)
+        self._normalize()
+
+    @torch.no_grad()
+    def reset_trace(self) -> None:
+        """回合结束时清空痕迹。"""
+        self.trace.zero_()
+
+    @torch.no_grad()
+    def active_unit_fraction(self, features: torch.Tensor, *, threshold: float = 0.5) -> float:
+        """发放率超过阈值的单元占比，用于观察有没有单元死掉（计划书 §3.1 的关切）。"""
+        return float((self.rates(features) > threshold).float().mean().item())

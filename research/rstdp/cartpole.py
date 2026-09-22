@@ -38,7 +38,7 @@ from research.common.provenance import DegradationLog, collect
 from research.common.seeding import SeedBook
 from research.rstdp.measure_bias import BiasTracker
 from research.rstdp.rstdp import RSTDPActor
-from research.rstdp.td_ltp import TDLCritic, td_error
+from research.rstdp.td_ltp import PopulationCritic, TDLCritic, td_error
 
 __all__ = ["CartPoleAgent", "encode_state", "run_episode"]
 
@@ -78,9 +78,14 @@ class CartPoleAgent:
         discount: float = 0.99,
         success_signal: str = "td_error",
         normalize_weights: bool = True,
+        critic_kind: str = "population",
+        critic_units: int = 64,
+        critic_init_directions: torch.Tensor | None = None,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
     ) -> None:
+        if critic_kind not in ("population", "single"):
+            raise ValueError(f"critic_kind 只能是 'population' 或 'single'，收到 {critic_kind!r}。")
         if success_signal not in ("reward_minus_value", "td_error"):
             raise ValueError(
                 f"success_signal 只能是 'reward_minus_value' 或 'td_error'，"
@@ -96,16 +101,27 @@ class CartPoleAgent:
             device=device,
             generator=generator,
         )
-        self.critic = TDLCritic(
-            n_features,
-            learning_rate=critic_learning_rate,
-            value_scale=critic_value_scale,
-            trace_decay=critic_trace_decay,
-            device=device,
-            # 必须传一个**已播种**的 generator：Critic 是随机初始化（零初始化会零点锁死，
-            # 见 td_ltp.py），不播种的话它的初值就不在复现记录覆盖的种子里。
-            generator=generator,
-        )
+        if critic_kind == "population":
+            self.critic = PopulationCritic(
+                n_features,
+                n_units=critic_units,
+                learning_rate=critic_learning_rate,
+                trace_decay=critic_trace_decay,
+                value_scale=critic_value_scale,
+                init_directions=critic_init_directions,
+                device=device,
+                generator=generator,
+            )
+        else:
+            self.critic = TDLCritic(
+                n_features,
+                learning_rate=critic_learning_rate,
+                value_scale=critic_value_scale,
+                trace_decay=critic_trace_decay,
+                device=device,
+                generator=generator,
+            )
+        self.critic_kind = critic_kind
         self.discount = float(discount)
         self.success_signal = success_signal
 
@@ -237,11 +253,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Critic 学习率。**这一项极敏感**：1e-3 与 5e-4 在本任务上差别巨大，见 README",
     )
     parser.add_argument(
+        "--critic-kind",
+        default="population",
+        choices=["population", "single"],
+        help="Critic 结构：'population' 是论文那样的群体 + 固定读出；'single' 是单单元版"
+        "（保留用于对照——两者的差别见 README）",
+    )
+    parser.add_argument("--critic-units", type=int, default=64, help="群体 Critic 的单元数")
+    parser.add_argument(
         "--critic-value-scale",
         type=float,
-        default=60.0,
-        help="Critic 输出的放大倍数。权重被归一到 L2=1，所以值域由它决定；"
-        "CartPole 的回报可达数百，需要几十倍放大",
+        default=200.0,
+        help="Critic 输出的量程。群体版里它经**固定读出**换算成 V 的值域上限；"
+        "CartPole 在 γ=0.99 下满分策略的值约 100，所以取 200 留余量",
     )
     parser.add_argument("--trace-decay", type=float, default=0.9)
     parser.add_argument("--discount", type=float, default=0.99)
@@ -287,6 +311,28 @@ def main(argv: list[str] | None = None) -> int:
     centers = (torch.rand(args.n_features, 4, generator=generator) - 0.5) * 3.0
     centers = centers.to(device)
 
+    # 采样代表性状态，作为 Critic 单元的偏好方向（感受野）。随机方向不行——实测
+    # V 的跨度只有 10，见 td_ltp.PopulationCritic 的说明。
+    direction_rng = torch.Generator().manual_seed(book.derive("Critic 感受野采样"))
+    sample_env = gymnasium.make("CartPole-v1")
+    sample_env.reset(seed=book.derive("感受野采样环境"))
+    sampled = []
+    for _ in range(40):
+        raw, _ = sample_env.reset()
+        for _ in range(EPISODE_LIMIT):
+            sampled.append(
+                encode_state(torch.tensor(raw, dtype=torch.float32), centers, args.encoding_sigma)
+            )
+            raw, _, term, trunc, _ = sample_env.step(
+                int(torch.randint(2, (1,), generator=direction_rng).item())
+            )
+            if term or trunc:
+                break
+    sample_env.close()
+    sampled = torch.stack(sampled)
+    choice = torch.randperm(len(sampled), generator=direction_rng)[: args.critic_units]
+    init_directions = sampled[choice].to(device)
+
     agent = CartPoleAgent(
         args.n_features,
         actor_learning_rate=args.actor_learning_rate,
@@ -295,6 +341,9 @@ def main(argv: list[str] | None = None) -> int:
         trace_decay=args.trace_decay,
         discount=args.discount,
         success_signal=args.success_signal,
+        critic_kind=args.critic_kind,
+        critic_units=args.critic_units,
+        critic_init_directions=init_directions,
         device=device,
         generator=torch.Generator().manual_seed(book.derive("Actor 与 Critic 初始权重")),
     )

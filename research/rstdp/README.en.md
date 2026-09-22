@@ -17,23 +17,47 @@ solution is stimulus-specific reward prediction.
 
 ## Current conclusion
 
-**Not met.** Neither criterion passes.
+**Acceptance is still not met, but for a different reason now.** The Critic side is fixed;
+what remains is on the Actor side.
+
+### After the change (population + fixed readout Critic)
 
 Measured over five seeds (`--seed 0..4`, everything else identical):
 
 | seed | Mean greedy episode length | \|offset\|/σR (tail) |
+| ---: | ---: | ---: |
+| 0 | 114.6 | 0.0076 ✓ |
+| 1 | 61.1 | 0.0127 ✓ |
+| 2 | 60.2 | 0.0142 ✓ |
+| 3 | 119.9 | 0.0290 ✓ |
+| 4 | 81.6 | 0.0162 ✓ |
+| **criterion** | **≥ 200** | **< 0.10** |
+
+**The offset criterion now passes 5/5**, with steps in the 60–120 range. Against the
+before numbers (offset 1/5, steps 9–37) this is a **structural** improvement: the Critic
+actually converges and `δ` no longer carries a DC offset — which is precisely what the
+population structure was for.
+
+**But 200 steps is still out of reach.** The best seed reaches 119.9, still about 40% short.
+The "before and after" section below analyses why: the bottleneck is now clearly the
+Actor's credit assignment, not the Critic.
+
+### Before the change (single-unit Critic, kept as a control)
+
+`--critic-kind single` reproduces the earlier behaviour:
+
+| seed | Steps | \|offset\|/σR |
 | ---: | ---: | ---: |
 | 0 | 9.3 | 0.9676 ✗ |
 | 1 | 23.1 | 0.4364 ✗ |
 | 2 | 37.3 | **0.0530** ✓ |
 | 3 | 9.4 | 0.7571 ✗ |
 | 4 | 9.5 | 1.3705 ✗ |
-| **criterion** | **≥ 200** | **< 0.10** |
 
-**No seed** reaches 200 steps, and only seed 2 meets the offset criterion. A random policy
+**No seed** reaches 200 steps, and only one meets the offset criterion. A random policy
 survives about 9–10 steps on CartPole, so seeds 0/3/4 effectively learned nothing.
 
-### But there is a signal pointing the way the paper predicts
+### There is a signal in the before table pointing the way the paper predicts
 
 Read the two columns together: **the seeds with a large offset are exactly the ones that
 fail to learn.**
@@ -138,6 +162,21 @@ not find it.
 So the "the Actor lacks capacity" hypothesis is **refuted**, and adding capacity is not the
 answer. That also rules out what looked like the cheapest explanation.
 
+## Before and after: why the population structure
+
+The single-unit Critic treated "the unit's output" and "the value" as the same quantity, so its
+eligibility trace was `e = x·V`. That produced three chained problems, all observed:
+
+| Problem | Symptom | Why the population structure fixes it |
+| :--- | :--- | :--- |
+| Zero-lock | With zero init, `V ≡ 0` → trace stays 0 → never learns | `y_j = σ(…)` is 0.5 at 0, not 0 |
+| Positive feedback | `V`↑ → `e=x·V`↑ → `Δw`↑ → `V`↑, weights diverge to NaN | the second factor is `y_j ∈ (0,1)`, **bounded** |
+| Scale freedom removed | To plug the previous one I added `‖w‖=1`, so `V` pinned to its ceiling and `δ` became constant | the scale is carried by the **fixed readout**; `w_j` only sets the shape |
+
+The numbers after the change are in the previous section: offset 1/5 → 5/5, steps 9–37 → 60–120.
+**Those two numbers are all it takes to decide whether this change was worth making** — no need
+to guess which hyperparameter is more sensitive.
+
 ## Known boundaries
 
 1. **Acceptance is not met** — no seed reaches 200 steps.
@@ -159,21 +198,25 @@ answer. That also rules out what looked like the cheapest explanation.
    two runs. Re-scanning after seeding gives a different picture (boundary 6 below): every
    configuration lands between 9 and 59 steps and ends with the Critic saturated. **Most of
    the tuning judgement this entry made on that earlier data has to be discarded.**
-5. **The "the Actor lacks capacity" hypothesis is refuted.** See the capacity probe below: on
-   **the same encoding**, a linear policy reaches 497 steps. So capacity is not the
-   bottleneck; the problem is on the credit-assignment / learning-signal side.
-6. **The direct cause of the failure is half located: the Critic's output saturates.** Measured,
-   `V` always pins to its ceiling (`value_scale · ‖x‖`), so `δ = r + γV(s') − V(s)` degenerates
-   into a **constant** (`1 − 0.01·V_ceiling`) and the Actor receives exactly the biased signal
-   §3.2 warns about. That is the direct mechanism by which this entry failed acceptance.
-7. **But swapping the Critic for standard TD(λ) does not fix it either.** I ran the control:
-   with the second factor being the unit's own output the weights diverge to NaN (so that
-   positive feedback is real); with the standard TD(λ) trace `e ← λe + x` it no longer
-   diverges, but 800 episodes still only reach 21–40 steps. **So the structural defect in the
-   second factor is real, but it is not the whole story** — the true root cause is not yet
-   located. Known candidates: the Actor's credit assignment, interference from the L1 weight
-   normalization, and the very fact that the Actor uses δ as its signal while the Critic is
-   unconverged.
+5. **The "the Actor lacks capacity" hypothesis is refuted.** See the capacity probe: on
+   **the same encoding**, a linear policy reaches 497 steps. So capacity is not the bottleneck.
+6. **Changing the Critic structure fixed the biased signal but not the step count.** The
+   offset went from 1/5 to 5/5 passing and steps from 9–37 to 60–120, but 200 steps is still
+   out of reach. **The bottleneck is now clearly on the Actor side:**
+   - the Actor is still a linear policy with L1 normalization (this was **not** re-examined as
+     part of this change and remains a candidate interference source);
+   - its eligibility trace takes the chosen action's indicator as the second factor, which is
+     a rather coarse credit assignment;
+   - the learning signal is the TD error while the Critic is learning simultaneously (not
+     two-phase).
+   None of these three has been ablated individually.
+7. **The single-unit Critic's two defects are located and fixed, but they only explain part of
+   the "before" numbers.** Its eligibility trace was gated by its own output (zero-lock), its
+   update scaled with `V` (positive feedback → divergence), and the normalization I added took
+   away its scale freedom (`V` pinned to the ceiling → `δ` became constant). All three vanish
+   with the population. But swapping the single unit for standard TD(λ) also only reached
+   21–40 steps — **so something else was at work then, and that something is very likely still
+   at work.**
 8. **§3.2's quantitative boundary was not reproduced.** Measuring "fails at ~25%σR" requires
    a task whose action distribution stays mixed; `examples/paper_fremaux2013.py`
    deliberately does **not** demonstrate it, because my first version was actually measuring

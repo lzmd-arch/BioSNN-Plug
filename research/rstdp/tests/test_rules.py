@@ -10,7 +10,7 @@ import pytest
 import torch
 
 from research.rstdp.rstdp import RSTDPActor
-from research.rstdp.td_ltp import TDLCritic, td_error
+from research.rstdp.td_ltp import PopulationCritic, TDLCritic, td_error
 
 
 def make_features(n: int = 5, seed: int = 0) -> torch.Tensor:
@@ -230,3 +230,135 @@ class TestRSTDPActor:
     def test_rejects_invalid_hyperparameters(self, kwargs, match):
         with pytest.raises(ValueError, match=match):
             RSTDPActor(3, 2, **kwargs)
+
+
+def _bump(generator: torch.Generator, n: int = 64, k: int = 5) -> torch.Tensor:
+    """模拟真实的状态编码：少数几个局域凸起，而不是稠密的随机向量。"""
+    vector = torch.zeros(n)
+    index = torch.randint(0, n, (k,), generator=generator)
+    vector[index] = torch.rand(k, generator=generator)
+    return vector
+
+
+class TestPopulationCritic:
+    """群体 + 固定读出的 Critic（论文结构）。
+
+    最要紧的三条：
+    :meth:`test_does_not_diverge_at_a_large_learning_rate`、
+    :meth:`test_rows_stay_normalised_so_the_readout_owns_the_scale`、
+    :meth:`test_has_no_zero_lock`——它们是单单元版那两个病（正值反馈发散、归一化夺走尺度
+    自由度）与零点锁死的回归测试。
+    """
+
+    @staticmethod
+    def _features(n: int = 5, seed: int = 0) -> torch.Tensor:
+        return torch.rand(n, generator=torch.Generator().manual_seed(seed))
+
+    def test_rates_are_bounded_and_non_negative(self):
+        critic = PopulationCritic(5, n_units=7)
+        rates = critic.rates(self._features())
+        assert rates.shape == (7,)
+        assert (rates > 0).all() and (rates < 1).all()
+
+    def test_value_is_the_fixed_readout_of_the_rates(self):
+        critic = PopulationCritic(5, n_units=7, value_scale=14.0)
+        features = self._features()
+        expected = float(critic.readout @ critic.rates(features))
+        assert critic.value(features).item() == pytest.approx(expected)
+        assert critic.readout.sum().item() == pytest.approx(14.0)
+
+    def test_readout_is_fixed(self):
+        """读出是**固定**的——它不参与学习，也就不会把尺度问题带回给 Critic。"""
+        critic = PopulationCritic(5, n_units=7, value_scale=14.0)
+        before = critic.readout.clone()
+        for _ in range(10):
+            critic.update(self._features(), critic.value(self._features()), td_error=1.0)
+        torch.testing.assert_close(critic.readout, before)
+
+    def test_trace_uses_the_units_own_rate_not_the_value(self):
+        """关键结构差别：第二因子是**单元自己的发放率**，不是值。
+
+        单单元版把两者当成同一个量，于是 ``e = x·V`` 与 ``V = w·x`` 构成正值反馈。
+        这里 ``y_j ∈ (0,1)`` 有界，回路断开。
+        """
+        critic = PopulationCritic(3, n_units=2, trace_decay=0.0)
+        with torch.no_grad():
+            critic.weights.copy_(torch.tensor([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]))
+        features = torch.tensor([1.0, 2.0, 0.0])
+        critic.update(features, critic.value(features), td_error=0.0)
+        rates = critic.rates(features)
+        torch.testing.assert_close(critic.trace[0], rates[0] * features)
+        torch.testing.assert_close(critic.trace[1], rates[1] * features)
+
+    def test_rows_stay_normalised_so_the_readout_owns_the_scale(self):
+        """每个单元的权重行恒为单位 L2 范数——尺度由固定读出承担，不由权重承担。"""
+        critic = PopulationCritic(6, n_units=5, learning_rate=1.0)
+        features = self._features(6)
+        for step in range(40):
+            critic.update(features, critic.value(features), td_error=1.0 if step % 3 else -1.0)
+        norms = critic.weights.norm(dim=1)
+        torch.testing.assert_close(norms, torch.ones(5), rtol=1e-5, atol=1e-6)
+
+    def test_does_not_diverge_at_a_large_learning_rate(self):
+        """回归测试：单单元版在这个学习率下权重会发散成 NaN。
+
+        原因是 ``e = x·V`` 且 ``V = w·x`` 的正值反馈。群体版的第二因子有界，所以不发散。
+        """
+        critic = PopulationCritic(8, n_units=8, learning_rate=1.0)
+        features = self._features(8)
+        for _ in range(200):
+            critic.update(features, critic.value(features), td_error=1.0)
+        assert torch.isfinite(critic.weights).all(), "群体版不该发散"
+        assert critic.weights.abs().max().item() <= 1.0 + 1e-5, "归一化后每行范数为 1"
+
+    def test_has_no_zero_lock(self):
+        """零锁死的回归测试：sigmoid 在 0 处是 0.5，不是 0，所以痕迹不会恒为零。"""
+        critic = PopulationCritic(5, n_units=4, learning_rate=1.0)
+        features = self._features()
+        assert (critic.rates(features) > 0).all()
+        critic.update(features, critic.value(features), td_error=1.0)
+        assert critic.trace.abs().sum().item() > 0
+
+    def test_init_directions_are_honoured(self):
+        """传入的偏好方向必须被真的用上（归一化后存为权重）。"""
+        generator = torch.Generator().manual_seed(1)
+        directions = torch.stack([_bump(generator) for _ in range(4)])
+        critic = PopulationCritic(64, n_units=4, init_directions=directions)
+        expected = directions / directions.norm(dim=1, keepdim=True).clamp_min(1e-12)
+        torch.testing.assert_close(critic.weights, expected, rtol=1e-5, atol=1e-7)
+
+    def test_rejects_mismatched_init_directions(self):
+        with pytest.raises(ValueError, match="init_directions"):
+            PopulationCritic(8, n_units=4, init_directions=torch.rand(3, 8))
+
+    def test_reset_trace_zeroes_it(self):
+        critic = PopulationCritic(3, n_units=2)
+        critic.update(self._features(3), critic.value(self._features(3)), td_error=1.0)
+        assert critic.trace.abs().sum().item() > 0
+        critic.reset_trace()
+        assert critic.trace.abs().sum().item() == 0
+
+    def test_rates_are_scale_invariant(self):
+        """发放率只看活动的**方向**，不看模长——否则固定的 ``bias`` 在不同状态下含义不同。
+
+        实测过：不做归一化时 ``V`` 恒等于其上限（所有单元饱和）。这条把那个失败模式钉住。
+        """
+        critic = PopulationCritic(6, n_units=4, bias=0.5, gain=8.0)
+        features = self._features(6)
+        scaled = features * 25.0
+        torch.testing.assert_close(
+            critic.rates(features), critic.rates(scaled), rtol=1e-5, atol=1e-7
+        )
+
+    @pytest.mark.parametrize(
+        ("kwargs", "match"),
+        [
+            ({"trace_decay": 1.0}, "trace_decay"),
+            ({"n_units": 0}, "n_units"),
+            ({"gain": 0.0}, "gain"),
+            ({"value_scale": -1.0}, "value_scale"),
+        ],
+    )
+    def test_rejects_invalid_hyperparameters(self, kwargs, match):
+        with pytest.raises(ValueError, match=match):
+            PopulationCritic(4, **kwargs)
