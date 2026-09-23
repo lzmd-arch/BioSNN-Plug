@@ -136,10 +136,24 @@ class LocalObjectiveLayer(nn.Module):
         negative_slope: float = 0.01,
         dropout_p: float = 0.0,
         center_activity: bool = True,
+        objective_mode: str = "plausible",
+        kernel: str = "gaussian",
+        grouping: bool = True,
+        divnorm: bool = True,
     ) -> None:
         super().__init__()
         if n_out % n_groups != 0:
             raise ValueError(f"层宽 {n_out} 无法等分成 {n_groups} 组。请让宽度是分组数的整数倍。")
+        if n_groups < 2:
+            # **静默失效的陷阱，显式拦掉。** n_groups=1 且 center=True 时，"跨组居中"就是减自己，
+            # grouped_activity 恒返回 0 → 局部目标恒为 0 → 梯度恒为 0：层照常前向、照常 step，
+            # 但永远学不到东西，而且不报错。（论文的「无分组」变体不是这个——那是把 z 直接送进核，
+            # 由 grouping=False 表达。）
+            raise ValueError(
+                f"n_groups 必须 >= 2，收到 {n_groups}。"
+                "「无分组」请用 grouping=False（把活动直接送进核），"
+                "而不是把组数设成 1——后者会让局部目标恒为 0、梯度恒为 0，且不报错。"
+            )
 
         self.n_in = int(n_in)
         self.n_out = int(n_out)
@@ -148,6 +162,10 @@ class LocalObjectiveLayer(nn.Module):
         self.gamma = float(gamma)
         self.divnorm_power = float(divnorm_power)
         self.smoothing_delta = float(smoothing_delta)
+        self.objective_mode = str(objective_mode)
+        self.kernel = str(kernel)
+        self.grouping = bool(grouping)
+        self.divnorm = bool(divnorm)
         self.center_activity = bool(center_activity)
 
         self.linear = nn.Linear(n_in, n_out, bias=False)
@@ -164,7 +182,9 @@ class LocalObjectiveLayer(nn.Module):
     def extra_repr(self) -> str:
         return (
             f"n_in={self.n_in}, n_out={self.n_out}, n_groups={self.n_groups}, "
-            f"sigma={self.sigma}, gamma={self.gamma}, divnorm_power={self.divnorm_power}"
+            f"sigma={self.sigma}, gamma={self.gamma}, divnorm_power={self.divnorm_power}, "
+            f"objective_mode={self.objective_mode}, kernel={self.kernel}, "
+            f"grouping={self.grouping}, divnorm={self.divnorm}"
         )
 
     @property
@@ -174,14 +194,26 @@ class LocalObjectiveLayer(nn.Module):
 
     def local_objective(self, z: torch.Tensor, label_kernel: torch.Tensor) -> torch.Tensor:
         """该层的局部目标 ``pHSIC(V,V) − γ·pHSIC(Y,V)``（Eq. 9/15）。"""
-        v = grouped_activity(
-            z,
-            self.n_groups,
-            exponent=self.grouping_exponent,
-            smoothing_delta=self.smoothing_delta,
-            center=self.center_activity,
+        # grouping=False 就是论文的「plain」变体：活动**直接进核**，不做分组、也不做跨组居中。
+        v = (
+            grouped_activity(
+                z,
+                self.n_groups,
+                exponent=self.grouping_exponent,
+                smoothing_delta=self.smoothing_delta,
+                center=self.center_activity,
+            )
+            if self.grouping
+            else z
         )
-        return kernelized_bottleneck_objective(v, label_kernel, sigma=self.sigma, gamma=self.gamma)
+        return kernelized_bottleneck_objective(
+            v,
+            label_kernel,
+            sigma=self.sigma,
+            gamma=self.gamma,
+            mode=self.objective_mode,
+            kernel=self.kernel,
+        )
 
     def forward(
         self,
@@ -224,7 +256,9 @@ class LocalObjectiveLayer(nn.Module):
         # 路径上的输出仍带着图——那是一处脆弱的依赖顺序的保证，不如这里直接切掉。
         z = z.detach()
 
-        return self.dropout(self.divisive_norm(z))
+        # divnorm=False 就是论文的「grp」变体（有分组、无除法归一化）：旁路掉整个模块。
+        # 注意**不能**用 divnorm_power=0 代替——那个模块在 power=0 时仍做组内居中、返回 ∘z 而非 z。
+        return self.dropout(self.divisive_norm(z) if self.divnorm else z)
 
     @torch.no_grad()
     def measure_local_objective(self, x: torch.Tensor, label_kernel: torch.Tensor) -> float:

@@ -46,6 +46,7 @@ import torch
 __all__ = [
     "biased_hsic",
     "centered_label_kernel",
+    "cosine_kernel",
     "gaussian_kernel",
     "kernelized_bottleneck_objective",
     "phsic",
@@ -77,6 +78,25 @@ def gaussian_kernel(x: torch.Tensor, sigma: float = DEFAULT_SIGMA) -> torch.Tens
     if sigma <= 0:
         raise ValueError(f"sigma 必须为正，收到 {sigma}。")
     return torch.exp(-squared_distances(x) / (2.0 * sigma**2))
+
+
+def cosine_kernel(x: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
+    """余弦核 ``k(x_i, x_j) = <x_i, x_j> / (‖x_i‖·‖x_j‖)``——论文的 "cossim"（Eq. 25）。
+
+    与高斯核一样给出一个**正半定**的格拉姆矩阵，所以 pHSIC 的推导一字不改。
+
+    ⚠️ **论文的默认核是余弦，不是高斯**：官方仓库 ``--hsic-kernel-z`` / ``--hsic-kernel-y``
+    的默认值都是 ``cossim``；论文 Table 1/表 3 把 ``pHSIC: cossim`` 与 ``pHSIC: Gaussian``
+    两组列并列报告。本仓库的默认取的是**高斯**，因为验收数字（`train_mnist.py` 的 97.79%）
+    对应的正是论文 Table 3 里 MNIST 的 **Gaussian + grp + div** 那一列——余弦核在这里作为
+    **对照臂**接进来。这一默认差异写在 README 的「已知边界」里。
+
+    ``eps`` 只在范数为 0 时起作用（全零行），照官方 ``CosineSimilarityKernel`` 的写法。
+    """
+    norm = x.norm(dim=1, keepdim=True)
+    safe = torch.where(norm > 0, norm, torch.ones_like(norm))
+    normalized = x / safe
+    return normalized @ normalized.t()
 
 
 def centered_label_kernel(labels: torch.Tensor, n_classes: int) -> torch.Tensor:
@@ -142,6 +162,7 @@ def kernelized_bottleneck_objective(
     sigma: float = DEFAULT_SIGMA,
     gamma: float = DEFAULT_GAMMA,
     mode: str = "plausible",
+    kernel: str = "gaussian",
 ) -> torch.Tensor:
     """单层的局部目标 ``pHSIC(Z,Z) − γ·pHSIC(Y,Z)``（Eq. 9）。
 
@@ -155,13 +176,19 @@ def kernelized_bottleneck_objective(
         sigma: 高斯核带宽 σ。
         gamma: 瓶颈平衡参数 γ。
         mode: ``"plausible"``（pHSIC，实验用的）或 ``"biased"``（HSIC，对照用）。
+            命名与取值照抄官方仓库的 ``--hsic-estimate-mode``（默认 ``plausible``）。
+            注意**论文全文没有 "biased" 这个词**——它是官方代码的用语，论文只写 HSIC 与 pHSIC。
+        kernel: ``"gaussian"`` 或 ``"cossim"``。**官方默认是 cossim**，本仓库默认高斯
+            （与验收数字对应的是论文 Table 3 里 MNIST 的 Gaussian 列）——见 :func:`cosine_kernel`。
 
     Returns:
         标量损失。
     """
     if mode not in ("plausible", "biased"):
         raise ValueError(f"mode 只能是 'plausible' 或 'biased'，收到 {mode!r}。")
+    if kernel not in ("gaussian", "cossim"):
+        raise ValueError(f"kernel 只能是 'gaussian' 或 'cossim'，收到 {kernel!r}。")
     estimator = phsic if mode == "plausible" else biased_hsic
 
-    z_kernel = gaussian_kernel(z, sigma=sigma)
+    z_kernel = gaussian_kernel(z, sigma=sigma) if kernel == "gaussian" else cosine_kernel(z)
     return estimator(z_kernel, z_kernel) - gamma * estimator(label_kernel, z_kernel)

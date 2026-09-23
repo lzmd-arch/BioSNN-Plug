@@ -122,6 +122,35 @@ def build_parser() -> argparse.ArgumentParser:
         help="岭回归的正则系数 λ（仅 --readout-kind ridge）。**不给就在验证集上选**"
         "（候选 {0, 1e-4, 1e-3, 1e-2, 1e-1}）；给了就用它、跳过选择。偏置项不正则化",
     )
+    parser.add_argument(
+        "--hsic-estimate-mode",
+        default="plausible",
+        choices=["plausible", "biased"],
+        help="局部目标用哪个 HSIC 估计量：'plausible'（pHSIC，论文实验用的）或 'biased'"
+        "（经典 HSIC，对照用）。**命名与取值照抄官方仓库的 --hsic-estimate-mode**（默认"
+        " plausible）。注意论文全文没有 'biased' 这个词——它是官方代码的用语",
+    )
+    parser.add_argument(
+        "--kernel",
+        default="gaussian",
+        choices=["gaussian", "cossim"],
+        help="核化目标的核。⚠️ **官方默认是 cossim**；本仓库默认 gaussian，因为验收数字对应的"
+        "是论文 Table 3 里 MNIST 的 Gaussian + grp + div 那一列。cossim 作为对照臂",
+    )
+    parser.add_argument(
+        "--grouping",
+        default="on",
+        choices=["on", "off"],
+        help="局部目标里做不做分组（论文 Eq. 14）。'off' = 论文的 plain 变体：活动直接进核，"
+        "不做分组、也不做跨组居中。**不要用 --n-groups 1 表达无分组**——那会让目标恒为 0",
+    )
+    parser.add_argument(
+        "--divnorm",
+        default="on",
+        choices=["on", "off"],
+        help="前向输出过不过除法归一化模块。'off' = 论文的 grp 变体（有分组、无除法归一化）。"
+        "**不要用 --divnorm-power 0 代替**——那个模块在 power=0 时仍做组内居中、返回的不是 z",
+    )
     parser.add_argument("--dropout", type=float, default=0.01)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--device", default=None, choices=[None, "cpu", "cuda"])
@@ -169,6 +198,10 @@ def build_model(args: argparse.Namespace) -> IBHebbianPerceptron:
         hidden_learning_rate=args.hidden_lr,
         readout_learning_rate=args.readout_lr,
         dropout_p=args.dropout,
+        objective_mode=args.hsic_estimate_mode,
+        kernel=args.kernel,
+        grouping=args.grouping == "on",
+        divnorm=args.divnorm == "on",
     )
 
 
@@ -325,6 +358,14 @@ def train(args: argparse.Namespace, device: torch.device):
                 f", ridge_lambda={best_ridge:g}（{lambda_source}；累积 XᵀX / XᵀY 后一次解出，无反向传播、无迭代）"
                 if args.readout_kind == "ridge"
                 else f", eta_readout={args.readout_lr}（交叉熵 + SGD）"
+            ),
+            f"局部目标：HSIC 估计量={args.hsic_estimate_mode}，核={args.kernel}，"
+            f"分组={args.grouping}，除法归一化={args.divnorm}"
+            + (
+                "（**不是验收配置**：验收默认是 plausible + gaussian + on + on）"
+                if (args.hsic_estimate_mode, args.kernel, args.grouping, args.divnorm)
+                != ("plausible", "gaussian", "on", "on")
+                else ""
             ),
             "局部性：隐藏层逐层用自身目标就地更新、输入被切断梯度；读出的 (XᵀX, XᵀY) 是全局二阶统计量",
         ],

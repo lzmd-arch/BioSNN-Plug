@@ -75,6 +75,10 @@ class IBHebbianPerceptron(nn.Module):
         negative_slope: float = 0.01,
         dropout_p: float = 0.0,
         center_activity: bool = True,
+        objective_mode: str = "plausible",
+        kernel: str = "gaussian",
+        grouping: bool = True,
+        divnorm: bool = True,
     ) -> None:
         super().__init__()
         if n_layers < 1:
@@ -98,6 +102,10 @@ class IBHebbianPerceptron(nn.Module):
                 smoothing_delta=smoothing_delta,
                 learning_rate=hidden_learning_rate,
                 momentum=hidden_momentum,
+                objective_mode=objective_mode,
+                kernel=kernel,
+                grouping=grouping,
+                divnorm=divnorm,
                 negative_slope=negative_slope,
                 dropout_p=dropout_p,
                 center_activity=center_activity,
