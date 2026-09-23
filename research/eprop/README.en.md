@@ -49,6 +49,56 @@ Python：3.12.14
 
 GPU memory 1.08 GB of 8 GB; none of the §6.2 fallback paths fired.
 
+### SHD cross-check: **it ran, and it did not learn** (a negative result, recorded as such)
+
+| Metric | Measured | Criterion |
+| :--- | ---: | :--- |
+| Test accuracy (SHD, 20 classes) | **0.0534** | chance is 0.05 — **it did not learn** |
+| Active-neuron fraction | 1.0000 | §7: "> 60%" ✓ |
+| Spike sparsity | 0.9385 | §9 sets a threshold only at phase 2; not a criterion here |
+
+The same hyperparameters chosen for sMNIST (`n_rec=256`, 30 epochs, `eta_in=eta_rec=2e-3`,
+`eta_out=5e-2`, `beta=0.07`, `thr=0.62`) **do not learn** SHD: the training cross-entropy
+moves only from 2.9948 to 2.9529, while `ln 20 = 2.996` — it stays at chance throughout.
+
+**Diagnosis** (reading the `w_in` initialisation in `research/eprop/neurons.py` plus a
+forward probe):
+
+* `w_in` is initialised as `1/√n_in`, so with 700 input channels each weight is only one
+  fifth the size it has with 28 channels (measured **0.0302** against sMNIST's **0.1507**);
+* the hidden layer's firing rate is therefore about half sMNIST's (**0.0526** against
+  **0.0997**) — not dead, but weakly driven;
+* SHD also brings 20 classes and 100 time steps, neither of which sMNIST (10 classes,
+  784 steps) has to carry.
+
+The paper's SHD configuration is a **different** one: 450 neurons, 100 epochs, α=0.97,
+β=0.96, v_th=1.0, Adam 1e-4, batch 128 (M&M 3.1 and Table 1). **No SHD-specific tuning was
+done in this phase**, so what this says is "these hyperparameters are not enough" — **not**
+"the rule does not apply", and **not** "the implementation is wrong": the same code reaches
+77.48% on sMNIST. Turning this into a comparable cross-check requires giving SHD its own
+hyperparameter budget (size, epochs, α/β/v_th) rather than pushing the sMNIST configuration
+harder.
+
+Reproducibility record (`--dataset shd --device cuda`, local GPU, ~24 minutes):
+
+```text
+实验名称：eprop/shd
+日期：2026-09-23 08:32:19 中国标准时间
+Git commit：e2d754ffe18f3ace20a735bbd6668bf94298e859
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=0；全局种子=1741413617；划分验证集=1435468909；权重初始化=3486733650；每批打乱=3990329895；脉冲编码=1681094898
+依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+运行命令：train_sequential.py --dataset shd --device cuda
+耗时：1413.7 s
+显存峰值：3,220.6 MiB（§6.2 硬约束 8GB）
+§6.2 降级路径：未触发
+备注：n_rec=256, beta=0.07, thr=0.62, eta_in=0.002, eta_rec=0.002, eta_out=0.05, decay_out=0.95
+备注：输入编码：SHD 脉冲时刻铺到 100 个箱、箱内二值化（本项目自己的选择）
+```
+
 ## How to reproduce it
 
 ```bash
@@ -57,8 +107,9 @@ uv run python -m research.eprop.train_sequential          # acceptance run (loca
 uv run python -m research.eprop.train_sequential --smoke  # CPU smoke, for CI only
 ```
 
-The secondary dataset SHD needs a separate ~130 MB download (see the hint in
-`tasks.load_shd`) and **was not run** — see "Known boundaries".
+The secondary dataset SHD needs a separate ~169 MB download:
+`uv run python scripts/download_data.py shd`. **It ran — and it did not learn**, see the
+"SHD cross-check" section below.
 
 ## Equations mapped to modules
 
@@ -114,6 +165,14 @@ MNIST, uses a synthetic sequential task that finishes on CPU in tens of seconds,
 runs it directly; it reproduces the "exactly equal" result above on the spot and asserts
 that the learning path contains no autograd.
 
+`examples/paper_pes2025.py` is a minimal reproduction of **Pes 2025's Trace Propagation** —
+likewise a synthetic task, likewise tens of seconds on CPU. **It does not verify the
+learning rule used here** (TP is not it, see [ADR-0010](../../docs/adr/ADR-0010-eprop-quadratic-storage-and-trace-propagation.en.md));
+it verifies that the paper's own rule runs, and lists the places where the paper's equations
+and its official implementation disagree (the off-by-one reset in Eq. (1), Eq. (15) using the
+previous layer's trace, the necessity of detaching across layers, and the output layer's
+update rule that the paper never states).
+
 ## Known boundaries
 
 This section matters more than the conclusion.
@@ -145,9 +204,12 @@ This section matters more than the conclusion.
 2. **This is a 30-epoch result and has not converged.** Validation accuracy was still
    rising in the final epoch.
 3. **A single run, not an average.** One seed only (`base=0`).
-4. **The SHD cross-check was not run.** This phase's primary acceptance is sMNIST; SHD is
-   the cross-check against the cited papers and needs a separate download.
-   `tasks.load_shd` is implemented but **was not executed**, so there is no SHD number.
+4. **The SHD cross-check ran, and it did not learn** (see "SHD cross-check" above). This
+   entry used to read "was not run" — actually running it exposed two defects in `load_shd`
+   that only surface at runtime (variable-length data indexed after the file was closed;
+   binning by milliseconds, which keeps only the first 100 ms of each clip), and after
+   fixing them the result was **no learning under the same hyperparameters**. So this is a
+   negative result, not a gap; and "tune for SHD" is something this phase did not do.
 5. **The input encoding is this project's own choice.** MNIST's analog pixels become spikes
    by Bernoulli sampling. No paper prescribes this, and changing the encoding changes the
    result.
