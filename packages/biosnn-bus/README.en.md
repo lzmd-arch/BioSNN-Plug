@@ -13,13 +13,17 @@ It is responsible for exactly one thing: **adding a new modality must not requir
 
 ## Installation
 
-Not published to PyPI yet; install from Git for now:
+```bash
+pip install biosnn-bus
+
+# When you need the torch bridge (SpikeTrain.to_torch / from_torch)
+pip install "biosnn-bus[torch]"
+```
+
+To install **unreleased** changes from the `main` branch (a fix under review, say), go through Git:
 
 ```bash
 pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
-
-# When you need the torch bridge (SpikeTrain.to_torch / from_torch)
-pip install "biosnn-bus[torch] @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
 ```
 
 Depends only on numpy.

@@ -51,7 +51,7 @@ Two boundaries worth stating plainly:
   in §2.2 of the project plan. That is a phase-2 research task. (Why the skeleton library is a
   separate package, and why it deliberately includes none of these things, see
   [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.en.md).)
-- The skeleton library is **not on PyPI yet**. `pip install biosnn-bus` only becomes usable once the `v0.1.0` tag is pushed (release channel in [release.yml](.github/workflows/release.yml)).
+- The skeleton library **is on PyPI**: `pip install biosnn-bus` (currently `0.1.0`). Releases go through PyPI trusted publishing (OIDC, no stored tokens); the pipeline is in [release.yml](.github/workflows/release.yml).
 
 ## Architecture
 

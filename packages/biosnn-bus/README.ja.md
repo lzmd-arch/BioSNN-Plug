@@ -13,13 +13,17 @@
 
 ## インストール
 
-PyPI にはまだリリースされていません。現在は Git からインストールします：
+```bash
+pip install biosnn-bus
+
+# torch ブリッジが必要なとき（SpikeTrain.to_torch / from_torch）
+pip install "biosnn-bus[torch]"
+```
+
+`main` ブランチの**未リリース**の変更（レビュー中の修正など）を入れる場合は Git から：
 
 ```bash
 pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
-
-# torch ブリッジが必要なとき（SpikeTrain.to_torch / from_torch）
-pip install "biosnn-bus[torch] @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
 ```
 
 依存するのは numpy だけです。

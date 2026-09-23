@@ -129,8 +129,8 @@ git tag v0.1.0 && git push origin v0.1.0
 `verify` job 会先确认 tag 名与包版本一致——写错 tag 会在这一步被拦下，不会出现
 "发了 v0.2.0 但包内容还是 0.1.0"这类事后难补救的情况。
 
-PyPI 尚未配置好之前，可以用 `gh workflow run release.yml` 手动触发流水线：
-它只跑校验与构建，不发布。
+PyPI 侧已用 **trusted publishing**（OIDC）配好，首次发布（`v0.1.0`）已完成。手动触发
+`gh workflow run release.yml` 仍然有用——它只跑校验与构建、**不发布**，用来在没打 tag 时验证流水线。
 
 ## 文档翻译
 

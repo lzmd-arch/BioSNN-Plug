@@ -47,7 +47,7 @@
 
 - スパイクバスは**骨組み**である：二重チャネルルーティングはすでに実装されているが、既定の融合戦略は単純連結であり、プロジェクト計画書 §2.2 が記述する TAAF 時間注意誘導融合では**ない**——それは第 2 フェーズの研究タスクである。（スケルトンライブラリがなぜ独立したパッケージなのか、なぜこれらを意図的に含めないのかは
   [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.ja.md) 参照。）
-- スケルトンライブラリは**PyPI にまだリリースしていない**。`pip install biosnn-bus` は `v0.1.0` タグを打って初めて使えるようになる（リリースパイプラインは [release.yml](.github/workflows/release.yml) 参照）。
+- スケルトンライブラリは**PyPI にリリース済み**です：`pip install biosnn-bus`（現在 `0.1.0`）。リリースは PyPI の trusted publishing（OIDC、トークンを保存しません）で行い、手順は [release.yml](.github/workflows/release.yml) にあります。
 
 ## アーキテクチャ
 
@@ -97,7 +97,7 @@ flowchart TB
 
 ## クイックスタート
 
-numpy だけに依存し、GPU は不要。PyPI にはまだリリースしていないため、現在は Git からインストールする：
+numpy だけに依存し、GPU は不要です：
 
 ```bash
 pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
