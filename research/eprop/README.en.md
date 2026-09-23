@@ -203,7 +203,42 @@ This section matters more than the conclusion.
      n_rec=256" to 50 s/epoch.
 2. **This is a 30-epoch result and has not converged.** Validation accuracy was still
    rising in the final epoch.
-3. **A single run, not an average.** One seed only (`base=0`).
+3. **Multi-seed statistics now exist (5 seeds) -- but "better than the paper" is still
+   far off.** Same convention as W1
+   (`uv run python -m research.eprop.sweep_seeds --seeds 0-4 --device cuda`):
+
+   | Seed | Test accuracy | Active-neuron fraction |
+   | ---: | ---: | ---: |
+   | 0 | 0.7748 | 1.0000 |
+   | 1 | 0.7678 | 1.0000 |
+   | 2 | 0.7789 | 1.0000 |
+   | 3 | 0.7857 | 1.0000 |
+   | 4 | 0.7746 | 1.0000 |
+   | **Mean** | **0.7764** | **1.0000** |
+   | Min / max | 0.7678 / 0.7857 | 1.0000 / 1.0000 |
+   | **Spread** | **1.79 percentage points** | **0.00 percentage points** |
+
+   ⚠️ **The active-fraction column has no seed variance at all** (all 5 seeds read
+   1.0000) -- it sits far from §7's 60% threshold and is **not a discriminating metric**;
+   it is reported only because the plan asks for it.
+   ⚠️ **The key fact on the accuracy side is not the spread, it is that this has not converged**:
+   validation accuracy is still rising at epoch 30 (the curve is in
+   [`figures/f2-w2-epoch-accuracy.png`](../../figures/f2-w2-epoch-accuracy.png)), so 0.7764
+   is a **budget-truncated** figure, not the ceiling of this rule on sMNIST. Whether it can beat
+   the paper is a question for a larger epoch budget -- that is the next step, not a claim already
+   established.
+
+   Per-seed JSONs and the full stdout (5 reproducibility record blocks, each reading a clean
+   `Git state`) are in [`sweep_results/w2_seeds/`](../../sweep_results/w2_seeds/) and
+   [`sweep_results/w2_seeds.log`](../../sweep_results/w2_seeds.log).
+   A second, **independent cross-check batch** (same configuration, run before per-epoch recording
+   was added) is in [`sweep_results/w2_seeds_nocurve/`](../../sweep_results/w2_seeds_nocurve/): mean
+   **0.7764** (min 0.7678, max 0.7857), which differs from the canonical batch's
+   0.7764 by 0.00 percentage points -- two independent runs
+   agreeing with each other.
+
+   ⚠️ This item used to read "**A single run, not an average.** One seed only (`base=0`)". That
+   statement has been superseded by this batch.
 4. **The SHD cross-check ran, and it did not learn** (see "SHD cross-check" above). This
    entry used to read "was not run" — actually running it exposed two defects in `load_shd`
    that only surface at runtime (variable-length data indexed after the file was closed;
@@ -213,9 +248,35 @@ This section matters more than the conclusion.
 5. **The input encoding is this project's own choice.** MNIST's analog pixels become spikes
    by Bernoulli sampling. No paper prescribes this, and changing the encoding changes the
    result.
-6. **The quantified gap report against BPTT has not been produced.** `bptt_baseline.py` is
-   in place and runnable, but the full comparison was not run, so the number for "how much
-   worse is e-prop than BPTT" does not yet exist. §9 lists it under phase 2; it is not a
-   phase-1 acceptance item.
+6. **The quantified gap report against BPTT: 23.3 percentage points at matched
+   budget.** `bptt_baseline.py` (same architecture, same loss, same budget, same seed -- the only
+   difference is the learning rule):
+
+   | Arm | Learning rule | Test accuracy |
+   | :--- | :--- | ---: |
+   | e-prop | local eligibility traces, **no cross-layer gradient** | **0.5274** |
+   | BPTT | surrogate gradient through spikes, graph not cut | **0.7602** |
+   | | **Gap** | **+0.2328** |
+
+   Configuration `n_rec=256, epochs=10, n_train=20000, batch=64, seed=0`. The raw stdout (including its reproducibility record block) is in
+   [`sweep_results/w2_bptt.log`](../../sweep_results/w2_bptt.log).
+
+   **Three caveats, stated up front so the number is not misread**:
+   - **The two arms use different learning rates** (e-prop 2e-3, BPTT 5e-3 -- each script's own
+     default). So this is the gap "under each method's default learning rate", **not** the gap
+     after hyperparameter alignment -- part of it may be nothing but the learning rate.
+   - **e-prop is far from converged at this budget** (10 epochs x 20k samples), so a large part of
+     the 23.3 points is "slow to converge", not "lower ceiling".
+   - **Across budgets, the striking number is compute efficiency** (this is **not** a paired
+     comparison -- the budgets differ): BPTT reaches 0.7602 with **200k**
+     sample presentations, whereas the acceptance configuration's e-prop needs about
+     **16200k** (30 epochs x 54k, where 54k = the 60k training set minus a
+     10% validation split) to reach 0.7748 -- about **8x the compute for one or two
+     points**. That is the real information in this report: it turns "e-prop is slow" from an
+     impression into a citable number, and it is the starting point for §9's phase-4 target
+     ("the gap narrows or gets a clear attribution analysis").
+
+   ⚠️ This item used to read "**the quantified gap report against BPTT has not been produced** ...
+   does not yet exist". That statement has been superseded by this report.
 7. **A single hidden layer.** `EPropLearner` is one ALIF layer plus a linear readout. §2.2's
    cognitive core is a multi-layer RSNN; stacking layers is not implemented.

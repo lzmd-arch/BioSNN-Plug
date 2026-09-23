@@ -1,0 +1,19 @@
+{
+  "seed": 0,
+  "test_accuracy": 0.7748000025749207,
+  "active_fraction": 1.0,
+  "n_classes": 10,
+  "elapsed_s": 1271.5580876000022,
+  "config": {
+    "dataset": "smnist",
+    "epochs": 30,
+    "n_rec": 256,
+    "batch_size": 64,
+    "beta": 0.07,
+    "threshold": 0.62,
+    "learning_rate_in": 0.002,
+    "learning_rate_rec": 0.002,
+    "learning_rate_out": 0.05,
+    "device": "cuda"
+  }
+}
