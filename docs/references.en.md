@@ -139,7 +139,7 @@ For each citation, verify four things:
 
 ## Items in the body of the project plan awaiting correction
 
-The following problems belong to the **body of `BioSNN-Plug_项目计划书_v6.2.md`**, which this file cannot change. **2026-09-23: all of these corrections are now folded into [`BioSNN-Plug_项目计划书_v6.3.md`](../BioSNN-Plug_项目计划书_v6.3.md)** — the table is kept as a change log, and **v6.3 is the version to cite**.
+The following problems belong to the **body of `BioSNN-Plug_项目计划书_v6.2.md`**, which this file cannot change. **2026-09-23: all of these corrections are now folded into [`BioSNN-Plug_项目计划书_v6.3.md`](../BioSNN-Plug_项目计划书_v6.3.md)** — the table is kept as a change log, and **v6.2 remains the version to cite as the plan; use v6.3 when you need the corrected wording**.
 
 | Location | Problem | Suggested change |
 | :--- | :--- | :--- |

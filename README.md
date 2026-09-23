@@ -2,7 +2,9 @@
 
 **面向高生物合理性的全模态脉冲神经网络认知原型**
 
-[English](README.en.md) · [项目计划书](BioSNN-Plug_项目计划书_v6.3.md) · [插件开发指南](docs/plugin_guide.md) · [架构决策记录](docs/adr/README.md)
+[English](README.en.md) · [项目计划书 v6.2](BioSNN-Plug_项目计划书_v6.2.md) · [v6.3（引用修订版）](BioSNN-Plug_项目计划书_v6.3.md) · [插件开发指南](docs/plugin_guide.md) · [架构决策记录](docs/adr/README.md)
+
+> **两个版本的关系**：**v6.2 是正式计划书**；**v6.3** 把第一批引用考证的更正并了进去（改了哪些见 [`docs/references.md`](docs/references.md) 的「计划书正文待更正项」）。引用计划书时以 v6.2 为准；需要用到更正后的表述（例如 Trace Propagation 的定位、TD-LTP 的出处）时用 v6.3。
 
 [![CI](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml/badge.svg)](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
@@ -33,7 +35,7 @@
 | :--- | :--- |
 | `biosnn-bus` 骨架库 | **0.1.0 可用**——插件接口、注册与发现、脉冲总线骨架 |
 | 研究代码：三条验证线 | **第一阶段实现完成**——W1 Hebbian 感知 MNIST **97.79%**（默认闭式解读出；SGD 读出 98.01%）✓；W2 e-prop 序列 sMNIST **77.48%**（活跃神经元 1.0000）✓；W3 R-STDP CartPole 中位数 **237.8 步**（阈值 ≥ 200）✓。数字与复现记录见[复现记录](docs/reproducibility.md) |
-| 认知核心 / LLM 协同 | **未开始**，见[计划书 §七](BioSNN-Plug_项目计划书_v6.3.md) |
+| 认知核心 / LLM 协同 | **未开始**，见[计划书 §七](BioSNN-Plug_项目计划书_v6.2.md) |
 
 两处需要说清楚的边界：
 
@@ -85,7 +87,7 @@ flowchart TB
     MCP -.->|结果编码回注| EM
 ```
 
-层间冲突由 **ES 元学习仲裁器**调节（⬜ 第二阶段）。各层学习规则的完整说明见[计划书](BioSNN-Plug_项目计划书_v6.3.md) §2、§3。
+层间冲突由 **ES 元学习仲裁器**调节（⬜ 第二阶段）。各层学习规则的完整说明见[计划书](BioSNN-Plug_项目计划书_v6.2.md) §2、§3。
 
 ## 快速开始
 
