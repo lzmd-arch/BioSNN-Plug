@@ -1,0 +1,36 @@
+配置 1 个 × 种子 20 个 = **20 次运行**
+单次约 4 秒，顺序执行，预计 1 分钟
+逐次结果落盘到 sweep_results\step12_lr003/（每次运行一个文件）
+
+[  1/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=25  →  190.1 步（157.0–224.0）  偏移比 0.0082  峰值  350.7 @550
+[  2/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=26  →  500.0 步（500.0–500.0）  偏移比 0.0211  峰值  500.0 @650
+[  3/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=27  →  352.8 步（179.0–500.0）  偏移比 0.0324  峰值  449.7 @800
+[  4/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=28  →  272.0 步（187.0–413.0）  偏移比 0.0051  峰值  378.7 @750
+[  5/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=29  →  476.8 步（268.0–500.0）  偏移比 0.0003  峰值  500.0 @800
+[  6/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=30  →  335.0 步（216.0–441.0）  偏移比 0.0129  峰值  500.0 @450
+[  7/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=31  →  317.5 步（226.0–466.0）  偏移比 0.0171  峰值  301.0 @800
+[  8/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=32  →  135.8 步（74.0–243.0）  偏移比 0.0061  峰值  500.0 @750
+[  9/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=33  →  189.3 步（114.0–351.0）  偏移比 0.0336  峰值  373.7 @600
+[ 10/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=34  →  232.0 步（176.0–294.0）  偏移比 0.0048  峰值  500.0 @700
+[ 11/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=35  →  173.3 步（66.0–314.0）  偏移比 0.0067  峰值  360.0 @800
+[ 12/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=36  →  392.5 步（135.0–500.0）  偏移比 0.0297  峰值  381.3 @750
+[ 13/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=37  →  430.9 步（232.0–500.0）  偏移比 0.0226  峰值  413.0 @800
+[ 14/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=38  →   92.1 步（66.0–188.0）  偏移比 0.0022  峰值  128.7 @750
+[ 15/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=39  →  328.8 步（244.0–398.0）  偏移比 0.0073  峰值  392.7 @500
+[ 16/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=40  →  123.4 步（100.0–188.0）  偏移比 0.0230  峰值  191.7 @650
+[ 17/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=41  →  225.5 步（95.0–500.0）  偏移比 0.0010  峰值  421.3 @650
+[ 18/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=42  →  449.8 步（319.0–500.0）  偏移比 0.0117  峰值  500.0 @350
+[ 19/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=43  →  371.2 步（214.0–500.0）  偏移比 0.0037  峰值  451.0 @450
+[ 20/20] actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 seed=44  →  290.1 步（239.0–379.0）  偏移比 0.0185  峰值  303.0 @600
+
+================================================================================================
+配置                                  n       中位数        均值      最小      最大      极差       偏移比       峰值中位数
+-------------------------------------------------------------------------------------------------------
+actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1 20     303.8     293.9      92     500     5.4    0.0099       402.8
+-------------------------------------------------------------------------------------------------------
+「峰值中位数」是训练途中贪心评测的最好一次，**只作诊断**：它把「搜索不到好解」与「找到了但留不住」分开，这两者的修法不相交。验收数字仍取最终权重。
+判据（计划书 §七）：中位数 >= 200 步
+达标的配置：['actor_action_samplingboltzmann_actor_lr_final_fraction0.03_actor_trace_centersampling_greedy_eval_every50_logit_scale_end40_logit_scale_start1']
+注意「极差」一列：本问题上它经常 > 3，说明单种子结论不可用。
+
+全部 20 个格子都有数据。

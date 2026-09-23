@@ -1,0 +1,37 @@
+配置 2 个 × 种子 10 个 = **20 次运行**
+单次约 4 秒，顺序执行，预计 1 分钟
+逐次结果落盘到 sweep_results\step2_curve/（每次运行一个文件）
+
+[  1/20] actor_lr_final_fraction1.0_greedy_eval_every50 seed=0  →  107.2 步（89.0–132.0）  偏移比 0.0057  峰值  275.3 @50
+[  2/20] actor_lr_final_fraction1.0_greedy_eval_every50 seed=1  →   49.7 步（29.0–95.0）  偏移比 0.0035  峰值  104.0 @750
+[  3/20] actor_lr_final_fraction1.0_greedy_eval_every50 seed=2  →   62.6 步（54.0–73.0）  偏移比 0.0169  峰值  172.3 @100
+[  4/20] actor_lr_final_fraction1.0_greedy_eval_every50 seed=3  →    9.2 步（8.0–10.0）  偏移比 0.0581  峰值  373.7 @100
+[  5/20] actor_lr_final_fraction1.0_greedy_eval_every50 seed=4  →   73.0 步（57.0–93.0）  偏移比 0.0035  峰值  164.7 @750
+[  6/20] actor_lr_final_fraction1.0_greedy_eval_every50 seed=5  →  292.0 步（267.0–305.0）  偏移比 0.0255  峰值  337.0 @450
+[  7/20] actor_lr_final_fraction1.0_greedy_eval_every50 seed=6  →  147.8 步（92.0–179.0）  偏移比 0.0141  峰值  229.7 @400
+[  8/20] actor_lr_final_fraction1.0_greedy_eval_every50 seed=7  →  116.5 步（103.0–153.0）  偏移比 0.0195  峰值  284.3 @650
+[  9/20] actor_lr_final_fraction1.0_greedy_eval_every50 seed=8  →    9.7 步（9.0–11.0）  偏移比 0.2018  峰值  105.0 @350
+[ 10/20] actor_lr_final_fraction1.0_greedy_eval_every50 seed=9  →   12.5 步（10.0–15.0）  偏移比 0.0217  峰值  113.0 @750
+[ 11/20] actor_lr_final_fraction0.1_greedy_eval_every50 seed=0  →   68.7 步（48.0–85.0）  偏移比 0.0059  峰值  427.7 @600
+[ 12/20] actor_lr_final_fraction0.1_greedy_eval_every50 seed=1  →   53.3 步（29.0–81.0）  偏移比 0.0282  峰值   84.7 @100
+[ 13/20] actor_lr_final_fraction0.1_greedy_eval_every50 seed=2  →   56.0 步（49.0–64.0）  偏移比 0.0152  峰值  193.7 @500
+[ 14/20] actor_lr_final_fraction0.1_greedy_eval_every50 seed=3  →  100.7 步（87.0–129.0）  偏移比 0.0112  峰值  309.0 @400
+[ 15/20] actor_lr_final_fraction0.1_greedy_eval_every50 seed=4  →   71.3 步（39.0–101.0）  偏移比 0.0122  峰值   92.3 @450
+[ 16/20] actor_lr_final_fraction0.1_greedy_eval_every50 seed=5  →   85.1 步（75.0–99.0）  偏移比 0.0012  峰值  175.7 @100
+[ 17/20] actor_lr_final_fraction0.1_greedy_eval_every50 seed=6  →  335.4 步（60.0–500.0）  偏移比 0.0127  峰值  375.3 @550
+[ 18/20] actor_lr_final_fraction0.1_greedy_eval_every50 seed=7  →  109.6 步（97.0–124.0）  偏移比 0.0048  峰值  272.7 @650
+[ 19/20] actor_lr_final_fraction0.1_greedy_eval_every50 seed=8  →   54.3 步（30.0–71.0）  偏移比 0.0415  峰值  126.3 @350
+[ 20/20] actor_lr_final_fraction0.1_greedy_eval_every50 seed=9  →  100.4 步（84.0–122.0）  偏移比 0.0068  峰值  244.0 @750
+
+================================================================================================
+配置                                  n       中位数        均值      最小      最大      极差       偏移比       峰值中位数
+-------------------------------------------------------------------------------------------------------
+actor_lr_final_fraction0.1_greedy_eval_every50 10      78.2     103.5      53     335     6.3    0.0117       218.8
+actor_lr_final_fraction1.0_greedy_eval_every50 10      67.8      88.0       9     292    31.7    0.0182       201.0
+-------------------------------------------------------------------------------------------------------
+「峰值中位数」是训练途中贪心评测的最好一次，**只作诊断**：它把「搜索不到好解」与「找到了但留不住」分开，这两者的修法不相交。验收数字仍取最终权重。
+判据（计划书 §七）：中位数 >= 200 步
+达标的配置：无
+注意「极差」一列：本问题上它经常 > 3，说明单种子结论不可用。
+
+全部 20 个格子都有数据。

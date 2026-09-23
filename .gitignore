@@ -46,13 +46,15 @@ dmypy.json
 .ipynb_checkpoints/
 *.ipynb~
 
-# ---- 数据与实验产物（不镜像数据，只提供下载脚本）----
+# ---- 数据与实验产物 ----
+# 数据集不入库：按计划书 §12.1 不镜像数据，只提供 scripts/download_data.py（逐文件校验 + 打印哈希）。
 data/
 datasets/
+# 但**实验产物入库**（2026-09-23 起。原来这里忽略了 sweep_results/，即那些数据只存在于一块硬盘上）。
+# 理由：论文的图表要从它们出；目录清单与保留策略见 sweep_results/README.md。
 outputs/
 runs/
 wandb/
-sweep_results/
 *.ckpt
 *.pth
 *.pt

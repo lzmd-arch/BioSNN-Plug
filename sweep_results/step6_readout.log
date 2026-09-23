@@ -1,0 +1,26 @@
+配置 1 个 × 种子 10 个 = **10 次运行**
+单次约 4 秒，顺序执行，预计 1 分钟
+逐次结果落盘到 sweep_results\step6_readout/（每次运行一个文件）
+
+[  1/10] actor_lr_final_fraction0.1_critic_readoutrandom_critic_trace_post_factorgradient_greedy_eval_every50 seed=0  →   23.8 步（17.0–30.0）  偏移比 0.0111  峰值   78.7 @650
+[  2/10] actor_lr_final_fraction0.1_critic_readoutrandom_critic_trace_post_factorgradient_greedy_eval_every50 seed=1  →   55.8 步（21.0–71.0）  偏移比 0.0274  峰值   74.3 @250
+[  3/10] actor_lr_final_fraction0.1_critic_readoutrandom_critic_trace_post_factorgradient_greedy_eval_every50 seed=2  →   11.4 步（10.0–13.0）  偏移比 0.0240  峰值   56.3 @300
+[  4/10] actor_lr_final_fraction0.1_critic_readoutrandom_critic_trace_post_factorgradient_greedy_eval_every50 seed=3  →   21.8 步（16.0–30.0）  偏移比 0.0099  峰值  151.3 @200
+[  5/10] actor_lr_final_fraction0.1_critic_readoutrandom_critic_trace_post_factorgradient_greedy_eval_every50 seed=4  →   94.9 步（47.0–148.0）  偏移比 0.0134  峰值   97.3 @750
+[  6/10] actor_lr_final_fraction0.1_critic_readoutrandom_critic_trace_post_factorgradient_greedy_eval_every50 seed=5  →   50.9 步（32.0–95.0）  偏移比 0.0366  峰值  107.0 @600
+[  7/10] actor_lr_final_fraction0.1_critic_readoutrandom_critic_trace_post_factorgradient_greedy_eval_every50 seed=6  →   57.3 步（35.0–83.0）  偏移比 0.0563  峰值  355.0 @650
+[  8/10] actor_lr_final_fraction0.1_critic_readoutrandom_critic_trace_post_factorgradient_greedy_eval_every50 seed=7  →   25.3 步（21.0–32.0）  偏移比 0.0098  峰值   29.0 @400
+[  9/10] actor_lr_final_fraction0.1_critic_readoutrandom_critic_trace_post_factorgradient_greedy_eval_every50 seed=8  →   46.8 步（29.0–58.0）  偏移比 0.0240  峰值  134.3 @300
+[ 10/10] actor_lr_final_fraction0.1_critic_readoutrandom_critic_trace_post_factorgradient_greedy_eval_every50 seed=9  →   24.5 步（17.0–33.0）  偏移比 0.0294  峰值  170.0 @200
+
+================================================================================================
+配置                                  n       中位数        均值      最小      最大      极差       偏移比       峰值中位数
+-------------------------------------------------------------------------------------------------------
+actor_lr_final_fraction0.1_critic_readoutrandom_critic_trace_post_factorgradient_greedy_eval_every50 10      36.0      41.2      11      95     8.3    0.0240       102.2
+-------------------------------------------------------------------------------------------------------
+「峰值中位数」是训练途中贪心评测的最好一次，**只作诊断**：它把「搜索不到好解」与「找到了但留不住」分开，这两者的修法不相交。验收数字仍取最终权重。
+判据（计划书 §七）：中位数 >= 200 步
+达标的配置：无
+注意「极差」一列：本问题上它经常 > 3，说明单种子结论不可用。
+
+全部 10 个格子都有数据。

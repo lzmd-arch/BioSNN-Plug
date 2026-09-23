@@ -1,0 +1,16 @@
+{
+  "seed": 8,
+  "mean_steps": 9.5,
+  "min_steps": 8,
+  "max_steps": 11,
+  "offset_ratio": 0.05238960382754109,
+  "offset": -0.1437026336956025,
+  "sigma": 2.7429608776705114,
+  "elapsed_s": 4.858475000000908,
+  "peak_mb": 0.0,
+  "seeds_used": "base=8；Actor 与 Critic 初始权重=3589114564；Critic 感受野采样=1786091384；动作探索=3138835143；感受野采样环境=2269638262；环境动作空间种子=4106697846；环境随机种子=2726622789；群体编码中心=4160090216",
+  "config": {
+    "actor_learning_rate": 1e-05,
+    "actor_lr_final_fraction": 1.0
+  }
+}

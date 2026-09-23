@@ -1,0 +1,46 @@
+配置 2 个 × 种子 10 个 = **20 次运行**
+单次约 4 秒，顺序执行，预计 1 分钟
+逐次结果落盘到 sweep_results\step4_units/（每次运行一个文件）
+
+[  1/20] actor_lr_final_fraction0.1_critic_units256_greedy_eval_every50 seed=0  →   97.0 步（82.0–133.0）  偏移比 0.0237  峰值  184.0 @450
+[  2/20] actor_lr_final_fraction0.1_critic_units256_greedy_eval_every50 seed=1  →   71.3 步（55.0–95.0）  偏移比 0.0111  峰值   79.7 @350
+[  3/20] actor_lr_final_fraction0.1_critic_units256_greedy_eval_every50 seed=2  →   89.0 步（73.0–108.0）  偏移比 0.0237  峰值  136.0 @400
+[  4/20] actor_lr_final_fraction0.1_critic_units256_greedy_eval_every50 seed=3  →  150.1 步（83.0–261.0）  偏移比 0.0210  峰值  335.7 @500
+[  5/20] actor_lr_final_fraction0.1_critic_units256_greedy_eval_every50 seed=4  →  120.3 步（105.0–133.0）  偏移比 0.0043  峰值  125.3 @750
+[  6/20] actor_lr_final_fraction0.1_critic_units256_greedy_eval_every50 seed=5  →   85.0 步（72.0–105.0）  偏移比 0.0101  峰值  274.3 @450
+[  7/20] actor_lr_final_fraction0.1_critic_units256_greedy_eval_every50 seed=6  →   57.6 步（39.0–109.0）  偏移比 0.0083  峰值  500.0 @50
+[  8/20] actor_lr_final_fraction0.1_critic_units256_greedy_eval_every50 seed=7  →  109.8 步（100.0–119.0）  偏移比 0.0070  峰值  276.0 @450
+[  9/20] actor_lr_final_fraction0.1_critic_units256_greedy_eval_every50 seed=8  →   85.9 步（32.0–110.0）  偏移比 0.0039  峰值  113.0 @750
+[ 10/20] actor_lr_final_fraction0.1_critic_units256_greedy_eval_every50 seed=9  →   24.4 步（19.0–30.0）  偏移比 0.0278  峰值  106.7 @700
+[ 11/20] actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=0  ✗ 失败：init_directions 的形状应为 (1024, 64)，收到 (892, 64)。
+[ 12/20] actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=1  ✗ 失败：init_directions 的形状应为 (1024, 64)，收到 (906, 64)。
+[ 13/20] actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=2  ✗ 失败：init_directions 的形状应为 (1024, 64)，收到 (876, 64)。
+[ 14/20] actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=3  ✗ 失败：init_directions 的形状应为 (1024, 64)，收到 (945, 64)。
+[ 15/20] actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=4  ✗ 失败：init_directions 的形状应为 (1024, 64)，收到 (897, 64)。
+[ 16/20] actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=5  ✗ 失败：init_directions 的形状应为 (1024, 64)，收到 (962, 64)。
+[ 17/20] actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=6  ✗ 失败：init_directions 的形状应为 (1024, 64)，收到 (949, 64)。
+[ 18/20] actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=7  ✗ 失败：init_directions 的形状应为 (1024, 64)，收到 (851, 64)。
+[ 19/20] actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=8  ✗ 失败：init_directions 的形状应为 (1024, 64)，收到 (861, 64)。
+[ 20/20] actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=9  ✗ 失败：init_directions 的形状应为 (1024, 64)，收到 (922, 64)。
+
+================================================================================================
+配置                                  n       中位数        均值      最小      最大      极差       偏移比       峰值中位数
+-------------------------------------------------------------------------------------------------------
+actor_lr_final_fraction0.1_critic_units256_greedy_eval_every50 10      87.5      89.0      24     150     6.2    0.0106       160.0
+-------------------------------------------------------------------------------------------------------
+「峰值中位数」是训练途中贪心评测的最好一次，**只作诊断**：它把「搜索不到好解」与「找到了但留不住」分开，这两者的修法不相交。验收数字仍取最终权重。
+判据（计划书 §七）：中位数 >= 200 步
+达标的配置：无
+注意「极差」一列：本问题上它经常 > 3，说明单种子结论不可用。
+
+⚠️ 10 个格子没有产出数据——注意这与「跑出来是 0」不同：它是**没跑成**：
+  actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=0：ValueError: init_directions 的形状应为 (1024, 64)，收到 (892, 64)。
+  actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=1：ValueError: init_directions 的形状应为 (1024, 64)，收到 (906, 64)。
+  actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=2：ValueError: init_directions 的形状应为 (1024, 64)，收到 (876, 64)。
+  actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=3：ValueError: init_directions 的形状应为 (1024, 64)，收到 (945, 64)。
+  actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=4：ValueError: init_directions 的形状应为 (1024, 64)，收到 (897, 64)。
+  actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=5：ValueError: init_directions 的形状应为 (1024, 64)，收到 (962, 64)。
+  actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=6：ValueError: init_directions 的形状应为 (1024, 64)，收到 (949, 64)。
+  actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=7：ValueError: init_directions 的形状应为 (1024, 64)，收到 (851, 64)。
+  actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=8：ValueError: init_directions 的形状应为 (1024, 64)，收到 (861, 64)。
+  actor_lr_final_fraction0.1_critic_units1024_greedy_eval_every50 seed=9：ValueError: init_directions 的形状应为 (1024, 64)，收到 (922, 64)。

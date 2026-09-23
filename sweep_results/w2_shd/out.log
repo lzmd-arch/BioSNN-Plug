@@ -1,0 +1,30 @@
+epoch   1  train_ce 2.9948  val_acc 0.0380
+epoch   6  train_ce 2.9827  val_acc 0.0405
+epoch  12  train_ce 2.9716  val_acc 0.0466
+epoch  18  train_ce 2.9636  val_acc 0.0442
+epoch  24  train_ce 2.9574  val_acc 0.0442
+epoch  30  train_ce 2.9529  val_acc 0.0442
+
+测试准确率：0.0534（20 类随机基线 0.05）
+活跃神经元比例：1.0000（§七 阈值 > 0.6）
+脉冲稀疏度：0.9385
+
+```text
+实验名称：eprop/shd
+日期：2026-09-23 08:32:19 中国标准时间
+Git commit：e2d754ffe18f3ace20a735bbd6668bf94298e859
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=0；全局种子=1741413617；划分验证集=1435468909；权重初始化=3486733650；每批打乱=3990329895；脉冲编码=1681094898
+依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+运行命令：train_sequential.py --dataset shd --device cuda
+耗时：1413.7 s
+显存峰值：3,220.6 MiB（§6.2 硬约束 8GB）
+§6.2 降级路径：未触发
+备注：n_rec=256, beta=0.07, thr=0.62, eta_in=0.002, eta_rec=0.002, eta_out=0.05, decay_out=0.95
+备注：输入编码：SHD 脉冲时刻铺到 100 个箱、箱内二值化（本项目自己的选择）
+```
+
+验收（计划书 §七）：活跃神经元比例 1.0000 > 0.6 → 达到；准确率 0.0534 > 0.10（20 类的两倍随机基线） → 未达到。

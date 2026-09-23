@@ -141,6 +141,25 @@ date (to 2027-09).
 | W2 e-prop cognitive layer | [`research/eprop/README.en.md`](../research/eprop/README.en.md) | sMNIST 77.48%; active-neuron fraction 1.0000 (threshold > 60%). **The SHD cross-check is a negative result**: test accuracy 0.0534 ≈ chance (0.05) — the sMNIST hyperparameters do not learn SHD; diagnosis and next steps in the README |
 | W3 R-STDP + TD-LTP Critic | [`research/rstdp/README.en.md`](../research/rstdp/README.en.md) | ✅ **All three criteria met**: CartPole median **237.8 steps** (seeds 45–64, 20 **fresh** seeds never involved in any selection; criterion ≥ 200); max offset ratio **0.0403** (all seeds < 0.10 ✓); minimum **121** (our own added stability condition ≥ 100 ✓, no seed below 100). On the tuning seeds 25–44 the median is 319.8 with minimum 109 — **both batches pass**. Configuration and rationale: [ADR-0009](adr/ADR-0009-w3-behaviour-policy-and-trace-centring.en.md) |
 
+## Raw experiment artefacts
+
+Every number in the table above can be traced back to a **raw artefact**, and those live in
+[`sweep_results/`](../sweep_results/) and are now **tracked in this repository** (since 2026-09-23 --
+until then the directory was in `.gitignore`, which meant the data existed on exactly one disk; that
+is not preservation). The directory listing, the meaning of each field in a json, and which directory
+backs which number in the READMEs are in [`sweep_results/README.md`](../sweep_results/README.md).
+
+Three retention rules: **never delete, never overwrite** -- new experiments get a new directory, and
+an old one stays even if its conclusion was later refuted (for example the W1 run polluted by a
+mid-run edit), with a note saying so; one run is one `.json`, one sweep is a directory plus a summary
+`.log` of the same name; and **datasets are not part of this** -- `data/` stays untracked and is
+reproduced with `scripts/download_data.py` (per-file checksums), as §12.1 requires.
+
+When writing a paper: draw curves from the `curve` field in the json; take medians and minima from the
+summary logs or aggregate the json yourself; and **only report acceptance numbers from the fresh-seed
+batch** (for W3 that is `step14_confirm`, seeds 45-64 -- the tuning batch is 25-44; both pass, but the
+~27% gap between them is itself part of the conclusion).
+
 ## Where later phases record this
 
 From Phase 1 (single-rule validation) onward, every experiment record must carry the full
