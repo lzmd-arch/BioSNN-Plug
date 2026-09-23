@@ -8,11 +8,17 @@
     uv run python -m research.eprop.train_sequential          # 验收运行（sMNIST）
     uv run python -m research.eprop.train_sequential --smoke  # CI 用的缩小规模冒烟
 
+    uv run python scripts/download_data.py shd                # 旁证数据集（约 169 MB）
+    uv run python -m research.eprop.train_sequential --dataset shd --device cuda
+
 验收标准（计划书 §七 第一阶段）：**顺序任务可用，活跃神经元比例 > 60%**。
+
+**类别数从数据里读**（sMNIST 10 类、SHD 20 类），不写死——写死 10 在 SHD 上会让
+``cross_entropy`` 的 target 越界。
 
 计划书没给"可用"的数字，所以本脚本把它拆成三件可查的事：
 
-1. 测试准确率**显著高于随机**（10 类的随机基线是 10%）；
+1. 测试准确率**显著高于随机**（基线取 1/类别数）；
 2. **活跃神经元比例 > 60%**——§七 的硬指标，也是 §3.1「死亡神经元防护」的触发线；
 3. 产出与代理梯度 BPTT 基线的**量化差距报告**（见 ``bptt_baseline.py``）。
 
@@ -20,8 +26,9 @@
 
 ## 编码的选择会写进结论边界
 
-MNIST 的模拟像素按**伯努利采样**变成脉冲（见 :mod:`research.eprop.tasks`）。这是本项目
-自己的编码选择，不是任何论文的规定。换编码结果会变，所以种子固定并写进复现记录。
+MNIST 的模拟像素按**伯努利采样**变成脉冲，SHD 的脉冲时刻按固定时间窗铺进 100 个箱
+（见 :mod:`research.eprop.tasks`）。两者都是本项目自己的编码选择，不是任何论文的规定。
+换编码结果会变，所以种子固定并写进复现记录。
 """
 
 from __future__ import annotations
@@ -73,15 +80,17 @@ def apply_smoke_overrides(args: argparse.Namespace) -> int:
 
 
 def load_task(args: argparse.Namespace, seed: int):
-    if args.dataset == "shd":
-        train = load_shd(args.data_dir, split="train", seed=seed)
-        test = load_shd(args.data_dir, split="test", seed=seed)
-        n_in = train.inputs.shape[-1]
-    else:
-        train = load_smnist(args.data_dir, split="train", seed=seed)
-        test = load_smnist(args.data_dir, split="test", seed=seed)
-        n_in = train.inputs.shape[-1]
-    return train, test, n_in
+    """返回 ``(train, test, n_in, n_classes)``。
+
+    **类别数从数据里读，不写死。** sMNIST 是 10 类、SHD 是 20 类；写死 10 在 SHD 上会让
+    ``cross_entropy`` 的 target 越界（CUDA 上只报 device-side assert，看不出真正的原因）。
+    这条路径在第一次真跑之前一直是写死的。
+    """
+    loader = load_shd if args.dataset == "shd" else load_smnist
+    train = loader(args.data_dir, split="train", seed=seed)
+    test = loader(args.data_dir, split="test", seed=seed)
+    n_classes = int(max(int(train.labels.max()), int(test.labels.max()))) + 1
+    return train, test, train.inputs.shape[-1], n_classes
 
 
 def train(args: argparse.Namespace, device: torch.device) -> float:
@@ -89,7 +98,7 @@ def train(args: argparse.Namespace, device: torch.device) -> float:
     book.apply("全局种子")
 
     limit = apply_smoke_overrides(args) if args.smoke else None
-    train_set, test_set, n_in = load_task(args, book.derive("脉冲编码"))
+    train_set, test_set, n_in, n_classes = load_task(args, book.derive("脉冲编码"))
 
     n_samples = min(len(train_set), limit) if limit else len(train_set)
     n_val = max(n_samples // 10, 1)
@@ -111,7 +120,7 @@ def train(args: argparse.Namespace, device: torch.device) -> float:
     model = EPropLearner(
         n_in,
         args.n_rec,
-        10,
+        n_classes,
         tau_adaptation=args.tau_adaptation,
         threshold=args.threshold,
         beta=args.beta,
@@ -153,7 +162,7 @@ def train(args: argparse.Namespace, device: torch.device) -> float:
     active = model.active_neuron_fraction(test_inputs)
     sparsity = model.spike_sparsity(test_inputs)
 
-    print(f"\n测试准确率：{test_accuracy:.4f}（10 类随机基线 0.10）")
+    print(f"\n测试准确率：{test_accuracy:.4f}（{n_classes} 类随机基线 {1 / n_classes:.2f}）")
     print(f"活跃神经元比例：{active:.4f}（§七 阈值 > {ACTIVE_NEURON_THRESHOLD}）")
     print(f"脉冲稀疏度：{sparsity:.4f}")
 
@@ -173,28 +182,35 @@ def train(args: argparse.Namespace, device: torch.device) -> float:
             f"n_rec={args.n_rec}, beta={args.beta}, thr={args.threshold}, "
             f"eta_in={args.learning_rate_in}, eta_rec={args.learning_rate_rec}, "
             f"eta_out={args.learning_rate_out}, decay_out={args.decay_out}",
-            "输入编码：像素值作发放概率的伯努利采样（本项目自己的选择）",
+            "输入编码："
+            + (
+                "像素值作发放概率的伯努利采样（本项目自己的选择）"
+                if args.dataset == "smnist"
+                else "SHD 脉冲时刻铺到 100 个箱、箱内二值化（本项目自己的选择）"
+            ),
         ],
     )
     print("\n" + record.render_block())
 
-    return test_accuracy, active
+    return test_accuracy, active, n_classes
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     device = select_device(args.device)
-    test_accuracy, active = train(args, device)
+    test_accuracy, active, n_classes = train(args, device)
 
     if args.smoke:
         return 0
 
+    chance = 1.0 / n_classes
     passed_activity = active > ACTIVE_NEURON_THRESHOLD
-    passed_accuracy = test_accuracy > 0.10 * 2  # 显著高于随机
+    passed_accuracy = test_accuracy > 2 * chance  # 显著高于随机
     print(
         f"\n验收（计划书 §七）：活跃神经元比例 {active:.4f} > "
         f"{ACTIVE_NEURON_THRESHOLD} → {'达到' if passed_activity else '未达到'}；"
-        f"准确率 {test_accuracy:.4f} 显著高于随机 → {'达到' if passed_accuracy else '未达到'}。"
+        f"准确率 {test_accuracy:.4f} > {2 * chance:.2f}（{n_classes} 类的两倍随机基线）"
+        f" → {'达到' if passed_accuracy else '未达到'}。"
     )
     return 0 if (passed_activity and passed_accuracy) else 1
 
