@@ -36,6 +36,27 @@ Three claims are under test:
 
 **Evidence, not inspiration.** Conclusions have to be reproducible from this repository; citations that cannot be verified are marked `unverified` (see the [reference list](docs/references.en.md)).
 
+## How this relates to comparable projects
+
+A one-glance comparison. **The evidence behind every cell, and the licence boundaries (which
+project may enter a dependency, which may not be copied at all), are in
+[`docs/related_projects.en.md`](docs/related_projects.en.md).**
+
+| | Purely local learning | Modality plugins | Autonomous triggering | Continual learning | Open-source framework |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Javis** | ✅ STDP family throughout, no backprop (12 selectable) | ✗ | ✗ | ✗ | ◐ Rust, but **PolyForm noncommercial** |
+| **EMBER** | ◐ STDP + eligibility traces x dopamine gating | ✗ (text only) | ◐ observational, **N=1** | ✗ | ✗ no public repo |
+| **MEMBRAIN** | ◐ Voja + PES | ✗ | ✗ | ◐ claims disagree with implementation | ✅ Nengo (MIT) |
+| **eprop-PyTorch / ESPP** | ✅ e-prop; ESPP is a separate parallel rule | ✗ | ✗ | ✗ | ◐ code fragments, not a framework |
+| **BioSNN-Plug** (this project) | ✅ all three lines accepted | ◐ skeleton released; image is the one plugin | ○ phase 5 | ○ phase 3 | ✅ `biosnn-bus` is on PyPI |
+
+Legend: **✅ implemented, with acceptance data** · **◐ partial** (mechanism or evidence incomplete) ·
+**○ roadmap only (task exists in the plan, not started)** · **✗ none**
+
+⚠️ **Two cells in the last row are ○ rather than ✅** -- "autonomous triggering" sits in phase 5 and
+"continual learning" in phase 3, and **neither is implemented yet**. The marks are kept separate
+precisely so this table cannot be read as "we have already done it".
+
 ## Status
 
 | Part | Status |
