@@ -49,8 +49,8 @@ Hebbian 规则，加上除法归一化，能否作为感知层特征提取器在
 
 ```text
 实验名称：ib_hebbian/mnist
-日期：2026-09-23 07:05:00 中国标准时间
-Git commit：edd0a82cca39408e88e3ceac136a154fdca2fc02
+日期：2026-09-23 08:40:04 中国标准时间
+Git commit：c8c89f5e4b234fb4908e0ac6a6467e380004873f
 Git 状态：干净
 Python：3.12.14
 操作系统 / 架构：Windows 11 / AMD64
@@ -58,7 +58,7 @@ Python：3.12.14
 随机种子：base=0；全局种子=1741413617；划分验证集=1435468909；权重初始化=3486733650；每轮打乱=2263596658
 依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
 运行命令：train_mnist.py --device cuda
-耗时：256.3 s
+耗时：240.8 s
 显存峰值：1,167.0 MiB（§6.2 硬约束 8GB）
 §6.2 降级路径：未触发
 备注：隐藏层：width=1024, n_layers=3, n_groups=32, sigma=5.0, gamma=2.0, divnorm_power=0.2, eta_local=1.0, dropout=0.01

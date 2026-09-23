@@ -56,8 +56,8 @@
 
 ```text
 実験名：ib_hebbian/mnist
-日付：2026-09-23 07:05:00 中国標準時
-Git commit：edd0a82cca39408e88e3ceac136a154fdca2fc02
+日付：2026-09-23 08:40:04 中国標準時
+Git commit：c8c89f5e4b234fb4908e0ac6a6467e380004873f
 Git 状態：クリーン
 Python：3.12.14
 OS / アーキテクチャ：Windows 11 / AMD64
@@ -65,7 +65,7 @@ OS / アーキテクチャ：Windows 11 / AMD64
 乱数シード：base=0；グローバルシード=1741413617；検証セット分割=1435468909；重み初期化=3486733650；各エポックのシャッフル=2263596658
 依存スナップショット：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
 実行コマンド：train_mnist.py --device cuda
-所要時間：256.3 s
+所要時間：240.8 s
 ピークメモリ：1,167.0 MiB（§6.2 の硬い制約 8GB）
 §6.2 の縮退経路：未発動
 備考：隠れ層：width=1024, n_layers=3, n_groups=32, sigma=5.0, gamma=2.0, divnorm_power=0.2, eta_local=1.0, dropout=0.01

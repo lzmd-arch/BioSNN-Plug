@@ -380,8 +380,11 @@ class TestStructuralOptionsReachTheActor:
         from research.rstdp.cartpole import run_trial
 
         parameters = inspect.signature(run_trial).parameters
+        # 退火起点是 **1.0**：验收那批（`sweep_results/step13_*`、`step14_*`）显式传的就是 1，
+        # 而默认值一度是 2——于是「默认运行即达标配置」这句话不成立。改成 1 之后，
+        # `--seed 45` 重跑给出 232.1 步，与验收批次里的 232.1 逐字一致（见 ADR-0009 的复核注记）。
         assert parameters["actor_lr_final_fraction"].default == pytest.approx(0.01)
-        assert parameters["logit_scale_start"].default == pytest.approx(2.0)
+        assert parameters["logit_scale_start"].default == pytest.approx(1.0)
         assert parameters["logit_scale_end"].default == pytest.approx(40.0)
 
         # **CLI 的默认值也必须跟上**：这两个不是 agent 构造参数，走的是独立字面量，
@@ -390,7 +393,7 @@ class TestStructuralOptionsReachTheActor:
         from research.rstdp.cartpole import build_parser
 
         cli = {action.dest: action.default for action in build_parser()._actions}
-        assert cli["logit_scale_start"] == pytest.approx(2.0)
+        assert cli["logit_scale_start"] == pytest.approx(1.0)
         assert cli["logit_scale_end"] == pytest.approx(40.0)
 
     def test_boltzmann_and_centering_reach_the_actor(self):
