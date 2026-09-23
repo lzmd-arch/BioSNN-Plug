@@ -1,24 +1,24 @@
-[e-prop] epoch   1  train_ce 2.1786  (17s)
-[e-prop] epoch   2  train_ce 1.9941  (33s)
-[e-prop] epoch   3  train_ce 1.8781  (48s)
-[e-prop] epoch   4  train_ce 1.7993  (63s)
-[e-prop] epoch   5  train_ce 1.7397  (79s)
-[e-prop] epoch   6  train_ce 1.6906  (94s)
-[e-prop] epoch   7  train_ce 1.6467  (110s)
-[e-prop] epoch   8  train_ce 1.6067  (125s)
-[e-prop] epoch   9  train_ce 1.5717  (141s)
-[e-prop] epoch  10  train_ce 1.5383  (156s)
+[e-prop] epoch   1  train_ce 2.1786  (16s)
+[e-prop] epoch   2  train_ce 1.9941  (32s)
+[e-prop] epoch   3  train_ce 1.8781  (49s)
+[e-prop] epoch   4  train_ce 1.7993  (65s)
+[e-prop] epoch   5  train_ce 1.7397  (81s)
+[e-prop] epoch   6  train_ce 1.6906  (97s)
+[e-prop] epoch   7  train_ce 1.6467  (112s)
+[e-prop] epoch   8  train_ce 1.6067  (128s)
+[e-prop] epoch   9  train_ce 1.5717  (144s)
+[e-prop] epoch  10  train_ce 1.5383  (161s)
 [e-prop] 测试准确率 0.5274
-[BPTT] epoch   1  train_ce 2.1014  (11s)
-[BPTT] epoch   2  train_ce 1.7728  (23s)
-[BPTT] epoch   3  train_ce 1.5263  (34s)
-[BPTT] epoch   4  train_ce 1.3311  (45s)
-[BPTT] epoch   5  train_ce 1.1781  (57s)
-[BPTT] epoch   6  train_ce 1.0600  (68s)
-[BPTT] epoch   7  train_ce 0.9648  (79s)
-[BPTT] epoch   8  train_ce 0.8900  (91s)
-[BPTT] epoch   9  train_ce 0.8236  (102s)
-[BPTT] epoch  10  train_ce 0.7759  (113s)
+[BPTT] epoch   1  train_ce 2.1014  (13s)
+[BPTT] epoch   2  train_ce 1.7728  (24s)
+[BPTT] epoch   3  train_ce 1.5263  (39s)
+[BPTT] epoch   4  train_ce 1.3311  (52s)
+[BPTT] epoch   5  train_ce 1.1781  (65s)
+[BPTT] epoch   6  train_ce 1.0600  (83s)
+[BPTT] epoch   7  train_ce 0.9648  (100s)
+[BPTT] epoch   8  train_ce 0.8900  (115s)
+[BPTT] epoch   9  train_ce 0.8236  (130s)
+[BPTT] epoch  10  train_ce 0.7759  (143s)
 [BPTT] 测试准确率 0.7602
 
 量化差距报告：e-prop 0.5274 vs BPTT 0.7602（差距 +0.2328）
@@ -27,16 +27,16 @@
 
 ```text
 实验名称：eprop/bptt-gap
-日期：2026-09-23 20:31:07 中国标准时间
-Git commit：2971c3f6ab7c1c965172afadce528e2e793885df
+日期：2026-09-23 20:39:11 中国标准时间
+Git commit：632f01b88b5755256c0075cf0bc8e8c73d867da9
 Git 状态：干净
 Python：3.12.14
 操作系统 / 架构：Windows 11 / AMD64
 硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
-随机种子：
+随机种子：seed=0（对照的两条臂共用：同一份数据顺序 + 同一套初始权重）
 依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
 运行命令：bptt_baseline.py
-耗时：271.3 s
+耗时：306.0 s
 显存峰值：1,573.3 MiB（§6.2 硬约束 8GB）
 备注：两条线同架构、同损失、同预算，唯一差别是学习规则：n_rec=256, epochs=10, n_train=20000, batch=64, seed=0
 备注：e-prop: eta_in=eta_rec=0.002, eta_out=0.05；BPTT: eta=0.005，代理梯度穿过脉冲函数
