@@ -192,6 +192,22 @@ fig.tight_layout()
 if plt.get_backend().lower() not in {"agg", "pdf", "ps", "svg", "template", "cairo"}:
     plt.show()
 
+# The paper's F1. **Written to disk only when `BIOSNN_FIGURE_DIR` is set** -- so CI (which does
+# not set it) is unaffected, while `scripts/make_figures.py` can redraw the very same figure
+# deterministically. The drawing code has exactly **one** source of truth and is not duplicated
+# into the plotting script (that would drift sooner or later).
+import os  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+_figure_dir = os.environ.get("BIOSNN_FIGURE_DIR")
+if _figure_dir:
+    _out = Path(_figure_dir) / "f1-spike-raster.png"
+    _out.parent.mkdir(parents=True, exist_ok=True)
+    # `metadata={"Software": None}` drops the varying software-version string from the PNG so
+    # the artifact can be compared byte for byte.
+    fig.savefig(_out, dpi=160, metadata={"Software": None})
+    print(f"[figure] saved {_out}")
+
 # %% [markdown]
 # ## 5. Decode back into modality space
 #

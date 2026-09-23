@@ -177,6 +177,20 @@ fig.tight_layout()
 if plt.get_backend().lower() not in {"agg", "pdf", "ps", "svg", "template", "cairo"}:
     plt.show()
 
+# 论文用的 F1。**只在设了 `BIOSNN_FIGURE_DIR` 时才落盘**——这样 CI（不设）行为不变，
+# 而 `scripts/make_figures.py` 能把同一份图稳定地重画出来。图的**内容只有这一份真相源**，
+# 不另抄一遍到绘图脚本里（那样迟早会漂移）。
+import os  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+_figure_dir = os.environ.get("BIOSNN_FIGURE_DIR")
+if _figure_dir:
+    _out = Path(_figure_dir) / "f1-spike-raster.png"
+    _out.parent.mkdir(parents=True, exist_ok=True)
+    # `metadata={"Software": None}` 去掉 PNG 里会变的软件版本串，让产物可逐字节比对。
+    fig.savefig(_out, dpi=160, metadata={"Software": None})
+    print(f"[图] 已保存 {_out}")
+
 # %% [markdown]
 # ## 5. 解码回模态空间
 #

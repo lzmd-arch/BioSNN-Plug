@@ -192,6 +192,22 @@ fig.tight_layout()
 if plt.get_backend().lower() not in {"agg", "pdf", "ps", "svg", "template", "cairo"}:
     plt.show()
 
+# 論文で使う F1。**`BIOSNN_FIGURE_DIR` が設定されているときだけ**ディスクに書き出します——
+# これにより CI（設定しない）の挙動は変わらず、`scripts/make_figures.py` が同じ図を安定して
+# 描き直せます。描画コードの**正となる情報源は一つだけ**で、描画スクリプト側に写しません
+# （いずれ必ずずれます）。
+import os  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+_figure_dir = os.environ.get("BIOSNN_FIGURE_DIR")
+if _figure_dir:
+    _out = Path(_figure_dir) / "f1-spike-raster.png"
+    _out.parent.mkdir(parents=True, exist_ok=True)
+    # `metadata={"Software": None}` は PNG から変動するソフトウェア版の文字列を除き、
+    # 生成物をバイト単位で比較できるようにします。
+    fig.savefig(_out, dpi=160, metadata={"Software": None})
+    print(f"[figure] saved {_out}")
+
 # %% [markdown]
 # ## 5. モダリティ空間へ復号する
 #

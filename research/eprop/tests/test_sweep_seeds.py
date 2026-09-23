@@ -69,8 +69,12 @@ class TestPerSeedRecording:
         """
         calls: list[int] = []
 
-        def fake_train(args, device):
+        def fake_train(args, device, history=None):
             calls.append(args.seed)
+            if history is not None:
+                history.extend(
+                    {"epoch": float(e), "val_accuracy": 0.5 + 0.01 * e} for e in (1, 2, 3)
+                )
             return 0.80 + 0.01 * args.seed, 0.65, 20
 
         monkeypatch.setattr(sweep_seeds, "train", fake_train)
@@ -84,9 +88,39 @@ class TestPerSeedRecording:
             assert record["test_accuracy"] == pytest.approx(0.80 + 0.01 * seed)
             assert record["active_fraction"] == pytest.approx(0.65)
             assert record["n_classes"] == 20  # 汇总里要拿它算随机基线
+            # 逐 epoch 曲线是「epoch–准确率」那张图的数据源，必须落盘。
+            assert [point["epoch"] for point in record["curve"]] == [1.0, 2.0, 3.0]
+
+    def test_runner_asks_for_an_evaluation_every_epoch(self, tmp_path, monkeypatch):
+        """曲线要够密——runner 默认给 `train` 传 `--eval-every 1`。
+
+        这条不是洁癖：`epochs//5` 的旧节奏在 30 epoch 下只产出 **6 个点**，那样的曲线画出来
+        看不出形状。评测只做前向、不消耗训练随机数，所以加密不会改变学习结果
+        （那一点由 `test_eval_frequency_does_not_change_learning` 盯着）。
+        """
+        seen: list[int] = []
+
+        def fake_train(args, device, history=None):
+            seen.append(args.eval_every)
+            return 0.5, 0.7, 10
+
+        monkeypatch.setattr(sweep_seeds, "train", fake_train)
+        assert main(["--seeds", "0", "--out-dir", str(tmp_path / "w2")]) == 0
+        assert seen == [1]
+
+    def test_an_explicit_eval_every_is_respected(self, tmp_path, monkeypatch):
+        seen: list[int] = []
+
+        def fake_train(args, device, history=None):
+            seen.append(args.eval_every)
+            return 0.5, 0.7, 10
+
+        monkeypatch.setattr(sweep_seeds, "train", fake_train)
+        assert main(["--seeds", "0", "--eval-every", "7", "--out-dir", str(tmp_path / "w2")]) == 0
+        assert seen == [7]
 
     def test_running_one_seed_does_not_require_the_others(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(sweep_seeds, "train", lambda args, device: (0.5, 0.7, 20))
+        monkeypatch.setattr(sweep_seeds, "train", lambda args, device, history=None: (0.5, 0.7, 20))
         out_dir = tmp_path / "w2_seeds"
         assert main(["--seeds", "3", "--out-dir", str(out_dir)]) == 0
         assert [p.name for p in sorted(out_dir.glob("*.json"))] == ["seed3.json"]

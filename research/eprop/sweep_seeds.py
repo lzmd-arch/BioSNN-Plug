@@ -98,6 +98,9 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("多种子扫描不要用 --smoke：冒烟规模的精度没有意义。")
 
     seeds = parse_seeds(args.seeds)
+    if "--eval-every" not in forwarded:
+        # 曲线是这一轮的产物之一，所以默认每轮都评测；调用方自己给了就听调用方的。
+        forwarded = [*forwarded, "--eval-every", "1"]
     train_args = build_parser().parse_args(forwarded)
     device = select_device(args.device or train_args.device)
 
@@ -112,7 +115,8 @@ def main(argv: list[str] | None = None) -> int:
         train_args.seed = seed
         print(f"\n{'=' * 78}\n种子 {seed}\n{'=' * 78}", flush=True)
         started = time.perf_counter()
-        accuracy, active, n_classes = train(train_args, device)
+        history: list[dict[str, float]] = []
+        accuracy, active, n_classes = train(train_args, device, history)
         elapsed = time.perf_counter() - started
         record = {
             "seed": seed,
@@ -120,6 +124,8 @@ def main(argv: list[str] | None = None) -> int:
             "active_fraction": active,
             "n_classes": n_classes,
             "elapsed_s": elapsed,
+            #: 逐 epoch 的验证准确率——论文画「epoch–准确率」曲线用的就是它。
+            "curve": history,
             "config": {
                 "dataset": train_args.dataset,
                 "epochs": train_args.epochs,

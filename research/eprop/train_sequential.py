@@ -66,6 +66,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--learning-rate-out", type=float, default=5e-2)
     parser.add_argument("--decay-out", type=float, default=0.95)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument(
+        "--eval-every",
+        type=int,
+        default=0,
+        help="每多少个 epoch 评测一次验证集（0 = 沿用 epochs//5 的旧节奏，行为不变）",
+    )
     parser.add_argument("--device", default=None, choices=[None, "cpu", "cuda"])
     parser.add_argument("--smoke", action="store_true", help="CI 冒烟：缩到 CPU 一分钟内")
     return parser
@@ -93,7 +99,11 @@ def load_task(args: argparse.Namespace, seed: int):
     return train, test, train.inputs.shape[-1], n_classes
 
 
-def train(args: argparse.Namespace, device: torch.device) -> float:
+def train(
+    args: argparse.Namespace,
+    device: torch.device,
+    history: list[dict[str, float]] | None = None,
+) -> tuple[float, float, int]:
     book = SeedBook(base=args.seed)
     book.apply("全局种子")
 
@@ -146,7 +156,8 @@ def train(args: argparse.Namespace, device: torch.device) -> float:
                 batches += 1
             running /= max(batches, 1)
 
-            if epoch == 1 or epoch % max(1, args.epochs // 5) == 0 or epoch == args.epochs:
+            eval_every = args.eval_every or max(1, args.epochs // 5)
+            if epoch % eval_every == 0 or epoch == args.epochs:
                 val_accuracy = float(
                     (model.predict(val_inputs) == val_labels).float().mean().item()
                 )
@@ -154,6 +165,10 @@ def train(args: argparse.Namespace, device: torch.device) -> float:
                     f"epoch {epoch:3d}  train_ce {running:.4f}  val_acc {val_accuracy:.4f}",
                     flush=True,
                 )
+                if history is not None:
+                    # 曲线图的数据源。``model.predict`` 只做前向，不碰训练用的随机数发生器，
+                    # 所以评测多密都不改变学习结果。
+                    history.append({"epoch": float(epoch), "val_accuracy": val_accuracy})
 
     elapsed = time.perf_counter() - started
 
