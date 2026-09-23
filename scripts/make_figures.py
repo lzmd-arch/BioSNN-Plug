@@ -9,6 +9,7 @@
     uv run python scripts/make_figures.py            # 全部
     uv run python scripts/make_figures.py f1         # 只画 F1
     uv run python scripts/make_figures.py w2-curve   # 只画 W2 的 epoch–准确率曲线
+    uv run python scripts/make_figures.py w3-curve   # 只画 W3 的贪心评测曲线
 
 ## 两张图的数据源
 
@@ -32,6 +33,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FIGURES = REPO_ROOT / "figures"
 W2_DIR = REPO_ROOT / "sweep_results" / "w2_seeds"
+#: W3 的**验收批**：全新种子 45–64，从未参与任何选择。
+W3_DIR = REPO_ROOT / "sweep_results" / "step14_confirm"
+#: §七 第一阶段的步数判据，画成参考线。
+W3_THRESHOLD = 200.0
 
 # PNG 里会写进 matplotlib 的版本串；去掉它，产物才能逐字节比对。
 PNG_METADATA = {"Software": None}
@@ -121,6 +126,96 @@ def make_w2_curve() -> Path:
     return out
 
 
+def _w3_records() -> list[dict]:
+    """读回验收批每个种子的完整记录（曲线 + 终值 + 峰值）。
+
+    ⚠️ **``curve[-1]`` 与 ``mean_steps`` 不是同一个量**：前者是**最后一个检查点**
+    （第 800 回合）那次评测，后者是在**最终权重**上重跑的 10 个贪心回合。两者逐种子都不同
+    （种子 45：279.7 对 232.1），而 README 的头条数字用的是后者——所以图上的标注必须取
+    ``mean_steps``，取 ``curve[-1]`` 会与 README 对不上。
+
+    Raises:
+        SystemExit: 目录不在，或没有任何 json 带 ``curve`` / ``mean_steps``。
+    """
+    if not W3_DIR.is_dir():
+        raise SystemExit(
+            f"找不到 {W3_DIR}。先跑验收批：\n"
+            "  uv run python -m research.rstdp.cartpole --seeds 45-64 --device cpu"
+        )
+    records = []
+    for path in sorted(W3_DIR.glob("*.json")):
+        record = json.loads(path.read_text(encoding="utf-8"))
+        if record.get("curve") and "mean_steps" in record:
+            records.append(record)
+    if not records:
+        raise SystemExit(f"{W3_DIR} 里的 json 都没有 `curve` / `mean_steps` 字段。")
+    if len({len(r["curve"]) for r in records}) != 1:
+        raise SystemExit("各条曲线的长度不一致，画不到一张图上——检查评测间隔。")
+    return records
+
+
+def make_w3_curve() -> Path:
+    """W3 的贪心评测曲线：每个种子一条细线 + 中位数粗线 + 判据参考线。
+
+    这张图要说的是**游走**，不是「学到了多少」——所以细线全留着，不画均值带
+    （均值带会把游走抹平，那正好掩盖了要展示的东西）。
+    """
+    plt = _plt()
+    records = _w3_records()
+    curves = [[float(v) for v in r["curve"]] for r in records]
+    n_seeds, n_points = len(curves), len(curves[0])
+    episodes = [50 * (i + 1) for i in range(n_points)]
+    median = [statistics.median([c[i] for c in curves]) for i in range(n_points)]
+    finals = [float(r["mean_steps"]) for r in records]
+    peaks = [float(r["peak_mean_steps"]) for r in records]
+
+    fig, ax = plt.subplots(figsize=(8.5, 4.5))
+    for curve in curves:
+        ax.plot(episodes, curve, color="0.6", linewidth=0.7, alpha=0.8)
+    ax.plot(
+        episodes,
+        median,
+        color="C3",
+        linewidth=2.2,
+        marker="o",
+        markersize=3,
+        label=f"median over {n_seeds} seeds",
+    )
+    ax.axhline(
+        W3_THRESHOLD,
+        color="C0",
+        linestyle="--",
+        linewidth=1.2,
+        label=f"phase-1 criterion ({W3_THRESHOLD:.0f} steps)",
+    )
+
+    # 把「终值 vs 峰值」这对数字直接标在图上——它正是「游走仍在」的量度。
+    ax.annotate(
+        f"final weights, median = {statistics.median(finals):.1f} steps   (the headline)\n"
+        f"per-seed peaks, median = {statistics.median(peaks):.1f} steps",
+        xy=(0.985, 0.04),
+        xycoords="axes fraction",
+        ha="right",
+        va="bottom",
+        fontsize=9,
+        bbox={"boxstyle": "round", "facecolor": "white", "edgecolor": "0.7", "alpha": 0.9},
+    )
+    ax.set_xlabel("episode")
+    ax.set_ylabel("greedy evaluation (mean steps over 10 episodes)")
+    ax.set_title(
+        f"W3 (R-STDP + TD-LTP, CartPole): greedy eval every 50 episodes, {n_seeds} held-out seeds",
+        fontsize=11,
+    )
+    ax.grid(alpha=0.3)
+    ax.legend(fontsize=9, loc="upper left")
+    fig.tight_layout()
+
+    out = FIGURES / "f3-w3-greedy-curves.png"
+    fig.savefig(out, dpi=160, metadata=PNG_METADATA)
+    plt.close(fig)
+    return out
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=__doc__.splitlines()[0],
@@ -129,8 +224,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "figures",
         nargs="*",
-        default=["f1", "w2-curve"],
-        help="要画哪些图（f1 / w2-curve；默认全部）",
+        default=["f1", "w2-curve", "w3-curve"],
+        help="要画哪些图（f1 / w2-curve / w3-curve；默认全部）",
     )
     return parser
 
@@ -143,8 +238,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"[画好] {make_f1().relative_to(REPO_ROOT)}")
         elif name == "w2-curve":
             print(f"[画好] {make_w2_curve().relative_to(REPO_ROOT)}")
+        elif name == "w3-curve":
+            print(f"[画好] {make_w3_curve().relative_to(REPO_ROOT)}")
         else:
-            raise SystemExit(f"没有这张图：{name!r}。可用：f1、w2-curve。")
+            raise SystemExit(f"没有这张图：{name!r}。可用：f1、w2-curve、w3-curve。")
     return 0
 
 

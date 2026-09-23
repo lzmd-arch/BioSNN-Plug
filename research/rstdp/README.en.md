@@ -85,7 +85,7 @@ Python：3.12.14
 备注：速率型单元：STDP 窗口形状与 TD-LTP/TD-STDP 的差别在此化简下无从体现
 ```
 
-**All twenty** curves look like this, with adjacent checkpoints differing by 5–30×. So the
+**All twenty** curves look like this, with adjacent checkpoints differing by 5–30× (see [`figures/f3-w3-greedy-curves.png`](../../figures/f3-w3-greedy-curves.png): the twenty acceptance-batch curves 45–64, their median, and the criterion line). So the
 acceptance statistic — the mean of 10 greedy episodes on the final weights — largely measures
 **which phase the wander stopped in**, not the level learned. **Under the acceptance
 configuration the median peak is** 389.8 (fresh seeds 45–64) / 441.7 (tuning seeds 25–44) —
