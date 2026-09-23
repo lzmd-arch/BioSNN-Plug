@@ -1,0 +1,16 @@
+{
+  "seed": 3,
+  "accuracy": 0.9764999747276306,
+  "elapsed_s": 274.0222439999925,
+  "config": {
+    "width": 1024,
+    "n_layers": 3,
+    "n_groups": 32,
+    "epochs": 100,
+    "readout_kind": "ridge",
+    "readout_ridge": null,
+    "hidden_lr": 1.0,
+    "batch_size": 256,
+    "device": "cuda"
+  }
+}

@@ -62,6 +62,7 @@
 | `w3_reseed/seed0.log` | W3 默认配置 `--seed 0`（新默认退火 1→40） | W3 README 里那条 seed-0 复现记录 |
 | `w3_reseed/seed45.log` | `--seed 45`（验证「默认即验收配置」：232.1） | ADR-0009 复核注记里的那条逐字一致 |
 | `w3_reseed/seed0_single.log` | `--seed 0 --critic-kind single`（9.3 步） | W3 README 「单单元 Critic」那张表配的记录 |
+| `w1_seeds/` + `w1_seeds.log` | **W1 的多随机种子扫描**（种子 0–4，论文的 5 种子口径） | W1 README 的「多随机种子」表与边界第 2 条逐字出自它：均值 **0.9774**、极差 **0.14** 个百分点 |
 
 ## 写论文时怎么用
 

@@ -41,6 +41,18 @@ There are two readout implementations, both above the threshold:
 | Cross-entropy + SGD | 98.01% | Backpropagation + learning rate + momentum + 100 epochs |
 | **Ridge closed form (current default)** | **97.79%** | Accumulate `XᵀX / XᵀY`, then **solve once**: no backpropagation, no learning rate, no iterations; λ=1e-4 chosen by the **validation set** (best of `{0, 1e-4, 1e-3, 1e-2, 1e-1}`, validation accuracy 0.9793) |
 
+**Multiple random seeds (the paper's own convention)**: Tables 1 and 4 of the paper report the
+mean and the max-minus-min over 5 random seeds (the matching MNIST column has 0.2; Table 5), so the
+same convention was re-run here (`uv run python -m research.ib_hebbian.sweep_seeds --seeds 0-4`):
+
+| Seeds 0–4 (5 runs) | Test accuracy |
+| :--- | ---: |
+| Mean | **0.9774** |
+| Min / max | 0.9765 / 0.9779 |
+| **Spread** | **0.14 percentage points** (paper, same column: 0.2) |
+
+Per-seed records (configuration and duration included) are in [`sweep_results/w1_seeds/`](../../sweep_results/w1_seeds/).
+
 **Neither is a "local" readout** — both use labels, both are supervised. What the closed form
 removes is **backpropagation and iteration**, **not globality**: `XᵀX` is an `(H+1)²` matrix that
 requires **every training sample** to accumulate. See the "Accurate statement of 'local'" section.
@@ -191,16 +203,33 @@ conclusion has no boundaries.
    roughly half the units are negative by construction, and computing an "active fraction"
    on that quantity would just be counting groups. The measured pre-normalization active
    unit fraction is 0.9639.
-2. **A single run, not an average of 5.** Tables 1 and 4 of the paper report the mean and
-   the max-minus-min over 5 random seeds (on MNIST the spread is about 0.3–0.4 percentage
-   points). This entry reports one run with seed `base=0`. The multi-run statistics needed
-   to claim "agrees with the paper" have **not been done**.
-3. **η_l (the local learning rate) was not copied from the paper.** Table 3's columns do
-   not line up with the values extracted from the PDF (10 numeric columns but only 6 η_l
-   and 6 c_k), so the column-to-value mapping cannot be reliably recovered. The paper
-   itself tuned it on a validation set (D.5). This run used η_l = 1.0, c_k = 32, readout
-   η_f = 5e-3, **without systematic tuning** — 98.01% is what those values give, not the
-   best that can be reached.
+2. **The multi-seed statistics have been run -- but they are not the same as "agreeing with the
+   paper".** Using the paper's own convention over 5 seeds (`--seeds 0-4`):
+   mean **0.9774**, spread **0.14 percentage points** (the paper's MNIST spread is
+   0.2 for this very column). **What this shows is stability, not point-by-point reproduction**
+   -- the readout was changed to the closed form (η_l and c_k, by contrast, turn out to *match*
+   the paper; see the next item).
+3. **Hyperparameters: these are the paper's own Table 3 values for the MNIST row** (previously
+   unverifiable, now established). This item used to say "Table 3's columns do not line up with
+   the values a PDF extraction produces, so the mapping cannot be recovered". **That misalignment
+   was an artefact of PDF text extraction**: `pdftotext` drops empty cells and splits the label
+   column away from the numeric ones (the η_l row comes out with only 6 numbers, the c^k row
+   with 6, as if cells were missing). Parsing **cell by cell** from arXiv's HTML and LaTeX source
+   recovers Table 3 **completely**, and it cross-checks against the official repository's grid
+   scripts (all 30 cells of the MNIST row match).
+
+   The column corresponding to this entry is **`pHSIC: Gaussian` + `grp+div`**: **η_l = 1.0,
+   c^k = 32**, plus the shared **σ = 5, γ = 2**. Those are exactly the values used here — so the
+   honest form of "not copied from the paper" is **"copied, but previously unverifiable"**.
+
+   ⚠️ **The readout still differs**: that column's η_f is 1e-3 (last layer trained with SGD),
+   while this entry defaults to the ridge closed form (λ chosen on the validation set) and uses
+   η_f = 5e-3 for the retained SGD readout.
+   ⚠️ **When citing Table 3, note a typesetting slip in the paper itself**: in the CIFAR10 block
+   the `c^k = 32` of columns 2 and 4 is printed on the η_l row (the official grid scripts have
+   `lrb=0, dim=32` there). This entry does not involve CIFAR10; recorded for reference.
+   ⚠️ The official implementation is `github.com/romanpogodin/plausible-kernelized-bottleneck`
+   (the address in the paper's §5.1).
 4. **The teaching signal uses the paper's binary simplification.** Eq. (35) of the paper is
    "cosine similarity of centered labels", which reduces to a binary signal for balanced
    classes, and that is what the paper's experiments use. So label information enters the
