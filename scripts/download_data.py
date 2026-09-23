@@ -25,6 +25,10 @@
 
 下载后会把校验通过的 SHA-256 一并打印出来，供复现记录留档。
 
+**SHD 是例外，它的校验值来源不同**：SHD 没有第三方公布的校验值，钉的是本项目首次
+下载时算出的 MD5——只能证明「此后每次下到的是同一个文件」，不能证明来源正确。这一
+区别写在 ``SHD`` 的定义处，不假装它和 MNIST 那四个值一样强。
+
 ## 为什么自己解析 IDX 而不直接用 torchvision
 
 ``scripts/`` 下的脚本属于仓库工具链，与骨架库一样只依赖 numpy（见 ADR-0002 的
@@ -36,6 +40,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import shutil
 import sys
 import urllib.error
 import urllib.request
@@ -78,8 +83,11 @@ class DatasetSpec:
     files: tuple[DataFile, ...]
     #: 数据源的许可说明。§12.1：遵循各数据源许可，本仓库不做镜像。
     license_note: str
-    #: 预处理产物：``输入文件名 -> 输出 .npy 文件名``。
+    #: 预处理产物：``输入文件名 -> 输出文件名``。
     parse: dict[str, str]
+    #: 预处理方式。``"idx"``：按 IDX 解析成 ``.npy``；``"gunzip"``：只是解压
+    #: （SHD 的发布形态就是 gzip 过的 HDF5，不需要再解析）。
+    parse_kind: str = "idx"
 
 
 #: MNIST。四个文件的 MD5 取自 torchvision 源码里硬编码的值（可交叉核对）。
@@ -105,16 +113,36 @@ MNIST = DatasetSpec(
     },
 )
 
+#: SHD（Spiking Heidelberg Digits）——e-prop 认知层的**旁证**数据集
+#: （Bellec et al. 2020 用 sMNIST 与 SHD，Pes et al. 2025 用 N-MNIST 与 SHD）。
+#:
+#: **校验值的来源与 MNIST 不同，必须说清楚**：SHD 没有第三方公布的校验值可交叉核对
+#: （MNIST 有 torchvision 硬编码的那四个 MD5）。这里钉的是本项目首次下载
+#: （2026-09-23）时算出的 MD5，它只能证明此后每次下到的是同一个文件，**不能**证明
+#: 来源正确。不假装它更强。
+#:
+#: 发布形态就是 gzip 过的 HDF5，所以 ``parse_kind="gunzip"``——解压即可，不需要解析
+#: 成 ``.npy``。读取由 ``research/eprop/tasks.py`` 的 ``load_shd`` 负责（用 h5py，
+#: 它已随 spikingjelly 进入 ``research`` 依赖组，仓库工具链本身仍只依赖 numpy）。
+SHD = DatasetSpec(
+    name="shd",
+    mirrors=("https://zenkelab.org/datasets/",),
+    files=(
+        DataFile("shd_train.h5.gz", "d47c9825dee33347913e8ce0f2be08b0"),
+        DataFile("shd_test.h5.gz", "3062a80ec0c5719404d5b02e166543b1"),
+    ),
+    license_note=(
+        "Spiking Heidelberg Digits，Zenke 实验室发布（https://zenkelab.org/datasets/）；"
+        "研究用途。本仓库不镜像、不再分发。"
+    ),
+    parse={"shd_train.h5.gz": "train.h5", "shd_test.h5.gz": "test.h5"},
+    parse_kind="gunzip",
+)
+
 #: 数据集注册表。**新增数据集时在这里加一项，其余代码不用动。**
-#:
-#: 尚未加入的：
-#:
-#: * **SHD**（Spiking Heidelberg Digits）——e-prop 认知层的引文对标数据集
-#:   （Bellec et al. 2020 与 Pes et al. 2025 都用它）。它随第一阶段第三条线
-#:   （``research/eprop/``）一起接入，届时在此登记并钉校验值。它是 HDF5 格式，
-#:   解析要用 h5py（已随 spikingjelly 进入 research 依赖组）。
 DATASETS: dict[str, DatasetSpec] = {
     MNIST.name: MNIST,
+    SHD.name: SHD,
 }
 
 
@@ -232,8 +260,16 @@ def fetch(spec: DatasetSpec, data_file: DataFile, root: Path, *, verify_only: bo
 
 
 def preprocess(spec: DatasetSpec, raw_path: Path, out_path: Path) -> None:
-    """把校验通过的原始文件解析成 ``.npy``，供下游直接 ``np.load``。"""
+    """把校验通过的原始文件变成下游直接可读的形式（见 ``DatasetSpec.parse_kind``）。"""
     import gzip
+
+    if spec.parse_kind == "gunzip":
+        with gzip.open(raw_path, "rb") as src, out_path.open("wb") as dst:
+            shutil.copyfileobj(src, dst, 1 << 20)
+        print(f"  解压    {out_path.name}  {out_path.stat().st_size / 1e6:.1f} MB")
+        return
+    if spec.parse_kind != "idx":
+        raise ValueError(f"未知的 parse_kind：{spec.parse_kind!r}")
 
     with gzip.open(raw_path, "rb") as handle:
         array = read_idx(handle.read())

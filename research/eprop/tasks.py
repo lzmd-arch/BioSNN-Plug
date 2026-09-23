@@ -13,7 +13,7 @@
 * **CPU 上也跑得动**，CI 的冒烟测试能覆盖。
 
 **SHD 是旁证**：Bellec et al. 2020 与 Pes et al. 2025 都用它，数字可与引文对标。但它要
-另外下载（约 130 MB），且是 HDF5 格式，所以放在 :func:`load_shd` 里单独走。
+另外下载（两个文件合计约 169 MB），且是 HDF5 格式，所以放在 :func:`load_shd` 里单独走。
 
 ## 模拟值怎么变成脉冲
 
@@ -89,11 +89,16 @@ def load_smnist(data_dir: str | Path, *, split: str, seed: int) -> SMNIST:
     return SMNIST(spikes.transpose(0, 1).contiguous(), torch.from_numpy(labels))
 
 
+#: SHD 的固定时间窗（秒）。发布集里最长的一段是 1.369 s（train），取 1.4 s 把全部脉冲
+#: 都收进来、不足的留空。**不做逐样本归一化**——那会把快慢不同的发音拉成同一节奏。
+SHD_WINDOW_S = 1.4
+
+
 def load_shd(data_dir: str | Path, *, split: str, seed: int, max_time: int = 100) -> SMNIST:
     """加载 SHD（Spiking Heidelberg Digits）——**旁证**数据集。
 
-    需要先有 ``data/shd/{train,test}.h5``。当前 ``scripts/download_data.py`` 尚未登记它
-    （它随本文件一起落地，见那里的注释），所以这里先给出明确的失败信息，而不是留半截实现。
+    需要先有 ``data/shd/{train,test}.h5``——由 ``scripts/download_data.py shd`` 落盘
+    （下载约 165 MB 的 ``shd_{train,test}.h5.gz`` 并解压；本仓库不提供数据镜像，计划书 §12.1）。
 
     SHD 的原始格式是每段音频的脉冲时刻列表，需要栅格化成固定长度的时间窗。这个转换是
     本项目自己的选择（``max_time`` 与时间分箱），不是数据集的规定——结论里要标明。
@@ -103,25 +108,32 @@ def load_shd(data_dir: str | Path, *, split: str, seed: int, max_time: int = 100
     path = Path(data_dir) / "shd" / f"{split}.h5"
     if not path.exists():
         raise SystemExit(
-            f"缺少 {path}。SHD 需要单独下载（约 130 MB）：\n"
-            f"  https://zenkelab.org/datasets/  → shd_train.h5.gz / shd_test.h5.gz\n"
-            f"  解压后放到 {path.parent}/ 下，命名为 train.h5 / test.h5。\n"
+            f"缺少 {path}。先跑：\n"
+            f"  uv run python scripts/download_data.py shd\n"
+            f"它会下载 shd_train.h5.gz / shd_test.h5.gz（约 165 MB）并解压到 {path.parent}/。\n"
             f"本仓库不提供数据镜像（计划书 §12.1）。"
         )
 
+    # **可变长数据必须在 with 块内取出来。** h5py 的 vlen 数据集是按需读取的，出了
+    # with（文件已关）再索引就是 `RuntimeError: Unable to synchronously get dataspace`。
+    # 这个缺陷在本函数第一次被真正运行之前一直藏着——它此前从未跑过，见 README 的边界。
     with h5py.File(path, "r") as handle:
-        times = handle["spikes"]["times"]
-        units = handle["spikes"]["units"]
         labels = handle["labels"][:]
+        times = list(handle["spikes"]["times"])
+        units = list(handle["spikes"]["units"])
 
     n_samples = len(labels)
     n_units = 700
-    generator = torch.Generator().manual_seed(seed)
-    raster = torch.zeros(n_samples, max_time, n_units)
+    raster = np.zeros((n_samples, max_time, n_units), dtype=np.float32)
     for index in range(n_samples):
-        bins = np.minimum((times[index] * 1000).astype(np.int64), max_time - 1)
-        np.add.at(raster[index].numpy(), (bins, units[index].astype(np.int64)), 1.0)
-    _ = generator
-    raster = (raster > 0).float()
+        # **把整段音频铺到 max_time 个箱里**（每箱 14 ms），不是只取开头 100 ms。
+        # 发布集的脉冲时刻最远到 1.37 s，按毫秒直接截断会丢掉绝大部分脉冲。
+        bins = np.minimum((times[index] / SHD_WINDOW_S * max_time).astype(np.int64), max_time - 1)
+        np.add.at(raster[index], (bins, units[index].astype(np.int64)), 1.0)
 
-    return SMNIST(raster.transpose(0, 1).contiguous(), torch.from_numpy(labels.astype(np.int64)))
+    # 二值化：这个任务里"某箱内有脉冲"比"有几颗"更接近论文的输入约定；`seed` 不参与——
+    # 与 sMNIST 不同，这里的脉冲时刻是数据给定的，没有随机编码步骤。参数保留是为了与
+    # :func:`load_smnist` 的签名对称。
+    _ = seed
+    spikes = torch.from_numpy((raster > 0).astype(np.float32))
+    return SMNIST(spikes.transpose(0, 1).contiguous(), torch.from_numpy(labels.astype(np.int64)))
