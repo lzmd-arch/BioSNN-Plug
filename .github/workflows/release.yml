@@ -22,7 +22,9 @@
 #   1. 改 `packages/biosnn-bus/pyproject.toml` 的 version（与 `__init__.py` 的
 #      `__version__` 保持一致，`scripts/check_version_consistency.py` 会盯着）；
 #   2. 提交、推送；
-#   3. `git tag v0.1.0 && git push origin v0.1.0`。
+#   3. 写 `.github/releases/v<版本>.md`（release notes 是**手写**的，不靠 `--generate-notes`——
+#      本仓库没有 PR 流程，自动笔记只会产出一行 changelog 链接）；
+#   4. `git tag v0.1.0 && git push origin v0.1.0`。
 #
 # `verify` job 会先确认 **tag 名与包版本一致**——tag 写错了就在这一步拦下，
 # 不会出现"发了 v0.2.0 但包内容是 0.1.0"这种事后很难补救的情况。
@@ -76,6 +78,18 @@ jobs:
               sys.exit(f"tag {tag!r} 与包版本 {version!r} 不符，应为 {expected!r}。")
           print(f"tag {tag} 与包版本一致")
           PY
+
+      - name: tag 对应的 release notes 文件必须存在
+        # 在这里拦，而不是等到 PyPI 已经发布之后才发现——那时同名版本已被占用，
+        # 补一次发布很麻烦。写法见 `.github/releases/v0.1.0.md`。
+        if: github.event_name == 'push'
+        run: |
+          notes=".github/releases/${GITHUB_REF_NAME}.md"
+          if [ ! -f "$notes" ]; then
+            echo "::error::缺少 $notes。先写好 release notes 再打 tag。"
+            exit 1
+          fi
+          echo "release notes 就绪：$notes"
 
       - name: 冒烟测试（发出去的包必须是能跑的）
         run: |
@@ -147,6 +161,9 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # notes 是**手写的文件**，不是 `--generate-notes`。v0.1.0 的教训：本仓库没有 PR
+          # 流程，GitHub 的自动笔记只产出一行 changelog 链接，等于没有 release notes。
+          # 文件必须存在——由 verify job 的「release notes 必须存在」那一步保证。
           gh release create "$GITHUB_REF_NAME" dist/* \
             --title "$GITHUB_REF_NAME" \
-            --generate-notes
+            --notes-file ".github/releases/${GITHUB_REF_NAME}.md"
