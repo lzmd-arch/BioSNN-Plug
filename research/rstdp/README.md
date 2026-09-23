@@ -59,8 +59,8 @@
 
 ```text
 实验名称：rstdp/cartpole
-日期：2026-09-23 06:43:51 中国标准时间
-Git commit：c0d4f4631693470c56665703f8153068dd5ae192
+日期：2026-09-23 08:36:30 中国标准时间
+Git commit：a315cd0fa5761356323664757b54c1e3b4ffa88c
 Git 状态：干净
 Python：3.12.14
 操作系统 / 架构：Windows 11 / AMD64
@@ -68,14 +68,14 @@ Python：3.12.14
 随机种子：base=0；Actor 与 Critic 初始权重=3589114572；Critic 感受野采样=1786091376；动作探索=3138835151；感受野采样环境=2269638270；环境动作空间种子=4106697854；环境随机种子=2726622797；群体编码中心=4160090208
 依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
 运行命令：cartpole.py --seed 0 --device cpu
-耗时：48.7 s
+耗时：24.5 s
 显存峰值：0.0 MiB（§6.2 硬约束 8GB）
 §6.2 降级路径：未触发
 备注：N=64, sigma=0.5, eta_actor=0.003, eta_critic=0.0005, trace_decay=0.9, gamma=0.99, success_signal=td_error
 备注：Actor：normalize=True, clip=None, polyak_tau=None, sampling=boltzmann, logit_scale=20.0, trace_center=sampling, lr_final_fraction=0.01
 备注：Critic：kind=population, units=64, value_scale=200.0, gain=8.0, threshold=0.4, output_bias=0.0, bias_lr=None, post_factor=rate
 备注：探索：start=0.3, end=0.02, 回合数=800
-备注：logit 退火：2.0 → 40.0（log 空间线性插值）
+备注：logit 退火：1.0 → 40.0（log 空间线性插值）
 备注：状态编码：4 维连续状态的高斯群体编码（本项目自己的选择）
 备注：速率型单元：STDP 窗口形状与 TD-LTP/TD-STDP 的差别在此化简下无从体现
 ```
@@ -165,22 +165,23 @@ Critic」。这个推断**被它自己的干预否证了**，见下一节。
 
 ```text
 实验名称：rstdp/cartpole
-日期：2026-09-23 05:21:05 中国标准时间
-Git commit：75bc258e2e6e1745ac1ee706faef1377bacebf9f
+日期：2026-09-23 08:36:52 中国标准时间
+Git commit：a315cd0fa5761356323664757b54c1e3b4ffa88c
 Git 状态：干净
 Python：3.12.14
 操作系统 / 架构：Windows 11 / AMD64
 硬件：CPU（Intel64 Family 6 Model 183 Stepping 1, GenuineIntel，无 GPU 参与）
 随机种子：base=0；Actor 与 Critic 初始权重=3589114572；Critic 感受野采样=1786091376；动作探索=3138835151；感受野采样环境=2269638270；环境动作空间种子=4106697854；环境随机种子=2726622797；群体编码中心=4160090208
 依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
-运行命令：cartpole.py --seed 0 --device cpu
-耗时：23.4 s
+运行命令：cartpole.py --seed 0 --critic-kind single --device cpu
+耗时：3.3 s
 显存峰值：0.0 MiB（§6.2 硬约束 8GB）
 §6.2 降级路径：未触发
 备注：N=64, sigma=0.5, eta_actor=0.003, eta_critic=0.0005, trace_decay=0.9, gamma=0.99, success_signal=td_error
-备注：Actor：normalize=True, clip=None, polyak_tau=None, sampling=boltzmann, logit_scale=20.0, trace_center=sampling, lr_final_fraction=0.1
-备注：Critic：kind=population, units=64, value_scale=200.0, gain=8.0, threshold=0.4, output_bias=0.0, bias_lr=None, post_factor=rate
+备注：Actor：normalize=True, clip=None, polyak_tau=None, sampling=boltzmann, logit_scale=20.0, trace_center=sampling, lr_final_fraction=0.01
+备注：Critic：kind=single, units=64, value_scale=200.0, gain=8.0, threshold=0.4, output_bias=0.0, bias_lr=None, post_factor=rate
 备注：探索：start=0.3, end=0.02, 回合数=800
+备注：logit 退火：1.0 → 40.0（log 空间线性插值）
 备注：状态编码：4 维连续状态的高斯群体编码（本项目自己的选择）
 备注：速率型单元：STDP 窗口形状与 TD-LTP/TD-STDP 的差别在此化简下无从体现
 ```

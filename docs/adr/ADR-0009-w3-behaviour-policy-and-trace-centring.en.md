@@ -102,6 +102,13 @@ and that reading went into the tri-lingual README.
   written and this note carries the update; current numbers are the README's conclusion and the
   code's defaults.
 
+  **Verified 2026-09-23: the defaults now match, and that was checked.** This note says "current
+  numbers are the code's defaults", but the default annealing start was **2** while the acceptance
+  batch ran with **1** -- inconsistent. The default is now 1, and re-running
+  `cartpole.py --seed 45 --device cpu` gives **232.1 steps**, byte-identical to seed 45's 232.1 in the
+  acceptance batch (`sweep_results/step14_confirm`). So "the default run is the acceptance
+  configuration" is now verifiable rather than asserted.
+
 ## Alternatives
 
 - **Action mixture `pi = (1−kappa)·onehot(argmax) + kappa/n`** (a fixed kappa decoupling policy
