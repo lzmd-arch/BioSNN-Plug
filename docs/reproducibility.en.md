@@ -111,6 +111,18 @@ independent of hardware. This phase therefore only needs dependency versions rec
 | Runtime dependencies | `numpy>=1.24` only |
 | Hardware requirements | None. CPU is enough |
 
+**The three Phase 0 success criteria (project plan §7) have each been checked**:
+
+| Criterion | Status |
+| :--- | :--- |
+| The skeleton library is `pip install`-able | ✅ `biosnn-bus 0.1.0` published to PyPI on 2026-09-23 (trusted publishing / OIDC; pipeline in [`release.yml`](../.github/workflows/release.yml)) |
+| ...and passes CI | ✅ 12 jobs green (including the leg that installs the wheel into a clean venv and runs the tests) |
+| The demo runs in a fresh, GPU-less environment | ✅ Ran [`examples/quickstart_register_plugin.py`](../examples/quickstart_register_plugin.py) in an environment with **only numpy + matplotlib**: it detected the missing package, installed it from PyPI, and completed the whole demo (decode error 0.0161, matching the level code's quantisation step of 1/32). All three language versions were run |
+
+The first two are watched continuously by CI and the release pipeline; the third was **checked by
+simulating Colab**. There is no Colab on this machine, so what was verified is the path "fresh
+environment + install from PyPI + run to completion", not "someone clicked it once in a Colab tab".
+
 ## The Phase 1 (single-rule validation) environment record
 
 Experiments in this phase **involve a GPU**, so they are no longer purely deterministic:

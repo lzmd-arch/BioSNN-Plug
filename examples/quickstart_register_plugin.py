@@ -9,6 +9,19 @@
 # 全程纯 CPU，唯一依赖是 numpy（绘图用 matplotlib）。
 
 # %%
+# **在 Colab 这类全新环境里，这个包还没有被安装。** 本地开发时它已经在环境里，
+# 所以下面这段会直接跳过——只有 import 真的失败时才会去装。
+import subprocess
+import sys
+
+try:
+    import biosnn_bus
+except ModuleNotFoundError:
+    print("环境里没有 biosnn-bus，先从 PyPI 安装……")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "biosnn-bus"])
+    import biosnn_bus  # noqa: F401
+
+# %%
 import numpy as np
 from biosnn_bus import (
     ModalityPlugin,

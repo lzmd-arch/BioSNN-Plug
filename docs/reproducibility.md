@@ -96,6 +96,17 @@ uv sync --locked      # lock 与 pyproject 必须一致
 | 运行时依赖 | 仅 `numpy>=1.24` |
 | 硬件要求 | 无。CPU 即可 |
 
+**第零阶段的三条成功标准（计划书 §七）已逐条核过**：
+
+| 标准 | 状态 |
+| :--- | :--- |
+| 骨架库可 `pip install` | ✅ 2026-09-23 发布 `biosnn-bus 0.1.0` 到 PyPI（trusted publishing/OIDC，流程见 [`release.yml`](../.github/workflows/release.yml)） |
+| 并通过 CI | ✅ 12 个 job 全绿（含在干净 venv 里装 wheel 再跑测试的那条腿） |
+| 演示在无 GPU 的全新环境可跑 | ✅ 在一个**只有 numpy + matplotlib**的环境里跑 [`examples/quickstart_register_plugin.py`](../examples/quickstart_register_plugin.py)：它检测到缺包后自动从 PyPI 装上、整个演示跑完（解码误差 0.0161，与水平编码的量化步长 1/32 相符）。中 / 英 / 日三版都跑过 |
+
+前两条由 CI 与发布流水线持续盯着；第三条是**模拟 Colab 手动核的**——本机没有 Colab，
+所以这里核的是「全新环境 + 从 PyPI 装 + 跑完」这条路径，而不是"在 Colab 网页里点过一次"。
+
 ## 第一阶段（单规则验证）的环境记录
 
 这一阶段的实验**有 GPU 参与**，因此不再是纯确定性的：同一个配置在 CPU 与 CUDA 上

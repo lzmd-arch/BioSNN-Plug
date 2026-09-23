@@ -12,6 +12,19 @@
 # Everything runs on CPU; the only dependency is numpy (matplotlib for the plot).
 
 # %%
+# **In a fresh environment such as Colab, this package is not installed yet.** Locally it
+# already is, so this block is skipped — it installs only when the import actually fails.
+import subprocess
+import sys
+
+try:
+    import biosnn_bus
+except ModuleNotFoundError:
+    print("biosnn-bus is not in this environment; installing it from PyPI ...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "biosnn-bus"])
+    import biosnn_bus  # noqa: F401
+
+# %%
 import numpy as np
 from biosnn_bus import (
     ModalityPlugin,

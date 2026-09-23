@@ -12,6 +12,19 @@
 # すべて CPU で動作し、依存は numpy のみです（描画に matplotlib）。
 
 # %%
+# **Colab のようなまっさらな環境には、このパッケージはまだ入っていません。** ローカル開発では
+# すでに入っているのでこのブロックはスキップされ、import が実際に失敗したときだけインストールします。
+import subprocess
+import sys
+
+try:
+    import biosnn_bus
+except ModuleNotFoundError:
+    print("この環境に biosnn-bus が無いので、PyPI からインストールします……")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "biosnn-bus"])
+    import biosnn_bus  # noqa: F401
+
+# %%
 import numpy as np
 from biosnn_bus import (
     ModalityPlugin,
