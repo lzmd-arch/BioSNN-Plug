@@ -7,7 +7,10 @@
 
 1. **不删除、不覆盖**。新实验**新开目录**，不改动已有目录里的文件——即使那次实验的结论后来被否证
    （例如 `w1_reaccept` 那次因为中途改了代码而作废），也原样留着并在下面注明。
-2. 一次运行 = 一个 `.json`（`sweep.py` 的产物）；一批扫描 = 一个目录 + 同名 `.log`（汇总表）。
+2. 一次运行 = 一个 `.json`（`sweep.py` 的产物）；一次扫描 = 一个目录。
+   **汇总 `.log` 不一定与目录同名**：调参期的批次日志一次跑好几个分支、结果分散到好几个目录
+   （见下面「批次日志」一节），所以按名字找 log 会漏。`sweep_results/` 里每个入库的 `.log`
+   都在本文件里有交代——这是这份清单要保证的事。
 3. **数据集不在这里**。`data/`（MNIST、SHD，共约 557 MB）按计划书 §12.1 不入库，复现方式是
    `uv run python scripts/download_data.py <名称>`（逐文件校验 + 打印 SHA-256）。
 
@@ -39,7 +42,7 @@
 | `step2_eta` | 扫 Actor 学习率（1e-1 … 1e-5） | 0–9（70 跑） | 「试过什么」表的 Actor 学习率那几行 |
 | `step2_curve` / `step2_curve_fixed` | 每 50 回合的贪心曲线 | 0–9 | 「策略在全程游走」一节；`_fixed` 是修掉「观测污染被观测」之后的版本 |
 | `step3_clip` / `step3_bias_fixed` / `step3_bias_lr` / `step3_critic_lr` / `step3_polyak` | 五个杠杆：成功信号裁剪、固定输出偏置、偏置学习率、Critic 学习率、Polyak 平均 | 0–9 | 「试过什么」表对应各行（含那条**网格选错**的裁剪，边界第 9 条） |
-| `step4_*`（`units`/`units1024`/`gain`/`threshold`/`post_factor`/`critic_lr_low`） | 群体 Critic 的结构扫描 | 0–9 | 「Critic 学不准，原因已经定位到读出」一节 |
+| `step4_*`（`units`/`units1024`/`gain`/`threshold`/`postfactor`/`critic_lr_low`） | 群体 Critic 的结构扫描 | 0–9 | 「Critic 学不准，原因已经定位到读出」一节 |
 | `step5_*`（`center5`/`center20`/`center80`/`boltz_nocenter`/`budget`） | Boltzmann 行为策略与痕迹中心化 | 0–9 | 「采纳规则」那两行 |
 | `step6_readout` / `step6_readout_scaled` | 固定**有符号**读出 + 完整半梯度（后者把 Actor 步长按比例放大 3 倍作补偿） | 0–9 | 边界第 6 条（把 Critic 变准并不改善步数） |
 | `step7_boltz_greedy` | 修掉「贪心评测其实是采样」之后的**重测** | 0–9 | 「本阶段修掉的五个真缺陷」第 5 条 |
@@ -63,6 +66,23 @@
 | `w3_reseed/seed45.log` | `--seed 45`（验证「默认即验收配置」：232.1） | ADR-0009 复核注记里的那条逐字一致 |
 | `w3_reseed/seed0_single.log` | `--seed 0 --critic-kind single`（9.3 步） | W3 README 「单单元 Critic」那张表配的记录 |
 | `w1_seeds/` + `w1_seeds.log` | **W1 的多随机种子扫描**（种子 0–4，论文的 5 种子口径） | W1 README 的「多随机种子」表与边界第 2 条逐字出自它：均值 **0.9774**、极差 **0.14** 个百分点 |
+| `w1_ablation/` + `w1_ablation.log` | **W1 的消融对照**（5 条臂 × 种子 0）。每条臂对应论文 Table 4/Table 3 里 MNIST 的某一列，映射见 `research/ib_hebbian/ablation.py` | W1 README 的已知边界第 5 条逐字出自它。两处值得记：① `baseline` 臂是空覆盖，跑出 **0.9779**，与验收配置逐字一致；② `divnorm_off` 臂**发散了**——局部目标第 10 轮触底后一路上爬，所以那个 0.9261 **不能当作一次有效读数**，「那条列没复现」的结论就是从这个 log 的逐轮目标读出来的 |
+
+### 批次日志（一个 `.log` 覆盖多个目录）
+
+调参期的扫描脚本一次跑好几个分支，**每个分支的结果落在各自的目录里，而汇总表只有一份**。
+所以下面这四个 `.log` 没有同名目录——它们的用处是「那次批跑一共跑了什么、每段在哪个目录」：
+
+| 批次日志 | 覆盖的目录 | 对应 README 的哪一段 |
+| :--- | :--- | :--- |
+| `step3_branchA.log` | `step3_critic_lr`、`step3_bias_lr`、`step3_bias_fixed`、`step3_polyak` | 「试过什么」表的 Critic 学习率 / 输出偏置 / Polyak 那几行 |
+| `step3_retention.log` | `step3_clip` | 「试过什么」表的成功信号裁剪那一行（含**网格选错**的那条，边界第 9 条） |
+| `step4_branchA2.log` | `step4_threshold`、`step4_gain`、`step4_postfactor`、`step4_critic_lr_low` | 「Critic 学不准，原因已经定位到读出」一节 |
+| `step5_structural.log` | `step5_boltz_nocenter`、`step5_center5`、`step5_center20`、`step5_center80` | 「采纳规则」那两行 |
+
+⚠️ **`step3_critic.log` 是 0 字节的空文件**，另外 `step3_critic/` 是个没有内容的空目录
+（git 本来就不收录空目录）。那是一次**没有产出任何结果**的运行留下的壳子。按「不删除」的保留
+策略原样留着——「哪一次跑了但什么也没出」也是记录的一部分，但**它不含任何数字，不要引用它**。
 
 ## 写论文时怎么用
 

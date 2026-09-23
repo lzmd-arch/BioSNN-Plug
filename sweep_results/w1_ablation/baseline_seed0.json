@@ -1,0 +1,8 @@
+{
+  "arm": "baseline",
+  "overrides": {},
+  "paper_column": "Table 3, MNIST: pHSIC Gaussian + grp+div（η_l=1.0, c^k=32）",
+  "seed": 0,
+  "accuracy": 0.977899968624115,
+  "elapsed_s": 337.52176629999303
+}

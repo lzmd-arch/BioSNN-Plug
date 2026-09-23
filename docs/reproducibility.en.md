@@ -164,7 +164,7 @@ backs which number in the READMEs are in [`sweep_results/README.md`](../sweep_re
 Three retention rules: **never delete, never overwrite** -- new experiments get a new directory, and
 an old one stays even if its conclusion was later refuted (for example the W1 run polluted by a
 mid-run edit), with a note saying so; one run is one `.json`, one sweep is a directory plus a summary
-`.log` of the same name; and **datasets are not part of this** -- `data/` stays untracked and is
+`.log` (**which does not always share the directory's name** -- a tuning-phase batch log covers several branches whose results land in several directories; see the "Batch logs" section of `sweep_results/README.md`); and **datasets are not part of this** -- `data/` stays untracked and is
 reproduced with `scripts/download_data.py` (per-file checksums), as §12.1 requires.
 
 When writing a paper: draw curves from the `curve` field in the json; take medians and minima from the

@@ -1,0 +1,10 @@
+{
+  "arm": "cossim",
+  "overrides": {
+    "kernel": "cossim"
+  },
+  "paper_column": "Table 3, MNIST: pHSIC cossim + grp+div（η_l=0.4, c^k=16）",
+  "seed": 0,
+  "accuracy": 0.9581999778747559,
+  "elapsed_s": 561.6700522000028
+}

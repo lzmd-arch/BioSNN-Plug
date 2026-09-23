@@ -235,6 +235,42 @@ conclusion has no boundaries.
    classes, and that is what the paper's experiments use. So label information enters the
    third factor through a single scalar — that is explicit in the code, not a hidden
    assumption.
-5. **Only the divisive-normalization ablation was done**, and in its weak form. The other
-   comparisons the paper makes (HSIC vs pHSIC, cosine vs Gaussian kernel, grouping vs no
-   grouping) have **not been reproduced** in this entry.
+5. **The ablations are now complete -- but one of the five arms did not reproduce, and the reason
+   is not "it came out a bit low": that arm diverged.** The paper's three named comparisons
+   (HSIC/pHSIC, kernel, grouping) plus divisive normalization make **five arms** (1 baseline + 4
+   ablations), each mapping to a **specific column** of the paper's Table 4 for MNIST (the mapping is in
+   `research/ib_hebbian/ablation.py`). Seed 0:
+
+   | Arm | Paper column (Table 3's η_l / c^k) | Paper (5-seed mean / spread) | This entry (seed 0) | Δ vs baseline |
+   | :--- | :--- | ---: | ---: | ---: |
+   | `baseline` | Gaussian `grp+div` (η_l=1.0、c^k=32) | 98.1 / 0.2 | **97.79** | — |
+| `divnorm_off` | Gaussian `grp` (η_l=1.0、c^k=32) | 98.4 / 0.3 | **92.61** | -5.18 |
+| `grouping_off` | Gaussian `plain` (η_l=0.6) | 94.6 / 0.2 | **94.25** | -3.54 |
+| `cossim` | cossim `grp+div` (η_l=0.4、c^k=16) | 96.3 / 0.6 | **95.82** | -1.97 |
+| `hsic` | **论文没有这一列的数** (—) | — | **97.69** | -0.10 |
+
+   Per-arm JSONs are in [`sweep_results/w1_ablation/`](../../sweep_results/w1_ablation/); the full stdout is
+   [`sweep_results/w1_ablation.log`](../../sweep_results/w1_ablation.log) -- all five arms' reproducibility
+   record blocks are in it, each reading a clean `Git state`. **Five things to keep in mind**:
+
+   - `baseline` is an empty override and its number is **identical** to the acceptance configuration
+     (0.9779) -- the "adding switches did not change the default path" self-check, not another result.
+   - **Three arms reproduce**: `plain` 94.25 vs the paper's 94.6, `grp+div` 97.79 vs 98.1, `cossim grp+div`
+     95.82 vs 96.3 -- all three **within 0.5 percentage points**.
+   - **`divnorm_off` did not reproduce, and that arm diverged**: its local objective bottoms out around
+     epoch 10 (-0.2484) and then **climbs all the way back** to -0.0936 at epoch 50 and -0.1614 at the end,
+     while the other four arms improve monotonically. So 92.61 is a **run that flew off**, not a reading of
+     "what the paper's column does under this implementation". A plausible mechanism: with divisive
+     normalization off the forward output is no longer normalised, so the scale runs away across three
+     layers (corroborating evidence: this arm's closed-form readout picked λ=0 on the validation set while
+     the others picked 1e-4). **But that is an explanation without experimental evidence -- do not use it
+     as a conclusion.**
+   - **Hyperparameters were not retuned per column**: the paper's columns each have their own η_l / c^k
+     (Table 3), while every arm here keeps the acceptance configuration (η_l=1.0, c^k=32). So
+     `grouping_off` uses η_l=1.0 where the paper's column uses 0.6, and `cossim` uses 1.0 where the paper
+     uses 0.4. **Only `baseline` and `divnorm_off` match the paper's column and hyperparameters** -- and
+     the latter is the one that diverged.
+   - **The `hsic` arm has no paper number to compare against**: the paper ran that comparison but reports it
+     only qualitatively, in §5.1 and Appendix D.8 ("Optimizing HSIC instead of our approximation, pHSIC,
+     didn't improve performance"; D.8: "training with HSIC instead did not lead to a significant change in
+     the results (not shown)"). This entry's -0.10 points agree in direction with that statement.

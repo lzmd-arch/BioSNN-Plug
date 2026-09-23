@@ -1,0 +1,10 @@
+{
+  "arm": "divnorm_off",
+  "overrides": {
+    "divnorm": "off"
+  },
+  "paper_column": "Table 3, MNIST: pHSIC Gaussian + grp（η_l=1.0, c^k=32）",
+  "seed": 0,
+  "accuracy": 0.926099956035614,
+  "elapsed_s": 299.6485296000028
+}

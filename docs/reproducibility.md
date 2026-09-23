@@ -142,7 +142,7 @@ uv sync --locked      # lock 与 pyproject 必须一致
 [`sweep_results/README.md`](../sweep_results/README.md)。
 
 保留策略三条：**不删除、不覆盖**——新实验新开目录，旧目录即使结论后来被否证也原样留着并注明
-（例如 W1 那次被中途改动污染的运行）；一次运行一个 `.json`、一批扫描一个目录 + 同名汇总 `.log`；
+（例如 W1 那次被中途改动污染的运行）；一次运行一个 `.json`、一批扫描一个目录（汇总 `.log` **不一定与目录同名**——调参期的批次日志一次跑好几个分支、结果分散到好几个目录，见 `sweep_results/README.md` 的「批次日志」一节）；
 **数据集不在此列**——`data/` 仍然不入库，按 §12.1 用 `scripts/download_data.py` 复现（逐文件校验）。
 
 写论文时：画曲线用 json 里的 `curve`；报中位数与最小值用汇总 log 或自行聚合；

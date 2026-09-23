@@ -1,0 +1,10 @@
+{
+  "arm": "hsic",
+  "overrides": {
+    "hsic_estimate_mode": "biased"
+  },
+  "paper_column": "**论文没有这一列的数字**（§5.1 / 附录 D.8 只有定性结论）",
+  "seed": 0,
+  "accuracy": 0.9768999814987183,
+  "elapsed_s": 421.5389226000116
+}

@@ -1,0 +1,11 @@
+{
+  "arm": "grouping_off",
+  "overrides": {
+    "grouping": "off",
+    "divnorm": "off"
+  },
+  "paper_column": "Table 3, MNIST: pHSIC Gaussian plain（η_l=0.6）",
+  "seed": 0,
+  "accuracy": 0.9424999952316284,
+  "elapsed_s": 221.15633399999933
+}
