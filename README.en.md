@@ -124,11 +124,13 @@ description of each layer's learning rules is in the [project plan](BioSNN-Plug_
 
 ## Quickstart
 
-Depends only on numpy, no GPU needed. Not on PyPI yet, so install from Git:
+Depends only on numpy, no GPU needed:
 
 ```bash
-pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
+pip install biosnn-bus
 ```
+
+(To install **unreleased** changes from `main`, use Git instead: `pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"`)
 
 A modality plugin is three methods and two properties:
 

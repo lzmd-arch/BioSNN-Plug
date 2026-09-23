@@ -115,8 +115,10 @@ flowchart TB
 只依赖 numpy，无需 GPU：
 
 ```bash
-pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
+pip install biosnn-bus
 ```
+
+（要从 `main` 装**尚未发布**的改动，才走 Git：`pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"`）
 
 一个模态插件就是三个方法加两个属性：
 

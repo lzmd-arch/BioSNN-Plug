@@ -121,8 +121,10 @@ flowchart TB
 numpy だけに依存し、GPU は不要です：
 
 ```bash
-pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"
+pip install biosnn-bus
 ```
+
+（`main` 上の**未リリース**の変更を入れる場合のみ Git 経由で：`pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"`）
 
 モダリティプラグインは 3 つのメソッドと 2 つのプロパティでできている：
 
