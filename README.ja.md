@@ -8,7 +8,7 @@
 > また、この日本語版は機械支援による翻訳であり、母語話者によるレビューを受けていません。
 > 不自然な箇所があれば issue でお知らせください。
 
-[中文](README.md) · [English](README.en.md) · [プロジェクト計画書](BioSNN-Plug_项目计划书_v6.2.md) · [プラグイン開発ガイド](docs/plugin_guide.ja.md) · [アーキテクチャ決定記録](docs/adr/README.ja.md)
+[中文](README.md) · [English](README.en.md) · [プロジェクト計画書](BioSNN-Plug_项目计划书_v6.3.md) · [プラグイン開発ガイド](docs/plugin_guide.ja.md) · [アーキテクチャ決定記録](docs/adr/README.ja.md)
 
 [![CI](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml/badge.svg)](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
@@ -39,7 +39,7 @@
 | :--- | :--- |
 | `biosnn-bus` スケルトンライブラリ | **0.1.0 利用可能**——プラグインインタフェース、レジストリとディスカバリ、スパイクバスの骨組み |
 | 研究コード：三つの検証ライン | **第 1 フェーズの実装完了**——W1 Hebbian 知覚 MNIST **97.79%**（既定の閉形式解の読み出し；SGD 読み出しは 98.01%）✓；W2 e-prop 系列 sMNIST **77.48%**（活動ニューロン 1.0000）✓；W3 R-STDP CartPole 中央値 **237.8 歩**（基準 ≥ 200）✓。数値と再現記録は[再現記録](docs/reproducibility.ja.md) 参照 |
-| 認知コア / LLM 連携 | **未着手**、[プロジェクト計画書 §七](BioSNN-Plug_项目计划书_v6.2.md) 参照 |
+| 認知コア / LLM 連携 | **未着手**、[プロジェクト計画書 §七](BioSNN-Plug_项目计划书_v6.3.md) 参照 |
 
 明確にしておくべき境界が 2 つある：
 
@@ -91,7 +91,7 @@ flowchart TB
     MCP -.->|結果を符号化して再注入| EM
 ```
 
-層間の衝突は **ES メタ学習アービタ**が調停する（⬜ 第 2 フェーズ）。各層の学習則の完全な説明は[プロジェクト計画書](BioSNN-Plug_项目计划书_v6.2.md) §2、§3 参照。
+層間の衝突は **ES メタ学習アービタ**が調停する（⬜ 第 2 フェーズ）。各層の学習則の完全な説明は[プロジェクト計画書](BioSNN-Plug_项目计划书_v6.3.md) §2、§3 参照。
 
 ## クイックスタート
 

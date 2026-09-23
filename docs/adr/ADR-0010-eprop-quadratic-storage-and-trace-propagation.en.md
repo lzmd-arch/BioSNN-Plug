@@ -10,7 +10,7 @@
 
 ## Context
 
-The project plan's §3.1 "key correction 1" (`BioSNN-Plug_项目计划书_v6.2.md:161-163`) says two things:
+The project plan's §3.1 "key correction 1" (`BioSNN-Plug_项目计划书_v6.3.md:161-163`) says two things:
 
 > e-prop 的资格痕迹按突触存储，空间复杂度随神经元数量**二次增长** [Pes et al., 2025].
 > Traces Propagation（TP）是一种前向、内存高效、可扩展的完全局部学习规则，结合资格痕迹与

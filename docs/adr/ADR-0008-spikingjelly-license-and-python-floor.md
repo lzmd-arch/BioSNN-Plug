@@ -78,6 +78,11 @@
 2. **不声称已做法律审查。** 以上是许可证正文的摘读，不是法律意见。若本项目形态变化（例如接受商业赞助、或对外提供托管服务），应重新评估。
 3. **不声称自实现神经元原语是等价替代。** e-prop 的正确性依赖 ALIF 动力学的精确实现，自实现同样有风险；本 ADR 选择保留 SpikingJelly，正是为了不把这块风险引进来。
 
+- **后续更正（2026-09-23，对外部仓库的实际复核）**：决策 3 里有两句与 `ChFrenkel/eprop-PyTorch` 的仓库事实不符，据实更正（按仓库惯例正文不动，在此注明）：
+  1. **它不是「锁的 torch API 与 2.14 对不上」**——该仓库**没有任何依赖清单或版本约束**（无 `requirements.txt` / `pyproject.toml` / CI）。真正跑不起来的机械原因是 `setup.py` 里两处 `dtype=np.int`，而该别名自 **NumPy 1.24** 起已被移除。
+  2. **它当不了 ALIF 资格痕迹的对照物**——该仓库**已显式移除 ALIF**（`main.py`："Support for the ALIF neuron model has been removed."；`models.py`：`assert self.model == "LIF"`），且全仓只有一个 2022-02-18 的初始提交，历史里没有可挖的 ALIF 版本。ALIF 的对照物只能在**官方实现** [15] `IGITUGraz/eligibility_propagation`（`Figure_3_and_S7_e-prop_tutorials/tutorial_evidence_accumulation_with_alif.py` 等）与 Bellec et al. 2020 原文里。
+  **它能提供的对照价值因此收窄为**：LIF + 证据累积那一条链（式 (4)/(25) 的硬编码实现、资格痕迹的 `F.conv1d` 因果卷积写法、以及「拉长泄漏时间常数以覆盖秒级依赖」这一技巧）。许可结论不变——Apache-2.0、合规、可进依赖；但**非 PyPI、无 tag**，只能锚 commit `0f32a8f2`，工程上仍只作阅读参考。
+
 ## Alternatives
 
 **A. 自实现 LIF/ALIF 神经元原语，彻底不引入 SpikingJelly（约 200–300 行）。**

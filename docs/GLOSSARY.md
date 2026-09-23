@@ -11,7 +11,7 @@
 
 | 中文 | English | 日本語 | 频次 | 备注 |
 | :--- | :--- | :--- | ---: | :--- |
-| 计划书 | project plan | プロジェクト計画書 | 104 | 指 `BioSNN-Plug_项目计划书_v6.2.md`。**不译作 "design doc" 或 "spec"** |
+| 计划书 | project plan | プロジェクト計画書 | 104 | 指 `BioSNN-Plug_项目计划书_v6.3.md`。**不译作 "design doc" 或 "spec"** |
 | 骨架库 | skeleton library | スケルトンライブラリ | 65 | 指 `biosnn-bus`。**不译作 framework / backbone / scaffold** |
 | 认知核心 | cognitive core | 認知コア | 23 | |
 | 模态插件 | modality plugin | モダリティプラグイン | 15 | |

@@ -8,7 +8,7 @@
 > library. The Japanese documentation is a machine-assisted translation that has not been
 > reviewed by a native speaker; if something reads unnaturally, please open an issue.
 
-[中文](README.md) · [日本語](README.ja.md) · [Project plan (Chinese)](BioSNN-Plug_项目计划书_v6.2.md) · [Plugin guide](docs/plugin_guide.en.md) · [Architecture decision records](docs/adr/README.en.md)
+[中文](README.md) · [日本語](README.ja.md) · [Project plan (Chinese)](BioSNN-Plug_项目计划书_v6.3.md) · [Plugin guide](docs/plugin_guide.en.md) · [Architecture decision records](docs/adr/README.en.md)
 
 [![CI](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml/badge.svg)](https://github.com/lzmd-arch/BioSNN-Plug/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
@@ -40,7 +40,7 @@ Three claims are under test:
 | :--- | :--- |
 | `biosnn-bus` skeleton library | **0.1.0, usable** — plugin interface, registration and discovery, spike-bus skeleton |
 | Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **97.79%** (default closed-form readout; SGD readout 98.01%) ✓; W2 e-prop sequential sMNIST **77.48%** (active neurons 1.0000) ✓; W3 R-STDP CartPole median **237.8 steps** (criterion ≥ 200) ✓. Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) |
-| Cognitive core / LLM orchestration | **Not started** — see the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §7 |
+| Cognitive core / LLM orchestration | **Not started** — see the [project plan](BioSNN-Plug_项目计划书_v6.3.md) §7 |
 
 Two boundaries worth stating plainly:
 
@@ -96,7 +96,7 @@ flowchart TB
 ```
 
 Conflicts between layers are arbitrated by an **ES meta-learning arbiter** (⬜ phase 2). The complete
-description of each layer's learning rules is in the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §2 and §3.
+description of each layer's learning rules is in the [project plan](BioSNN-Plug_项目计划书_v6.3.md) §2 and §3.
 
 ## Quickstart
 
