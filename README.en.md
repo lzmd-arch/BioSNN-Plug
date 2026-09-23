@@ -53,7 +53,7 @@ Two boundaries worth stating plainly:
 
 ## Architecture
 
-Data flows bottom-up. ✅ marks what already runs in this repository; ⬜ marks what the project plan describes but has not been implemented. Both are on the same diagram because it doubles as the roadmap.
+Data flows bottom-up. ✅ marks what already runs in this repository; ◐ marks a layer whose **single learning rule has been verified in phase 1** while the module as a whole (multi-layer network, modality decoders, working-memory circuit) is still unimplemented; ⬜ marks what the project plan describes but has not been started. All are on the same diagram because it doubles as the roadmap.
 
 ```mermaid
 flowchart TB
@@ -62,11 +62,11 @@ flowchart TB
     end
 
     subgraph L4["Execution layer"]
-        ACT["Action generation + modality decoders<br/>R-STDP + reward-prediction Critic<br/>⬜ phases 1-3"]
+        ACT["Action generation + modality decoders<br/>R-STDP + reward-prediction Critic<br/>◐ phase 1: learning rule verified (W3)<br/>⬜ modality decoders"]
     end
 
     subgraph L3["Cognitive layer (cognitive core)"]
-        WM["Working memory<br/>RSNN + ALIF + e-prop<br/>⬜ phase 1"]
+        WM["Working memory<br/>RSNN + ALIF + e-prop<br/>◐ phase 1: learning rule verified (W2)<br/>⬜ multi-layer RSNN and working-memory circuit"]
         EM["Episodic memory<br/>pattern separation + neurogenesis<br/>⬜ phase 4"]
         MG["Metacognitive gating<br/>uncertainty monitoring<br/>⬜ phase 4"]
     end
@@ -173,6 +173,8 @@ One maintainer; reports with a complete reproduction get priority.
 
 ## License and citation
 
-Code [Apache-2.0](LICENSE); documentation and the project plan [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Datasets follow the license of each data source; this repository ships no data mirrors — download and preprocessing scripts will ship with phase 1.
+Code [Apache-2.0](LICENSE); documentation and the project plan [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Datasets follow the license of each data source; this repository ships no data mirrors — the download and preprocessing script is [scripts/download_data.py](scripts/download_data.py).
+
+**SpikingJelly, which the research lines depend on, uses the Open-Intelligence Open Source License 1.0 (OIOSL), not Apache-2.0.** Research use does not trigger it, but **commercial use or redistribution requires a disclosure filing with AITISA**. For the trade-off and its effect on the Python floor, see [ADR-0008](docs/adr/ADR-0008-spikingjelly-license-and-python-floor.en.md).
 
 Cite via [CITATION.cff](CITATION.cff).

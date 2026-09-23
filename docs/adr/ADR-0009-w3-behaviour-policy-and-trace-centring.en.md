@@ -93,8 +93,8 @@ and that reading went into the tri-lingual README.
 
 - **Later update (2026-09-23, numeric retuning under the same decision)**: the figures recorded
   above belong to the configuration as of the decision — annealing 2 -> 20, learning-rate final
-  fraction 0.1, and 260.0 / minimum 74 measured on seeds 10–24. Retuning continued on **held-out
-  seeds**, and the final configuration is **annealing 2 -> 40, learning-rate final fraction 0.01**,
+  fraction 0.1, and 260.0 / minimum 74 measured on seeds **25–44**. Retuning continued on **held-out
+  seeds**, and the final configuration is **annealing 1 -> 40, learning-rate final fraction 0.01**,
   giving median 237.8 and minimum 121 on the fresh seeds 45–64 (both seed batches pass). The
   **decision** in this ADR — Boltzmann sampling, trace centred by the sampling probability, inverse
   temperature annealing — is unchanged; only two of its numbers were retuned. By repository

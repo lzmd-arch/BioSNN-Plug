@@ -43,7 +43,7 @@
 
 ## 架构
 
-数据自下而上流动。✅ 是当前仓库里已经能跑的，⬜ 是计划书里尚未实现的——画在同一张图上，因为这张图同时是路线图。
+数据自下而上流动。✅ 是当前仓库里已经能跑的；◐ 是**该层的单条学习规则已在第一阶段验证**、模块整体仍未实现（多层网络、模态解码器、工作记忆回路等）；⬜ 是计划书里尚未开始实现的。画在同一张图上，因为这张图同时是路线图。
 
 ```mermaid
 flowchart TB
@@ -52,11 +52,11 @@ flowchart TB
     end
 
     subgraph L4["执行层"]
-        ACT["动作生成 + 模态解码器<br/>R-STDP + 奖励预测 Critic<br/>⬜ 第一至三阶段"]
+        ACT["动作生成 + 模态解码器<br/>R-STDP + 奖励预测 Critic<br/>◐ 第一阶段：学习规则已验证（W3）<br/>⬜ 模态解码器"]
     end
 
     subgraph L3["认知层（认知核心）"]
-        WM["工作记忆<br/>RSNN + ALIF + e-prop<br/>⬜ 第一阶段"]
+        WM["工作记忆<br/>RSNN + ALIF + e-prop<br/>◐ 第一阶段：学习规则已验证（W2）<br/>⬜ 多层 RSNN 与工作记忆回路"]
         EM["情景记忆<br/>模式分离 + 神经发生<br/>⬜ 第四阶段"]
         MG["元认知门控<br/>不确定性监控<br/>⬜ 第四阶段"]
     end
@@ -160,6 +160,8 @@ scripts/               CI 与 pre-commit 用的检查脚本
 
 ## 许可证与引用
 
-代码 [Apache-2.0](LICENSE)，文档与计划书 [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)。数据集遵循各数据源许可，本仓库不提供数据镜像；下载与预处理脚本将随第一阶段提供。
+代码 [Apache-2.0](LICENSE)，文档与计划书 [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)。数据集遵循各数据源许可，本仓库不提供数据镜像；下载与预处理脚本是 [scripts/download_data.py](scripts/download_data.py)。
+
+研究线依赖的 **SpikingJelly 用的是启智开源许可证 1.0（OIOSL），不是 Apache-2.0**。研究用途不触发它，但**商业使用或再发布须自行向 AITISA 声明披露**。取舍与它对 Python 下限的影响见 [ADR-0008](docs/adr/ADR-0008-spikingjelly-license-and-python-floor.md)。
 
 引用请用 [CITATION.cff](CITATION.cff)。

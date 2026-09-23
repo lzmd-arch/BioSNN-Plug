@@ -31,9 +31,7 @@ def write_fake_shd(path, samples):
         for index, (t, u, _) in enumerate(samples):
             times[index] = np.asarray(t, dtype="float32")
             units[index] = np.asarray(u, dtype="uint8")
-        handle.create_dataset(
-            "labels", data=np.asarray([s[2] for s in samples], dtype="uint16")
-        )
+        handle.create_dataset("labels", data=np.asarray([s[2] for s in samples], dtype="uint16"))
 
 
 class TestLoadShd:
@@ -85,7 +83,7 @@ class TestLoadShd:
         assert task.labels.tolist() == [N_CLASSES - 1]
 
     def test_missing_file_points_at_the_download_script(self, tmp_path):
-        with pytest.raises(SystemExit, match="download_data.py shd"):
+        with pytest.raises(SystemExit, match=r"download_data\.py shd"):
             load_shd(tmp_path, split="train", seed=0)
 
     def test_window_covers_the_longest_released_clip(self):

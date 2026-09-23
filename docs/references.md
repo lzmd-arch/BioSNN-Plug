@@ -119,4 +119,5 @@ Tihomirov et al. 2025，与 [12] 冲突。对抗性复核推翻了这两个归�
 | §4.6、参考文献 [11] | ASTRA 作者写为项目名 | 改为 GitHub 账号 christophejlegros-lgtm |
 | §4.3、参考文献 [10] | MEMBRAIN 作者写为项目名 | 改为 GitHub 账号 tfatykhov |
 | §3.2 | Critic 训练规则的具体形式 | 按 [12] 2013 原文写：Δw ∝ δ(t)·κ∗[x_i·y_j]（**仅计 pre-before-post**），δ 为全局标量 TD 误差。并避免用"no back-propagation signal"一句论证局部性 |
+| §三、§八 选型表、§十一 风险表、§3.1 关键修正 1 | 把 Trace Propagation 写成「e-prop 的存储优化：O(N²) → O(N)」 | 按 [ADR-0010](adr/ADR-0010-eprop-quadratic-storage-and-trace-propagation.md) 改写：TP 是**另一条规则**（痕迹按神经元而非按突触存储），不是 e-prop 的省内存版本；两者并列而非替代。同时删去 §3.1 把它列为本条补救措施的表述 |
 | §12.1、§1.4、§八 | 许可证表把 SpikingJelly 写成"与本项目同一许可证（Apache-2.0）" | 按事实改写：SpikingJelly 用**启智开源许可证 1.0**（OIOSL），并补上其商业使用披露义务。§1.4/§八 的技术选型行注上"该依赖的许可条款，以及它对开发环境 Python 下限的影响，见 `docs/adr/ADR-0008`" |

@@ -20,7 +20,7 @@
 
 | 阶段 | 内容 | 对应计划书 |
 | :--- | :--- | :--- |
-| 第一阶段（1-3 月） | e-prop 认知核心（Trace Propagation + ALIF + 自适应阈值）；核化 IB-Hebbian 感知层（含除法归一化）；R-STDP 执行层（含 Critic） | §七 第一阶段、§三 |
+| 第一阶段（1-3 月） | e-prop 认知核心（ALIF + 自适应阈值；计划书点名的 Trace Propagation 经考证**不适用**，见 [ADR-0010](../docs/adr/ADR-0010-eprop-quadratic-storage-and-trace-propagation.md)）；核化 IB-Hebbian 感知层（含除法归一化）；R-STDP 执行层（含 Critic） | §七 第一阶段、§三 |
 | 第二阶段（4-8 月） | 双规则协同、TAAF 快速微调、ES 元学习仲裁器 | §七 第二阶段 |
 | 第三阶段（9-15 月） | 三规则闭环、持续学习基准 | §七 第三阶段 |
 | 第四阶段起 | 神经发生、规模扩展、元认知门控 | §七 第四阶段 |

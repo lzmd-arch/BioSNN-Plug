@@ -509,7 +509,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--logit-scale-start",
         type=float,
-        default=2.0,
+        default=1.0,
         help="Boltzmann 逆温度的**起点**；与 --logit-scale-end 一起给出才启用退火（log 空间"
         "线性插值）。先用近均匀把策略学起来，再收紧拿决策边际——恒定值两端各丢一半。"
         "**两者都给了才启用退火，届时 --actor-logit-scale 被覆盖**",
@@ -704,7 +704,7 @@ def run_trial(
     success_signal: str | None = None,
     exploration_start: float = 0.3,
     exploration_end: float = 0.02,
-    logit_scale_start: float | None = 2.0,
+    logit_scale_start: float | None = 1.0,
     logit_scale_end: float | None = 40.0,
     actor_lr_final_fraction: float = 0.01,
     evaluation_episodes: int = 10,

@@ -27,7 +27,7 @@ CartPole 这条线上的**种子方差极大**：同一配置内实测能差 3.5
     # 列出要跑哪些格子，不真跑（先把"要跑什么"摆出来）
     uv run python -m research.rstdp.sweep --grid encoding_sigma=0.5,1.0 --seeds 0-9 --dry-run
 
-    # 真跑：2 × 10 = 20 次，每次约 4 秒
+    # 真跑：2 × 10 = 20 次，每次约 30–70 秒（随策略好坏浮动，见 RUNS_PER_SECOND 的注释）
     uv run python -m research.rstdp.sweep --grid encoding_sigma=0.5,1.0 --seeds 0-9
 
     # 多轴交叉

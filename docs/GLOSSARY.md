@@ -184,7 +184,7 @@
 | 活跃神经元比例 | active neuron fraction | 活動ニューロン比率 | — | 计划书 §9 的网络健康指标；口径见 `research/common/metrics.py`——观察窗内**至少发放过一次**的神经元占比。§3.1 规定低于 60% 触发阈值调整 |
 | 脉冲稀疏度 | spike sparsity | スパイク疎度 | — | 计划书 §9 指标；零元素占比，即 `SpikeTrain.density` 的补数。与「稀疏随机投影」区分——后者是骨架库的一个组件 |
 | 死亡神经元 | dead neuron | 死んだニューロン | — | 从不发放的神经元；§3.1「死亡神经元防护」把放电阈值提升为可训练参数来应对 |
-| 迹传播 | Trace Propagation (TP) | トレース伝播 | — | Pes et al. 2025 的方法；把资格痕迹存储从按突触的 O(N²) 降到 O(N)。**不译作「痕迹传播」**，与「资格痕迹」区分 |
+| 迹传播 | Trace Propagation (TP) | トレース伝播 | — | Pes et al. 2025 提出的**另一条**完全局部规则：痕迹按**神经元**而非按突触存储，所以是 O(N) 而不是 O(N²)。**不是 e-prop 的省内存版本**——计划书曾那样写，经考证据此更正，见 [ADR-0010](adr/ADR-0010-eprop-quadratic-storage-and-trace-propagation.md)。**不译作「痕迹传播」**，与「资格痕迹」区分 |
 | 成功偏移 | success-signal offset | 成功信号のオフセット | — | R-STDP 的失败模式：成功信号的平均值偏离零。§七 第一阶段要求 < 10%σR，测量见 `research/rstdp/measure_bias.py` |
 | 显存峰值 | peak GPU memory | GPU メモリのピーク | — | §12.4 要求 GPU 实验记录；§6.2 把 8GB 列为硬约束，峰值是判断有无踩线的依据 |
 

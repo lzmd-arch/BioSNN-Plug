@@ -24,7 +24,7 @@ from **phase 1**:
 
 | Phase | Contents | Plan reference |
 | :--- | :--- | :--- |
-| Phase 1 (months 1-3) | e-prop cognitive core (Trace Propagation + ALIF + adaptive threshold); kernelized IB-Hebbian perception layer (including divisive normalization); R-STDP execution layer (including the Critic) | §7 phase 1, §3 |
+| Phase 1 (months 1-3) | e-prop cognitive core (ALIF + adaptive threshold; the Trace Propagation named by the plan was **ruled out** by provenance review, see [ADR-0010](../docs/adr/ADR-0010-eprop-quadratic-storage-and-trace-propagation.en.md)); kernelized IB-Hebbian perception layer (including divisive normalization); R-STDP execution layer (including the Critic) | §7 phase 1, §3 |
 | Phase 2 (months 4-8) | Dual-rule coordination, TAAF fast fine-tuning, ES meta-learning arbiter | §7 phase 2 |
 | Phase 3 (months 9-15) | Three-rule closed loop, continual-learning benchmark | §7 phase 3 |
 | Phase 4 onward | Neurogenesis, scaling up, metacognitive gating | §7 phase 4 |

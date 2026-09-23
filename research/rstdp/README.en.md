@@ -19,7 +19,7 @@
 above 200 at the median and above 100 at the minimum, and that is the part that matters.
 
 **Acceptance configuration** (now the defaults, see [ADR-0009](../../docs/adr/ADR-0009-w3-behaviour-policy-and-trace-centring.en.md)): Boltzmann behaviour policy +
-trace centred by the sampling probability + inverse temperature **annealed in log space from 2 to
+trace centred by the sampling probability + inverse temperature **annealed in log space from 1 to
 40** + Actor learning rate decayed to **0.01x**. So `cartpole.py --seed 0` runs **exactly that**.
 
 Getting here, **most of the hypotheses along the way were refuted** — and those negative results are
@@ -89,7 +89,8 @@ Python：3.12.14
 acceptance statistic — the mean of 10 greedy episodes on the final weights — largely measures
 **which phase the wander stopped in**, not the level learned. **Under the acceptance
 configuration the median peak is** 389.8 (fresh seeds 45–64) / 441.7 (tuning seeds 25–44) —
-well above the final medians, which is exactly what says the wandering is still there.
+well above the final medians (237.8 / 319.8), which is exactly what says the wandering is still
+there.
 
 **Two: making the Critic genuinely more accurate makes the policy worse.** The pre-registered
 fork rule said "EV < 0.5 ⇒ the Critic is the bottleneck". That inference **was refuted by its own
@@ -214,9 +215,14 @@ Python：3.12.14
 ## How to reproduce it
 
 ```bash
-uv run python -m research.rstdp.cartpole              # acceptance run (~4 seconds)
+uv run python -m research.rstdp.cartpole              # one seed (~30-70 s, varies with policy quality)
 uv run python -m research.rstdp.cartpole --seed 2     # a different seed
 uv run python -m research.rstdp.cartpole --smoke      # CI smoke
+
+# **The acceptance figures are a multi-seed statistic** (20 seeds). A single seed is unusable
+# here — within one configuration, seeds differ by 5-30x in practice. This runs the default
+# configuration and prints a summary table:
+uv run python -m research.rstdp.sweep --seeds 45-64
 ```
 
 ## Equations mapped to modules
@@ -332,7 +338,13 @@ to guess which hyperparameter is more sensitive.
    so the advantage-weighted direction is **identically zero at the visited states**
    (`per-state |T| median = 0.0000`) — at the states a good policy visits the two actions are nearly
    equivalent. **Switching to Boltzmann + `a_j − pi_j` centring is the only lever this phase to pass
-   the adoption rule** (held-out 177.3, paired +204.0), but it does not yet meet the criterion and
+   the adoption rule** (held-out 177.3, paired +204.0). **Note that sentence measures the
+   intermediate configuration of that moment**: annealing had not been added and the learning rate
+   had not decayed to 0.01x, so 177.3 fell short of 200 and roughly one seed in ten collapsed. The
+   final configuration (annealing 1 -> 40, learning-rate final fraction 0.01) gives median 237.8 and
+   minimum 121 on the fresh seeds 45-64, i.e. **it passes** -- no seed in that batch fell below 100,
+   so one-in-ten collapse at least does not apply to the final configuration. (The original wording
+   went on:)
    has roughly a one-in-ten collapse rate. **Two claims formerly written here are retracted**: "the
    rule's direction is fine, cos = 0.74" (that cosine is noise when the target is near zero — seed 1
    gives 0.078) and "a step ratio of 20–36× means the step is too large" (it is a small denominator,
