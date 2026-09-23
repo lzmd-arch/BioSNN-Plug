@@ -42,6 +42,7 @@ Three claims are under test:
 | :--- | :--- |
 | `biosnn-bus` skeleton library | **0.1.0, usable** — plugin interface, registration and discovery, spike-bus skeleton |
 | Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **97.79%** (default closed-form readout; SGD readout 98.01%) ✓; W2 e-prop sequential sMNIST **77.48%** (active neurons 1.0000) ✓; W3 R-STDP CartPole median **237.8 steps** (criterion ≥ 200) ✓. Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) |
+| **Network scale** | **256 spiking neurons** (W2); W1 adds 3,072 **rate-based** units (not spiking neurons). The plan's §2.2 cognitive-core target is about 50k -- a gap of roughly **195x**, see [research/README](research/README.en.md) |
 | Cognitive core / LLM orchestration | **Not started** — see the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §7 |
 
 Two boundaries worth stating plainly:

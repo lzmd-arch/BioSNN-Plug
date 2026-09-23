@@ -17,6 +17,37 @@ The reasoning behind that trade-off is in [`docs/adr/ADR-0005`](../docs/adr/ADR-
 it follows semver and deliberately depends on none of the code in this directory
 (see [`ADR-0001`](../docs/adr/ADR-0001-skeleton-as-separate-library.en.md)).
 
+## Current scale
+
+**This project currently runs on 256 spiking neurons.**
+
+The networks of the three verification lines (numbers taken from each line's CLI defaults, i.e. the
+acceptance configuration):
+
+| Line | Network | Scale | Type |
+| :--- | :--- | ---: | :--- |
+| W1 perception | 3 layers x 1024 | **3,072** units | rate-based LReLU -- **not** spiking neurons |
+| W2 cognition | single recurrent layer | **256** neurons | **ALIF spiking neurons** (beta=0.07) |
+| W3 execution | population critic + actor | **64** units (+2 actions) | rate-based units |
+| Skeleton-library demo | spike bus | 128-d (plugins 32 + 128 channels) | plugin encoding units, **not** neurons |
+
+**The only genuine spiking neurons are W2's 256.**
+
+⚠️ **That is about two orders of magnitude short of the plan's targets**, stated here so no reader
+mistakes "phase 1 complete" for "the scale is nearly there":
+
+| | Neuron count |
+| :--- | ---: |
+| **Now (measured)** | **256** |
+| §2.2 cognitive core, "initially about 50,000 neurons" | 50,000 |
+| §9 phase-2 target | 100,000 |
+| §9 phase-4 target | 500,000 |
+
+A gap of roughly **195x**. W1's 3,072 units are the largest count, but they are
+rate-based and **do not count toward the "spiking neuron scale" metric**. The scaling path, the
+memory constraint and the three degradation paths are in plan §6.2/§6.3; **the scaling experiments
+themselves have not started** (§9 puts "100,000" in phase 2).
+
 ## What will be here
 
 Following the phase breakdown in the project plan §7, this directory is filled in starting

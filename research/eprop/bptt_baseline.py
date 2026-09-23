@@ -32,6 +32,8 @@ import time
 
 import torch
 
+from research.common.device import measure_peak_memory
+from research.common.provenance import collect
 from research.eprop.neurons import ALIFCell, ALIFState
 from research.eprop.traces import exp_convolve
 
@@ -203,7 +205,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    results = compare(args)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    started = time.perf_counter()
+    with measure_peak_memory(device) as memory:
+        results = compare(args)
+    elapsed = time.perf_counter() - started
     print(
         f"\n量化差距报告：e-prop {results['e-prop']:.4f} vs BPTT {results['BPTT']:.4f}"
         f"（差距 {results['gap']:+.4f}）"
@@ -214,6 +220,24 @@ def main(argv: list[str] | None = None) -> int:
         f"**这个数字只在上述配置下成立**——它衡量的是 e-prop 那条近似在此任务此规模上的"
         f"代价，换配置会变。"
     )
+
+    record = collect(
+        "eprop/bptt-gap",
+        elapsed_s=elapsed,
+        peak_mb=memory["peak_mb"],
+        device=device,
+        notes=[
+            f"两条线同架构、同损失、同预算，唯一差别是学习规则："
+            f"n_rec={args.n_rec}, epochs={args.epochs}, n_train={args.n_train}, "
+            f"batch={args.batch_size}, seed={args.seed}",
+            f"e-prop: eta_in=eta_rec={args.learning_rate}, eta_out={args.learning_rate_out}；"
+            f"BPTT: eta={args.learning_rate_bptt}，代理梯度穿过脉冲函数",
+            "配对设计：两者用同一个 seed（同一份数据顺序、同一套初始权重）",
+            "**这个差距不是「e-prop 不如 BPTT」的判决**——它是那条近似（丢掉跨神经元循环路径与"
+            "复位项带来的脉冲介导路径，见 traces.py 的说明）在此任务此规模上的代价",
+        ],
+    )
+    print("\n" + record.render_block())
     return 0
 
 
