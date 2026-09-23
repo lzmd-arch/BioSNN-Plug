@@ -366,10 +366,44 @@ to guess which hyperparameter is more sensitive.
     The population structure removes all three. But replacing the single-unit version with standard
     TD(λ) also only reached 21–40 steps — so **other factors were already at work then, and those
     factors are most likely still present**.
-11. **§3.2's quantitative boundary was not reproduced.** "An offset of ~25% σR prevents learning"
-    requires a task designed to keep the action distribution mixed in order to measure cleanly;
-    `examples/paper_fremaux2013.py` deliberately does **not** demonstrate it, because my first
-    version was actually measuring "which action the actor happened to pick", not the bias structure.
+11. **§3.2's quantitative boundary: the structure reproduces, the numbers do not.** There is now
+    [`examples/paper_fremaux2010.py`](../../examples/paper_fremaux2010.py) (project plan §12.3 requires
+    a minimal reproduction for core reference [3]; it was missing): 8 stimuli, one-hot encoding, a
+    **fixed-temperature** Boltzmann policy (the action distribution stays mixed -- getting this wrong
+    is exactly what broke the earlier attempt), and rewards carrying a **per-stimulus baseline bias**
+    `b_k`, comparing two baselines:
+
+    * a **global running mean** (this is the biased R-STDP) -- it knows only the overall mean, so it
+      subtracts the wrong baseline for every stimulus;
+    * a **per-stimulus prediction** (the structural fix §3.2 names) -- one mean per stimulus.
+
+    The offset is an **emergent property** of the scheme, not something injected from outside.
+    Seeds 0-4:
+
+    | `b_k` magnitude | offset/σR | global baseline: before -> after (worst seed) | per-stimulus: offset/σR -> after (worst seed) |
+    | ---: | ---: | :--- | :--- |
+    | 0.000 | 0.034 | 0.525 -> **1.000** (1.000) | 0.090 -> **0.975** (0.875) |
+    | 0.125 | 0.261 | 0.525 -> **0.975** (0.875) | 0.090 -> **0.975** (0.875) |
+    | 0.500 | 0.719 | 0.525 -> **0.825** (0.750) | 0.088 -> **0.975** (0.875) |
+    | 2.000 | 0.965 | 0.525 -> **0.625** (**0.375**) | 0.218 -> **0.975** (0.875) |
+
+    **What reproduces is the structure**: the offset grows with the per-stimulus reward differences;
+    the global-baseline scheme's post-learning performance **falls monotonically**; switching to the
+    per-stimulus prediction pins the offset at 0.09-0.22σR and keeps performance flat at every
+    magnitude; and at the largest magnitude **the worst seed (0.375) drops below the pre-learning
+    level (0.525)** -- the paper's "unlearning" branch does appear.
+
+    **What does not reproduce is the two numbers**: the paper says ~25%σR suffices to stop R-STDP
+    from learning, whereas here **0.26σR** still leaves accuracy at **0.975**; and the paper says
+    S̄ < −0.4σR puts post-learning performance below pre-learning, whereas here that takes
+    **0.97σR**, and even then the **mean** does not fall below pre-learning (0.625 vs 0.525) -- only
+    the worst seed does. This task (a lookup-table linear Actor) is far **more forgiving** than the
+    paper's spike-timing learning task, so the numeric thresholds do not line up -- **do not read that
+    script as a verification of the 25% figure**.
+
+    ⚠️ The previous version of this item said "not reproduced; a task needs to be designed". That is
+    now out of date: the task was designed and it is **structurally right**; what does not line up is
+    the numbers.
 12. **Seed variance is enormous, and it is dynamical rather than statistical.** CartPole's dynamics
     are deterministic; the randomness comes only from the initial state, exploration, and the
     initial weights. A 10-seed median still has a wide confidence interval, so every
