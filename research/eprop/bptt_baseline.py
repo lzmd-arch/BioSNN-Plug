@@ -223,6 +223,10 @@ def main(argv: list[str] | None = None) -> int:
 
     record = collect(
         "eprop/bptt-gap",
+        # **这一格此前是空的**——`collect` 的 `seeds` 是可选参数，漏传不会报错，只会让复现记录
+        # 块里多出一行没有值的「随机种子：」。种子的实际值当时只写在备注行里，信息没丢但不整齐；
+        # 而「哪个字段该有值」正是这种自证文件存在的意义，空着比写错更糟——它看起来像没控制种子。
+        seeds=f"seed={args.seed}（对照的两条臂共用：同一份数据顺序 + 同一套初始权重）",
         elapsed_s=elapsed,
         peak_mb=memory["peak_mb"],
         device=device,
