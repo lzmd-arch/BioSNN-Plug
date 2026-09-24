@@ -369,10 +369,12 @@ This section matters more than the conclusion.
    - **This project has no comparable published e-prop baseline on sMNIST** -- neither "far behind
      the paper" nor "ahead of the paper", because [1] never evaluated on this task at all.
    - **But the same family (LSNN) does have a paper-level number attached to it**: a **mean** of
-     94.2 / 93.8, obtained by BPTT + DEEP R. This project's 0.7748 is genuinely distant from it,
-     **but that distance is the sum of two differences at once -- a different learning rule and a
-     different budget/hyperparameter set** -- and must not be read as "the e-prop implementation is
-     wrong".
+     94.2 / 93.8, obtained by BPTT + DEEP R. ⚠️ **Align the basis**: their 94.2 is a **mean** over 12
+     runs, so this project must be compared by **mean** too -- the 30-epoch batch's 5-seed mean is
+     **0.7764** and the 100-epoch batch's is **0.8519** (the seed-0 figures 0.7748 / 0.8534 are
+     single draws from the same thing). Whichever we take, that distance is real, **but it is the sum
+     of two differences at once -- a different learning rule and a different budget/hyperparameter
+     set** -- and must not be read as "the e-prop implementation is wrong".
 
    Quantifying the e-prop/BPTT gap **on its own** can only be done with this project's own
    **same-budget** comparison (item 6 below), never by borrowing the paper's TIMIT / ATARI numbers.
