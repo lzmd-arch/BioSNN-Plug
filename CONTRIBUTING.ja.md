@@ -18,14 +18,14 @@
 git clone https://github.com/lzmd-arch/BioSNN-Plug.git
 cd BioSNN-Plug
 uv sync                    # 開発依存をまとめて導入（スケルトンライブラリは editable で入ります）
-uv run pre-commit install  # 装提交钩子（首次需要联网拉取钩子仓库）
+uv run pre-commit install  # コミットフックを導入（初回はネットワークから取得します）
 ```
 
 環境を確認します：
 
 ```bash
-uv run pytest -q                                  # 测试全绿
-uv run python examples/quickstart_register_plugin.py   # 示例能跑
+uv run pytest -q                                  # テストが全部通る
+uv run python examples/quickstart_register_plugin.py   # サンプルが動く
 ```
 
 ## 提出前チェックリスト

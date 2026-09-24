@@ -40,9 +40,9 @@ OS / アーキテクチャ：
 
 ```bash
 git rev-parse HEAD                     # commit hash
-git status --porcelain                 # 有输出 = 工作区不干净，复现结果不可信
+git status --porcelain                 # 出力あり = 作業ツリーが汚れている＝再現結果は信用できない
 python -V
-uv pip freeze                          # 已安装依赖的精确版本
+uv pip freeze                          # インストール済み依存の正確なバージョン
 shasum -a 256 uv.lock                  # Windows 用 Get-FileHash uv.lock
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv
 ```

@@ -232,7 +232,7 @@ CI が直接実行します。検証するのは三点——局所目的が計�
 | `divnorm_off` | Gaussian `grp`（η_l=1.0、c^k=32） | 98.4 / 0.3 | **92.61** | -5.18 |
 | `grouping_off` | Gaussian `plain`（η_l=0.6） | 94.6 / 0.2 | **94.25** | -3.54 |
 | `cossim` | cossim `grp+div`（η_l=0.4、c^k=16） | 96.3 / 0.6 | **95.82** | -1.97 |
-| `hsic` | **论文没有这一列的数**（—） | — | **97.69** | -0.10 |
+| `hsic` | **論文にはこの列の数値がありません**（—） | — | **97.69** | -0.10 |
 
    アームごとの JSON は [`sweep_results/w1_ablation/`](../../sweep_results/w1_ablation/)、完全な stdout は
    [`sweep_results/w1_ablation.log`](../../sweep_results/w1_ablation.log) にあります——5 本すべての再現記録
