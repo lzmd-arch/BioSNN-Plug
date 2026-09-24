@@ -161,10 +161,20 @@ jobs:
         with:
           # 403 也放行：ACM DL / Nature / IEEE 会对自动化检查返回 403，
           # 那说明"服务器拒绝了我们"，而不是"链接是错的"。真正的 404 仍然会失败。
+          #
+          # 唯一一条 URL 级排除：`https://doi.org/10.1613/jair.3912`。它是全仓唯一一处
+          # "引用他人原文里的 DOI"——出现在 research/eprop/README.{md,en,ja} 的逐字引用块
+          # （e-prop 论文 Data availability 原文）里，不是本仓库主张的链接。
+          # doi.org → jair.org 对 lychee 稳定返回 "HTTP/2 protocol error. Server may not
+          # support HTTP/2 properly"（同一段引用里的 NIST DOI 正常通过），连续两次重跑
+          # 复现，不是抖动。已手工核实链接本身是活的：curl -L 跟随重定向得 200，终点
+          # https://jair.org/index.php/jair/article/view/10819 —— 是检查器的传输层问题，
+          # 不是死链。只排除这一个 URL，不排除域名：jair.org 上的其他链接仍会被检查。
           args: >-
             --no-progress
             --max-concurrency 8
             --accept 200,206,429,403
+            --exclude '^https://doi\.org/10\.1613/jair\.3912$'
             --exclude-path .venv
             --exclude-path node_modules
             './**/*.md'
