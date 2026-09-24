@@ -135,9 +135,12 @@ with and without recurrent connections. We find the best hyperparameters to be *
 
 **e-prop's SHD performance is on record in the literature, but again it is not self-reported.**
 Table 1 of [2] carries two e-prop SHD rows -- **feed-forward LIF 450: 63.04%**, **recurrent LIF
-450: 80.79%** -- with a footnote reading verbatim "1 Results from [10].", i.e. those two numbers were
-transcribed by [2] from its own reference [10] (the ETLP paper). And since [1] contains no SHD at
-all, **they cannot be numbers [1] reported about itself**.
+450: 80.79%** -- with a footnote reading verbatim "1 Results from [10]." ⚠️ **That footnote is not
+confined to the two e-prop rows**: read cell by cell from the table markup, **five** SHD rows carry
+the `1` (`eProp` feed-forward / `DECOLLE` feed-forward / `eProp` recurrent / `ETLP` recurrent /
+`DECOLLE` recurrent; the N-MNIST block has two more). [2] lifted **an entire comparison block**
+from [10] (its own reference, the ETLP paper), with the two e-prop rows inside it. So those numbers
+are **neither self-reported by [1]** ([1] contains no SHD at all) **nor produced by [2] itself**.
 
 Viewed across the literature: e-prop reaches 63.04%-80.79% on SHD, while this entry gets 0.0534
 (chance) under the **sMNIST hyperparameters and a 30-epoch budget**. The two differ in **both
