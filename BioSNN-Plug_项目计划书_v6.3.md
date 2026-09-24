@@ -56,6 +56,10 @@
 > （e-prop 天然支持逐样本在线更新，TP 因为要用 batch 内对比损失**结构上做不到**——方向与原文写反）。
 > 推导、算式与反解表见 §6.2；算式已用 `research/eprop/traces.py` docstring 里的两个数字（约 470 MB / 约 33 MB）逐字校验。
 > ⚠️ 这只是纸面推导，**无规模实测**，故 §6.2 原降级路径保留不变。
+> ⑬ **§3.4 里 [19] 的一句"原文"引用不逐字**：重抓 Noè et al. 2026 的全文副本后逐字比对发现，
+> 该文写的是 `Predictive Eprop`——**没有连字符**；带连字符的 `Predictive E-prop` 只出现在标题与其余 42 处。
+> 本版 §3.4 与 `docs/references` 三语台账原先把这处引成了带连字符的形式，一并改正。
+> 这句是 v6.3 新增的（v6.2 无此句），故不进"计划书正文待更正项"表。来源与哈希见 `docs/references.md`。
 
 ---
 
@@ -230,7 +234,7 @@ ALIF 神经元的资格痕迹涉及**依赖于使用的放电阈值**的时间�
 **e-prop 的三条已知扩展（v6.3 新增；都是并列变体，不是替代品）**
 
 - **深度方向**：e-prop 的资格痕迹框架已被推广到任意深度网络（乃至任意 DAG），做法是在深度方向再引入一层痕迹递归，并论证复杂度随深度保持线性 [Millidge, 2025]。⚠️ **这是一篇纯数学笔记、没有任何实验**（作者自己在 Discussion 里写着 "we have performed no experiments demonstrating that good credit assignment across depth works in practice"），所以它只能支撑"多层 RSNN 用纯局部规则训练在理论上成立"这类方法学断言，**不能用来支撑任何性能数字**；它自列的局限（e-prop 并非真正的在线权重更新——要等 episode 结束才更新；每组参数各存一套痕迹，深层时"很快变得不可控"）反过来是本项目在线学习主张的反证材料。
-- **预测编码方向**：把 e-prop 的"第三因子"从任务专用外部信号换成**预测编码自身的局部预测误差**，即 Predictive E-prop。作者自己的定位是"**一条学习原理，而不是某个任务专用模型**"（原文："We term the resulting model 'Predictive E-prop', emphasizing its role as a learning principle rather than a task specific model."）[Noè et al., 2026]。它在两个动力学系统（正弦极限环、Lorenz）上的三个任务里与 truncated BPTT 相当（p > 0.05），但收敛所需 epoch 少 70%（约 23 vs 约 80）。**它是 e-prop 的变体，不是新架构**。
+- **预测编码方向**：把 e-prop 的"第三因子"从任务专用外部信号换成**预测编码自身的局部预测误差**，即 Predictive E-prop。作者自己的定位是"**一条学习原理，而不是某个任务专用模型**"（原文："We term the resulting model 'Predictive Eprop', emphasizing its role as a learning principle rather than a task specific model."）[Noè et al., 2026]。它在两个动力学系统（正弦极限环、Lorenz）上的三个任务里与 truncated BPTT 相当（p > 0.05），但收敛所需 epoch 少 70%（约 23 vs 约 80）。**它是 e-prop 的变体，不是新架构**。
 - **事件驱动方向**：把"每个时间步同步更新"改成"**突触收到脉冲事件时才更新**"，并接进大规模仿真平台（NEST）；在模式生成、证据累积、N-MNIST 三个任务上复现原版性能，且在稀疏网络上做到 2 百万神经元的弱/强 scaling [Korcsák-Gorzo et al., 2025]。该文为遵守**严格局部性**还改掉了原版 e-prop 里一处违例（资格痕迹滤波器依赖输出神经元的时间常数——"for synapses to compute their weight updates, they must know the time constant of the output neuron, which violates the principle of locality"），这一句对本项目的"纯局部"叙事最有用。
 
 **注意区分三条不同的东西**（本仓库在引用上踩过"把 A 的结论记到 B 头上"的坑）：e-prop 的**事件驱动版**（Korcsák-Gorzo，是 e-prop 的工程实现变体）≠ **ESPP 的选择性时间步更新**（Graf et al.，是**另一条规则**，预测编码 + 对比编码式的层间局部规则，不属于资格痕迹路线）≠ **"事件优先级"**（本项目对 ESPP 那个机制的中文转述，不是文献术语）。三者在计划书里的归属因此不同：前两条进本节，ESPP 进 §七 第四阶段与 §八 选型表。
