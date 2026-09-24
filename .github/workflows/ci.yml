@@ -135,6 +135,22 @@ jobs:
           python-version: "3.12"
       - run: python scripts/check_references.py
 
+  # ── Markdown 表格结构检查（不联网）────────────────────────────────────────
+  # GFM 里表格的 `|` **即使在反引号内也仍是列分隔符**，要写成 `\|` 才是字面竖线。
+  # 漏转义会让该行多出单元格，而渲染时超出表头格数的部分**被直接丢弃**——文件里还在，
+  # 渲染出来却没有。这类错误读原文发现不了：cat 正常、git diff 正常、逐行审查也正常。
+  # 2026-09-25 因此在引用清单里静默丢过 877 个字符（见 docs/references.md 的
+  # 「已发生过的错误」一节），所以补上这道检查。
+  md-tables:
+    name: Markdown 表格结构检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/check_md_tables.py
+
   # ── 三语一致性检查 ────────────────────────────────────────────────────────
   # 文档有中文 / English / 日本語 三版。最大的风险不是"翻译得不好"，而是
   # **改了一处忘了另两处**——漂移的译文比没有译文更误导人，读者会以为读到的是

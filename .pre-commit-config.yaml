@@ -72,6 +72,17 @@ repos:
         files: ^docs/references(\.en|\.ja)?\.md$
         pass_filenames: false
 
+      # 「Markdown 表格结构检查」——GFM 里表格的 `|` 即使在反引号内也是列分隔符，
+      # 漏转义会让该行多出的单元格在渲染时被丢弃，而读原文完全看不出来。
+      # 触发范围写 `.md$`，但计划书本身被上面的全局 exclude 排除（它是只读文件）——
+      # 不过 CI 里那个 job 扫的是全仓库，所以计划书那边仍然覆盖得到。
+      - id: md-tables
+        name: Markdown 表格结构检查
+        entry: python scripts/check_md_tables.py
+        language: system
+        files: \.md$
+        pass_filenames: false
+
       # 「三语一致性检查」——拦"改了一处忘了另两处"。
       # 漂移的译文比没有译文更误导人，所以漏译、结构错位、代码块被改坏、
       # 链接指回别的语言，都在这里拦下。

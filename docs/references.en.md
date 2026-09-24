@@ -25,9 +25,10 @@ This repository has since had a second, different kind of error — one that tou
 conclusion but makes content **vanish**: the column-structure note in the row for reference
 [4] used three unescaped `|`. In GFM a table's `|` **is still a separator even inside a
 backtick span**, and must be written `\|`; the extra cells are then **dropped outright** when
-rendering — in that row, the 878 characters running from the third pipe to the end of the
-line (the Table 4/5 MNIST figures and two verbatim HSIC quotations) simply do not appear on
-GitHub, while the raw file reads perfectly. Fixed in all three languages on 2026-09-25. The
+rendering — in that row the 877 source characters running from the third pipe to the end of
+the line (the Table 4/5 MNIST figures and two verbatim HSIC quotations) vanish entirely: the
+notes cell's visible text drops from 1,089 characters to 260, while the raw file reads
+perfectly. Fixed in all three languages on 2026-09-25. The
 lesson: **this table cannot be checked by reading the raw files alone** — look at the
 rendered result, or at least count each row's cells against the header.
 
