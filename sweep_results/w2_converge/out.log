@@ -1,0 +1,137 @@
+W2 多随机种子：1 个种子（0–0），数据集 smnist，设备 cuda
+
+==============================================================================
+种子 0
+==============================================================================
+epoch   1  train_ce 2.0391  val_acc 0.4165
+epoch   2  train_ce 1.7694  val_acc 0.4663
+epoch   3  train_ce 1.6319  val_acc 0.4927
+epoch   4  train_ce 1.5335  val_acc 0.5302
+epoch   5  train_ce 1.4492  val_acc 0.5558
+epoch   6  train_ce 1.3710  val_acc 0.5797
+epoch   7  train_ce 1.3023  val_acc 0.6017
+epoch   8  train_ce 1.2420  val_acc 0.6242
+epoch   9  train_ce 1.1883  val_acc 0.6368
+epoch  10  train_ce 1.1417  val_acc 0.6465
+epoch  11  train_ce 1.1010  val_acc 0.6605
+epoch  12  train_ce 1.0667  val_acc 0.6690
+epoch  13  train_ce 1.0314  val_acc 0.6770
+epoch  14  train_ce 1.0028  val_acc 0.6900
+epoch  15  train_ce 0.9768  val_acc 0.6987
+epoch  16  train_ce 0.9519  val_acc 0.7000
+epoch  17  train_ce 0.9305  val_acc 0.7042
+epoch  18  train_ce 0.9131  val_acc 0.7080
+epoch  19  train_ce 0.8958  val_acc 0.7177
+epoch  20  train_ce 0.8784  val_acc 0.7227
+epoch  21  train_ce 0.8624  val_acc 0.7260
+epoch  22  train_ce 0.8475  val_acc 0.7337
+epoch  23  train_ce 0.8293  val_acc 0.7370
+epoch  24  train_ce 0.8149  val_acc 0.7475
+epoch  25  train_ce 0.8018  val_acc 0.7492
+epoch  26  train_ce 0.7897  val_acc 0.7513
+epoch  27  train_ce 0.7783  val_acc 0.7542
+epoch  28  train_ce 0.7681  val_acc 0.7630
+epoch  29  train_ce 0.7541  val_acc 0.7647
+epoch  30  train_ce 0.7414  val_acc 0.7695
+epoch  31  train_ce 0.7322  val_acc 0.7613
+epoch  32  train_ce 0.7220  val_acc 0.7787
+epoch  33  train_ce 0.7088  val_acc 0.7752
+epoch  34  train_ce 0.6978  val_acc 0.7765
+epoch  35  train_ce 0.6911  val_acc 0.7785
+epoch  36  train_ce 0.6828  val_acc 0.7850
+epoch  37  train_ce 0.6767  val_acc 0.7880
+epoch  38  train_ce 0.6688  val_acc 0.7907
+epoch  39  train_ce 0.6559  val_acc 0.7907
+epoch  40  train_ce 0.6506  val_acc 0.7933
+epoch  41  train_ce 0.6441  val_acc 0.7942
+epoch  42  train_ce 0.6381  val_acc 0.7953
+epoch  43  train_ce 0.6336  val_acc 0.8060
+epoch  44  train_ce 0.6279  val_acc 0.8030
+epoch  45  train_ce 0.6193  val_acc 0.8092
+epoch  46  train_ce 0.6127  val_acc 0.8068
+epoch  47  train_ce 0.6091  val_acc 0.8043
+epoch  48  train_ce 0.6064  val_acc 0.8045
+epoch  49  train_ce 0.5998  val_acc 0.8097
+epoch  50  train_ce 0.5945  val_acc 0.8063
+epoch  51  train_ce 0.5907  val_acc 0.8147
+epoch  52  train_ce 0.5867  val_acc 0.8067
+epoch  53  train_ce 0.5789  val_acc 0.8153
+epoch  54  train_ce 0.5751  val_acc 0.8170
+epoch  55  train_ce 0.5713  val_acc 0.8133
+epoch  56  train_ce 0.5680  val_acc 0.8220
+epoch  57  train_ce 0.5589  val_acc 0.8212
+epoch  58  train_ce 0.5582  val_acc 0.8248
+epoch  59  train_ce 0.5526  val_acc 0.8232
+epoch  60  train_ce 0.5497  val_acc 0.8270
+epoch  61  train_ce 0.5467  val_acc 0.8327
+epoch  62  train_ce 0.5443  val_acc 0.8278
+epoch  63  train_ce 0.5387  val_acc 0.8210
+epoch  64  train_ce 0.5353  val_acc 0.8310
+epoch  65  train_ce 0.5322  val_acc 0.8280
+epoch  66  train_ce 0.5286  val_acc 0.8300
+epoch  67  train_ce 0.5257  val_acc 0.8277
+epoch  68  train_ce 0.5243  val_acc 0.8248
+epoch  69  train_ce 0.5168  val_acc 0.8323
+epoch  70  train_ce 0.5169  val_acc 0.8342
+epoch  71  train_ce 0.5139  val_acc 0.8320
+epoch  72  train_ce 0.5129  val_acc 0.8368
+epoch  73  train_ce 0.5115  val_acc 0.8355
+epoch  74  train_ce 0.5058  val_acc 0.8375
+epoch  75  train_ce 0.5033  val_acc 0.8352
+epoch  76  train_ce 0.4979  val_acc 0.8373
+epoch  77  train_ce 0.4979  val_acc 0.8387
+epoch  78  train_ce 0.4983  val_acc 0.8380
+epoch  79  train_ce 0.4900  val_acc 0.8367
+epoch  80  train_ce 0.4907  val_acc 0.8407
+epoch  81  train_ce 0.4872  val_acc 0.8365
+epoch  82  train_ce 0.4868  val_acc 0.8442
+epoch  83  train_ce 0.4838  val_acc 0.8400
+epoch  84  train_ce 0.4845  val_acc 0.8445
+epoch  85  train_ce 0.4765  val_acc 0.8417
+epoch  86  train_ce 0.4755  val_acc 0.8350
+epoch  87  train_ce 0.4762  val_acc 0.8387
+epoch  88  train_ce 0.4729  val_acc 0.8435
+epoch  89  train_ce 0.4695  val_acc 0.8450
+epoch  90  train_ce 0.4726  val_acc 0.8425
+epoch  91  train_ce 0.4669  val_acc 0.8463
+epoch  92  train_ce 0.4686  val_acc 0.8433
+epoch  93  train_ce 0.4614  val_acc 0.8460
+epoch  94  train_ce 0.4640  val_acc 0.8442
+epoch  95  train_ce 0.4614  val_acc 0.8523
+epoch  96  train_ce 0.4569  val_acc 0.8430
+epoch  97  train_ce 0.4546  val_acc 0.8518
+epoch  98  train_ce 0.4543  val_acc 0.8483
+epoch  99  train_ce 0.4515  val_acc 0.8520
+epoch 100  train_ce 0.4534  val_acc 0.8475
+
+测试准确率：0.8534（10 类随机基线 0.10）
+活跃神经元比例：1.0000（§七 阈值 > 0.6）
+脉冲稀疏度：0.8449
+
+```text
+实验名称：eprop/smnist
+日期：2026-09-23 23:28:52 中国标准时间
+Git commit：32774099a77e3a12257e45df5171ea21d1811c93
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=0；全局种子=1741413617；划分验证集=1435468909；权重初始化=3486733650；每批打乱=3990329895；脉冲编码=1681094898
+依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+运行命令：sweep_seeds.py --seeds 0 --epochs 100 --device cuda --out-dir data/w2_converge
+耗时：4439.4 s
+显存峰值：1,104.1 MiB（§6.2 硬约束 8GB）
+§6.2 降级路径：未触发
+备注：n_rec=256, beta=0.07, thr=0.62, eta_in=0.002, eta_rec=0.002, eta_out=0.05, decay_out=0.95
+备注：输入编码：像素值作发放概率的伯努利采样（本项目自己的选择）
+```
+[落盘] data\w2_converge\seed0.json
+
+==============================================================================
+W2 多随机种子汇总（1 个种子：0–0，smnist）
+==============================================================================
+  种子   0  准确率 0.8534  活跃比例 1.0000  耗时 4441 s
+
+  测试准确率        均值 0.8534  最小 0.8534  最大 0.8534  极差 0.00 个百分点   （判据：显著高于随机（10 类））
+  活跃神经元比例      均值 1.0000  最小 1.0000  最大 1.0000  极差 0.00 个百分点   （判据：§七：「> 60%」）
+  JSON 落在 data\w2_converge/，逐种子可查

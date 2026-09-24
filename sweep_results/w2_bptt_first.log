@@ -1,0 +1,33 @@
+# 运行环境（这份对照报告的自证）
+Git commit：1ac4c480f827e48c48ff2c14d7d3db41e6f74d09
+Git 状态：0 处未提交改动
+Python：3.12.14
+uv.lock sha256：cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+运行命令：python -m research.eprop.bptt_baseline
+
+[e-prop] epoch   1  train_ce 2.1786  (23s)
+[e-prop] epoch   2  train_ce 1.9941  (45s)
+[e-prop] epoch   3  train_ce 1.8781  (68s)
+[e-prop] epoch   4  train_ce 1.7993  (92s)
+[e-prop] epoch   5  train_ce 1.7397  (115s)
+[e-prop] epoch   6  train_ce 1.6906  (138s)
+[e-prop] epoch   7  train_ce 1.6467  (161s)
+[e-prop] epoch   8  train_ce 1.6067  (183s)
+[e-prop] epoch   9  train_ce 1.5717  (205s)
+[e-prop] epoch  10  train_ce 1.5383  (227s)
+[e-prop] 测试准确率 0.5274
+[BPTT] epoch   1  train_ce 2.1014  (17s)
+[BPTT] epoch   2  train_ce 1.7728  (33s)
+[BPTT] epoch   3  train_ce 1.5263  (50s)
+[BPTT] epoch   4  train_ce 1.3311  (67s)
+[BPTT] epoch   5  train_ce 1.1781  (85s)
+[BPTT] epoch   6  train_ce 1.0600  (103s)
+[BPTT] epoch   7  train_ce 0.9648  (119s)
+[BPTT] epoch   8  train_ce 0.8900  (136s)
+[BPTT] epoch   9  train_ce 0.8236  (154s)
+[BPTT] epoch  10  train_ce 0.7759  (170s)
+[BPTT] 测试准确率 0.7602
+
+量化差距报告：e-prop 0.5274 vs BPTT 0.7602（差距 +0.2328）
+配置：n_rec=256, epochs=10, n_train=20000, batch=64, seed=0
+**这个数字只在上述配置下成立**——它衡量的是 e-prop 那条近似在此任务此规模上的代价，换配置会变。

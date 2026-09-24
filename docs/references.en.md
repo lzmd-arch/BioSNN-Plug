@@ -138,6 +138,32 @@ For each citation, verify four things:
 **Do not substitute memory for search.** If you cannot verify something, mark it honestly as
 `unverified` or `partial`.
 
+#### Where the full texts used for verification live
+
+Every "verbatim check" marked `verified` in the table above rests on a locally kept copy of the
+full text. Those copies are **not committed** -- redistributing third-party full texts is
+constrained by their own licences ([3] is J Neurosci, all rights reserved; [19] is `cc_no`).
+Following the same principle as §12.1 ("no data mirror, only a way to obtain it"), only the
+**source and fingerprint** are registered here:
+
+| Reference | Source | Local copy | Extraction |
+| :--- | :--- | :--- | :--- |
+| [1] Bellec et al. 2020 | `nature.com/articles/s41467-020-17236-y` | 97,228 B · sha256 `6a02005749ee0949…` | publisher HTML, tags stripped |
+| [3] Frémaux et al. 2010 | `jneurosci.org/content/30/40/13326` | 90,510 B · sha256 `86e2fe258282f113…` | same (cross-checked against PMC6634722) |
+| [4] Pogodin & Latham 2020 | `arxiv.org/abs/2006.07123` | 125,749 B · sha256 `c860d802e48557a0…` | arXiv LaTeXML HTML, **parsed cell by cell** |
+
+Two things must be stated, or these fingerprints will be read as stronger than they are:
+
+1. **These are not PDF text streams.** Reading [4]'s Tables 3/4/5 with `pdftotext -layout`
+   misaligns rows (this repository has been burned by that once), so tables are parsed from HTML
+   cell by cell.
+2. **A local copy is not necessarily the same extraction that produced the numbers above.**
+   Example: [1]'s note says "146,503 characters after stripping tags from the main text", while
+   this local `.txt` is 97,002 characters -- not the same artifact (most likely one is main text
+   only and the other includes the reference list). So **the hash identifies this local file, not
+   the sole basis for the conclusions above**; that basis is the **verbatim quotations themselves**
+   in the notes, which can be checked against public sources without the copy.
+
 ## Items in the body of the project plan awaiting correction
 
 The following problems belong to the **body of `BioSNN-Plug_项目计划书_v6.2.md`**, which this file cannot change. **2026-09-23: all of these corrections are now folded into [`BioSNN-Plug_项目计划书_v6.3.md`](../BioSNN-Plug_项目计划书_v6.3.md)** — the table is kept as a change log, and **v6.2 remains the version to cite as the plan; use v6.3 when you need the corrected wording**.
@@ -153,7 +179,7 @@ The following problems belong to the **body of `BioSNN-Plug_项目计划书_v6.2
 | §4.6, reference [11] | ASTRA's author written as the project name | Change to the GitHub account christophejlegros-lgtm |
 | §4.3, reference [10] | MEMBRAIN's author written as the project name | Change to the GitHub account tfatykhov |
 | §3.2 | The concrete form of the Critic's training rule | Write it according to the original of [12] (2013): Δw ∝ δ(t)·κ∗[x_i·y_j] (**counting pre-before-post only**), where δ is the global scalar TD error. And avoid using the "no back-propagation signal" sentence to argue for locality |
-| §3, the §8 selection table, the §11 risk table, §3.1 key correction 1 | Trace Propagation is written as "e-prop's storage optimisation: O(N²) → O(N)" | Rewrite per [ADR-0010](adr/ADR-0010-eprop-quadratic-storage-and-trace-propagation.en.md): TP is **another rule** (traces per neuron, not per synapse), not a memory-saving version of e-prop; the two are parallel, not substitutes. Also drop §3.1's framing of it as this item's remedy |
+| §3, the §8 selection table, the §11 risk table, §3.1 key correction 1, **§6.2, §10, §12.4, §13** | Trace Propagation is written as "e-prop's storage optimisation: O(N²) → O(N)" | Rewrite per [ADR-0010](adr/ADR-0010-eprop-quadratic-storage-and-trace-propagation.en.md): TP is **another rule** (traces per neuron, not per synapse), not a memory-saving version of e-prop; the two are parallel, not substitutes. Also drop §3.1's framing of it as this item's remedy. **Added 2026-09-25**: this row originally listed only the first four places, so v6.3's first correction pass **missed §6.2's bullet and memory-budget statement, the two §10 risk-table rows, §12.4's ADR example, and §13's innovation line** -- all five were still telling the reader to "adopt TP to save memory". All are now fixed, and **§6.2's memory-budget statement was recomputed** (the original's two figures had dropped the batch dimension; see v6.3 §6.2 for the derivation). Lesson: when correcting a **misattribution**, search the whole document for where else the claim appears rather than working through the list of places you happened to note at the time |
 | §12.1, §1.4, §8 | The license table writes SpikingJelly as "same license as this project (Apache-2.0)" | Rewrite to the facts: SpikingJelly uses the **Open-Intelligence Open Source License 1.0** (OIOSL); add its commercial-use disclosure obligation. In the technology-choice rows of §1.4/§8, note "the license terms of this dependency, and their effect on the development environment's Python floor, are in `docs/adr/ADR-0008`" |
 | §7 phase 4 task line | **Predictive E-prop** listed alongside "metacognitive gating" | That paper contains **zero** occurrences of metacognition / forgetting / working memory, so the pairing is a misattribution. v6.3 keeps metacognitive gating (grounded in this project's own §2.2/§3.4) and moves Predictive E-prop, per its self-description ("a learning principle"), into the §3.1 list of e-prop variants; the task line now carries **event priority** (ESPP's selective time-step updates) |
 | §3.1, §8 | "Event priority" written as if it were a term from some paper | No such term exists in the 2025-2026 spiking literature (seven papers checked word by word; `priorit*` hits 0/0/0/1/0/0/0). v6.3 writes it as ESPP's mechanism and states that "event priority" is this project's Chinese paraphrase, not a literature term |

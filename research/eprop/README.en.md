@@ -388,6 +388,14 @@ This section matters more than the conclusion.
    0.7764 by 0.00 percentage points -- two independent runs
    agreeing with each other.
 
+   That cross-check only verified the **final accuracy**. A finer-grained one exists at the
+   100-epoch budget: [`sweep_results/w2_converge/`](../../sweep_results/w2_converge/) is the
+   **first exploratory run** of seed 0, and it and
+   [`w2_seeds_100ep/seed0.json`](../../sweep_results/w2_seeds_100ep/) are two independent
+   executions with the same `test_accuracy` of **0.85340** and **all 100 `curve` points identical
+   point by point** (only `elapsed_s` differs: 4441 s vs 4372 s). Equivalently: **given the seeds,
+   this training pipeline is deterministic**, verifiable down to every single epoch.
+
    ⚠️ This item used to read "**A single run, not an average.** One seed only (`base=0`)". That
    statement has been superseded by this batch.
 4. **The SHD cross-check ran, and it did not learn** (see "SHD cross-check" above). This
