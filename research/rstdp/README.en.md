@@ -235,6 +235,13 @@ uv run python -m research.rstdp.sweep --seeds 45-64
 | §3.2 | Weight normalization | implemented in both classes |
 | §3.2 / §七 | Success-signal offset / σR | `measure_bias` |
 
+The minimal reproduction of the Frémaux 2013 rule is
+[`examples/paper_fremaux2013.py`](../../examples/paper_fremaux2013.py) (project plan §12.3 requires
+one per core reference). It demonstrates the **structure of the rule** — the three-factor form, the
+weight change being exactly `η·δ·e`, and how the success-offset / σR acceptance metric is
+computed — **not** its performance on any task. The claim that a biased signal prevents learning
+belongs to the other paper (Frémaux et al. 2010); see known boundary 11.
+
 ## Three structural bugs fixed while implementing this
 
 Each has a regression test, and none of them could be worked around by tuning.

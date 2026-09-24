@@ -63,6 +63,19 @@ print(out)
 For a complete, runnable version see [`examples/quickstart_register_plugin.py`](https://github.com/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.py),
 and the [Colab notebook](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.en.ipynb) (runs without a GPU).
 
+Running it produces the figure below — a 1-D sine signal through the temporal channel (32 units,
+level code), an 8×8 brightness-change sequence through the semantic channel (128 channels,
+ON/OFF), and at the bottom what is **actually fed to the cognitive core** after fusion and
+projection:
+
+![Three-panel spike raster: temporal channel sine_wave / semantic channel image_diff / SpikeBus fused output](../../figures/f1-spike-raster.png)
+
+The labels inside the figure are English: the default font has no CJK glyphs, so Chinese labels
+would render as boxes. The figure has **a single source of truth** —
+[`scripts/make_figures.py`](../../scripts/make_figures.py) re-runs the example above and lets the
+example write the PNG itself, rather than keeping a second copy of the plotting code. This is
+paper figure F1.
+
 ## Core concepts
 
 | Concept | Description |

@@ -60,6 +60,15 @@ print(out)
 完整可跑的版本见 [`examples/quickstart_register_plugin.py`](https://github.com/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.py)，
 以及 [Colab notebook](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.ipynb)（无 GPU 可跑）。
 
+它跑出来就是下面这张图——一维正弦信号走时间通道（32 个单元的水平编码），8×8 的亮度变化序列走
+语义通道（128 通道 ON/OFF），最下面那条是融合、投影之后**真正送进认知核心的输入**：
+
+![三面板脉冲栅格图：时间通道 sine_wave / 语义通道 image_diff / SpikeBus 融合输出](../../figures/f1-spike-raster.png)
+
+图内的标签是英文：默认字体没有中文字形，中文标签会渲染成方块。图**只有这一份真相源**——
+[`scripts/make_figures.py`](../../scripts/make_figures.py) 重跑上面那个示例、由示例自己把 PNG 落盘，
+绘图代码不另抄一份。这是论文用图 F1。
+
 ## 核心概念
 
 | 概念 | 说明 |

@@ -63,6 +63,16 @@ print(out)
 完全に実行できる版は [`examples/quickstart_register_plugin.py`](https://github.com/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.py)、
 および [Colab notebook](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.ja.ipynb)（GPU なしで実行できます）にあります。
 
+実行すると下の図が出ます——1 次元の正弦信号が時間チャネル（32 ユニットのレベル符号化）、8×8 の
+輝度変化列が意味チャネル（128 チャネル、ON/OFF）を通り、最下段が融合と射影のあとに
+**実際に認知コアへ送られる入力**です：
+
+![三パネルのスパイクラスタ：時間チャネル sine_wave / 意味チャネル image_diff / SpikeBus 融合出力](../../figures/f1-spike-raster.png)
+
+図中のラベルが英語なのは、既定のフォントに CJK 字形がなく、日本語ラベルが豆腐（□）になるためです。
+図の**真実の源はただ一つ**——[`scripts/make_figures.py`](../../scripts/make_figures.py) が上の例を
+再実行し、例自身が PNG を書き出します（描画コードを別に持たない）。論文用の図 F1 です。
+
 ## 中核となる概念
 
 | 概念 | 説明 |
