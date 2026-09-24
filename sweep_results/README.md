@@ -67,7 +67,8 @@
 | `w3_reseed/seed0_single.log` | `--seed 0 --critic-kind single`（9.3 步） | W3 README 「单单元 Critic」那张表配的记录 |
 | `w1_seeds/` + `w1_seeds.log` | **W1 的多随机种子扫描**（种子 0–4，论文的 5 种子口径） | W1 README 的「多随机种子」表与边界第 2 条逐字出自它：均值 **0.9774**、极差 **0.14** 个百分点 |
 | `w1_ablation/` + `w1_ablation.log` | **W1 的消融对照**（5 条臂 × 种子 0）。每条臂对应论文 Table 4/Table 3 里 MNIST 的某一列，映射见 `research/ib_hebbian/ablation.py` | W1 README 的已知边界第 5 条逐字出自它。两处值得记：① `baseline` 臂是空覆盖，跑出 **0.9779**，与验收配置逐字一致；② `divnorm_off` 臂**发散了**——局部目标第 10 轮触底后一路上爬，所以那个 0.9261 **不能当作一次有效读数**，「那条列没复现」的结论就是从这个 log 的逐轮目标读出来的 |
-| `w2_seeds/` + `w2_seeds.log` | **W2 的多随机种子扫描**（种子 0–4，sMNIST）。每个 json 另外带 `curve`（逐 epoch 验证准确率） | W2 README 的「已知边界」第 3 条与 `figures/f2-w2-epoch-accuracy.png` 都出自它：均值 **0.7764**、极差 **1.79** 个百分点 |
+| `w2_seeds/` + `w2_seeds.log` | **W2 的多随机种子扫描**（种子 0–4，sMNIST）。每个 json 另外带 `curve`（逐 epoch 验证准确率） | W2 README 的「已知边界」第 3 条出自它：均值 **0.7764**、极差 **1.79** 个百分点。`figures/f2-w2-epoch-accuracy.png` 里**红色那条 30 epoch 曲线**（虚线、空心圆、止于第 30 轮）也出自它 |
+| `w2_seeds_100ep/` + `w2_seeds_100ep.log` | **W2 的 100 epoch 追加批**——同一批种子 0–4、同一份代码，**只把 epoch 预算从 30 放到 100**。每个 json 带 100 个 `curve` 点 | 与 `w2_seeds/` **逐种子配对**：截断的代价均值 **+7.55** 个百分点（最小 +6.05、最大 +8.66，5 对）。**前 30 轮与 30 epoch 批逐点相同**（5/5 种子 × 30/30 轮，两次独立运行），所以 30 epoch 的数字是这条轨迹的**前缀**，不是另一个结果——`figures/f2-w2-epoch-accuracy.png` 里**蓝色那条 100 epoch 曲线**与图上的数字框都出自它。⚠️ 到第 100 轮**仍未收敛**（最后 20 轮**窗口均值**的增量在 5 个种子上全为正：+0.0084 … +0.0147。判据取窗口均值而不是「最后一轮的增量」——后者是噪声，跨种子均值曲线第 100 轮是 −0.0003），所以 100 epoch 也**仍是预算截断的结果** |
 | `w2_seeds_nocurve/` + `w2_seeds_nocurve.log` | **同一配置的独立复现批**（跑在加逐 epoch 记录之前，所以**没有** `curve` 字段） | 交叉核对：均值 **0.7764**，与正式那批差 0.00 个百分点 |
 | `w2_bptt.log` | **e-prop vs BPTT 的量化差距报告**（同架构/同损失/同预算/同 seed，唯一差别是学习规则）。**只有日志、没有 json** —— `bptt_baseline.py` 只打印 | W2 README 已知边界第 6 条逐字出自它：e-prop **0.5274** vs BPTT **0.7602**，差距 **+0.2328** |
 
