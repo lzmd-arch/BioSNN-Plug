@@ -1,4 +1,14 @@
-# 统一换行为 LF，避免 Windows/Linux 协作者之间的整文件 diff
+# 统一换行为 LF，避免 Windows/Linux 协作者之间的整文件 diff。
+#
+# 这条 `eol=lf` 会**压过** `core.autocrlf`：Git for Windows 在系统级 gitconfig 里默认把
+# `core.autocrlf` 设为 `true`（意为"检出时写 CRLF"），本仓库不依赖那个设置——检出与提交
+# 一律 LF。协作者不必改自己的全局配置，本文件已经管住了。
+#
+# 但有一个容易误判的副作用：若工作区里某个文件被编辑器写成了 CRLF，`git` 会因为 clean
+# filter 归一化而认为它**没改**（`git status` 干净、`git diff` 为空），然而
+# `pre-commit run --all-files` 的 mixed-line-ending 钩子会把它就地改成 LF，于是一次跑出
+# 上百个文件的 diff，看起来像钩子坏了——其实只是把工作区拉回本文件规定的一致状态。
+# 所以**验证某个钩子时只跑那一个 id**，别用 `--all-files` 顺手跑全套。
 * text=auto eol=lf
 
 # 二进制文件不参与换行转换
