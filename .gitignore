@@ -76,6 +76,12 @@ desktop.ini
 site/
 docs/_build/
 
+# ---- CI artifact ----
+# scripts/gap_report.py 在 CI 里生成并上传，不入库：它由记录现算，
+# 入库反而会多出一份需要跟着记录走、却没人会去核对的副本。
+gap-report.md
+gap-report.json
+
 # ---- 环境变量 ----
 # 本项目不使用任何环境变量；这里只是防止贡献者把本地的 .env 误提交。
 .env

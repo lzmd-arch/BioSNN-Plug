@@ -93,6 +93,17 @@ repos:
         files: (\.md|README|CONTRIBUTING)$
         pass_filenames: false
 
+      # 「基线差距报告」的核对那一半——拦"文档引用的差距数字与记录脱钩"。
+      # 产出报告（artifact）的那一半在 CI 里，不进 pre-commit：钩子不该往工作区写文件，
+      # 所以这里跑的是 `--check`。
+      # 触发范围含 `.log`：记录本身改了，文档里的引用同样要跟着核。
+      - id: gap-report
+        name: 基线差距报告核对
+        entry: python scripts/gap_report.py --check
+        language: system
+        files: (\.md|\.log)$
+        pass_filenames: false
+
       # Colab notebook 由示例脚本生成，脚本是唯一真相源。这里自动重建，
       # 免得手写副本与脚本漂移——那正是"CI 绿但用户跑不通"的成因。
       - id: build-notebook

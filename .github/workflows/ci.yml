@@ -83,6 +83,37 @@ jobs:
         # 这里补上真正跑一遍——from_torch 的内存别名 bug 就是这么漏掉的。
         run: uv run pytest -q packages/biosnn-bus/tests/test_types.py -k torch
 
+  # ── 计划书 §12.3：基线差距报告（CI artifact）──────────────────────────────
+  # 产出数字的是本机的 GPU 运行：那份完整对照（同架构/同损失/同预算/同 seed，唯一差别是
+  # 学习规则）在 GPU 上要 306 s，见 sweep_results/w2_bptt.log 的自证块，CPU 上还要慢若干倍，
+  # 且要先下 MNIST——放进 CI 既超时，也会把一个**只在那一个配置下成立**的数字伪装成
+  # CI 的产物。所以 CI 负责让那些数字**可追溯、不漂移**：报告由 sweep_results/ 里的记录
+  # 现算，并核对三语 README 引用的数字能不能追溯到**同一次**运行。
+  gap-report:
+    name: 基线差距报告
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --locked --group research
+      - name: 下载 MNIST（下面那条冒烟要用，约 10 MB）
+        run: uv run python scripts/download_data.py mnist
+      - name: 冒烟：产出差距的那条脚本还跑得起来
+        # 缩小规模（1 epoch × 256 样本 × 16 单元），**这里的数字不作数**，也刻意不写进
+        # sweep_results/——那是记录目录，塞一次没有意义的运行进去会污染追踪。
+        # 这一条只证明 bptt_baseline.py 没烂掉：它是那份报告的产出者，此前从没被 CI 碰过。
+        run: uv run python -m research.eprop.bptt_baseline --epochs 1 --n-train 256 --n-rec 16
+      - name: 生成报告，并核对文档引用的数字仍可追溯到记录
+        run: uv run python scripts/gap_report.py --out-dir .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gap-report
+          path: |
+            gap-report.md
+            gap-report.json
+
   # ── 计划书 §12.3：风格 ────────────────────────────────────────────────────
   lint:
     name: ruff（check + format）
