@@ -85,6 +85,28 @@
 > （换成实际在量的口径 / 第二阶段先添一个序列**预测**任务），**不预设选哪条、也不在本版实现**：
 > §七 的第一阶段成功标准只要求「e-prop RSNN 顺序任务可用」，现状不欠这个指标。
 
+> ⑱ **§2.3 模态表补入第四模态「气体」，编码方案已按论文定稿，实现走仓库外第三方包**：MOS 气体传感器阵列 / 电子鼻的
+>    响应曲线是**秒级**的时序信号，判别信息在**时间结构**里而不在空间帧结构里，故融合通道登记为**时间**（判据同
+>    `docs/plugin_guide.md` 的通道选择表，不是图像式的语义通道）。「编码方案」一列**已定稿**（不再是占位）：**中位线
+>    相对变化归一化 + 一阶差分阈值穿越（吸附/脱附双通道）+ 幅度量化群体编码**——其中归一化与时间尺度**直接取自论文**
+>    （表 1-2 的「分式差分」一行标注适用 MOX；§4.4.1「取动态检测波形的中位线为基准」；结论章认定的最优调制周期 20s），
+>    幅度量化的四项参数由论文的物理量程与时间常数反推。
+>    ⚠️ **「感知层学习规则」一列不由论文决定**：该论文走的是 FFT + DWT(db4) + PCA + GA-PNN / GRNN 的批处理管线，
+>    **全篇没有脉冲编码，也没有任何局部学习规则**，故这一列沿用本仓骨架统一的「核化 IB-Hebbian + 除法归一化」，
+>    并在 §2.3 表中显式标注其非论文来源，免被读成从该论文导出。**这是本表第一次出现"编码方案来自论文、学习规则不来自
+>    论文"的模态**，特此写明。
+>    实现以**独立分发包**形式提供、经 entry points（group `biosnn_bus.plugins`）接入，**本仓库零改动**：
+>    这正是 §12.5 与 `CONTRIBUTING.md`「第三方插件」一节承诺的通道，也是 §12.6「第 24 个月：外部贡献的模态插件 ≥ 1」
+>    那一格的第一个实例；归属裁决见 [ADR-0011](docs/adr/ADR-0011-gas-modality-as-out-of-repo-plugin.md)。
+>    排期见 §七 第二阶段，⚠️ **第一阶段一律不推进实现**（同 ⑪ 的处理）。
+>    ⚠️ 新增文献编号是 **[23]**、**不是 [22]**：[22] 已被本表 LSNN 条目（Bellec et al. 2018）占用，且已被
+>    `research/eprop/README.md` 正文四处引用，不可改号；计划书自身的参考文献列表止于 [21]，故按 [23] 追加会留一个
+>    可见空档——**编号以 `docs/references.md` 为准**。论文书目已按全文补入 [23]（张晓东，哈尔滨理工大学硕士学位论文，
+>    2024），三语登记见 `docs/references.md`。
+>    §12.3 表**不新增行**：该表登记的是「本仓 CI 实际跑什么」，而仓库外的包不进本仓 CI——加一行就是该表自己两次防过的
+>    那类缺陷（⑮「实际有、文档没有」与 ⑯「空头支票」）。唯一需显式交代的偏离是 §12.3「最小复现脚本」一行要求每篇
+>    核心文献对应一个 `examples/paper_<name>.py`：本包的对应脚本落在**仓库外包的 `examples/paper_zhang2024.py`**、不在本仓。
+
 ---
 
 ## 版本说明（v6.2，原样保留）
@@ -226,6 +248,7 @@ class ModalityPlugin(ABC):
 | 文本 | Token 嵌入 + 时间常数编码 | 核化 IB-Hebbian | 语义 |
 | 图像 | 差分编码 / DVS 事件流 | 核化 IB-Hebbian + 除法归一化 | 语义 |
 | 音频 | 耳蜗模型频率分解 | 核化 IB-Hebbian + 除法归一化 | 时间 |
+| 气体 | 中位线相对变化归一化 + 一阶差分阈值穿越（吸附/脱附双通道）+ 幅度量化群体编码 | 核化 IB-Hebbian + 除法归一化（**非**所引论文提供，见 ⑱） | 时间 |
 
 ---
 
@@ -523,7 +546,7 @@ class NeurogenesisController:
 
 ### 第二阶段：双规则协同 + 仲裁器（4-8 个月）
 
-**任务**：模态插件框架与双通道融合；文本 + 图像插件；TAAF 快速微调 [Shen et al., 2025]；ES 元学习仲裁器（先仅调节 Hebbian 与 e-prop 两规则）[Confavreux et al., 2025]；**感知层接入脉冲总线**——`research/ib_hebbian/` 改为消费 `biosnn-bus` 插件产出的 `SpikeTrain`（脉冲进、层内速率运算）。⚠️ 这一条补的是**架构连线**，**不是**把感知层换成脉冲神经元：Pogodin & Latham 的网络本身就是 LReLU 速率型，换成脉冲会脱离来源论文。
+**任务**：模态插件框架与双通道融合；文本 + 图像插件；TAAF 快速微调 [Shen et al., 2025]；ES 元学习仲裁器（先仅调节 Hebbian 与 e-prop 两规则）[Confavreux et al., 2025]；**感知层接入脉冲总线**——`research/ib_hebbian/` 改为消费 `biosnn-bus` 插件产出的 `SpikeTrain`（脉冲进、层内速率运算）。⚠️ 这一条补的是**架构连线**，**不是**把感知层换成脉冲神经元：Pogodin & Latham 的网络本身就是 LReLU 速率型，换成脉冲会脱离来源论文；**气体传感器插件**（MOS 阵列 / 电子鼻，第四模态，见 §2.3 模态表；依据 [张晓东, 2024]）——实现以**独立分发包**形式提供、经 entry points 接入，**本仓库零改动**（见 §12.5 与 `CONTRIBUTING.md` 的「第三方插件」一节）。它既是该通道的首次实测，也是 §12.6「第 24 个月：外部贡献的模态插件 ≥ 1」那一格的第一个实例。⚠️ 编码方案已按 [23] 定稿（归一化与时间尺度取自论文，幅度量化参数反推；该论文**不含脉冲编码、不含局部学习规则**，故「感知层学习规则」一列沿用本仓骨架），详见 §2.3 与版本说明 ⑱。⚠️ 本条是**排期**，**第一阶段一律不推进实现**（同 ⑪ 的处理）。
 
 **成功标准**：插件可独立替换，TAAF 微调样本量 < 从头训练 1/10；跨模态检索 R@1 50%+；仲裁器使双规则冲突事件减少 50% 以上。
 
@@ -804,4 +827,6 @@ BioSNN-Plug v6.3 的核心创新在于：**完全放弃代理梯度，采用三�
 [20] Graf, L., Su, Z., & Indiveri, G. (2024). EchoSpike Predictive Plasticity: An Online Local Learning Rule for Spiking Neural Networks. *arXiv preprint* arXiv:2405.13976. https://arxiv.org/abs/2405.13976 ；代码 https://github.com/Zhe-Su/ESPP （**v6.3 新增**：**"事件优先级"这个中文提法的原文出处**——§III-C 用输入活动阈值 + 损失阈值让规则自己决定哪些时间步才更新，原文 "ESPP intrinsically has the ability to selectively choose those time steps that matter the most"，实测 18%–27% 的时间步。SHD 上 84.32%。⚠️ 它是**另一条规则**（预测编码 + 对比编码的层间局部规则），不是 e-prop 的变体，别写进 §3.1 的 e-prop 链；⚠️ 论文脚注的 `largraf/EchoSpike` 已 404，权威仓库是 `Zhe-Su/ESPP`（Apache-2.0，LICENSE 的版权人一行仍是模板占位符）；⚠️ "ESPP" 是高频缩写（员工购股计划、欧洲粒子物理战略…），SNN 语境下才是这一个）
 
 [21] Frenkel, C. (2022). eprop-PyTorch: PyTorch implementation of the eligibility propagation (e-prop) learning algorithm. *GitHub Repository*. https://github.com/ChFrenkel/eprop-PyTorch （**v6.3 新增**：计划书 §1.4/§八 点名的"e-prop 实现参考"。**Apache-2.0**（版权人 University of Zurich），许可合规；但**非官方**（官方是 [15]）、**非 PyPI、无 tag/release**（只能锚 commit `0f32a8f2`，2022-02-18 单一提交）、全仓只有 **LIF 且已显式移除 ALIF**、任务只有证据累积一种。⚠️ **ALIF 的对照物只能用 [15] 与 [1] 原文**——[ADR-0008](docs/adr/ADR-0008-spikingjelly-license-and-python-floor.md) 决策 3 里"拿它的源码核对 ALIF 资格痕迹"一句已在该 ADR 的后续更正注记中撤回） （**v6.3 新增**：LICENSE 正文是标准 **BSD-3-Clause**（GitHub API 标 `NOASSERTION` 只因版权头格式非标准，不是许可证不明），与 Apache-2.0 兼容。**仅作阅读参考与交叉验证，不进依赖**——与 [14] 同样处理）
+
+[23] 张晓东. (2024). 基于低频温度调制的半导体气体传感器 GA-PNN 识别算法研究 [D]. 哈尔滨: 哈尔滨理工大学. https://kns.cnki.net/ （**v6.3 新增**：§2.3 模态表第四模态「气体」的**表征来源**——表 1-2 的「分式差分」归一化、§4.4.1 的中位线基准、结论章认定的最优调制模式 4-5V / 20s。⚠️ 该论文**不含脉冲编码、不含任何局部学习规则**，走的是 FFT + DWT(db4) + PCA + GA-PNN / GRNN 批处理管线，故 §2.3 的「感知层学习规则」一列**不是**从它导出的，见版本说明 ⑱。⚠️ **编号跳过 [22]**：`docs/references.md` 的 [22] 是 Bellec et al. (2018) LSNN（`research/eprop/README.md` 正文四处引用），不可改号；本表未引 [22]，**编号一律以 `docs/references.md` 为准**。⚠️ 不登记 CNKI 直链：详情页 URL 带会话 token，隔期即失效；标题 + 作者 + 学位授予单位足以在 CNKI 检索到。登记状态 `partial`（全文已取回、哈希已核对，但编码参数只部分可标定），全文 sha256 与逐项出处见仓库外 `D:\Projects\BioSNN-GasSensor\refs\README.md`）
 
