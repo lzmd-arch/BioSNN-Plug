@@ -209,19 +209,35 @@ jobs:
           # 403 也放行：ACM DL / Nature / IEEE 会对自动化检查返回 403，
           # 那说明"服务器拒绝了我们"，而不是"链接是错的"。真正的 404 仍然会失败。
           #
-          # 唯一一条 URL 级排除：`https://doi.org/10.1613/jair.3912`。它是全仓唯一一处
+          # URL 级排除共两条，都是**传输层/路由问题，不是死链**：
+          #
+          # ① `https://doi.org/10.1613/jair.3912`。它是全仓唯一一处
           # "引用他人原文里的 DOI"——出现在 research/eprop/README.{md,en,ja} 的逐字引用块
           # （e-prop 论文 Data availability 原文）里，不是本仓库主张的链接。
           # doi.org → jair.org 对 lychee 稳定返回 "HTTP/2 protocol error. Server may not
           # support HTTP/2 properly"（同一段引用里的 NIST DOI 正常通过），连续两次重跑
           # 复现，不是抖动。已手工核实链接本身是活的：curl -L 跟随重定向得 200，终点
-          # https://jair.org/index.php/jair/article/view/10819 —— 是检查器的传输层问题，
-          # 不是死链。只排除这一个 URL，不排除域名：jair.org 上的其他链接仍会被检查。
+          # https://jair.org/index.php/jair/article/view/10819。
+          #
+          # ② `https://kns.cnki.net/`。引用清单 [23]（张晓东 2024，CNKI 上的中文学位论文）
+          # 的检索入口。CI runner 侧 TLS 校验失败，逐字为：
+          #   failed to verify TLS certificate: certificate not valid for name "kns.cnki.net";
+          #   certificate is only valid for DnsName("*.cdn.myqcloud.com"), ...
+          # 即该域名在 runner 上被解析到腾讯云 CDN 边缘节点，那张通配符证书不覆盖
+          # kns.cnki.net——与 ① 同类，是 CDN 路由问题而非死链。本地实测 curl -L 得 200
+          # （国内外走的是不同的 CDN 节点，本地证书正确）。另外 CNKI 对自动化客户端还会
+          # 重定向到验证码页（/verify/home?captchaType=blockPuzzle），所以这条链接本来就
+          # 只能当"检索入口"用，不是可抓取的资源地址。
+          #
+          # 两条都**只排除 URL 本身，不排除域名**：jair.org 与 cnki.net 上的其他链接仍会被
+          # 检查。加新排除前请先按 ① 的标准核实：链接本身是活的，失败可稳定复现，且原因
+          # 在传输层而非 HTTP 状态码。
           args: >-
             --no-progress
             --max-concurrency 8
             --accept 200,206,429,403
             --exclude '^https://doi\.org/10\.1613/jair\.3912$'
+            --exclude '^https://kns\.cnki\.net/?$'
             --exclude-path .venv
             --exclude-path node_modules
             './**/*.md'
