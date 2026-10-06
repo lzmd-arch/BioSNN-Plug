@@ -39,3 +39,4 @@
 | [ADR-0008](ADR-0008-spikingjelly-license-and-python-floor.md) | SpikingJelly 采用 OIOSL 1.0，并据此提升开发环境 Python 下限 | 已采纳 |
 | [ADR-0009](ADR-0009-w3-behaviour-policy-and-trace-centring.md) | W3 的行为策略改为 Boltzmann 采样，并按采样概率中心化资格痕迹 | 已采纳 |
 | [ADR-0010](ADR-0010-eprop-quadratic-storage-and-trace-propagation.md) | e-prop 的二次存储成立，但 §3.1 的补救措施（上 Trace Propagation）不采纳 | 已采纳 |
+| [ADR-0011](ADR-0011-gas-modality-as-out-of-repo-plugin.md) | 气体（化学传感）模态以仓库外第三方包提供，不进 packages/ | 已采纳 |
