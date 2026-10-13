@@ -150,7 +150,12 @@ def _via_pulse_bus(
         rows = []
         for i in range(x.shape[0]):
             current = bus.step({plugin.modality_name: raw[i]})
-            rate = np.asarray(current.data, dtype=np.float64).mean(axis=0)
+            # ⚠️ **`bus.step` 的输出是 ±1 投影电流，不是脉冲**（`is_binary=False`，
+            # 取值范围能到 ±20）。直接 `.mean(axis=0)` 拿到的是**电流的均值**，
+            # 不是发放率——这个错在 `encode_batch` 的第一版犯过一次，这里是第二次。
+            # 正确做法是先二值化（`.binary()`）把电流还原成"该神经元有没有被推高"，
+            # 再沿时间求发放率。
+            rate = np.asarray(current.binary(threshold=0.0).data, dtype=np.float64).mean(axis=0)
             rows.append(rate[:n_in])
         return torch.from_numpy(np.stack(rows, axis=0)).to(torch.float32)
 
