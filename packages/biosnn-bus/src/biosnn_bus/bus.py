@@ -125,6 +125,9 @@ class SparseRandomProjection:
         self.in_dim = int(in_dim)
         self.out_dim = int(out_dim)
         self.density = float(density)
+        # 种子留档：只用它建权重然后丢掉，等于「逐位可复现」无从核对
+        # （见 ADR-0012 补记：随机投影的种子必须进 config dump）。
+        self.seed = int(seed)
 
         rng = np.random.default_rng(seed)
         n_per_input = max(1, round(self.out_dim * self.density))
@@ -156,7 +159,7 @@ class SparseRandomProjection:
     def __repr__(self) -> str:
         return (
             f"SparseRandomProjection({self.in_dim} -> {self.out_dim}, "
-            f"density={self.density:g}, n_connections={self.n_connections})"
+            f"density={self.density:g}, seed={self.seed}, n_connections={self.n_connections})"
         )
 
 
@@ -412,6 +415,17 @@ class SpikeBus:
             self._projections[cache_key] = projection
         return projection
 
+    def _projection_seed_dump(self) -> dict[str, Any]:
+        """把每个投影矩阵的派生输入与结果列出来，供 config dump 记录。
+
+        键是缓存键的可读形式，值是派生出的种子。**没注册任何模态时返回空**——
+        投影矩阵是懒建的，还没建就没有可记的。
+        """
+        out: dict[str, Any] = {}
+        for key, projection in sorted(self._projections.items(), key=lambda kv: str(kv[0])):
+            out[str(key)] = {"seed": projection.seed, "in_dim": projection.in_dim}
+        return out
+
     def _derive_seed(self, key: tuple[Any, ...]) -> int:
         tag = "|".join([str(self.seed), *[str(part) for part in key]]).encode()
         return zlib.crc32(tag)
@@ -426,7 +440,13 @@ class SpikeBus:
     # ------------------------------------------------------------ 自省
 
     def describe(self) -> dict[str, Any]:
-        """返回总线当前状态的摘要，便于打日志与写实验记录。"""
+        """返回总线当前状态的摘要，便于打日志与写实验记录。
+
+        ⚠️ **含投影矩阵的派生种子**（``projection_seeds``）：随机投影的种子从
+        ``(bus seed, 通道, 模态名, 维度)`` 用 ``zlib.crc32`` 派生，所以**换一组模态名
+        就会换掉投影矩阵而表面看不出来**。把派生输入与结果一起记进 config dump，
+        「逐位可复现」才成立（见 ADR-0012 补记）。
+        """
         by_channel: dict[str, list[str]] = {c.value: [] for c in FusionChannel}
         for name, plugin in self._plugins.items():
             by_channel[plugin.channel.value].append(name)
@@ -435,6 +455,7 @@ class SpikeBus:
             "dt": self.dt,
             "seed": self.seed,
             "projection_density": self.projection_density,
+            "projection_seeds": self._projection_seed_dump(),
             "strategy": type(self.strategy).__name__,
             "modalities": {
                 name: {

@@ -26,6 +26,7 @@ from biosnn_bus import (
     SpikeTrain,
     UnknownModalityError,
 )
+from biosnn_bus.plugins import MnistPulsePlugin
 from helpers import ConstantPlugin, make_pattern
 
 
@@ -366,3 +367,41 @@ class TestMembraneAccess:
         bus.register(plugin)
         assert isinstance(plugin.get_membrane(), PassThroughMembrane)
         assert isinstance(plugin, ModalityPlugin)
+
+
+class TestProjectionSeedDump:
+    """随机投影的种子必须进 config dump（ADR-0012 补记）。
+
+    ⚠️ **hazard 是真的**：派生种子依赖 `(bus seed, 通道, 模态名, 维度)`，所以
+    **只把注册名改一下，投影矩阵就静默换了**——表面看不出来，而下游数值全变。
+    """
+
+    def _bus(self, name="mnist_pulse"):
+        bus = SpikeBus(bus_dim=64, seed=0)
+        bus.register(MnistPulsePlugin(height=28, width=28, n_steps=4, seed=0), name=name)
+        bus.step({name: np.zeros((28, 28))})
+        return bus
+
+    def test_projection_seeds_are_dumped(self):
+        dump = self._bus().describe()["projection_seeds"]
+        assert dump, "投影矩阵已建，却没记进 config dump"
+        for info in dump.values():
+            assert isinstance(info["seed"], int)
+            assert info["in_dim"] > 0
+
+    def test_renaming_the_modality_changes_the_projection_seed(self):
+        """同插件、同 bus seed，只改注册名 → 派生种子不同。"""
+        a = self._bus("mnist_pulse").describe()["projection_seeds"]
+        b = self._bus("text_like").describe()["projection_seeds"]
+        assert {v["seed"] for v in a.values()} != {v["seed"] for v in b.values()}
+
+    def test_same_name_same_seed_is_reproducible(self):
+        """同名、同 seed → 派生种子逐位相同。"""
+        a = self._bus("mnist_pulse").describe()["projection_seeds"]
+        b = self._bus("mnist_pulse").describe()["projection_seeds"]
+        assert a == b
+
+    def test_projection_remembers_its_own_seed(self):
+        proj = SparseRandomProjection(4, 8, density=0.5, seed=12345)
+        assert proj.seed == 12345
+        assert "seed=12345" in repr(proj)

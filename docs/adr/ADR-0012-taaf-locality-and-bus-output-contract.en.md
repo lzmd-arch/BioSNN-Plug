@@ -69,3 +69,29 @@ Warning: **do not change `SparseRandomProjection` semantics before this is decid
 **The open third constraint** is a real phase-two gap: the current projection matrix is random and **never optimised for a task**. If cross-modal retrieval R@1 50%+ (the §7 success criterion) cannot be reached, look here first.
 
 **The project plan's wording needs to change**: §7 phase two's "TAAF quick fine-tuning" should become "**implement TAAF temporal-attention fusion** (rate-based gating, no backpropagation)" -- "quick fine-tuning" assumes TAAF already exists.
+
+## Addendum (2026-10-13): the projection-layer training rule is decided
+
+The open question in section 3 above is now closed by the three phase-two rulings (see project
+plan revision note (24)):
+
+**A (fixed-seed random projection) is the phase-two default.** The reasoning follows the
+project's usual approach -- ship the simplest working solution first, and turn "does
+trainability help?" into an **experiment** rather than an assumption. The Echo State / FlyHash
+tradition shows random projections are startlingly strong: zero training, zero stability risk,
+**bit-for-bit reproducible** (fixed seed), and it immediately unlocks TAAF's C3 integration.
+
+**B (IB-Hebbian) is scheduled as a phase-two ablation.** "Does a locally-trainable projection
+beat a random one?" is a **research question, not an engineering one** -- A first, then B, same
+configuration, matched comparison; the same design as W1's ridge-vs-SGD readout comparison.
+
+**C (simple local normalization) is absorbed and struck from the candidate list.** Normalization
+is not a standalone candidate but a **shared implementation detail** of A and B (divisive
+normalization, already required by Pogodin & Latham).
+
+Warning: **the random projection's seed must go into the config dump.** That is the premise of
+A's "bit-for-bit reproducibility", and a hard requirement of the reproducibility record -- a seed
+that lives only in code and not in the artifact is no reproducibility guarantee at all. Currently
+`SparseRandomProjection` derives its seed via `zlib.crc32` from `(bus seed, channel, modality name,
+dimension)`; **those derivation inputs should also go into the config dump**, otherwise renaming a
+modality silently changes the projection matrix and nobody notices.
