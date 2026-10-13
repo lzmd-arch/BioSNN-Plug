@@ -11,6 +11,11 @@ Table 4/5 数值与两句逐字引文），于是把它做成检查。
 
 本脚本查两类问题：
 
+0. **无表头的表块**（被空行切断的续表）。GFM 要求表头行后跟分隔行才算表；
+   一个只剩数据行的块**根本不会被渲染成表格**，在 GitHub 上是一堆竖线文本。
+   这是 2026-10-13 在 `docs/references.md` 上真发生过的：文献表中间一个空行，
+   编号 16–23 那半张表渲染不出来，而当时的检查器只看「表头格数」，看不见它。
+
 1. **整行格数与表头不符**。多出来的部分会被渲染丢弃，是内容凭空消失的直接原因；
    少则会被补空单元格，通常意味着漏写了一个分隔竖线。
 2. **反引号内的未转义竖线**。代码段里的 ``|`` 一定会切开单元格，几乎总是笔误；
@@ -126,6 +131,34 @@ def preview(text: str) -> str:
     return text[:PREVIEW_WIDTH] + "…"
 
 
+def check_orphan_blocks(findings: list[str], lines: list[str], label: str) -> None:
+    """找出**没有表头分隔行**的 ``|`` 行块——多半是被空行切断的续表。
+
+    判据保守：块至少 2 行、每行至少 3 格（不像 ASCII 图），且第二行不是分隔行。
+    这种块在 GitHub 上**不会渲染成表**，内容以一堆竖线文本出现。
+    ⚠️ **已知局限：单行的孤立 `|` 块不报。** 一行的 `|` 行本就不像表格，报它会误伤
+    ASCII 图；代价是「表只剩 1 个数据行、被空行切断」这一种会漏。按「宁可漏、不可误报」取舍。
+    """
+    index = 0
+    while index < len(lines):
+        if not is_table_line(lines[index]):
+            index += 1
+            continue
+        start = index
+        while index < len(lines) and is_table_line(lines[index]):
+            index += 1
+        block = lines[start:index]
+        if len(block) < 2:
+            continue
+        second_is_separator = TableRow(block[1]).is_separator()
+        wide_enough = all(TableRow(row).cell_count >= 3 for row in block)
+        if not second_is_separator and wide_enough:
+            findings.append(
+                f"{label}:{start + 1} 这段 {len(block)} 行**没有表头分隔行**，"
+                "GFM 不会把它渲染成表格——多半是表被空行切断了，续表接不回主表。"
+            )
+
+
 def check_file(findings: list[str], path: Path, root: Path) -> int:
     """检查一个文件，返回发现的表格张数。"""
     lines = path.read_text(encoding="utf-8").splitlines()
@@ -136,6 +169,7 @@ def check_file(findings: list[str], path: Path, root: Path) -> int:
 
     tables = 0
     index = 0
+    check_orphan_blocks(findings, lines, label)
     while index < len(lines) - 1:
         header = TableRow(lines[index])
         if not is_table_line(lines[index]) or not TableRow(lines[index + 1]).is_separator():

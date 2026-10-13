@@ -44,7 +44,7 @@ project may enter a dependency, which may not be copied at all), are in
 
 | | Purely local learning | Modality plugins | Autonomous triggering | Continual learning | Open-source framework |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **Javis** | ✅ STDP family throughout, no backprop (12 selectable) | ✗ | ✗ | ✗ | ◐ Rust, but **PolyForm noncommercial** |
+| **Javis** | ◐ STDP family throughout, no backprop (12 selectable); warning: **its own `iter-45` reward benchmark puts neither arm above chance** (README verbatim "neither arm reaches above-chance accuracy") | ✗ | ✗ | ✗ | ◐ Rust, but **PolyForm noncommercial** |
 | **EMBER** | ◐ STDP + eligibility traces x dopamine gating | ✗ (text only) | ◐ observational, **N=1** | ✗ | ✗ no public repo |
 | **MEMBRAIN** | ◐ Voja + PES | ✗ | ✗ | ◐ claims disagree with implementation | ✅ Nengo (MIT) |
 | **eprop-PyTorch / ESPP** | ✅ e-prop; ESPP is a separate parallel rule | ✗ | ✗ | ✗ | ◐ code fragments, not a framework |
@@ -74,7 +74,7 @@ precisely so this table cannot be read as "we have already done it".
 | Criterion | Status |
 | :--- | :--- |
 | Plugins replace independently | ✅ Three plugins + entry points; skeleton library is on PyPI |
-| TAAF fine-tuning samples < 1/10 of from-scratch | ⚠️ **Reworded to "TAAF needs no fine-tuning"** — fusion weights are not trained at all, per the red line. Warning: this **lowers the bar**; see plan revision note 27 |
+| TAAF fine-tuning samples < 1/10 of from-scratch | ⚠️ **The criterion dissolves under [ADR-0012](docs/adr/ADR-0012-taaf-locality-and-bus-output-contract.en.md); it is not met** — fusion weights are never trained, per the red line, so the criterion **has no referent** (no fine-tuning means no "fine-tuning sample count"). See plan revision note 27 |
 | Cross-modal retrieval R@1 50%+ | ❌ **Dataset and protocol scope missing** (the protocol code exists; the data does not) |
 | Arbiter cuts dual-rule conflict events by 50%+ | ✅ Met on a **real shared synapse** (10 -> 0, `retention` 0.3) |
 

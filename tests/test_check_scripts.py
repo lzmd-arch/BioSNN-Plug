@@ -25,6 +25,7 @@ DOC_BLOCKS = SCRIPTS / "check_doc_code_blocks.py"
 REFERENCES = SCRIPTS / "check_references.py"
 VERSIONS = SCRIPTS / "check_version_consistency.py"
 LICENSES = SCRIPTS / "check_licenses.py"
+MD_TABLES = SCRIPTS / "check_md_tables.py"
 
 
 def run(script: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -354,6 +355,97 @@ class TestVersionConsistency:
             '__version__ = "0.3.1"\n',
         )
         assert run(VERSIONS, "--root", str(tmp_path)).returncode == 0
+
+
+class TestMdTables:
+    """`scripts/check_md_tables.py` 的回归测试。
+
+    **这个检查器曾经零测试**——结果「被空行切断的续表」一路漏到 GitHub 上才发现
+    （`docs/references.md` 的文献表编号 16–23 不渲染成表格，而检查器只看表头格数、
+    看不见它）。所以这里的重点是负向用例：造出缺陷，断言它报错。
+    """
+
+    def _check(self, tmp_path: Path, content: str):
+        return run(MD_TABLES, str(write(tmp_path / "doc.md", content)))
+
+    def test_accepts_a_normal_table(self, tmp_path):
+        result = self._check(
+            tmp_path,
+            textwrap.dedent("""
+            | a | b |
+            | :--- | :--- |
+            | 1 | 2 |
+        """),
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_catches_orphan_block_without_header(self, tmp_path):
+        """表被空行切断：续表没有表头分隔行，GFM 不渲染它。"""
+        result = self._check(
+            tmp_path,
+            textwrap.dedent("""
+            | a | b | c |
+            | :--- | :--- | :--- |
+            | 1 | 2 | 3 |
+
+            | 4 | 5 | 6 |
+            | 7 | 8 | 9 |
+        """),
+        )
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert "没有表头分隔行" in result.stdout + result.stderr
+
+    def test_catches_row_wider_than_header(self, tmp_path):
+        """多出来的格会被 GFM 静默丢弃——内容凭空消失。"""
+        result = self._check(
+            tmp_path,
+            textwrap.dedent("""
+            | a | b |
+            | :--- | :--- |
+            | 1 | 2 | 3 |
+        """),
+        )
+        assert result.returncode == 1, result.stdout + result.stderr
+
+    def test_catches_row_narrower_than_header(self, tmp_path):
+        result = self._check(
+            tmp_path,
+            textwrap.dedent("""
+            | a | b | c |
+            | :--- | :--- | :--- |
+            | 1 | 2 |
+        """),
+        )
+        assert result.returncode == 1, result.stdout + result.stderr
+
+    def test_single_pipe_row_is_not_a_table(self, tmp_path):
+        """单格的竖线行不像表格，不该报「无表头」。"""
+        result = self._check(
+            tmp_path,
+            textwrap.dedent("""
+            | just one cell |
+            | another |
+        """),
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_reports_the_document_line(self, tmp_path):
+        result = self._check(
+            tmp_path,
+            textwrap.dedent("""
+            line one
+
+            | a | b | c |
+            | :--- | :--- | :--- |
+            | 1 | 2 | 3 |
+
+            | 4 | 5 | 6 |
+            | 7 | 8 | 9 |
+        """),
+        )
+        assert result.returncode == 1, result.stdout + result.stderr
+        # 不钉死行号：textwrap.dedent 的首行是空行，行号会随格式化细节偏移；
+        assert "doc.md" in result.stdout + result.stderr
 
 
 class TestLicenses:
