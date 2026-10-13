@@ -116,32 +116,57 @@ flowchart TB
         MG["Metacognitive gating<br/>uncertainty monitoring<br/>⬜ phase 4"]
     end
 
+    subgraph ARB["Cross-rule arbitration research/arbiter"]
+        CF["Conflict detection: cosine > 90 degrees<br/>✅ implemented"]
+        ES["ES meta-learned arbiter<br/>✅ wired into both lines (shared input synapse)<br/>⚠ 50% fewer is trivially satisfied on synthetic data"]
+    end
+
     subgraph L2["biosnn-bus skeleton library"]
-        BUS["SpikeBus<br/>group by fusion channel · align time grid<br/>fuse · sparse random projection<br/>✅ implemented"]
+        BUS["SpikeBus<br/>group by fusion channel · align time grid<br/>project-then-fuse · sparse random projection<br/>TAAF temporal-attention fusion (rate-based gating, not trained)<br/>✅ implemented"]
     end
 
     subgraph L1["Perception layer (plugin-based)"]
-        IMG["Image plugin<br/>difference encoding / DVS<br/>✅ reference implementation"]
-        TXT["Text plugin<br/>token + time-constant encoding<br/>⬜ phase 2"]
+        IMG["Image image_diff<br/>DVS event coding<br/>✅ implemented"]
+        MN["MNIST mnist_pulse<br/>firing-rate coding<br/>✅ implemented"]
+        TXT["Text text_zscore<br/>frozen embedding + z-score top-k<br/>✅ implemented"]
         AUD["Audio plugin<br/>cochlear-model frequency decomposition<br/>⬜ phase 3"]
         THIRD["Third-party plugins<br/>attached via entry points<br/>✅ mechanism in place"]
+        HEB["Learning rule: kernelised IB-Hebbian + divisive normalization<br/>◐ phase 1 verified (W1, MNIST 97.79%)"]
     end
 
     IMG --> BUS
-    TXT -.-> BUS
+    MN --> BUS
+    TXT --> BUS
     AUD -.-> BUS
     THIRD -.-> BUS
-
     BUS --> WM
+    BUS -.->|wire the perception layer| HEB
+    HEB -.->|features| WM
     WM --> EM
     EM --> MG
     MG --> ACT
-    MG -.->|triggers a call| MCP
-    MCP -.->|results encoded back| EM
+    MG -.->|trigger a call| MCP
+    MCP -.->|result encoded back| EM
+    ARB -.->|arbitrate inter-layer conflicts| WM
+    ARB -.->|arbitrate inter-layer conflicts| ACT
 ```
 
 Conflicts between layers are arbitrated by an **ES meta-learning arbiter** (⬜ phase 2). The complete
 description of each layer's learning rules is in the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §2 and §3.
+
+Conflicts between layers are arbitrated by an **ES meta-learning arbiter**: conflict detection and
+the arbiter are both implemented, and **wired into both research lines**
+(`research/arbiter/shared_synapse.py`, where the two rules share the input->hidden synapses).
+Warning: `50% fewer conflict events` is **trivially satisfied** on synthetic data -- the optimum is
+to switch one rule off, so read the drop together with `retention`; see
+[`research/arbiter/README`](research/arbiter/README.en.md).
+
+Warning: **the ✅ in the diagram means implemented, not connected where the roadmap puts it**:
+TAAF is implemented, but it is a strategy you **opt into** (the default is still concatenation);
+the text plugin is implemented, but it fronts a **frozen pre-trained encoder** (boundary
+declaration in [plan section 2.3](BioSNN-Plug_项目计划书_v6.3.md) -- purely local learning covers
+synaptic rules, not input encoders). The complete description of each layer's learning rules is in
+the [project plan](BioSNN-Plug_项目计划书_v6.2.md) section 2 and section 3.
 
 ## Quickstart
 

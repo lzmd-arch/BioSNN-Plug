@@ -97,31 +97,45 @@ flowchart TB
         MG["元认知门控<br/>不确定性监控<br/>⬜ 第四阶段"]
     end
 
+    subgraph ARB["跨规则仲裁 research/arbiter"]
+        CF["冲突判定：余弦 > 90°<br/>✅ 已实现"]
+        ES["ES 元学习仲裁器<br/>✅ 已接进两条线（共享输入突触）<br/>⚠️「减少 50%」在合成数据上平凡成立"]
+    end
+
     subgraph L2["骨架库 biosnn-bus"]
-        BUS["SpikeBus<br/>按融合通道分组 · 时间网格对齐<br/>融合 · 稀疏随机投影<br/>✅ 已实现"]
+        BUS["SpikeBus<br/>按融合通道分组 · 时间网格对齐<br/>先投影后融合 · 稀疏随机投影<br/>TAAF 时间注意力融合（rate-based gating，不训练）<br/>✅ 已实现"]
     end
 
     subgraph L1["感知层（插件化）"]
-        IMG["图像插件<br/>差分编码 / DVS<br/>✅ 参考实现"]
-        TXT["文本插件<br/>Token + 时间常数编码<br/>⬜ 第二阶段"]
+        IMG["图像 image_diff<br/>DVS 事件编码<br/>✅ 已实现"]
+        MN["MNIST mnist_pulse<br/>发放率编码<br/>✅ 已实现"]
+        TXT["文本 text_zscore<br/>冻结 embedding + z-score top-k<br/>✅ 已实现"]
         AUD["音频插件<br/>耳蜗模型频率分解<br/>⬜ 第三阶段"]
         THIRD["第三方插件<br/>entry points 接入<br/>✅ 机制已就绪"]
+        HEB["学习规则：核化 IB-Hebbian + 除法归一化<br/>◐ 第一阶段已验证（W1，MNIST 97.79%）"]
     end
 
     IMG --> BUS
-    TXT -.-> BUS
+    MN --> BUS
+    TXT --> BUS
     AUD -.-> BUS
     THIRD -.-> BUS
 
     BUS --> WM
+    BUS -.->|接入脉冲总线| HEB
+    HEB -.->|特征| WM
     WM --> EM
     EM --> MG
     MG --> ACT
     MG -.->|触发调用| MCP
     MCP -.->|结果编码回注| EM
+    ARB -.->|调停层间冲突| WM
+    ARB -.->|调停层间冲突| ACT
 ```
 
-层间冲突由 **ES 元学习仲裁器**调节（⬜ 第二阶段）。各层学习规则的完整说明见[计划书](BioSNN-Plug_项目计划书_v6.2.md) §2、§3。
+层间冲突由 **ES 元学习仲裁器**调节：冲突判定与仲裁器都已实现，并**已接进两条研究线**（`research/arbiter/shared_synapse.py`，两条规则共享输入→隐藏那一组突触）。⚠️ 但「冲突事件减少 50%」在合成数据上是**平凡成立**的——最优解是把一条规则关掉，所以降幅要与 `retention` 一起读；详见 [`research/arbiter/README`](research/arbiter/README.md)。
+
+⚠️ **图里的 ✅ 是「已实现」，不等于「已接入路线图上的那个位置」**：例如 TAAF 已实现，但它是**显式选用**的融合策略（默认仍是拼接）；文本插件已实现，但它接的是**冻结的预训练前端**（边界声明见[计划书 §2.3](BioSNN-Plug_项目计划书_v6.3.md)——「纯局部学习」只管突触学习规则，不管输入编码器）。各层学习规则的完整说明见[计划书](BioSNN-Plug_项目计划书_v6.2.md) §2、§3。
 
 ## 快速开始
 
