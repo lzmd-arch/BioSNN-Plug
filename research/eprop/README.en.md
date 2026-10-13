@@ -28,6 +28,23 @@ and both pass:
 on the same seeds, opening the budget to 100 epochs raises test accuracy to **85.19%** (mean over
 5 seeds) and it has **still not converged by epoch 100** -- see "Two budgets" below.
 
+**Added 2026-10-13: once the learning rate is opened up, this rule does converge.** Three batches
+run serially, 18.7 h in total, artifacts in `sweep_results/w2_lr001` ... `w2_lr010`, `w2_lif`,
+`w2_long`:
+
+| Batch | Configuration | Test accuracy (mean) |
+| :--- | :--- | ---: |
+| Learning-rate sweep | 30 epochs x 5 seeds, `eta_in = eta_rec` | 1e-3 -> 0.7564; 2e-3 -> 0.7764; 5e-3 -> 0.7983; **1e-2 -> 0.8002** |
+| LIF control | 30 epochs x 5 seeds, `--beta 0`, lr still 2e-3 | 0.7867 |
+| Extended budget | 250 epochs x 3 seeds, lr = 1e-2 | **0.8831** |
+
+Two points, both written into the known boundaries below: **the learning rate matters far more
+than the neuron model** -- moving lr from 2e-3 to 1e-2 alone is **+2.38 percentage points** at
+30 epochs; and **the 250-epoch setting finally converges** (last-20-epoch window-mean increments
++0.0016 / -0.0037 / +0.0025, both signs present), so "every W2 number is budget-truncated" **stops
+being true here**. There is also a **counter**-finding on boundary 8: at the default learning rate
+**LIF scores 1.04 points higher than ALIF**.
+
 ### Two budgets: 30 epochs (acceptance) and 100 epochs (opened up)
 
 Under the acceptance budget, validation accuracy rose from 0.4165 at epoch 1 to 0.7695 at epoch 30
@@ -178,6 +195,22 @@ uv run python -m research.eprop.train_sequential          # acceptance run (loca
 uv run python -m research.eprop.train_sequential --smoke  # CPU smoke, for CI only
 ```
 
+Multi-seed, multi-configuration batches go through `sweep_seeds.py` -- it **does not change the
+training logic**, it only swaps `args.seed` and forwards the remaining arguments to
+`train_sequential`:
+
+```bash
+# The three batches of 2026-10-13. Artifacts land in data/ first (gitignored) and are moved into
+# sweep_results/ afterwards -- landing in the repo mid-run makes provenance report a dirty
+# worktree, and every later record block gets stamped "conclusion not trustworthy"
+uv run python -m research.eprop.sweep_seeds --seeds 0-4 --epochs 30 --device cuda \
+    --learning-rate-in 5e-3 --learning-rate-rec 5e-3 --out-dir data/w2_lr005
+uv run python -m research.eprop.sweep_seeds --seeds 0-4 --epochs 30 --device cuda \
+    --beta 0 --out-dir data/w2_lif
+uv run python -m research.eprop.sweep_seeds --seeds 0-2 --epochs 250 --device cuda \
+    --learning-rate-in 1e-2 --learning-rate-rec 1e-2 --out-dir data/w2_long
+```
+
 The secondary dataset SHD needs a separate ~169 MB download:
 `uv run python scripts/download_data.py shd`. **It ran — and it did not learn**, see the
 "SHD cross-check" section below.
@@ -280,6 +313,16 @@ This section matters more than the conclusion.
    window gain is positive in all 5 seeds in both batches** (30-epoch batch +0.1247 … +0.1338;
    100-epoch batch +0.0084 … +0.0147) -- see "Two budgets". Every test accuracy W2 reports so far
    is therefore a **budget-truncated** figure, not the ceiling of this rule on sMNIST.
+
+   🔄 **Updated 2026-10-13: this limitation stops at the 250-epoch, lr=1e-2 setting.** The same
+   criterion (last-20-epoch window-mean increment) on
+   [`sweep_results/w2_long/`](../../sweep_results/w2_long/) gives **+0.0016 / -0.0037 / +0.0025**
+   (seeds 0-2) -- **both signs present, down at the noise floor** -- in direct contrast with the
+   100-epoch batch's "positive in all 5 seeds, +0.0084 … +0.0147". So **0.8831 is a converged
+   value, not another truncated one**. ⚠️ But that setting moved **two** variables at once (budget
+   30->250 and lr 2e-3->1e-2); the budget axis alone, at the same lr and the same seeds, is in
+   [`w2_lr010/`](../../sweep_results/w2_lr010/): 0.8036 at 30 epochs, so 250 epochs is worth
+   **+7.95 percentage points** net.
 3. **Multi-seed statistics now exist (5 seeds); but "better or worse than the paper" has no
    referent -- the paper never evaluated this task.** Same convention as W1
    (`uv run python -m research.eprop.sweep_seeds --seeds 0-4 --device cuda`):
@@ -424,6 +467,14 @@ This section matters more than the conclusion.
    - **The two arms use different learning rates** (e-prop 2e-3, BPTT 5e-3 -- each script's own
      default). So this is the gap "under each method's default learning rate", **not** the gap
      after hyperparameter alignment -- part of it may be nothing but the learning rate.
+     🔄 **2026-10-13: the magnitude is now measured.** The e-prop side alone was swept over four lr
+     values (30 epochs x 5 seeds) -- 1e-3 -> 0.7564, 2e-3 -> 0.7764, 5e-3 -> 0.7983, 1e-2 -> 0.8002.
+     **Moving lr from 2e-3 to 1e-2 alone is +2.38 percentage points**, so "part of it may be
+     nothing but the learning rate" is no longer a guess.
+     ⚠️ But you still **cannot** subtract that from 23.3: the gap report runs **10 epochs x 20k
+     samples** while this sweep is **30 epochs x 54k** -- two different budgets. Turning "how much
+     gap remains once the learning rate is aligned" into one number requires re-running the BPTT
+     arm at the **same budget**; that has not been done.
    - **e-prop is far from converged at this budget** (10 epochs x 20k samples), so a large part of
      the 23.3 points is "slow to converge", not "lower ceiling".
    - **Across budgets, the striking number is compute efficiency** (this is **not** a paired
@@ -444,3 +495,25 @@ This section matters more than the conclusion.
    does not yet exist". That statement has been superseded by this report.
 7. **A single hidden layer.** `EPropLearner` is one ALIF layer plus a linear readout. §2.2's
    cognitive core is a multi-layer RSNN; stacking layers is not implemented.
+8. **ALIF's gain over LIF is negative at the default learning rate -- and this is not settled.**
+   `--beta 0` degenerates `ALIFCell` into a LIF, which allows a same-architecture, same-budget,
+   same-seed control: [`sweep_results/w2_lif/`](../../sweep_results/w2_lif/) (30 epochs x 5 seeds,
+   lr 2e-3, LIF) against [`sweep_results/w2_lr002/`](../../sweep_results/w2_lr002/) (ALIF, same lr,
+   same seeds):
+
+   | Same lr = 2e-3 | Mean test accuracy | Range |
+   | :--- | ---: | :--- |
+   | LIF (beta=0) | **0.7867** | 0.7801-0.7899 |
+   | ALIF (beta=0.07) | 0.7764 | 0.7678-0.7857 |
+
+   **LIF scores 1.04 percentage points higher, and the two per-seed ranges do not overlap.** So at
+   the default learning rate the adaptation term is a drag; ALIF only overtakes LIF's 2e-3 score
+   once its lr is raised past 5e-3 (0.7983 / 0.8002).
+
+   ⚠️ **But "is ALIF worth it" cannot be answered yet.** **The LIF arm only ever ran at 2e-3; its
+   learning rate was never swept** -- and ALIF's +2.38 points came entirely from sweeping lr. For
+   "ALIF brings a gain" to hold, LIF needs a learning-rate sweep of the same size (about 4 values x
+   5 seeds); until then this item can only report the **single-point** fact that **at one shared
+   learning rate, LIF scores higher** -- it cannot be turned around into "LIF is better". This is
+   the same class of problem as item 3 (the activity fraction has no discriminating power):
+   **a choice treated as a premise of the acceptance configuration was itself never controlled.**

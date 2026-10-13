@@ -1,0 +1,299 @@
+W2 多随机种子：5 个种子（0–4），数据集 smnist，设备 cuda
+
+==============================================================================
+种子 0
+==============================================================================
+epoch   1  train_ce 1.9742  val_acc 0.4488
+epoch   2  train_ce 1.6419  val_acc 0.5095
+epoch   3  train_ce 1.4587  val_acc 0.5683
+epoch   4  train_ce 1.3292  val_acc 0.5972
+epoch   5  train_ce 1.2253  val_acc 0.6305
+epoch   6  train_ce 1.1414  val_acc 0.6432
+epoch   7  train_ce 1.0729  val_acc 0.6655
+epoch   8  train_ce 1.0193  val_acc 0.6858
+epoch   9  train_ce 0.9712  val_acc 0.6922
+epoch  10  train_ce 0.9323  val_acc 0.7123
+epoch  11  train_ce 0.8954  val_acc 0.7302
+epoch  12  train_ce 0.8607  val_acc 0.7328
+epoch  13  train_ce 0.8336  val_acc 0.7378
+epoch  14  train_ce 0.8060  val_acc 0.7560
+epoch  15  train_ce 0.7870  val_acc 0.7620
+epoch  16  train_ce 0.7673  val_acc 0.7580
+epoch  17  train_ce 0.7505  val_acc 0.7582
+epoch  18  train_ce 0.7375  val_acc 0.7555
+epoch  19  train_ce 0.7208  val_acc 0.7780
+epoch  20  train_ce 0.7063  val_acc 0.7750
+epoch  21  train_ce 0.6949  val_acc 0.7830
+epoch  22  train_ce 0.6813  val_acc 0.7873
+epoch  23  train_ce 0.6716  val_acc 0.7883
+epoch  24  train_ce 0.6565  val_acc 0.7958
+epoch  25  train_ce 0.6459  val_acc 0.7952
+epoch  26  train_ce 0.6426  val_acc 0.7930
+epoch  27  train_ce 0.6331  val_acc 0.7912
+epoch  28  train_ce 0.6212  val_acc 0.7953
+epoch  29  train_ce 0.6165  val_acc 0.8053
+epoch  30  train_ce 0.6104  val_acc 0.7933
+
+测试准确率：0.7965（10 类随机基线 0.10）
+活跃神经元比例：1.0000（§七 阈值 > 0.6）
+脉冲稀疏度：0.8415
+
+```text
+实验名称：eprop/smnist
+日期：2026-10-12 15:35:02 中国标准时间
+Git commit：4e9763cb200a8d5ca27663e7d29adc8ebe3cf67b
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=0；全局种子=1741413617；划分验证集=1435468909；权重初始化=3486733650；每批打乱=3990329895；脉冲编码=1681094898
+依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+运行命令：sweep_seeds.py --seeds 0-4 --device cuda --out-dir data/w2_lr010 --epochs 30 --learning-rate-in 1e-2 --learning-rate-rec 1e-2
+耗时：1616.3 s
+显存峰值：1,104.1 MiB（§6.2 硬约束 8GB）
+§6.2 降级路径：未触发
+备注：n_rec=256, beta=0.07, thr=0.62, eta_in=0.01, eta_rec=0.01, eta_out=0.05, decay_out=0.95
+备注：输入编码：像素值作发放概率的伯努利采样（本项目自己的选择）
+```
+[落盘] data\w2_lr010\seed0.json
+
+==============================================================================
+种子 1
+==============================================================================
+epoch   1  train_ce 1.9787  val_acc 0.4118
+epoch   2  train_ce 1.6454  val_acc 0.4923
+epoch   3  train_ce 1.4571  val_acc 0.5570
+epoch   4  train_ce 1.3186  val_acc 0.5935
+epoch   5  train_ce 1.2144  val_acc 0.6278
+epoch   6  train_ce 1.1305  val_acc 0.6525
+epoch   7  train_ce 1.0638  val_acc 0.6718
+epoch   8  train_ce 1.0168  val_acc 0.6812
+epoch   9  train_ce 0.9803  val_acc 0.7007
+epoch  10  train_ce 0.9439  val_acc 0.6888
+epoch  11  train_ce 0.9189  val_acc 0.7225
+epoch  12  train_ce 0.8886  val_acc 0.7222
+epoch  13  train_ce 0.8656  val_acc 0.7283
+epoch  14  train_ce 0.8398  val_acc 0.7368
+epoch  15  train_ce 0.8267  val_acc 0.7275
+epoch  16  train_ce 0.8064  val_acc 0.7435
+epoch  17  train_ce 0.7882  val_acc 0.7587
+epoch  18  train_ce 0.7706  val_acc 0.7610
+epoch  19  train_ce 0.7544  val_acc 0.7583
+epoch  20  train_ce 0.7383  val_acc 0.7608
+epoch  21  train_ce 0.7260  val_acc 0.7768
+epoch  22  train_ce 0.7131  val_acc 0.7773
+epoch  23  train_ce 0.7050  val_acc 0.7772
+epoch  24  train_ce 0.6913  val_acc 0.7812
+epoch  25  train_ce 0.6772  val_acc 0.7825
+epoch  26  train_ce 0.6689  val_acc 0.7917
+epoch  27  train_ce 0.6550  val_acc 0.7815
+epoch  28  train_ce 0.6574  val_acc 0.7907
+epoch  29  train_ce 0.6395  val_acc 0.7982
+epoch  30  train_ce 0.6359  val_acc 0.8010
+
+测试准确率：0.8005（10 类随机基线 0.10）
+活跃神经元比例：1.0000（§七 阈值 > 0.6）
+脉冲稀疏度：0.8345
+
+```text
+实验名称：eprop/smnist
+日期：2026-10-12 15:57:19 中国标准时间
+Git commit：4e9763cb200a8d5ca27663e7d29adc8ebe3cf67b
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=1；全局种子=1741413616；划分验证集=1435468908；权重初始化=3486733651；每批打乱=3990329894；脉冲编码=1681094899
+依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+运行命令：sweep_seeds.py --seeds 0-4 --device cuda --out-dir data/w2_lr010 --epochs 30 --learning-rate-in 1e-2 --learning-rate-rec 1e-2
+耗时：1335.8 s
+显存峰值：1,104.1 MiB（§6.2 硬约束 8GB）
+§6.2 降级路径：未触发
+备注：n_rec=256, beta=0.07, thr=0.62, eta_in=0.01, eta_rec=0.01, eta_out=0.05, decay_out=0.95
+备注：输入编码：像素值作发放概率的伯努利采样（本项目自己的选择）
+```
+[落盘] data\w2_lr010\seed1.json
+
+==============================================================================
+种子 2
+==============================================================================
+epoch   1  train_ce 1.9733  val_acc 0.4378
+epoch   2  train_ce 1.6407  val_acc 0.5158
+epoch   3  train_ce 1.4471  val_acc 0.5755
+epoch   4  train_ce 1.3120  val_acc 0.6195
+epoch   5  train_ce 1.2106  val_acc 0.6478
+epoch   6  train_ce 1.1334  val_acc 0.6515
+epoch   7  train_ce 1.0722  val_acc 0.6783
+epoch   8  train_ce 1.0150  val_acc 0.6915
+epoch   9  train_ce 0.9667  val_acc 0.7007
+epoch  10  train_ce 0.9258  val_acc 0.7238
+epoch  11  train_ce 0.8935  val_acc 0.7292
+epoch  12  train_ce 0.8633  val_acc 0.7360
+epoch  13  train_ce 0.8377  val_acc 0.7397
+epoch  14  train_ce 0.8142  val_acc 0.7438
+epoch  15  train_ce 0.7896  val_acc 0.7588
+epoch  16  train_ce 0.7675  val_acc 0.7607
+epoch  17  train_ce 0.7525  val_acc 0.7655
+epoch  18  train_ce 0.7352  val_acc 0.7645
+epoch  19  train_ce 0.7240  val_acc 0.7655
+epoch  20  train_ce 0.7122  val_acc 0.7667
+epoch  21  train_ce 0.7013  val_acc 0.7635
+epoch  22  train_ce 0.6912  val_acc 0.7850
+epoch  23  train_ce 0.6773  val_acc 0.7792
+epoch  24  train_ce 0.6664  val_acc 0.7903
+epoch  25  train_ce 0.6550  val_acc 0.7878
+epoch  26  train_ce 0.6478  val_acc 0.7795
+epoch  27  train_ce 0.6437  val_acc 0.7855
+epoch  28  train_ce 0.6327  val_acc 0.7970
+epoch  29  train_ce 0.6290  val_acc 0.7883
+epoch  30  train_ce 0.6272  val_acc 0.8022
+
+测试准确率：0.8137（10 类随机基线 0.10）
+活跃神经元比例：1.0000（§七 阈值 > 0.6）
+脉冲稀疏度：0.8439
+
+```text
+实验名称：eprop/smnist
+日期：2026-10-12 16:19:22 中国标准时间
+Git commit：4e9763cb200a8d5ca27663e7d29adc8ebe3cf67b
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=2；全局种子=1741413619；划分验证集=1435468911；权重初始化=3486733648；每批打乱=3990329893；脉冲编码=1681094896
+依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+运行命令：sweep_seeds.py --seeds 0-4 --device cuda --out-dir data/w2_lr010 --epochs 30 --learning-rate-in 1e-2 --learning-rate-rec 1e-2
+耗时：1321.4 s
+显存峰值：1,104.1 MiB（§6.2 硬约束 8GB）
+§6.2 降级路径：未触发
+备注：n_rec=256, beta=0.07, thr=0.62, eta_in=0.01, eta_rec=0.01, eta_out=0.05, decay_out=0.95
+备注：输入编码：像素值作发放概率的伯努利采样（本项目自己的选择）
+```
+[落盘] data\w2_lr010\seed2.json
+
+==============================================================================
+种子 3
+==============================================================================
+epoch   1  train_ce 1.9497  val_acc 0.4153
+epoch   2  train_ce 1.6391  val_acc 0.5022
+epoch   3  train_ce 1.4538  val_acc 0.5637
+epoch   4  train_ce 1.3066  val_acc 0.6050
+epoch   5  train_ce 1.2024  val_acc 0.6327
+epoch   6  train_ce 1.1295  val_acc 0.6520
+epoch   7  train_ce 1.0731  val_acc 0.6712
+epoch   8  train_ce 1.0257  val_acc 0.6842
+epoch   9  train_ce 0.9902  val_acc 0.6870
+epoch  10  train_ce 0.9500  val_acc 0.7062
+epoch  11  train_ce 0.9213  val_acc 0.7027
+epoch  12  train_ce 0.8930  val_acc 0.7257
+epoch  13  train_ce 0.8666  val_acc 0.7160
+epoch  14  train_ce 0.8347  val_acc 0.7357
+epoch  15  train_ce 0.8106  val_acc 0.7405
+epoch  16  train_ce 0.7902  val_acc 0.7502
+epoch  17  train_ce 0.7696  val_acc 0.7538
+epoch  18  train_ce 0.7541  val_acc 0.7605
+epoch  19  train_ce 0.7386  val_acc 0.7623
+epoch  20  train_ce 0.7225  val_acc 0.7643
+epoch  21  train_ce 0.7064  val_acc 0.7618
+epoch  22  train_ce 0.6936  val_acc 0.7722
+epoch  23  train_ce 0.6860  val_acc 0.7690
+epoch  24  train_ce 0.6773  val_acc 0.7643
+epoch  25  train_ce 0.6693  val_acc 0.7707
+epoch  26  train_ce 0.6623  val_acc 0.7805
+epoch  27  train_ce 0.6523  val_acc 0.7720
+epoch  28  train_ce 0.6424  val_acc 0.7845
+epoch  29  train_ce 0.6356  val_acc 0.7883
+epoch  30  train_ce 0.6282  val_acc 0.7713
+
+测试准确率：0.7906（10 类随机基线 0.10）
+活跃神经元比例：1.0000（§七 阈值 > 0.6）
+脉冲稀疏度：0.8314
+
+```text
+实验名称：eprop/smnist
+日期：2026-10-12 16:41:25 中国标准时间
+Git commit：4e9763cb200a8d5ca27663e7d29adc8ebe3cf67b
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=3；全局种子=1741413618；划分验证集=1435468910；权重初始化=3486733649；每批打乱=3990329892；脉冲编码=1681094897
+依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+运行命令：sweep_seeds.py --seeds 0-4 --device cuda --out-dir data/w2_lr010 --epochs 30 --learning-rate-in 1e-2 --learning-rate-rec 1e-2
+耗时：1322.1 s
+显存峰值：1,104.1 MiB（§6.2 硬约束 8GB）
+§6.2 降级路径：未触发
+备注：n_rec=256, beta=0.07, thr=0.62, eta_in=0.01, eta_rec=0.01, eta_out=0.05, decay_out=0.95
+备注：输入编码：像素值作发放概率的伯努利采样（本项目自己的选择）
+```
+[落盘] data\w2_lr010\seed3.json
+
+==============================================================================
+种子 4
+==============================================================================
+epoch   1  train_ce 1.9781  val_acc 0.4408
+epoch   2  train_ce 1.6320  val_acc 0.5230
+epoch   3  train_ce 1.4462  val_acc 0.5652
+epoch   4  train_ce 1.3164  val_acc 0.6040
+epoch   5  train_ce 1.2182  val_acc 0.6380
+epoch   6  train_ce 1.1325  val_acc 0.6545
+epoch   7  train_ce 1.0701  val_acc 0.6700
+epoch   8  train_ce 1.0232  val_acc 0.6753
+epoch   9  train_ce 0.9907  val_acc 0.6902
+epoch  10  train_ce 0.9603  val_acc 0.6983
+epoch  11  train_ce 0.9318  val_acc 0.7102
+epoch  12  train_ce 0.9069  val_acc 0.7075
+epoch  13  train_ce 0.8808  val_acc 0.7277
+epoch  14  train_ce 0.8561  val_acc 0.7192
+epoch  15  train_ce 0.8353  val_acc 0.7308
+epoch  16  train_ce 0.8069  val_acc 0.7453
+epoch  17  train_ce 0.7838  val_acc 0.7283
+epoch  18  train_ce 0.7665  val_acc 0.7647
+epoch  19  train_ce 0.7502  val_acc 0.7445
+epoch  20  train_ce 0.7329  val_acc 0.7780
+epoch  21  train_ce 0.7191  val_acc 0.7737
+epoch  22  train_ce 0.7043  val_acc 0.7805
+epoch  23  train_ce 0.6897  val_acc 0.7772
+epoch  24  train_ce 0.6798  val_acc 0.7887
+epoch  25  train_ce 0.6702  val_acc 0.7818
+epoch  26  train_ce 0.6594  val_acc 0.7888
+epoch  27  train_ce 0.6544  val_acc 0.7923
+epoch  28  train_ce 0.6411  val_acc 0.7780
+epoch  29  train_ce 0.6308  val_acc 0.8015
+epoch  30  train_ce 0.6265  val_acc 0.7960
+
+测试准确率：0.7998（10 类随机基线 0.10）
+活跃神经元比例：1.0000（§七 阈值 > 0.6）
+脉冲稀疏度：0.8312
+
+```text
+实验名称：eprop/smnist
+日期：2026-10-12 17:03:26 中国标准时间
+Git commit：4e9763cb200a8d5ca27663e7d29adc8ebe3cf67b
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=4；全局种子=1741413621；划分验证集=1435468905；权重初始化=3486733654；每批打乱=3990329891；脉冲编码=1681094902
+依赖快照：uv.lock sha256=cbafb161e71421f9f228e23e2ab6f4f742f899e9958d290f214dac1dd948e37f
+运行命令：sweep_seeds.py --seeds 0-4 --device cuda --out-dir data/w2_lr010 --epochs 30 --learning-rate-in 1e-2 --learning-rate-rec 1e-2
+耗时：1320.3 s
+显存峰值：1,104.1 MiB（§6.2 硬约束 8GB）
+§6.2 降级路径：未触发
+备注：n_rec=256, beta=0.07, thr=0.62, eta_in=0.01, eta_rec=0.01, eta_out=0.05, decay_out=0.95
+备注：输入编码：像素值作发放概率的伯努利采样（本项目自己的选择）
+```
+[落盘] data\w2_lr010\seed4.json
+
+==============================================================================
+W2 多随机种子汇总（5 个种子：0–4，smnist）
+==============================================================================
+  种子   0  准确率 0.7965  活跃比例 1.0000  耗时 1618 s
+  种子   1  准确率 0.8005  活跃比例 1.0000  耗时 1337 s
+  种子   2  准确率 0.8137  活跃比例 1.0000  耗时 1323 s
+  种子   3  准确率 0.7906  活跃比例 1.0000  耗时 1323 s
+  种子   4  准确率 0.7998  活跃比例 1.0000  耗时 1321 s
+
+  测试准确率        均值 0.8002  最小 0.7906  最大 0.8137  极差 2.31 个百分点   （判据：显著高于随机（10 类））
+  活跃神经元比例      均值 1.0000  最小 1.0000  最大 1.0000  极差 0.00 个百分点   （判据：§七：「> 60%」）
+  JSON 落在 data\w2_lr010/，逐种子可查

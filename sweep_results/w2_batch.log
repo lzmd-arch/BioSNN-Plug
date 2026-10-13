@@ -1,0 +1,28 @@
+[2026-10-12 09:19:08] ========================================================================
+[2026-10-12 09:19:08] 组 1：学习率扫描 30ep x seeds 0-4 x 4 档 lr
+[2026-10-12 09:19:08] >> w2_lr001: uv run python -m research.eprop.sweep_seeds --seeds 0-4 --device cuda --out-dir data/w2_lr001 --epochs 30 --learning-rate-in 1e-3 --learning-rate-rec 1e-3
+[2026-10-12 11:14:55] OK w2_lr001 rc=0 墙钟 1.93 h
+[2026-10-12 11:14:55] >> w2_lr002: uv run python -m research.eprop.sweep_seeds --seeds 0-4 --device cuda --out-dir data/w2_lr002 --epochs 30 --learning-rate-in 2e-3 --learning-rate-rec 2e-3
+[2026-10-12 13:06:04] OK w2_lr002 rc=0 墙钟 1.85 h
+[2026-10-12 13:06:04] >> w2_lr005: uv run python -m research.eprop.sweep_seeds --seeds 0-4 --device cuda --out-dir data/w2_lr005 --epochs 30 --learning-rate-in 5e-3 --learning-rate-rec 5e-3
+[2026-10-12 15:08:01] OK w2_lr005 rc=0 墙钟 2.03 h
+[2026-10-12 15:08:01] >> w2_lr010: uv run python -m research.eprop.sweep_seeds --seeds 0-4 --device cuda --out-dir data/w2_lr010 --epochs 30 --learning-rate-in 1e-2 --learning-rate-rec 1e-2
+[2026-10-12 17:03:28] OK w2_lr010 rc=0 墙钟 1.92 h
+[2026-10-12 17:03:28] 组 1 汇总：
+[2026-10-12 17:03:28]   w2_lr001     n=5  准确率均值 0.7564（0.7534-0.7618）  活跃 1.0000
+[2026-10-12 17:03:28]   w2_lr002     n=5  准确率均值 0.7764（0.7678-0.7857）  活跃 1.0000
+[2026-10-12 17:03:28]   w2_lr005     n=5  准确率均值 0.7983（0.7922-0.8060）  活跃 1.0000
+[2026-10-12 17:03:28]   w2_lr010     n=5  准确率均值 0.8002（0.7906-0.8137）  活跃 1.0000
+[2026-10-12 17:03:28] 胜者：w2_lr010（lr=1e-2，均值 0.8002）
+[2026-10-12 17:03:28] ========================================================================
+[2026-10-12 17:03:28] 组 2：LIF 对照（--beta 0）30ep x seeds 0-4
+[2026-10-12 17:03:28] >> w2_lif: uv run python -m research.eprop.sweep_seeds --seeds 0-4 --device cuda --out-dir data/w2_lif --epochs 30 --beta 0
+[2026-10-12 19:10:56] OK w2_lif rc=0 墙钟 2.12 h
+[2026-10-12 19:10:56] 组 2 汇总：  w2_lif       n=5  准确率均值 0.7867（0.7801-0.7899）  活跃 1.0000
+[2026-10-12 19:10:56] ALIF(胜者) - LIF = +0.0135
+[2026-10-12 19:10:56] ========================================================================
+[2026-10-12 19:10:56] 组 3：预算延长 250ep x seeds 0-2，胜者 lr=1e-2
+[2026-10-12 19:10:56] >> w2_long: uv run python -m research.eprop.sweep_seeds --seeds 0-2 --device cuda --out-dir data/w2_long --epochs 250 --learning-rate-in 1e-2 --learning-rate-rec 1e-2
+[2026-10-13 04:00:51] OK w2_long rc=0 墙钟 8.83 h
+[2026-10-13 04:00:51] 组 3 汇总：  w2_long      n=3  准确率均值 0.8831（0.8812-0.8853）  活跃 1.0000
+[2026-10-13 04:00:51] 三组全部结束。产物在 data/ 下——搬进 sweep_results/ 之前别去动工作区。
