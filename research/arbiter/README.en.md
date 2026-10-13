@@ -70,10 +70,15 @@ Two modules:
 1. **Only class 1 (Hebbian <-> e-prop) is done.** Classes 2-3 (e-prop <-> R-STDP,
    Hebbian <-> R-STDP) and class 4 (dispatch decisions) are not -- the plan puts them in
    phase three.
-2. **The arbiter is not wired into either research line.** `research/ib_hebbian/` and
-   `research/eprop/` are still validated independently; **nowhere do their updates reach
-   the same arbiter**. So this module is a **part**, not "dual-rule coordination" itself
-   -- the same problem as `memterm-pure-layer-not-wired`.
+2. **Wired into both research lines** (`shared_synapse.py`). This boundary used to read
+   "nowhere do their updates reach the same arbiter"; now there is such a place: the two
+   rules **share one input synapse matrix** (shared numbers, re-synced each step) and
+   their aligned updates go to the arbiter. Warning: **only the input->hidden mapping is
+   shared**; the two downstreams stay independent with their accepted widths (1024 and
+   256). Warning: **storage conventions differ** -- `ib_hebbian` uses PyTorch's
+   `(out, in)`, `eprop` uses `(in, out)` -- so sharing is **numeric**, not by pointer,
+   maintained by copying each step. `align_update` rejects the wrong convention (comparing
+   a matrix with its own transpose yields a meaningless cosine).
 3. **`alpha` blends update tensors, not learning rates.** The alternative is adjusting
    each rule's learning rate, which is another reading of "weight adjustment"; this
    implementation takes the former (closer to section 3.4's wording) and **has not been
