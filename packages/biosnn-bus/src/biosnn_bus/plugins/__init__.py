@@ -10,5 +10,6 @@ from __future__ import annotations
 
 from .image_diff import DiffImagePlugin
 from .mnist_pulse import MnistPulsePlugin
+from .text_zscore import OllamaEmbedding, TextZScorePlugin
 
-__all__ = ["DiffImagePlugin", "MnistPulsePlugin"]
+__all__ = ["DiffImagePlugin", "MnistPulsePlugin", "OllamaEmbedding", "TextZScorePlugin"]

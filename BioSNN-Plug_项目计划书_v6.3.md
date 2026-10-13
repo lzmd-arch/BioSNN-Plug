@@ -187,6 +187,24 @@
 >    （除法归一化，Pogodin & Latham 已要求），**从候选名单里划掉**。
 >    ADR-0012 已按此补记，且要求**随机投影种子必须进 config dump**。
 
+> ㉕ **文本插件落地，TAAF 的「无调用方」缺口（㉒）随之闭合**：新增
+>    `packages/biosnn-bus/.../plugins/text_zscore.py`，按 §4.3 的 z-score top-k 规格实现
+>    （`z_i = (cos(e, p_i) − μ) / σ` → top-k（`k = ⌊s·N⌋`，`s = 0.14`）→ `r_i = max(z_i, 0)/
+>    max(z_top-k) · r_max`），前端是**冻结的本地 embedding**（Ollama 的 `nomic-embed-text`，
+>    768 维，Apache-2.0）。实测每步发放的神经元数**恰好 35**（= ⌊0.14×256⌋），
+>    `spike_dim = 256` 与 embedding 维度无关——维度无关这条是可断言的。
+>    **三处 §4.3 没写死、本实现定死并留痕**：① **偏好方向 `p_i` 是固定种子的随机单位向量**，
+>    不学习（与 ADR-0012 的 A 同一取舍：零训练、逐位可复现、种子进 config dump）；
+>    ② **一个 token 一个时间步**（`T = 词数`），与 `temporal` 通道一致；③ **词元化用空白切分**，
+>    不引分词器依赖。
+>    ⚠️ **本方案的固有代价**：`nomic-embed-text` 是**句向量模型**，逐词 embed 拿到的是
+>    「这个词作为单独句子」的向量，**丢了上下文**。这是 (a) 冻结 embedding 路线的代价，
+>    不是实现缺陷；要上下文得整段 embed（`T = 1`，退化成非序列）或换逐 token 输出的模型。
+>    **TAAF 现在有真实调用方**：文本（`temporal`，T = 词数）+ 图像（`semantic`）经
+>    `TemporalAttentionFusion` 融合，输出 `N = bus_dim`。测试
+>    `test_multimodal_fusion_closes_the_taaf_gap` 钉住这件事——㉒ 里"写完、测过、CI 绿
+>    却没调用方"的状态**到此为止**。
+
 ---
 
 ## 版本说明（v6.2，原样保留）
