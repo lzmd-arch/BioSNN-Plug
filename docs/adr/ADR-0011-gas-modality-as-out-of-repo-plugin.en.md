@@ -46,7 +46,13 @@ The accepted costs first:
   ADR-0005 grants the skeleton library is its only protection;
 - The §12.3 row "minimal reproduction script" requires one `examples/paper_<name>.py` per core
   reference, and there is **no counterpart in this repository** — that script lands inside the
-  out-of-repo package. This is an **explicitly recorded deviation**, not an omission.
+  out-of-repo package. This is an **explicitly recorded deviation**, not an omission;
+- It is **proprietary and not publicly distributed** (all rights reserved), which does **not**
+  conflict with this repository's Apache-2.0: this repository does not bundle it, does not distribute
+  it, and does not list it as a dependency — it merely discovers it through an entry point. That
+  yields one constraint: **do not copy its code or parameters into this repository** — comments,
+  examples and documentation fragments all count, because that would carry proprietary content into
+  a public repository.
 
 Then the benefits:
 
