@@ -86,6 +86,40 @@ def load_mnist(data_dir: str | Path) -> tuple[torch.Tensor, ...]:
     )
 
 
+def _via_pulse_bus(
+    train_x: torch.Tensor,
+    test_x: torch.Tensor,
+    *,
+    n_steps: int,
+    seed: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """把 W1 的连续输入改走脉冲总线：``encode`` 成脉冲、``decode`` 成发放率。
+
+    ⚠️ **这是「感知层接入脉冲总线」的映射层**（计划书 §七 第二阶段），
+    ⚠️ **也是本项目自己的选择**——W1 原先直接吃连续值，现在多一道"编成脉冲、
+    再还原"的往返。往返本身是有损的（``O(1/sqrt(n_steps))`` 的采样噪声），
+    所以**两条路径的数字不会相等**，这也正是留着 ``--input-path`` 开关的理由。
+
+    这里**刻意绕过** :class:`~biosnn_bus.bus.SpikeBus` 的投影：``step()`` 的输出
+    是融合后送进认知核心的输入电流（±1 加权），不是脉冲；要的是脉冲表示，
+    所以直接用插件的 ``encode`` / ``decode`` 这一对互逆操作。
+    """
+    from biosnn_bus.plugins import MnistPulsePlugin
+
+    from research.ib_hebbian.bus_input import encode_batch
+
+    plugin = MnistPulsePlugin(height=28, width=28, n_steps=n_steps, seed=seed)
+    n_in = int(train_x.shape[1])
+
+    def _run(x: torch.Tensor) -> torch.Tensor:
+        # W1 的 x 取值 [-1, 1]（论文 D.4），脉冲插件要 [0, 1]——把变换倒过来。
+        raw = (x.reshape(x.shape[0], 28, 28).cpu().numpy() + 1.0) / 2.0
+        raw = np.clip(raw, 0.0, 1.0)
+        return encode_batch(plugin, raw, batch_size=x.shape[0], n_in=n_in)
+
+    return _run(train_x), _run(test_x)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=__doc__.splitlines()[0],
@@ -150,6 +184,24 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["on", "off"],
         help="前向输出过不过除法归一化模块。'off' = 论文的 grp 变体（有分组、无除法归一化）。"
         "**不要用 --divnorm-power 0 代替**——那个模块在 power=0 时仍做组内居中、返回的不是 z",
+    )
+    parser.add_argument(
+        "--input-path",
+        default="raw",
+        choices=["raw", "bus"],
+        help=(
+            "W1 的输入从哪来。**默认 raw**：直接读 MNIST 的 .npy 并做论文 D.4 的 "
+            "(x/255 − 0.5) / 0.5 预处理——这是验收数字 0.9779 对应的那条路径，**不动它**。"
+            " 选 bus：先经 biosnn-bus 的 MnistPulsePlugin 编成脉冲、再解码成发放率"
+            "（research/ib_hebbian/bus_input.py），那是「感知层接入脉冲总线」"
+            "（计划书 §七 第二阶段）的路径，⚠️ **未必等于 0.9779**——见该模块的说明"
+        ),
+    )
+    parser.add_argument(
+        "--n-steps",
+        type=int,
+        default=16,
+        help="脉冲编码的时间步数（仅 --input-path bus）",
     )
     parser.add_argument("--dropout", type=float, default=0.01)
     parser.add_argument("--seed", type=int, default=0)
@@ -223,6 +275,12 @@ def train(args: argparse.Namespace, device: torch.device):
 
     limit = apply_smoke_overrides(args) if args.smoke else None
     train_x_all, train_y_all, test_x, test_y = load_mnist(args.data_dir)
+    if args.input_path == "bus":
+        # 走脉冲总线：把每张图编成脉冲，再用插件自己的 decode 还原成发放率。
+        # ⚠️ 这是本项目自己的选择，且与 raw 路径**数值不同**——见 bus_input.py。
+        train_x_all, test_x = _via_pulse_bus(
+            train_x_all, test_x, n_steps=args.n_steps, seed=args.seed
+        )
 
     # 论文 §5.1：验证集取训练集的 10%。
     n_val = len(train_x_all) // 10

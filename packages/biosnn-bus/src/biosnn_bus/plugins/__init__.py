@@ -9,5 +9,6 @@
 from __future__ import annotations
 
 from .image_diff import DiffImagePlugin
+from .mnist_pulse import MnistPulsePlugin
 
-__all__ = ["DiffImagePlugin"]
+__all__ = ["DiffImagePlugin", "MnistPulsePlugin"]
