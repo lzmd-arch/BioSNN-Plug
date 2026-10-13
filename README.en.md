@@ -48,7 +48,7 @@ project may enter a dependency, which may not be copied at all), are in
 | **EMBER** | ◐ STDP + eligibility traces x dopamine gating | ✗ (text only) | ◐ observational, **N=1** | ✗ | ✗ no public repo |
 | **MEMBRAIN** | ◐ Voja + PES | ✗ | ✗ | ◐ claims disagree with implementation | ✅ Nengo (MIT) |
 | **eprop-PyTorch / ESPP** | ✅ e-prop; ESPP is a separate parallel rule | ✗ | ✗ | ✗ | ◐ code fragments, not a framework |
-| **BioSNN-Plug** (this project) | ✅ all three lines accepted | ◐ skeleton released; image is the one plugin | ○ phase 5 | ○ phase 3 | ✅ `biosnn-bus` is on PyPI |
+| **BioSNN-Plug** (this project) | ✅ all three lines accepted | ◐ three plugins (image / MNIST / text), **audio missing** | ○ phase 5 | ○ phase 3 | ✅ `biosnn-bus` is on PyPI |
 
 Legend: **✅ implemented, with acceptance data** · **◐ partial** (mechanism or evidence incomplete) ·
 **○ roadmap only (task exists in the plan, not started)** · **✗ none**
@@ -61,18 +61,39 @@ precisely so this table cannot be read as "we have already done it".
 
 | Part | Status |
 | :--- | :--- |
-| `biosnn-bus` skeleton library | **0.1.0, usable** — plugin interface, registration and discovery, spike-bus skeleton |
-| Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **97.79%** (default closed-form readout; SGD readout 98.01%) ✓; W2 e-prop sequential sMNIST **77.48%** (active neurons 1.0000; the 30-epoch acceptance budget — opening it to 100 epochs on the same seeds adds **+7.55** points and **still has not converged**) ✓; W3 R-STDP CartPole median **237.8 steps** (criterion ≥ 200) ✓. Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) |
+| `biosnn-bus` skeleton library | **0.1.0, usable** — plugin interface, registration and discovery, spike bus, **TAAF temporal-attention fusion** (rate-based gating: weights come from each path's firing rate, **no backpropagation**) |
+| Modality plugins | **Three**: `image_diff` (DVS event coding), `mnist_pulse` (firing rates), **`text_zscore`** (frozen local embedding + z-score top-k population coding) |
+| Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **97.79%** (default closed-form readout; SGD readout 98.01%) ✓; W2 e-prop sequential sMNIST **0.7764** (30 epochs x 5 seeds) -> **0.8831** (250 epochs, **converged**) ✓; W3 R-STDP CartPole median **237.8 steps** (criterion ≥ 200) ✓. Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) |
 | **Network scale** | **256 spiking neurons** (W2); W1 adds 3,072 **rate-based** units (not spiking neurons). The plan's §2.2 cognitive-core target is about 50k -- a gap of roughly **195x**, see [research/README](research/README.en.md) |
+| Arbiter | **Parts in place** (`research/arbiter/`): conflict detection (cosine > 90 degrees) + ES meta-learned arbiter, **wired into both research lines** (a shared input synapse). Warning: only the input->hidden mapping is shared, and "50% fewer conflict events" is **trivially satisfied** on synthetic data -- see that directory's README |
+| Cross-modal retrieval | **R@K protocol in place** (`research/retrieval/metrics.py`); **no dataset wired up yet** |
 | Cognitive core / LLM orchestration | **Not started** — see the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §7 |
 
-Two boundaries worth stating plainly:
+**Phase-two success criteria, as things actually stand**:
 
-- The spike bus is a **skeleton**: dual-channel routing is in place, but the default fusion
-  strategy is plain concatenation — **not** the TAAF temporal-attention-guided fusion described
-  in §2.2 of the project plan. That is a phase-2 research task. (Why the skeleton library is a
-  separate package, and why it deliberately includes none of these things, see
-  [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.en.md).)
+| Criterion | Status |
+| :--- | :--- |
+| Plugins replace independently | ✅ Three plugins + entry points; skeleton library is on PyPI |
+| TAAF fine-tuning samples < 1/10 of from-scratch | ⚠️ **Reworded to "TAAF needs no fine-tuning"** — fusion weights are not trained at all, per the red line. Warning: this **lowers the bar**; see plan revision note 27 |
+| Cross-modal retrieval R@1 50%+ | ❌ **Dataset and protocol scope missing** (the protocol code exists; the data does not) |
+| Arbiter cuts dual-rule conflict events by 50%+ | ✅ Met on a **real shared synapse** (10 -> 0, `retention` 0.3) |
+
+Three boundaries worth stating plainly:
+
+- **TAAF is implemented, but the default strategy is still concatenation**:
+  `TemporalAttentionFusion` is a fusion strategy you **opt into** (`SpikeBus(strategy=...)`);
+  the default is still plain concatenation. Warning: its attention weights are **computed from
+  each path's firing rate and never trained** (rate-based gating) — that red line is pinned by
+  an **AST structural assertion**, see [ADR-0012](docs/adr/ADR-0012-taaf-locality-and-bus-output-contract.en.md).
+- **The perception layer may use a frozen pre-trained front end** (boundary declaration, see
+  [plan section 2.3](BioSNN-Plug_项目计划书_v6.3.md)): the "purely local learning" claim covers
+  **synaptic learning rules**, not **input encoders**. The test is "do the parameters enter a
+  gradient", not "is the model big" — a frozen 2GB pre-trained embedding is equivalent to a
+  fixed random projection here; conversely, a 100-line local encoder that trains its own
+  parameters by backprop **breaks** this boundary. The text plugin's `nomic-embed-text`
+  (Ollama, 768-d) is frozen.
+- (Why the skeleton library is a separate package, and why it deliberately includes none of
+  these things, see [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.en.md).)
 - The skeleton library **is on PyPI**: `pip install biosnn-bus` (currently `0.1.0`). Releases go through PyPI trusted publishing (OIDC, no stored tokens); the pipeline is in [release.yml](.github/workflows/release.yml).
 
 ## Architecture
