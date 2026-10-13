@@ -43,3 +43,4 @@ Michael Nygard の古典的な 4 段構成を採用します：
 | [ADR-0009](ADR-0009-w3-behaviour-policy-and-trace-centring.ja.md) | W3 の行動方策を Boltzmann サンプリングにし、サンプリング確率で痕跡を中心化する | 承認済み |
 | [ADR-0010](ADR-0010-eprop-quadratic-storage-and-trace-propagation.ja.md) | e-prop の二次記憶量は成立するが、§3.1 の是正措置（Trace Propagation の採用）は採用しない | 承認済み |
 | [ADR-0011](ADR-0011-gas-modality-as-out-of-repo-plugin.ja.md) | ガス（化学センシング）モダリティはリポジトリ外のサードパーティパッケージとして提供し、packages/ には置かない | 承認済み |
+| [ADR-0012](ADR-0012-taaf-locality-and-bus-output-contract.ja.md) | TAAF の局所性のレッドライン、未決の射影層の学習規則、`SpikeBus` 出力形状の契約 | 部分採用 |

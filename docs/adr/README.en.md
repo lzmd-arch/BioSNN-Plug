@@ -44,3 +44,4 @@ and link the two to each other.
 | [ADR-0009](ADR-0009-w3-behaviour-policy-and-trace-centring.en.md) | W3's behaviour policy becomes Boltzmann sampling, with the trace centred by the sampling probability | Accepted |
 | [ADR-0010](ADR-0010-eprop-quadratic-storage-and-trace-propagation.en.md) | e-prop's quadratic storage holds, but §3.1's remedy (adopting Trace Propagation) is not adopted | Accepted |
 | [ADR-0011](ADR-0011-gas-modality-as-out-of-repo-plugin.en.md) | The gas (chemical sensing) modality ships as an out-of-repo third-party package, not under packages/ | Accepted |
+| [ADR-0012](ADR-0012-taaf-locality-and-bus-output-contract.en.md) | TAAF's locality red line, the open projection-layer training rule, and the `SpikeBus` output-shape contract | Partially accepted |

@@ -65,6 +65,7 @@ from .registry import (
     register_plugin,
     unregister_plugin,
 )
+from .taaf import TemporalAttentionFusion
 from .types import FusionChannel, Membrane, SpikeTrain
 
 __version__ = "0.1.0"
@@ -84,6 +85,7 @@ __all__ = [
     "SparseRandomProjection",
     "SpikeBus",
     "SpikeTrain",
+    "TemporalAttentionFusion",
     "UnknownModalityError",
     "__version__",
     "discover_plugins",

@@ -48,11 +48,27 @@ class FusionStrategy(Protocol):
 
     实现者只需保证：输入的所有序列已经**对齐到同一时间网格**（相同 ``T``、相同
     ``dt``），且属于同一 :class:`~biosnn_bus.types.FusionChannel`。
+
+    ⚠️ **融合层的红线（骨架库进产品之后更要守住）**：融合权重必须由**局部可计算的
+    信号**驱动（例如各路的发放率），**不允许反向传播训练**。否则"纯局部学习"的声明
+    在融合层就被戳穿。见 :class:`TemporalAttentionFusion` 与 ADR-0012。
+
+    **两种工作点**，由是否实现 :meth:`fuse_projected` 决定：
+
+    * 只实现 :meth:`fuse`：**先融合、后投影**——输出维度是各路之和，投影矩阵的
+      ``in_dim`` 取拼接和。:class:`ConcatenateFusion` 是这一类，也是默认；
+    * 实现 :meth:`fuse_projected`：**先投影、后融合**——每路各自被投影到
+      ``bus_dim``，策略再把它们合成一路。这是 TAAF 的位置（各路维度不同时也能
+      加权求和），见 :class:`TemporalAttentionFusion`。
     """
 
     def fuse(self, trains: Sequence[SpikeTrain]) -> SpikeTrain:
-        """融合。``trains`` 非空。"""
+        """融合（先融合、后投影）。``trains`` 非空。"""
         ...
+
+    # ``fuse_projected`` 刻意不在 Protocol 里：它是一个**可选能力**，用
+    # ``hasattr`` 探测。写进 Protocol 就会逼所有实现者都实现它，而
+    # ConcatenateFusion 没有理由实现。
 
 
 class ConcatenateFusion:
@@ -60,6 +76,9 @@ class ConcatenateFusion:
 
     这是骨架库的默认策略，用来说明接口怎么接，**不是**计划书 §2.2 的 TAAF。
     融合后的 ``temporal_scale`` 取各输入的最大值（最慢的模态决定融合后的尺度）。
+
+    它走的是**先融合、后投影**工作点：输出沿神经元维拼接，维度是各路之和，
+    所以总线给它配的投影矩阵 ``in_dim`` 就是那个和。
     """
 
     def fuse(self, trains: Sequence[SpikeTrain]) -> SpikeTrain:
@@ -255,6 +274,21 @@ class SpikeBus:
             * ``channel`` 字段在融合之后已无意义（输出是双通道之和），保留默认值
               仅为满足容器契约。
 
+            **输出形状（接口契约，写死在这里）**：
+
+            * **形状** ``(T, bus_dim)``——``T`` 是对齐后的时间步数，**第二维恒等于**
+              ``bus_dim``（构造参数），与注册了几个模态、各模态 ``spike_dim`` 多少
+              **无关**；
+            * **通道** 跨通道求和后的结果，``channel`` 字段已无意义；模态的通道信息
+              只在 :meth:`describe` 里保留（按 ``modalities_by_channel`` 归组）；
+            * **dtype** ``float64``，稀疏随机投影带 ±1 权重的输入电流。
+
+            ⚠️ **第二维恒为 ``bus_dim`` 是承诺，不是巧合**：下游认知核心可以按
+            ``bus_dim`` 建维度而不必知道上游有几个模态。这一点在换融合策略
+            （:class:`ConcatenateFusion` 的先融合后投影 /
+            :class:`TemporalAttentionFusion` 的先投影后融合）时**都不变**——两条
+            工作点的差异只在**怎么合成一路**，不在输出维度。
+
         Raises:
             ValueError: ``inputs`` 为空。
             UnknownModalityError: 某个键未注册。
@@ -285,9 +319,24 @@ class SpikeBus:
             )
             if not group:
                 continue
-            merged = self.strategy.fuse([train for _, train in group])
-            projection = self._get_projection(channel, group)
-            fused.append(projection(merged.data))
+            if hasattr(self.strategy, "fuse_projected"):
+                # 先投影、后融合：每路各自投影到 bus_dim，策略再合成一路。
+                # 这样各路 spike_dim 不同也能加权求和，TAAF 走这个工作点。
+                projected = [
+                    self._projection_for(channel, train.n_neurons, key=(name,))(train.data)
+                    for name, train in group
+                ]
+                projected_trains = [
+                    train.replace(data=np.asarray(data))
+                    for data, (_, train) in zip(projected, group, strict=True)
+                ]
+                merged = self.strategy.fuse_projected(projected_trains)
+                fused.append(np.asarray(merged.data))
+            else:
+                # 先融合、后投影：输出维度是各路之和，投影矩阵 in_dim 取拼接和。
+                merged = self.strategy.fuse([train for _, train in group])
+                projection = self._get_projection(channel, group)
+                fused.append(projection(merged.data))
 
         if not fused:  # pragma: no cover - 输入非空时不可能走到
             raise BioSNNBusError("没有可融合的脉冲序列。")
@@ -341,6 +390,26 @@ class SpikeBus:
                 seed=self._derive_seed(key),
             )
             self._projections[key] = projection
+        return projection
+
+    def _projection_for(
+        self, channel: FusionChannel, n_neurons: int, *, key: tuple[Any, ...]
+    ) -> SparseRandomProjection:
+        """按**单路**维度取投影矩阵（先投影、后融合工作点用）。
+
+        缓存键含通道、维度与该路的名字——名字进了 key，所以同一通道里两个维度
+        相同的模态**不会**共用同一个投影矩阵（否则它们的语义会被混成一路）。
+        """
+        cache_key = ("per-modality", channel.value, tuple(key), n_neurons)
+        projection = self._projections.get(cache_key)
+        if projection is None:
+            projection = SparseRandomProjection(
+                n_neurons,
+                self.bus_dim,
+                density=self.projection_density,
+                seed=self._derive_seed(cache_key),
+            )
+            self._projections[cache_key] = projection
         return projection
 
     def _derive_seed(self, key: tuple[Any, ...]) -> int:
