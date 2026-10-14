@@ -61,7 +61,7 @@ precisely so this table cannot be read as "we have already done it".
 
 | Part | Status |
 | :--- | :--- |
-| `biosnn-bus` skeleton library | **0.1.0, usable** — plugin interface, registration and discovery, spike bus, **TAAF temporal-attention fusion** (rate-based gating: weights come from each path's firing rate, **no backpropagation**) |
+| `biosnn-bus` skeleton library | **0.2.0, usable** — plugin interface, registration and discovery, spike bus, **TAAF temporal-attention fusion** (rate-based gating: weights come from each path's firing rate, **no backpropagation**) |
 | Modality plugins | **Three**: `image_diff` (DVS event coding), `mnist_pulse` (firing rates), **`text_zscore`** (frozen local embedding + z-score top-k population coding) |
 | Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **97.79%** (default closed-form readout; SGD readout 98.01%) ✓; W2 e-prop sequential sMNIST **0.7764** (30 epochs x 5 seeds) -> **0.8831** (250 epochs, **converged**) ✓; W3 R-STDP CartPole median **237.8 steps** (criterion ≥ 200) ✓. Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) |
 | **Network scale** | **256 spiking neurons** (W2); W1 adds 3,072 **rate-based** units (not spiking neurons). The plan's §2.2 cognitive-core target is about 50k -- a gap of roughly **195x**, see [research/README](research/README.en.md) |
@@ -94,7 +94,7 @@ Three boundaries worth stating plainly:
   (Ollama, 768-d) is frozen.
 - (Why the skeleton library is a separate package, and why it deliberately includes none of
   these things, see [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.en.md).)
-- The skeleton library **is on PyPI**: `pip install biosnn-bus` (currently `0.1.0`). Releases go through PyPI trusted publishing (OIDC, no stored tokens); the pipeline is in [release.yml](.github/workflows/release.yml).
+- The skeleton library **is on PyPI**: `pip install biosnn-bus` (currently `0.2.0`). Releases go through PyPI trusted publishing (OIDC, no stored tokens); the pipeline is in [release.yml](.github/workflows/release.yml).
 
 ## Architecture
 
