@@ -187,6 +187,20 @@ uv run python -m research.eprop.sweep_seeds --seeds 0-2 --epochs 250 --device cu
     --learning-rate-in 1e-2 --learning-rate-rec 1e-2 --out-dir data/w2_long
 ```
 
+BPTT 那条对照臂（P2 头条数字的另一半）用 `sweep_bptt.py`——它是 `sweep_seeds.py` 在 BPTT
+侧的对应物：只借 `BPTTLearner`，**不碰 `bptt_baseline.py`**（那个产出的是另一件东西，是 CI
+的 `gap-report` job 依赖的「量化差距报告」artifact）。它按同一套用途名派生种子，所以每个
+种子的划分/初始化/打乱/编码与 e-prop 那次**逐位相同**——是真的配对设计，不是「同 seed」
+一句话。`--variant` 管读出层的待遇：A 是单个 SGD 覆盖全部参数（现状），B 是参数分组、读出层
+拿到 e-prop 那样的独立 `eta_out`。两个变体都进论文，A 同时是一份 handicap 对照：
+
+```bash
+# P2 头条数字那一批：先预扫定下 lr 与变体，再用胜方跑满 250ep。
+# 产物同样先落 data/，跑完再整体搬进 sweep_results/
+uv run python -m research.eprop.sweep_bptt --seeds 0-2 --epochs 30 --device cuda \
+    --variant B --learning-rate-out 5e-2 --learning-rate 3e-3 --out-dir data/w2_bptt_lr003_vB
+```
+
 旁证数据集 SHD 要另外下载（约 169 MB）：`uv run python scripts/download_data.py shd`。
 **它跑了，但没学出来**——见下面的「旁证 SHD」一节。
 

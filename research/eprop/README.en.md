@@ -211,6 +211,22 @@ uv run python -m research.eprop.sweep_seeds --seeds 0-2 --epochs 250 --device cu
     --learning-rate-in 1e-2 --learning-rate-rec 1e-2 --out-dir data/w2_long
 ```
 
+The BPTT arm (the other half of the P2 headline number) runs through `sweep_bptt.py` -- the BPTT
+counterpart of `sweep_seeds.py`: it borrows `BPTTLearner` and **does not touch
+`bptt_baseline.py`** (that one produces something else, the quantitative gap-report artifact the
+CI `gap-report` job depends on). It derives its seeds from the same purpose names, so the split,
+weight init, batch order and spike encoding are **bit-identical** to the e-prop run -- a real
+paired design, not just "same seed". `--variant` governs how the readout is treated: A is a
+single SGD over all parameters (the status quo), B is parameter groups where the readout gets
+e-prop's separate `eta_out`. Both variants go into the paper; A doubles as a handicap control:
+
+```bash
+# The P2 headline batch: presweep to fix the lr and the variant, then 250ep at the winner.
+# Also lands in data/ first, moved into sweep_results/ afterwards
+uv run python -m research.eprop.sweep_bptt --seeds 0-2 --epochs 30 --device cuda \
+    --variant B --learning-rate-out 5e-2 --learning-rate 3e-3 --out-dir data/w2_bptt_lr003_vB
+```
+
 The secondary dataset SHD needs a separate ~169 MB download:
 `uv run python scripts/download_data.py shd`. **It ran — and it did not learn**, see the
 "SHD cross-check" section below.

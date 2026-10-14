@@ -205,6 +205,22 @@ uv run python -m research.eprop.sweep_seeds --seeds 0-2 --epochs 250 --device cu
     --learning-rate-in 1e-2 --learning-rate-rec 1e-2 --out-dir data/w2_long
 ```
 
+BPTT の対照アーム（P2 ヘッドライン数字の残り半分）は `sweep_bptt.py` で回します——
+`sweep_seeds.py` の BPTT 側の対応物で、`BPTTLearner` だけを借り、**`bptt_baseline.py` には
+触りません**（あちらが生むのは別物で、CI の `gap-report` job が依存する「定量ギャップ報告」
+の成果物です）。同じ用途名からシードを派生させるため、分割・初期化・シャッフル・符号化は
+e-prop の実行と**ビット単位で同一**——「同じ seed」という一言ではなく、実際のペア設計です。
+`--variant` は読み出し層の扱いを切り替えます：A は全パラメータを単一 SGD（現状）、
+B はパラメータグループに分け、読み出し層に e-prop と同じ独立した `eta_out` を与えます。
+両方の変体とも論文に入れます——A は同時にハンディキャップ対照でもあります：
+
+```bash
+# P2 ヘッドラインのバッチ：まず予備スキャンで lr と変体を決め、勝った構成で 250ep。
+# 同じく data/ に落とし、完了後に sweep_results/ へまとめて移します
+uv run python -m research.eprop.sweep_bptt --seeds 0-2 --epochs 30 --device cuda \
+    --variant B --learning-rate-out 5e-2 --learning-rate 3e-3 --out-dir data/w2_bptt_lr003_vB
+```
+
 傍証データセット SHD は別途約 169 MB のダウンロードが必要です：
 `uv run python scripts/download_data.py shd`。**実行しましたが、学習しませんでした**——
 下の「SHD の傍証」を参照。
