@@ -33,21 +33,22 @@ Recorded here as a correction rather than quietly deleted:
 
 ## Known gaps
 
-1. **`refs.bib` has 14 entries; the task list named 15.** Three keys had zero hits in this
-   repo's ledgers. Two were verified online and added, with the verification recorded in
-   `docs/references.md` [24][25]:
+1. **`refs.bib` now has all 15 entries.** Three keys had zero hits in this repo's ledgers and
+   were resolved by verification, recorded in `docs/references.md` [24][25][26]:
    - `miconi2018differentiable` — ICML 2018, PMLR 80, pp. 3559–3568;
-   - `zanardi2024metaplasticity` — Phys. Rev. E 110(5), 054304.
+   - `zanardi2024metaplasticity` — Phys. Rev. E 110(5), 054304;
+   - `turcu2025switching` — NeurIPS 2025 **UniReps workshop**.
 
-   The third, `neurips2025switching`, is **still missing its author list**: title and venue
-   are confirmed ("Learning using switching synaptic plasticity rules", NeurIPS 2025), but
-   **every route to the authors was tried on 2026-10-15 and blocked**:
-   the NeurIPS virtual page renders its author block client-side (the served HTML carries
-   only CSS class names and `Authors -->` template placeholders, no names), the bioRxiv
-   preprint (`10.64898/2026.06.10.731456`) refuses the fetch, and the OpenReview API returns
-   `403 ChallengeRequiredError`. **The authors are not guessed** — an incomplete entry stays
-   out rather than carry a plausible-looking author list. ⚠️ It is a §2.2
-   nearest-neighbour citation and must be complete before the Zenodo deposit.
+   ⚠️ **The third carries a venue correction worth reading.** The task list's key was
+   `neurips2025switching`, which assumed a **main-conference** paper. It is a **workshop**
+   paper (also a DBM 2025 Findings Poster, and Cosyne 2026), from the Allen Institute, with
+   **no arXiv preprint**. The key was renamed to match. Earlier attempts to fetch the author
+   list all failed (NeurIPS virtual page renders authors client-side; bioRxiv refused;
+   OpenReview API returned `403 ChallengeRequiredError`) — it was resolved by hand from the
+   UniReps page and OpenReview, cross-checked.
+   ⚠️ **`main.tex` line 44's comment still reads "NeurIPS 2025 switching rules" without the
+   workshop qualifier.** That is skeleton body text and was **not edited** under this batch's
+   red line; the venue in `refs.bib` governs.
 2. **`hajizada2026clp` is dated 2026** here, matching the task list and `docs/references.md`
    [8]. Note the project plan's prose says 2025; the two disagree.
 3. **`main.tex` is committed byte-for-byte as delivered** and has not been edited — the two

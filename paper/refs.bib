@@ -5,18 +5,12 @@
 %  每一条都必须能在 docs/references.md 或 docs/related_projects.md 里
 %  找到对应的已点验条目——本文件**不新增**任何仓库里没有的引用。
 %
-%  当前 14 条，任务清单列了 15 条。
+%  当前 **15 条**，与任务清单的 15 条对齐。
 %
-%  2026-10-15：清单里有三条在本仓 docs/ 下**零命中**，经授权联网查证后补入两条
-%  （miconi2018differentiable、zanardi2024metaplasticity，均带官方 DOI / 卷页），
-%  并同步登记进 docs/references.md 台账 [24][25]。
-%
-%  ⚠️ 仍缺 1 条：`neurips2025switching`。标题与会场已确认
-%  （"Learning using switching synaptic plasticity rules", NeurIPS 2025），但**作者列表
-%  拿不到**——2026-10-15 三条路径都试过且都被拦：NeurIPS 虚拟页的作者块是前端渲染
-%  （服务端 HTML 里只有 CSS 类名与 `Authors -->` 模板占位）、bioRxiv 预印本
-%  （10.64898/2026.06.10.731456）拒抓、OpenReview API 返回 403 ChallengeRequiredError。
-%  **不猜作者**：书目信息不全的条目宁可留空，也不写一个看起来像样的作者列表。
+%  2026-10-15：清单里有三条在本仓 docs/ 下**零命中**，查证后全部补入——
+%  两条来自联网核实（miconi2018differentiable、zanardi2024metaplasticity），
+%  第三条（切换型可塑性规则）由人工双源确认后给出完整书目。三条都同步登记进了
+%  docs/references.md 台账（[24][25][26]）。
 % ============================================================
 
 % ---- 本地学习规则 ----
@@ -173,4 +167,22 @@
   year    = {2024},
   doi     = {10.1103/PhysRevE.110.054304},
   url     = {https://doi.org/10.1103/PhysRevE.110.054304},
+}
+
+% ---- SNN 元可塑性的最近邻（2026-10-15 补齐；venue 已更正）----
+%
+% ⚠️ **venue 更正**：任务清单给的键名是 `neurips2025switching`，那是基于当时**错误的**
+% venue 判断。经双源确认后更正为：这是 **NeurIPS 2025 UniReps workshop** 论文，
+% **不是主会论文**（同时是 DBM 2025 Findings Poster、Cosyne 2026 收录）；Allen Institute
+% 出品、**无 arXiv 预印本**。键名随之改为按作者命名，免得把 workshop 记成主会。
+%
+% ⚠️ **骨架 `main.tex` 第 44 行的注释里写的是 "NeurIPS 2025 switching rules"（未提 workshop）**。
+% 那是骨架正文，按本批的红线**没有改**——要引用时 venue 以本条为准。
+
+@inproceedings{turcu2025switching,
+  title     = {Learning using switching synaptic plasticity rules},
+  author    = {Turcu, Denis and Cornford, Jonathan and Dorkenwald, Sven and Mihalas, Stefan},
+  booktitle = {NeurIPS 2025 Workshop on Unifying Representations in Neural Models (UniReps)},
+  year      = {2025},
+  url       = {https://openreview.net/forum?id=SfYSE9c2}
 }
