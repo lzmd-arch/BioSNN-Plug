@@ -46,10 +46,15 @@ Recorded here as a correction rather than quietly deleted:
    list all failed (NeurIPS virtual page renders authors client-side; bioRxiv refused;
    OpenReview API returned `403 ChallengeRequiredError`) — it was resolved by hand from the
    UniReps page and OpenReview, cross-checked.
-   ⚠️ **`main.tex` line 44's comment still reads "NeurIPS 2025 switching rules" without the
-   workshop qualifier.** That is skeleton body text and was **not edited** under this batch's
-   red line; the venue in `refs.bib` governs.
+   ⚠️ **`main.tex` line 44's comment carried the same imprecision** ("NeurIPS 2025 switching
+   rules", with no workshop qualifier). It has since been **corrected in place** — see gap 3.
 2. **`hajizada2026clp` is dated 2026** here, matching the task list and `docs/references.md`
    [8]. Note the project plan's prose says 2025; the two disagree.
-3. **`main.tex` is committed byte-for-byte as delivered** and has not been edited — the two
-   items above were checked, not changed.
+3. **`main.tex` has exactly one edit against the delivered file**, and it is **comment-only**:
+   line 44's comment said "NeurIPS 2025 switching rules" and now says "Turcu et al. 2025,
+   UniReps workshop (switching rules; ...)" — the same venue correction recorded in
+   `docs/references.md` [26]. **The evidence is the diff itself**: one line changed in
+   `git diff --stat`, and the `\todo{}` count is unchanged at 6. ⚠️ Do **not** use "the PDF
+   bytes are the same" as evidence — `main.pdf` embeds a creation timestamp, so its **hash
+   changes on every rebuild** even when the source is untouched (observed on this very
+   commit: same 103,970 bytes, different blob hash).

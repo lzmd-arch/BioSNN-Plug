@@ -176,8 +176,12 @@
 % **不是主会论文**（同时是 DBM 2025 Findings Poster、Cosyne 2026 收录）；Allen Institute
 % 出品、**无 arXiv 预印本**。键名随之改为按作者命名，免得把 workshop 记成主会。
 %
-% ⚠️ **骨架 `main.tex` 第 44 行的注释里写的是 "NeurIPS 2025 switching rules"（未提 workshop）**。
-% 那是骨架正文，按本批的红线**没有改**——要引用时 venue 以本条为准。
+% ✅ **骨架 `main.tex` 第 44 行的注释已就地更正**（2026-10-15，经授权、**仅注释级**）：
+% 原写 "NeurIPS 2025 switching rules"，现为 "Turcu et al. 2025, UniReps workshop
+% (switching rules; closest neighbor -- cite AND delimit)"。
+% **证据是 diff 本身**：`git diff --stat` 只有 1 行、且 `\todo{}` 计数不变（6）。
+% ⚠️ **别拿「PDF 字节数相同」当证据**——`main.pdf` 内嵌生成时间，**每次重编译哈希都会变**，
+% 哪怕源码一个字没动（本次即如此：同为 103,970 字节，blob 哈希却不同）。
 
 @inproceedings{turcu2025switching,
   title     = {Learning using switching synaptic plasticity rules},
