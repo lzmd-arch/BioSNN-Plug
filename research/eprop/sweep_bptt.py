@@ -29,17 +29,27 @@
 的差距」。所以流程是两段：先用 30 epoch × 3 档 lr 选出 BPTT 自己的最优 lr，再用那个
 lr 跑满预算。选 lr 的那一段的产物也要留档——「我们怎么选的」本身是方法的一部分。
 
-## 已知的不对称（记录在案，没有偷偷抹平）
+## 配方待遇的不对称：用变体维度处理，不动旧 artifact
 
 :class:`~research.eprop.bptt_baseline.BPTTLearner` 用**单个** ``SGD(momentum=0.9)``
 覆盖全部参数，读出层拿不到 e-prop 那样的独立 ``eta_out=5e-2``。这条不对称对 BPTT 是
-**不利**的。它不在本轮授权范围内（改它就等于改那条已记录 artifact 的含义），所以照原样
-跑并写进备注；读这个数字的人应该知道它。
+**不利**的，而「honest measurement」这个标题赌不起它——审稿人一旦翻出来，全文信誉受损，
+比数字难看严重得多。
+
+处理方式刻意**不改** ``BPTTLearner``（改它等于改 ``w2_bptt.log`` 那条已记录 artifact
+的含义），而是在这里加一个变体维度：
+
+* ``--variant A``：单个 SGD，读出层与隐层同 lr。**现状**，与那条 artifact 同一配方，
+  于是它同时是一份 handicap 对照——「配方待遇对 BPTT 成绩的影响」本身有信息量。
+* ``--variant B``：参数分组，隐层用扫描的 lr、读出层用 ``--learning-rate-out``
+  （默认 5e-2，逐参数镜像 e-prop）。两个变体的**唯一**差别就是这个。
+
+两个变体都进论文，最终那条 250 epoch 的臂用预扫的胜方。
 
 用法::
 
     uv run python -m research.eprop.sweep_bptt --seeds 0-2 --epochs 30 \\
-        --learning-rate 3e-3 --out-dir sweep_results/w2_bptt_lr003
+        --learning-rate 3e-3 --variant B --out-dir sweep_results/w2_bptt_lr003_vB
 
     uv run python -m research.eprop.sweep_bptt --smoke   # 只验管线，数字无意义
 """
@@ -62,7 +72,7 @@ from research.eprop.neurons import ALIFState
 from research.eprop.sweep_seeds import parse_seeds
 from research.eprop.tasks import load_shd, load_smnist
 
-__all__ = ["apply_smoke", "build_parser", "run_seed"]
+__all__ = ["apply_smoke", "build_optimizer", "build_parser", "run_seed"]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -89,7 +99,21 @@ def build_parser() -> argparse.ArgumentParser:
         "--learning-rate",
         type=float,
         default=5e-3,
-        help="BPTT 的 lr（单个优化器覆盖全部参数，见模块 docstring 的「已知的不对称」）",
+        help="BPTT 的 lr。变体 A 下它管全部参数；变体 B 下它只管隐层（读出层见 "
+        "--learning-rate-out）",
+    )
+    parser.add_argument(
+        "--variant",
+        choices=["A", "B"],
+        default="A",
+        help="A = 单个 SGD 覆盖全部参数（现状，与 w2_bptt.log 那份 artifact 同配方，"
+        "是一份 handicap 对照）；B = 参数分组，读出层用独立的 --learning-rate-out",
+    )
+    parser.add_argument(
+        "--learning-rate-out",
+        type=float,
+        default=5e-2,
+        help="变体 B 下读出层的 lr，默认 5e-2 = e-prop 的 eta_out（逐参数镜像它）",
     )
     parser.add_argument("--decay-out", type=float, default=0.95)
     parser.add_argument(
@@ -135,6 +159,46 @@ def _spike_stats(model: BPTTLearner, inputs: torch.Tensor) -> tuple[float, float
     return active, sparsity
 
 
+def build_optimizer(
+    model: BPTTLearner, *, variant: str, learning_rate: float, learning_rate_out: float
+) -> torch.optim.SGD:
+    """按变体造优化器。两个变体的**参数集合必须完全一样**。
+
+    ``momentum=0.9`` 两个变体都保留——变体之间**只许**差读出层那一个 lr，否则 A/B 的
+    对比就不再是"配方待遇"这一件事的对比。
+
+    Raises:
+        ValueError: 变体名不认识。宁可当场炸，也不要静默退回 A 而让调用方以为跑了 B。
+    """
+    if variant == "A":
+        # 与 BPTTLearner.__init__ 里那行逐字同构（同一个调用、同样的默认 momentum），
+        # 所以变体 A 就是那条已记录 artifact 的配方，没有偷偷改动。
+        return torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9)
+    if variant == "B":
+        return torch.optim.SGD(
+            [
+                {"params": list(model.cell.parameters()), "lr": learning_rate},
+                {"params": [model.w_out], "lr": learning_rate_out},
+            ],
+            momentum=0.9,
+        )
+    raise ValueError(f"未知变体 {variant!r}，只能是 'A' 或 'B'。")
+
+
+def _variant_note(args: argparse.Namespace) -> str:
+    """复现记录里的「配方待遇」一行——让变体名可机器查询，而不是只写在某个人的记忆里。"""
+    if args.variant == "A":
+        return (
+            "优化器变体 A：单个 SGD(momentum=0.9) 覆盖全部参数，读出层与隐层同 lr"
+            f"（{args.learning_rate}）——与 w2_bptt.log 那份 artifact 同配方，"
+            "对 BPTT 不利，作为 handicap 对照保留"
+        )
+    return (
+        f"优化器变体 B：参数分组，隐层 lr={args.learning_rate}、"
+        f"读出层 lr={args.learning_rate_out}（镜像 e-prop 的 eta_out），两组合用 momentum=0.9"
+    )
+
+
 def run_seed(args: argparse.Namespace, seed: int, device: torch.device) -> dict:
     """跑一个种子，返回落盘的那条记录（键与 ``sweep_seeds`` 对齐）。"""
     book = SeedBook(base=seed)
@@ -177,6 +241,16 @@ def run_seed(args: argparse.Namespace, seed: int, device: torch.device) -> dict:
         decay_out=args.decay_out,
         generator=torch.Generator().manual_seed(book.derive("权重初始化")),
     ).to(device)
+
+    # 优化器一律经 build_optimizer 造，**包括变体 A**：这样"变体 A = 那条 artifact 的配方"
+    # 是被同一个函数保证的，而不是靠"我没碰它"这句话。测试另拿 BPTTLearner 自带的那个
+    # 优化器做对照，验参数集合一致。
+    model.optimizer = build_optimizer(
+        model,
+        variant=args.variant,
+        learning_rate=args.learning_rate,
+        learning_rate_out=args.learning_rate_out,
+    )
 
     shuffle = torch.Generator().manual_seed(book.derive("每批打乱"))
     started = time.perf_counter()
@@ -225,8 +299,7 @@ def run_seed(args: argparse.Namespace, seed: int, device: torch.device) -> dict:
             f"epochs={args.epochs}, batch={args.batch_size}",
             "预算由构造保证：训练集同样是从全量里切掉 10% 验证集，"
             "划分/初始化/打乱/编码四处的种子与 e-prop 那次逐位相同（用途名派生，与顺序无关）",
-            "已知不对称（对 BPTT 不利，未抹平）：BPTTLearner 用单个 SGD(momentum=0.9) "
-            "覆盖全部参数，读出层没有 e-prop 那样的独立 eta_out=5e-2",
+            _variant_note(args),
             "代理梯度穿过脉冲函数；与 e-prop 的差别只在学习规则",
         ],
     )
@@ -248,6 +321,8 @@ def run_seed(args: argparse.Namespace, seed: int, device: torch.device) -> dict:
             "beta": args.beta,
             "threshold": args.threshold,
             "learning_rate": args.learning_rate,
+            "variant": args.variant,
+            "learning_rate_out": args.learning_rate_out if args.variant == "B" else None,
             "decay_out": args.decay_out,
             "n_train": n_train,
             "n_val": n_val,
@@ -280,7 +355,9 @@ def main(argv: list[str] | None = None) -> int:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     print(
         f"BPTT 臂：{len(seeds)} 个种子（{seeds[0]}–{seeds[-1]}），数据集 {args.dataset}，"
-        f"eta={args.learning_rate}，epochs={args.epochs}，设备 {device}"
+        f"变体 {args.variant}，eta={args.learning_rate}"
+        + (f"，eta_out={args.learning_rate_out}" if args.variant == "B" else "")
+        + f"，epochs={args.epochs}，设备 {device}"
     )
 
     records = []
