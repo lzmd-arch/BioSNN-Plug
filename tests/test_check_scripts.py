@@ -26,6 +26,7 @@ REFERENCES = SCRIPTS / "check_references.py"
 VERSIONS = SCRIPTS / "check_version_consistency.py"
 LICENSES = SCRIPTS / "check_licenses.py"
 MD_TABLES = SCRIPTS / "check_md_tables.py"
+README_LINKS = SCRIPTS / "check_readme_links.py"
 
 
 def run(script: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -446,6 +447,74 @@ class TestMdTables:
         assert result.returncode == 1, result.stdout + result.stderr
         # 不钉死行号：textwrap.dedent 的首行是空行，行号会随格式化细节偏移；
         assert "doc.md" in result.stdout + result.stderr
+
+
+class TestReadmeLinks:
+    """`scripts/check_readme_links.py` 的回归测试。
+
+    它是 lychee 那条 **URL 级豁免的补偿**（豁免理由见 ci.yml：`packages/biosnn-bus/README*.md`
+    是 PyPI long_description 的来源，**必须**用绝对 URL，于是那些自指链接只能走网络、
+    而 GitHub 对自指链接间歇 503）。
+
+    补偿的要点是**两个域都要覆盖**：相对路径、以及**指向本仓库的绝对 URL**——后者正是
+    被豁免的那批。只测前者会漏掉补偿的核心，所以下面两个方向各有一条负向用例。
+    """
+
+    def _check(self, tmp_path: Path, content: str) -> subprocess.CompletedProcess[str]:
+        return run(README_LINKS, str(write(tmp_path / "doc.md", content)))
+
+    def test_passes_on_a_good_relative_link(self, tmp_path):
+        write(tmp_path / "target.md", "# x\n")
+        result = self._check(tmp_path, "[ok](target.md)\n")
+        assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_catches_a_broken_relative_link(self, tmp_path):
+        result = self._check(tmp_path, "[bad](no_such_file.md)\n")
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert "相对链接指向不存在的文件" in result.stdout + result.stderr
+
+    def test_passes_on_a_good_self_referential_url(self, tmp_path):
+        """指向本仓库的绝对 URL——**被豁免的那一类**，必须同样本地验到。"""
+        result = self._check(
+            tmp_path,
+            "[ok](https://github.com/lzmd-arch/BioSNN-Plug/blob/main/README.md)\n",
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_catches_a_broken_self_referential_url(self, tmp_path):
+        """**这条是补偿存在的理由**：它本来由 lychee 走网络查，现已豁免。"""
+        result = self._check(
+            tmp_path,
+            "[bad](https://github.com/lzmd-arch/BioSNN-Plug/blob/main/no_such_file_xyz.md)\n",
+        )
+        assert result.returncode == 1, result.stdout + result.stderr
+        assert "自指链接指向仓库内" in result.stdout + result.stderr
+
+    def test_external_links_are_skipped(self, tmp_path):
+        result = self._check(tmp_path, "[ext](https://example.com/nope)\n")
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert "跳过 1 条" in result.stdout + result.stderr
+
+    def test_anchor_only_links_are_skipped(self, tmp_path):
+        result = self._check(tmp_path, "[top](#section)\n")
+        assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_fragment_in_a_relative_link_is_stripped(self, tmp_path):
+        """`x.md#section` 要按 `x.md` 验存在——锚点不影响文件在不在。"""
+        write(tmp_path / "target.md", "# x\n")
+        result = self._check(tmp_path, "[ok](target.md#some-heading)\n")
+        assert result.returncode == 0, result.stdout + result.stderr
+
+    def test_reports_what_it_checked_and_skipped(self, tmp_path):
+        """**跳过的条数必须报**：一个什么都没查的绿色输出，和「全都查过」长得一模一样。"""
+        result = self._check(tmp_path, "[ext](https://example.com)\n")
+        out = result.stdout + result.stderr
+        assert "本地断言 0 条" in out and "跳过 1 条" in out, out
+
+    def test_missing_target_file_is_an_error(self, tmp_path):
+        result = run(README_LINKS, str(tmp_path / "no_such.md"))
+        assert result.returncode == 1
+        assert "找不到" in result.stdout + result.stderr
 
 
 class TestLicenses:

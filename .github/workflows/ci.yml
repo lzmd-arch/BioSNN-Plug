@@ -232,16 +232,49 @@ jobs:
           # 两条都**只排除 URL 本身，不排除域名**：jair.org 与 cnki.net 上的其他链接仍会被
           # 检查。加新排除前请先按 ① 的标准核实：链接本身是活的，失败可稳定复现，且原因
           # 在传输层而非 HTTP 状态码。
+          #
+          # ③ `packages/biosnn-bus/README*.md` 里**指向本仓库的绝对 URL**（两条：ADR-0001
+          # 的三语版本、examples/quickstart_register_plugin.py）。这条的理由是**结构性**的、
+          # 不是抖动：那个 README 是 **PyPI 页面的 long_description 来源**，那里**必须**用
+          # 绝对 URL（相对路径在 PyPI 上会 404），于是 lychee 必然走网络访问 github.com，
+          # 而 GitHub 对这类**自指链接**间歇返回 503（2026-10-13 与 10-15 各复现一次，
+          # 两次重跑都即绿）。
+          #
+          # ⚠️ **豁免挪走的是「网络可达性」，不是「链接正确性」**——所以配了一道**本地补偿
+          # 检查**：`scripts/check_readme_links.py`（见下面的 `readme-links` job）。它把自指
+          # 绝对 URL 的路径抠出来，**断言仓库内该文件存在**，纯本地、不走网络。这比 HTTP 200
+          # 更严：200 只说明「此刻可达」，抓不到「文件被移走、URL 却仍返回 200」的软 404。
+          # 它的扫描范围与 lychee 同为全仓 `.md`（豁免是 URL 级的，无法限定文件，所以补偿
+          # 范围必须不小于豁免范围），因此被挪走多少就补回多少。
           args: >-
             --no-progress
             --max-concurrency 8
             --accept 200,206,429,403
             --exclude '^https://doi\.org/10\.1613/jair\.3912$'
             --exclude '^https://kns\.cnki\.net/?$'
+            --exclude '^https://github\.com/lzmd-arch/BioSNN-Plug/blob/main/(docs/adr/ADR-0001-skeleton-as-separate-library(\.en|\.ja)?\.md|examples/quickstart_register_plugin\.py)$'
             --exclude-path .venv
             --exclude-path node_modules
             './**/*.md'
           fail: true
+
+  # ── README 内部链接的本地解析检查（上面 `links` job 那条豁免的补偿）──────
+  # lychee 豁免了 `packages/biosnn-bus/README*.md` 里指向本仓库的绝对 URL（理由见
+  # `links` job 注释③：那个 README 是 PyPI long_description 的来源，必须用绝对 URL）。
+  # 豁免丢掉的「链接会不会腐烂」由这里补回来——**纯本地、不走网络**：把相对路径与
+  # 自指绝对 URL 都解析成仓库内路径，**断言目标文件存在**。
+  # 比 HTTP 200 更严：200 只说明「此刻可达」，抓不到「文件被移走、URL 却仍返回 200」。
+  # 扫描范围与 lychee 同为全仓 `.md`——豁免是 URL 级的（无法限定文件），所以补偿范围
+  # 必须不小于豁免范围，否则被挪走的那部分就成了净损失。
+  readme-links:
+    name: README 内部链接检查（本地解析）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/check_readme_links.py
 
   # ── 计划书 §12.1：第三方依赖许可审计 ──────────────────────────────────────
   # 计划书点名要核查 eprop-PyTorch 与 Lava/Loihi 相关组件的许可证条款。

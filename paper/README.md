@@ -41,9 +41,13 @@ Recorded here as a correction rather than quietly deleted:
 
    The third, `neurips2025switching`, is **still missing its author list**: title and venue
    are confirmed ("Learning using switching synaptic plasticity rules", NeurIPS 2025), but
-   the page renders authors with JS and the bioRxiv preprint was unreachable. **The authors
-   are not guessed** — an incomplete entry stays out rather than carry a plausible-looking
-   author list.
+   **every route to the authors was tried on 2026-10-15 and blocked**:
+   the NeurIPS virtual page renders its author block client-side (the served HTML carries
+   only CSS class names and `Authors -->` template placeholders, no names), the bioRxiv
+   preprint (`10.64898/2026.06.10.731456`) refuses the fetch, and the OpenReview API returns
+   `403 ChallengeRequiredError`. **The authors are not guessed** — an incomplete entry stays
+   out rather than carry a plausible-looking author list. ⚠️ It is a §2.2
+   nearest-neighbour citation and must be complete before the Zenodo deposit.
 2. **`hajizada2026clp` is dated 2026** here, matching the task list and `docs/references.md`
    [8]. Note the project plan's prose says 2025; the two disagree.
 3. **`main.tex` is committed byte-for-byte as delivered** and has not been edited — the two
