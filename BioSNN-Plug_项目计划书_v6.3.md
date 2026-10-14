@@ -263,6 +263,28 @@
 >    **仲裁器本身已备好两条路都能用**：`research/arbiter/` 的 `blend` / `fit` 只收两个
 >    更新张量，**不知道也不关心它们来自哪条线**（形状相同即可），所以接线的技术准备是
 >    好的，缺的是**架构上让两条规则能比**这件事。
+> ㉙ **P2 论文骨架入库（`paper/`），并交代过程中发现的三个问题。** 骨架 v0.2 的 `main.tex`
+>    按交付**原样**入库（逐字节相同，sha256 `876095d1…`），配 `refs.bib`、`paper/README.md`
+>    与 `figures/.gitkeep`。编译验证：本机装了 TinyTeX（**解压式、未改系统 PATH**——装前装后
+>    User / Machine PATH 的长度与内容逐项比对过），`pdflatex → bibtex → pdflatex ×2` 全绿，
+>    产出 `main.pdf` **3 页**；`main.pdf` 入库，`*.aux/*.log/*.out/*.blg/*.bbl` 进 `.gitignore`。
+>    **① 清单里三条文献在本仓零命中**（`neurips2025switching` / `zanardi2024metaplasticity` /
+>    `miconi2018differentiable`）——任务既列了它们、又要求「不新增仓库外引用」，两者冲突，所以
+>    先查证再定。经授权联网核实后两条拿到权威书目并入 `refs.bib`、**同步登记台账 [24][25]**：
+>    Miconi et al. 2018（ICML，PMLR 80，3559–3568）、Zanardi et al. 2024（Phys. Rev. E 110(5)，
+>    054304，DOI 可核）。**第三条仍缺作者**：标题与会场已确认（NeurIPS 2025），但该页面作者由
+>    JS 渲染、bioRxiv 预印本抓取被拦——**不猜作者**，条目留空并在 `refs.bib` 顶部与
+>    `paper/README.md` 显式登记为待补。**所以 refs.bib 是 14 条而非清单的 15 条。**
+>    **② 我凭记忆断言的两处「会编译失败」，实测都不成立**：`\title` 里的 `\\A` 合法（`\\` 是
+>    控制符、后面不需要空格），`\bibliographystyle{plainnat}` 也能解析（natbib 随 TinyTeX-1 发布）。
+>    教训：**没有验证手段时措辞要留余地**——我写的是 "look like they will fail to compile"，
+>    已经偏硬。两处已在 `paper/README.md` 更正并保留原判（不删，便于对照）。
+>    **③ 一条会静默污染内容的操作习惯**：用 Bash heredoc + Python 写文件时，`\'`、`\t`、`\b`
+>    这些**转义序列会被 Python 解释**，于是 `refs.bib` 的重音（`Korcs{\'a}k` → `Korcs{'a}k`）
+>    与 `paper/README.md` 的三处 LaTeX 命令（`\todo` → TAB、`\bibliographystyle` → 退格）
+>    **静默损坏**，而两个文件都「看起来正常」。已用编辑工具重写修好，并用**控制字符扫描**
+>    验证三个文件都不含被吞转义的指纹。**结论：写含反斜杠的内容（LaTeX / bib）必须走编辑
+>    工具，不要经过 shell 字符串。**
 
 ---
 

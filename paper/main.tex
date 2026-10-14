@@ -1,0 +1,100 @@
+% ============================================================
+%  P2 paper skeleton v0.2  ·  BioSNN-Plug Benchmark Paper
+%  Build:  pdflatex main && bibtex main && pdflatex main && pdflatex main
+%         (or simply:  latexmk -pdf main)
+%  写作纪律: 数字全部来自 research/ 复现记录; \todo{} 标记待填
+%  红线: 不得出现 "state-of-the-art"; 预训练组件必须声明冻结
+% ============================================================
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs, graphicx, hyperref, amsmath, xcolor}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\title{Local Learning Rules Under Honest Measurement:\\A Reproducibility-First Benchmark of e-prop, Hebbian, and R-STDP\\on Consumer Hardware}
+\author{lzmd-arch\thanks{Independent researcher. Correspondence: \todo{email}.}\\ \small{github.com/lzmd-arch/BioSNN-Plug}}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+% ------------------------------------------------------------
+\begin{abstract}
+\todo{120-180 words. Outline: (1) problem -- local-rule benchmarks lack honest measurement (budget/protocol/degenerate solutions); (2) what we did -- three rule lines + interaction matrix + same-budget BPTT control, consumer GPU; (3) headline numbers -- e-prop ALIF converges at 0.8831 (250ep); LIF-vs-ALIF interaction; Critic-corrected R-STDP 237.8 steps; (4) methodological contributions -- bit-exact reproduction, retention-joint reporting, alpha-to-zero degeneracy analysis; (5) stance -- gaps reported as-is, no cosmetics.}
+\end{abstract}
+
+% ------------------------------------------------------------
+\section{Introduction}
+\subsection{Motivation}          % pain point: BPTT biological implausibility + memory/compute-graph cost
+\subsection{The measurement gap} % status quo: local-rule papers use incomparable budgets/protocols
+\subsection{Contributions}
+\begin{itemize}
+  \item \textbf{Honest benchmark}: three local-rule lines under one unified protocol (budget/seeds/protocols fully public). \todo{fill numbers}
+  \item \textbf{Interaction finding}: neuron type x learning rate interaction; at default hyperparameters the adaptation term can hurt (same-budget LIF leads ALIF by 1.04pp).
+  \item \textbf{Convergence evidence}: e-prop + ALIF converges at 0.8831 (250 epochs), lower edge of the e-prop literature band.
+  \item \textbf{Methodology}: bit-exact reproduction, retention-joint reporting, degeneracy analysis, frozen-noise evaluation protocol.
+  \item \textbf{Open assets}: all code/configs/scripts open (biosnn-bus on PyPI); comparison table with evidence ledger for 5 sibling projects.
+\end{itemize}
+\subsection{Positioning: what this paper is not}
+% Three non-claims: no SOTA claims; no emergence/intelligence claims; no hidden negative results (SHD reported as-is).
+
+% ------------------------------------------------------------
+\section{Related Work}
+\subsection{Local learning rules for spiking networks}  % Bellec 2020; TP (Pes 2025); ESPP; event-driven e-prop (Korcsak-Gorzo 2025); deep e-prop (Millidge 2025); D-RTRL/pp-prop
+\subsection{Meta-learned plasticity and arbitration}    % Confavreux 2025; Miconi/ABCD; meta-plasticity (Zanardi 2024); NeurIPS 2025 switching rules (closest neighbor -- cite AND delimit)
+\subsection{SNN--LLM hybrid architectures}               % EMBER; MEMBRAIN; Javis (quote its learning-rule status verbatim and honestly)
+\subsection{Reproducibility protocols in SNN training}  % sparse literature; our Section 3 fills the gap
+% One sentence per citation: "difference from ours". Reuse the grouping from docs/related_work.md.
+
+% ------------------------------------------------------------
+\section{Methods}
+\subsection{Systems under test}   % W1 Hebbian (kernelized + divisive norm.); W2 e-prop (ALIF/LIF); W3 R-STDP + TD-LTP Critic
+\subsection{Evaluation protocol}  % this section is a selling point -- write it thick:
+  % (a) budget discipline: all comparisons at matched epochs/sample budgets; cross-budget numbers must never be subtracted;
+  % (b) config dumps: mandatory per-run machine-readable config; every paper number is queryable;
+  % (c) seeds & bit-exact reproduction: 5 seeds; identical results across sessions, bit-for-bit;
+  % (d) frozen-noise evaluation: encoding seed fixed at eval time (training stays stochastic);
+  % (e) model selection on validation only; test set frozen.
+\subsection{Triviality analysis}  % alpha-to-zero degenerate solution; "conflict reduction must be reported with retention"; per-synapse cosine degeneracy -> per-row cosine
+\subsection{Ethical / boundary statement} % frozen-pretrained-component boundary (mirrors plan SS1.4)
+
+% ------------------------------------------------------------
+\section{Experimental Setup}
+% RTX 5060 8GB; software version table; energy measurement convention. One environment table.
+
+% ------------------------------------------------------------
+\section{Results}
+\subsection{W1: Hebbian feature learning}
+  % Table: ridge readout 97.79% vs SGD readout 98.01% -- feature quality vs boundary statement
+\subsection{W2: e-prop sequential learning}
+  \subsubsection{Learning-rate sweep}      % Table: 4 lr x 5 seeds; 2e-3 arm reproduces September results bit-for-bit
+  \subsubsection{Neuron type interaction}  % Table: LIF vs ALIF at matched lr (2e-3): 0.7867 vs 0.7764; intervals do not overlap
+  \subsubsection{Budget extension}         % Figure: 250ep convergence curve -> 0.8831; plateau criterion pre-registered
+  \subsubsection{Comparison with BPTT}     % \todo{headline control-arm number; matched budget; gap = X.XX pp}
+\subsection{W3: R-STDP with Critic correction}
+  % CartPole median 237.8 (20 seeds); with/without baseline comparison; protocol cross-ref SS3.2
+\subsection{SHD: an honest negative result}
+  % 5.34% vs 5% chance; attribution (hyperparams or implementation); gap vs ESPP 70.31% discussed -- as-is, not hidden
+\subsection{Resource measurements}
+  % memory/throughput vs n_rec curve (log-log); empirical basis for consumer-grade deployment
+
+% ------------------------------------------------------------
+\section{Discussion}
+\subsection{When do local rules suffice?}    % readable conclusions by budget / task type
+\subsection{The interaction matters more than the rule} % policy implication of lr interaction: hyperparameter audit should be standard practice
+\subsection{Limits}                          % scale (256 -> 50k neurons unvalidated); task family (MNIST); single hardware
+
+% ------------------------------------------------------------
+\section{Conclusion}
+% Three sentences: honest measurement is a prerequisite for local-learning research; this paper provides protocol + numbers + code; future: arbiter synergy benchmark.
+
+% ------------------------------------------------------------
+\bibliographystyle{plainnat}
+\bibliography{refs}   % \todo{refs.bib: ~21 entries, from plan references + related_work.md}
+
+\appendix
+\section{Full configuration dumps}   % verbatim config dump per acceptance run
+\section{Reproduction checklist}       % examples/paper_*.py mapped one-to-one
+\section{Triviality analysis details} % alpha degeneracy sweep curves
+
+\end{document}

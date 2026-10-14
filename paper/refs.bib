@@ -1,0 +1,175 @@
+% ============================================================
+%  P2 paper bibliography  ·  BioSNN-Plug
+%
+%  规则（写在最前面，免得后来者随手加条目）：
+%  每一条都必须能在 docs/references.md 或 docs/related_projects.md 里
+%  找到对应的已点验条目——本文件**不新增**任何仓库里没有的引用。
+%
+%  当前 14 条，任务清单列了 15 条。
+%
+%  2026-10-15：清单里有三条在本仓 docs/ 下**零命中**，经授权联网查证后补入两条
+%  （miconi2018differentiable、zanardi2024metaplasticity，均带官方 DOI / 卷页），
+%  并同步登记进 docs/references.md 台账 [24][25]。
+%
+%  ⚠️ 仍缺 1 条：`neurips2025switching`。标题与会场已确认
+%  （"Learning using switching synaptic plasticity rules", NeurIPS 2025,
+%  https://neurips.cc/virtual/2025/loc/san-diego/127186），但**作者列表拿不到**——
+%  该页面由 JS 渲染，bioRxiv 预印本（10.64898/2026.06.10.731456）抓取被拦。
+%  **不猜作者**：书目信息不全的条目宁可留空，也不写一个看起来像样的作者列表。
+% ============================================================
+
+% ---- 本地学习规则 ----
+
+@article{bellec2020eprop,
+  author  = {Bellec, Guillaume and Scherr, Franz and Subramoney, Anand and Hajek, Elias and
+             Salaj, Darjan and Legenstein, Robert and Maass, Wolfgang},
+  title   = {A solution to the learning dilemma for recurrent networks of spiking neurons},
+  journal = {Nature Communications},
+  volume  = {11},
+  pages   = {3625},
+  year    = {2020},
+  url     = {https://www.nature.com/articles/s41467-020-17236-y},
+}
+
+@article{pes2025tp,
+  author  = {Pes, Luca and Yin, Bangjie and Stuijk, Sander and Corradi, Federico},
+  title   = {Traces Propagation: Memory-Efficient and Scalable Forward-Only Learning in
+             Spiking Neural Networks},
+  journal = {arXiv preprint arXiv:2509.13053},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2509.13053},
+}
+
+@article{espp2024,
+  author  = {Graf, Lukas and Su, Zhe and Indiveri, Giacomo},
+  title   = {EchoSpike Predictive Plasticity: An Online Local Learning Rule for Spiking
+             Neural Networks},
+  journal = {arXiv preprint arXiv:2405.13976},
+  year    = {2024},
+  url     = {https://arxiv.org/abs/2405.13976},
+}
+
+@article{korcsak2025event,
+  author  = {Korcs{\'a}k-Gorzo, Andr{\'a}s and Espinoza Valverde, Jos{\'e} Antonio and
+             Stapmanns, Jonas and Plesser, Hans E. and Dahmen, David and Bolten, Matthias and
+             van Albada, Sacha J. and Diesmann, Markus},
+  title   = {Event-driven eligibility propagation in large sparse networks: efficiency
+             shaped by biological realism},
+  journal = {arXiv preprint arXiv:2511.21674},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2511.21674},
+}
+
+@article{millidge2025deep,
+  author  = {Millidge, Beren},
+  title   = {Generalizing E-prop to Deep Networks},
+  journal = {arXiv preprint arXiv:2512.24506},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2512.24506},
+}
+
+% ---- 奖励调制与仲裁 ----
+
+@article{fremaux2010,
+  author  = {Fr{\'e}maux, Nicolas and Sprekeler, Henning and Gerstner, Wulfram},
+  title   = {Functional Requirements for Reward-Modulated Spike-Timing-Dependent Plasticity},
+  journal = {Journal of Neuroscience},
+  volume  = {30},
+  number  = {40},
+  pages   = {13326--13337},
+  year    = {2010},
+  url     = {https://www.jneurosci.org/content/30/40/13326},
+}
+
+@article{confavreux2025,
+  author  = {Confavreux, Basile and Agnes, Everardo J. and Zenke, Friedemann and
+             Sprekeler, Henning and Vogels, Tim P.},
+  title   = {Balancing complexity, performance and plausibility to meta learn plasticity
+             rules in recurrent spiking networks},
+  journal = {PLoS Computational Biology},
+  volume  = {21},
+  number  = {4},
+  pages   = {e1012910},
+  year    = {2025},
+  url     = {https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1012910},
+}
+
+% ---- 感知层 / 模态融合 ----
+
+@inproceedings{pogodin2020kernelized,
+  author    = {Pogodin, Roman and Latham, Peter E.},
+  title     = {Kernelized information bottleneck leads to biologically plausible 3-factor
+               Hebbian learning in deep networks},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {33},
+  year      = {2020},
+  url       = {https://proceedings.nips.cc/paper/2020/hash/517f24c02e620d5a4dac1db388664a63-Abstract.html},
+}
+
+@inproceedings{shen2025taaf,
+  author    = {Shen, Jie and Xie, Yan and Xu, Qing and Pan, Gang and Tang, Huajin and Chen, Bo},
+  title     = {Spiking Neural Networks with Temporal Attention-Guided Adaptive Fusion for
+               imbalanced Multi-modal Learning},
+  booktitle = {Proceedings of the 33rd ACM International Conference on Multimedia},
+  year      = {2025},
+  url       = {https://dl.acm.org/doi/10.1145/3746027.3755622},
+}
+
+@article{hu2026pssnn,
+  author  = {Hu, Kai and Wen, Lin and Zhang, Tao and Zhang, Hui},
+  title   = {PS-SNN: pattern separation learning for expandable spiking neural networks in
+             class-incremental learning},
+  journal = {Scientific Reports},
+  volume  = {16},
+  pages   = {12653},
+  year    = {2026},
+  url     = {https://www.nature.com/articles/s41598-026-42970-6},
+}
+
+% ---- SNN--LLM 混合架构 / 硬件 ----
+
+@article{savage2026ember,
+  author  = {Savage, William},
+  title   = {EMBER: Autonomous Cognitive Behaviour from Learned Spiking Neural Network
+             Dynamics in a Hybrid LLM Architecture},
+  journal = {arXiv preprint arXiv:2604.12167},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2604.12167},
+}
+
+@article{hajizada2026clp,
+  author  = {Hajizada, Elvin and Rager, Daniel and Shea, Timothy and Campos-Macias, Laura and
+             Wild, Andreas and H{\"u}llermeier, Eyke and Sandamirskaya, Yulia and Davies, Mike},
+  title   = {Online Continual Learning on Intel Loihi 2 via a Co-designed Spiking Neural
+             Network},
+  journal = {arXiv preprint arXiv:2511.01553},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2511.01553},
+}
+
+% ---- 元可塑性与可微可塑性（2026-10-15 联网查证后补入，台账 [24][25]）----
+
+@inproceedings{miconi2018differentiable,
+  author    = {Miconi, Thomas and Clune, Jeff and Stanley, Kenneth O.},
+  title     = {Differentiable plasticity: training plastic neural networks with
+               backpropagation},
+  booktitle = {Proceedings of the 35th International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {80},
+  pages     = {3559--3568},
+  year      = {2018},
+  url       = {https://proceedings.mlr.press/v80/miconi18a.html},
+}
+
+@article{zanardi2024metaplasticity,
+  author  = {Zanardi, Gianmarco and Bettotti, Paolo and Morand, Jules and Pavesi, Lorenzo
+             and Tubiana, Luca},
+  title   = {Metaplasticity and memory in multilevel recurrent feed-forward networks},
+  journal = {Physical Review E},
+  volume  = {110},
+  number  = {5},
+  pages   = {054304},
+  year    = {2024},
+  doi     = {10.1103/PhysRevE.110.054304},
+  url     = {https://doi.org/10.1103/PhysRevE.110.054304},
+}

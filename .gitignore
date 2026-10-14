@@ -86,3 +86,11 @@ gap-report.json
 # 本项目不使用任何环境变量；这里只是防止贡献者把本地的 .env 误提交。
 .env
 .env.*
+
+# ---- paper/ 的 LaTeX 中间产物（可再生成，不入库）----
+# main.pdf 例外：它是骨架阶段的交付物，入库便于不装 LaTeX 也能看结构。
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.blg
+paper/*.bbl
