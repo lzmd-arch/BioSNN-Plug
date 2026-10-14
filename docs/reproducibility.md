@@ -17,7 +17,9 @@ PyTorch 版本、随机种子没记、跑的是本地未提交的改动。
 实验名称：
 日期：
 Git commit：          # git rev-parse HEAD
-Git 状态：            # git status --porcelain 的输出；非空说明有未提交改动
+Git 状态：            # 真的没提交的条目数（未跟踪文件 + 已跟踪的内容改动）；0 即干净
+#                     —— 由 research/common/provenance.py 的 count_dirty_entries() 算，
+#                     排除了 CRLF 归一造成的 stat 假脏（2026-10-13 的坑）
 Python：              # python -V
 操作系统 / 架构：
 硬件：                # GPU 型号 + 显存

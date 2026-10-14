@@ -21,7 +21,9 @@ Copy this block, fill it in, and put it in an experiment log or an issue:
 Experiment name:
 Date:
 Git commit:           # git rev-parse HEAD
-Git status:           # output of git status --porcelain; non-empty means uncommitted changes
+Git status:           # count of genuinely uncommitted entries (untracked files + tracked
+#                     content changes); 0 means clean -- computed by count_dirty_entries() in
+#                     research/common/provenance.py, which excludes CRLF stat-only noise
 Python:               # python -V
 OS / architecture:
 Hardware:             # GPU model + GPU memory

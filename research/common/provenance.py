@@ -32,9 +32,62 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-__all__ = ["DegradationLog", "ReproRecord", "collect", "uv_lock_hash"]
+__all__ = ["DegradationLog", "ReproRecord", "collect", "count_dirty_entries", "uv_lock_hash"]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _git_lines(*args: str) -> list[str] | None:
+    """跑一条 git 命令并返回行列表；拿不到时返回 ``None``（而不是空列表）。
+
+    **空列表与"拿不到"必须分开**：都当成"没有改动"会把 git 不可用的环境
+    误判成干净的工作区，那正好是这个字段存在的理由的反面。
+    """
+    out = _git(*args)
+    if out.startswith("("):  # _git 用括号标记"命令没跑成"
+        return None
+    return out.splitlines() if out else []
+
+
+def count_dirty_entries() -> int:
+    """数工作区里**真的**没提交的条目数——判"记录可不可信"用的就是它。
+
+    ## 为什么不是一行 `len(git status --porcelain)`
+
+    两个坑，方向相反，要一起躲：
+
+    1. **stat 假脏会被误报**。`git status --porcelain` 先看 stat（mtime/size），
+       mtime 与索引相同（racy timestamp）时会保守地报成 `` M``。手工归一行尾
+       （CRLF → LF）之后正是这样：`status` 报改、`git diff` 为空、两边哈希相同
+       （2026-10-13 踩到）。这种条目**内容其实一致**，不该算脏。
+    2. ⚠️ **但不能为此改用 `--untracked-files=no`**。`docs/reproducibility.md`
+       把这个字段定义成「``git status --porcelain`` 的输出；非空说明有未提交改动」，
+       **未跟踪文件也在内**——而实验纪律靠的就是这一条：产物必须先落 ``data/``
+       （被 .gitignore 忽略），跑完再搬进 ``sweep_results/``；**中途落进仓库会让
+       此后每次运行的记录块都盖上「结论不可信」**。把未跟踪排除掉，那条纪律就失效了。
+
+    所以这里**逐类判定**：
+
+    * **未跟踪**（``??``）→ 算脏（明文语义，不动）；
+    * **已跟踪的内容改动** → 用 ``git diff --name-only``（会真的比内容，不是比 stat）
+      复核；只是 stat 假脏的不会出现在里面；
+    * **已暂存的改动** → 同理，用 ``git diff --cached --name-only``。
+
+    Returns:
+        真的没提交的条目数。git 不可用时返回 **0**——与旧行为一致
+        （记录块里 ``Git commit`` 那一行会显示"拿不到"，读者据此判断）。
+    """
+    porcelain = _git_lines("status", "--porcelain")
+    if porcelain is None:
+        return 0
+
+    untracked = sum(1 for line in porcelain if line.startswith("??"))
+    content = _git_lines("diff", "--name-only")
+    staged = _git_lines("diff", "--cached", "--name-only")
+    # diff 拿不到时保守地回退到 porcelain 的计数——宁可多报，不可漏报。
+    if content is None or staged is None:
+        return len(porcelain)
+    return untracked + len(content) + len(staged)
 
 
 def _git(*args: str) -> str:
@@ -202,8 +255,7 @@ def collect(
     if command is None:
         command = " ".join([Path(sys.argv[0]).name, *sys.argv[1:]]) if sys.argv else "(未知)"
 
-    porcelain = _git("status", "--porcelain")
-    dirty_lines = len(porcelain.splitlines()) if porcelain and not porcelain.startswith("(") else 0
+    dirty_lines = count_dirty_entries()
 
     return ReproRecord(
         experiment=experiment,

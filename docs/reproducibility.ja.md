@@ -22,7 +22,9 @@ numpy のバージョンが変わった、PyTorch のバージョンが変わっ
 実験名：
 日付：
 Git commit：          # git rev-parse HEAD
-Git 状態：            # git status --porcelain の出力；空でなければ未コミットの変更がある
+Git 状態：            # 本当に未コミットの項目数（未追跡ファイル ＋ 追跡済みの内容変更）；0 でクリーン
+#                     —— research/common/provenance.py の count_dirty_entries() が算出し、
+#                     CRLF 正規化による stat 上の偽の差分は除外します（2026-10-13 の落とし穴）
 Python：              # python -V
 OS / アーキテクチャ：
 ハードウェア：        # GPU モデル + GPU メモリ
