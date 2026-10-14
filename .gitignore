@@ -88,7 +88,9 @@ gap-report.json
 .env.*
 
 # ---- paper/ 的 LaTeX 中间产物（可再生成，不入库）----
-# main.pdf 例外：它是骨架阶段的交付物，入库便于不装 LaTeX 也能看结构。
+# PDF 是本地构建产物（latexmk -pdf main.tex），入库会每次重编译都产生一个二进制改动
+# （PDF 内嵌生成时间，哈希必变）。可编译性由 CI 的 latex-build job 保证。
+paper/*.pdf
 paper/*.aux
 paper/*.log
 paper/*.out

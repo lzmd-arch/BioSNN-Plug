@@ -5,22 +5,26 @@ Source for the **P2 paper**: an honest-measurement benchmark of local learning r
 reproduction record under `research/`, per the project plan's §12.4 rule.
 
 Build: `latexmk -pdf main.tex` (or `pdflatex main && bibtex main && pdflatex main && pdflatex main`).
+The resulting `main.pdf` is a **local build artifact and is not committed** — see below.
 
 Status: **skeleton v0.2** — structure and section plan only. Outstanding work is marked
 in-file with `\todo{}` (rendered red), so `grep -c '\todo{' main.tex` counts the open items.
 
-## Compile status (verified 2026-10-15)
+## Compile status
 
-The full pipeline runs clean and produces `main.pdf` (**3 pages**):
+**`main.pdf` is a local build artifact, not committed.** Run `latexmk -pdf main.tex` and it
+appears in this directory; both it and the intermediates (`*.aux`, `*.log`, `*.out`, `*.blg`,
+`*.bbl`) are gitignored. The reason it is not committed: a PDF **embeds a creation
+timestamp**, so its hash changes on every rebuild even when the source is untouched —
+committing it would add a binary diff to every documentation-only change.
 
-```bash
-pdflatex main && bibtex main && pdflatex main && pdflatex main
-```
+**Compilability is guaranteed by CI instead**: the `latex-build` job runs `tectonic main.tex`
+on every push. Tectonic pulls packages on demand and runs BibTeX itself, so the job also
+checks the syntax of all 15 `refs.bib` entries. Watch that job, not a committed PDF.
 
-`main.pdf` is committed; the intermediates (`*.aux`, `*.log`, `*.out`, `*.blg`, `*.bbl`)
-are gitignored. `bibtex` prints `I found no \citation commands` — **expected at skeleton
-stage**, since the body still has no `\cite{}` (the single grep hit sits inside a comment).
-It still parses `refs.bib`, so the run doubles as a bibliography syntax check.
+Last verified locally 2026-10-15 (TinyTeX + pdflatex): clean, **3 pages**. `bibtex` prints
+`I found no \citation commands` — **expected at skeleton stage**, since the body still has no
+`\cite{}` (the single grep hit sits inside a comment).
 
 Two things in the skeleton **looked** like they would fail to compile. **Both were wrong** —
 asserted from memory before any LaTeX was installed, and the real build disproved both.

@@ -276,6 +276,36 @@ jobs:
           python-version: "3.12"
       - run: python scripts/check_readme_links.py
 
+  # ── paper/main.tex 的编译验证 ─────────────────────────────────────────────
+  # 骨架入库时，「它能编译」只在本机验过一次——那依赖「我记得跑」。这个 job 把它变成
+  # **每次推送自动验**，于是「不装 LaTeX 也能确认骨架可编译」以正确的方式成立：**看 CI 绿**，
+  # 而不是看一份提交进仓库的 PDF（PDF 内嵌生成时间，每次重编译哈希都变，入库只添二进制噪音
+  # ——所以 main.pdf 已改为 .gitignore 下的本地构建产物）。
+  #
+  # 用 tectonic 而不是 TeX Live：单二进制（约 20 MB）、按需拉宏包、**自带 BibTeX 流程**，
+  # 所以它同时验 `refs.bib` 的语法（15 条条目的字段别写错）。版本与 asset 名取自 release：
+  # tag `tectonic@0.17.0`（tag 里的 `@` 要写成 `%40`）。
+  latex-build:
+    name: paper 编译验证（tectonic）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装 tectonic
+        run: |
+          curl -sSL -o tectonic.tar.gz \
+            "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-x86_64-unknown-linux-musl.tar.gz"
+          tar xzf tectonic.tar.gz
+          ./tectonic --version
+          ./tectonic --help | head -20
+      - name: 编译 main.tex（同时验 refs.bib 的语法）
+        working-directory: paper
+        run: ../tectonic main.tex
+      - name: 断言产出了 PDF
+        working-directory: paper
+        run: |
+          test -f main.pdf || { echo "编译没产出 main.pdf"; exit 1; }
+          ls -l main.pdf
+
   # ── 计划书 §12.1：第三方依赖许可审计 ──────────────────────────────────────
   # 计划书点名要核查 eprop-PyTorch 与 Lava/Loihi 相关组件的许可证条款。
   # 这里只做基线：列出全部依赖的许可证，并在出现强 copyleft 时失败。
