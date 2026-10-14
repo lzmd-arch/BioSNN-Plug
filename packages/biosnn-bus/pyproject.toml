@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "biosnn-bus"
-version = "0.1.0"
+version = "0.2.0"
 description = "BioSNN-Plug 的模态插件骨架库：ModalityPlugin 接口、脉冲总线与插件注册机制（与认知核心解耦，无 GPU 依赖）"
 readme = "README.md"
 requires-python = ">=3.10"
