@@ -387,6 +387,14 @@ paper, and it forced one licence onto files that have two different native ones.
   - **What this DOI is, and is not.** It identifies the *findings and protocol record* (a report).
     It is **not** the software's DOI and **not** the paper's, so it does not belong in
     `CITATION.cff`'s `doi:` field — that field describes the repository itself.
+  - ⚠️ **A private URL in a tracked file fails CI, and local checks will not tell you.**
+    The intermediate commit `3d5c3b0` recorded the *draft* page (`https://zenodo.org/deposit/23388709`)
+    in this file; an unsubmitted deposition is visible only to its owner, so lychee got 403/404 and the
+    `引用链接存活检查（lychee）` job went red. `check_readme_links.py` — the local check — validates
+    relative paths and self-referential URLs only, by design; external URLs are lychee's job. So
+    "local link check green" says **nothing** about a newly added external URL, private ones
+    especially. Fixed by replacing the draft URL with the DOI text in `3af9771`; the lesson is the
+    one the repo keeps re-learning: **watch the run, not the local check**.
 - **Record B — 2026-10-22: the full paper**, Zenodo + arXiv, `publication_type = preprint`,
   licence CC-BY-4.0.
 
