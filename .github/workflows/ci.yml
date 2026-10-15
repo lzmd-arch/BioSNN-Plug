@@ -305,6 +305,15 @@ jobs:
         run: |
           test -f main.pdf || { echo "编译没产出 main.pdf"; exit 1; }
           ls -l main.pdf
+      # 把成品挂成 Actions artifact：PDF 不入库（内嵌生成时间，入库只添二进制噪音），
+      # 但审阅需要拿到成品——artifact 可以在任何设备上从 Actions 页面下载，包括手机。
+      # ⚠️ artifact 是**构建产物**不是可复现产物：每次编译哈希都变，**别拿它当身份**。
+      - name: 上传编译好的 PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-pdf
+          path: paper/main.pdf
+          if-no-files-found: error
 
   # ── 计划书 §12.1：第三方依赖许可审计 ──────────────────────────────────────
   # 计划书点名要核查 eprop-PyTorch 与 Lava/Loihi 相关组件的许可证条款。

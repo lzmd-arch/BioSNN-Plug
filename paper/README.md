@@ -25,7 +25,15 @@ committing it would add a binary diff to every documentation-only change.
 
 **Compilability is guaranteed by CI instead**: the `latex-build` job runs `tectonic main.tex`
 on every push. Tectonic pulls packages on demand and runs BibTeX itself, so the job also
-checks the syntax of all 19 `refs.bib` entries. Watch that job, not a committed PDF.
+checks the syntax of all 24 `refs.bib` entries. Watch that job, not a committed PDF.
+
+**And the PDF is now downloadable from CI**: that same job uploads the compiled file as an
+Actions artifact named **`paper-pdf`**, so after a push the current build can be fetched from the
+run's Summary page on any device, phones included. Two things to keep straight about it: the
+artifact is a **build product, not a reproducible one** — it embeds a creation timestamp, so its
+hash changes on every rebuild and it is never an identity; and it lives as long as the run's
+retention window (Actions' default), not forever. If you need a build from a specific commit and
+the artifact has expired, re-run that run — or build locally.
 
 Last verified locally 2026-10-15 (TinyTeX + pdflatex), after the second drafting batch:
 `pdflatex → bibtex → pdflatex ×2`, no errors and no warnings, **7 pages**. `bibtex` now
