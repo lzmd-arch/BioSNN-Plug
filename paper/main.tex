@@ -21,7 +21,7 @@
 
 % ------------------------------------------------------------
 \begin{abstract}
-\todo{120-180 words. Outline: (1) problem -- local-rule benchmarks lack honest measurement (budget/protocol/degenerate solutions); (2) what we did -- three rule lines + interaction matrix + same-budget BPTT control, consumer GPU; (3) headline numbers -- e-prop ALIF converges at 0.8831 (250ep); LIF-vs-ALIF interaction; Critic-corrected R-STDP 237.8 steps; (4) methodological contributions -- bit-exact reproduction, retention-joint reporting, alpha-to-zero degeneracy analysis; (5) stance -- gaps reported as-is, no cosmetics.}
+\todo{120-180 words. Outline: (1) problem -- local-rule benchmarks lack honest measurement (budget/protocol/degenerate solutions); (2) what we did -- three rule lines + interaction matrix + same-budget BPTT control, consumer GPU; (3) headline numbers -- e-prop LIF converges at 0.8889 (250ep); LIF-vs-ALIF interaction; Critic-corrected R-STDP 237.8 steps; (4) methodological contributions -- bit-exact reproduction, retention-joint reporting, alpha-to-zero degeneracy analysis; (5) stance -- gaps reported as-is, no cosmetics.}
 \end{abstract}
 
 % ------------------------------------------------------------
@@ -32,7 +32,7 @@
 \begin{itemize}
   \item \textbf{Honest benchmark}: three local-rule lines under one unified protocol (budget/seeds/protocols fully public). \todo{fill numbers}
   \item \textbf{Interaction finding}: neuron type x learning rate swept as a controlled grid; the adaptation term is a net drag at every learning rate tested (same-budget LIF leads ALIF by 0.93-1.23pp over lr 1e-3 to 1e-2; 5 seeds each).
-  \item \textbf{Convergence evidence}: e-prop + ALIF converges at 0.8831 (250 epochs), lower edge of the e-prop literature band.
+  \item \textbf{Convergence evidence}: e-prop with LIF neurons converges at 0.8889 (250 epochs), lower edge of the e-prop literature band.
   \item \textbf{Methodology}: bit-exact reproduction, retention-joint reporting, degeneracy analysis, frozen-noise evaluation protocol.
   \item \textbf{Open assets}: all code/configs/scripts open (biosnn-bus on PyPI); comparison table with evidence ledger for 5 sibling projects.
 \end{itemize}
@@ -237,7 +237,7 @@ obtained. This is the gap Section~3 is built to fill.
 \subsection{W2: e-prop sequential learning}
   \subsubsection{Learning-rate sweep}      % Table: 4 lr x 5 seeds; 2e-3 arm reproduces September results bit-for-bit
   \subsubsection{Neuron type interaction}  % Table: LIF vs ALIF at matched lr (2e-3): 0.7867 vs 0.7764; intervals do not overlap
-  \subsubsection{Budget extension}         % Figure: 250ep convergence curve -> 0.8831; plateau criterion pre-registered
+  \subsubsection{Budget extension}         % Figure: 250ep convergence curve -> 0.8889 (LIF, official); plateau criterion pre-registered
   \subsubsection{Comparison with BPTT}     % \todo{headline control-arm number; matched budget; gap = X.XX pp}
 \subsection{W3: R-STDP with Critic correction}
   % CartPole median 237.8 (20 seeds); with/without baseline comparison; protocol cross-ref SS3.2

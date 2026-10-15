@@ -329,9 +329,32 @@ likely culprits are the appendix table's column widths or the `\ref{app:search}`
 
 ## Pre-approval on record — the "W2 official number" batch (2026-10-15)
 
-**Trigger: the 250-epoch LIF run's plateau verdict.** Until it lands, nothing below is executed.
-Recorded here because it is a standing instruction, not a one-off: when the trigger fires, the
-six edits go in **without further sign-off**.
+**Trigger: the 250-epoch LIF run's plateau verdict. EXECUTED 2026-10-16, 05:47.** Recorded here
+because it was a standing instruction, not a one-off: the six edits went in **without further
+sign-off**.
+
+**Execution record (2026-10-16):**
+
+- **Official number = `0.8889`** — LIF, lr = 1e-2, 250 epochs, seeds 0.8962 / 0.8854 / 0.8851,
+  range 1.11 pp, wall clock 5.86 / 6.05 / 5.91 h.
+- **Plateau verdict: passed.** Last-20-epoch window-mean increments **+0.0019 / +0.0007 /
+  +0.0025** — the same order as ALIF's +0.0016 / −0.0037 / +0.0025. **But all three are positive**
+  where ALIF had both signs, so the judgment rests on **magnitude, not sign**: epoch-to-epoch val
+  spread in this arm is ≈ ±0.009, so the standard error of a 20-epoch mean is ≈ 0.002 and the three
+  increments sit at 0.35–1.25 SE. Because the ALIF record's own phrasing was "both signs", this
+  difference is written out in `research/eprop/README.*` rather than smoothed over — the next reader
+  should see the criterion, not only the verdict.
+- All six locations updated; **`grep -c 0.8831 paper/main.tex` → 0**.
+  ⚠️ **One clarification of location 5's criterion, found on execution**: the grep was specified
+  over `paper/`, but this README now *documents* the change and therefore quotes 0.8831 by
+  necessity. The criterion that carries the meaning is the **paper source**, which is clean.
+  Recorded rather than left looking like a miss.
+- ⚠️ **A seventh change, not on the list: the official run's artefacts were moved into the
+  repository.** They had been written to `data/w2_lif_long/`, and `data/` is gitignored — so the
+  "only source of the official number" sat *outside* version control while its control sat inside.
+  Copied to `sweep_results/w2_lif_long/` plus the log, following the existing practice for accepted
+  runs, and verified md5-identical to the source. Without this, §5.2 and the 2026-10-22 deposit
+  would both cite a path that git does not carry.
 
 The official headline number for W2 becomes **LIF @ lr=1e-2 @ 250 epochs** (the arm the
 pre-registered decision rule selected), and ALIF's **0.8831** is demoted to a **control** value.

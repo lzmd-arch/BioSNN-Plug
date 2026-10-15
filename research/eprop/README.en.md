@@ -36,7 +36,8 @@ run serially, 18.7 h in total, artifacts in `sweep_results/w2_lr001` ... `w2_lr0
 | :--- | :--- | ---: |
 | Learning-rate sweep | 30 epochs x 5 seeds, `eta_in = eta_rec` | 1e-3 -> 0.7564; 2e-3 -> 0.7764; 5e-3 -> 0.7983; **1e-2 -> 0.8002** |
 | LIF control | 30 epochs x 5 seeds, `--beta 0`, lr still 2e-3 | 0.7867 |
-| Extended budget | 250 epochs x 3 seeds, lr = 1e-2 | **0.8831** |
+| Extended budget (ALIF, **control**) | 250 epochs x 3 seeds, lr = 1e-2 | **0.8831** |
+| Extended budget (LIF, **official**) | 250 epochs x 3 seeds, lr = 1e-2, `--beta 0` | **0.8889** (0.8851-0.8962) |
 
 Two points, both written into the known boundaries below: **the learning rate matters far more
 than the neuron model** -- moving lr from 2e-3 to 1e-2 alone is **+2.38 percentage points** at
@@ -44,6 +45,20 @@ than the neuron model** -- moving lr from 2e-3 to 1e-2 alone is **+2.38 percenta
 +0.0016 / -0.0037 / +0.0025, both signs present), so "every W2 number is budget-truncated" **stops
 being true here**. There is also a **counter**-finding on boundary 8: **LIF scores higher than ALIF
 at every one of the four learning rates** (+0.93 / +1.04 / +1.05 / +1.23 points).
+
+**2026-10-16: the official number changes arms.** The official headline figure becomes **LIF @
+lr=1e-2 @ 250 epochs = 0.8889** (three seeds 0.8962 / 0.8854 / 0.8851, range 1.11 points; artefacts
+in [`sweep_results/w2_lif_long/`](../../sweep_results/w2_lif_long/)). The **0.8831** in the table
+above is a real result of the ALIF run and stays **as the control, with the number unchanged** --
+same lr, same seeds 0-2, same 250 epochs, differing only in the neuron model, so this is a clean
+comparison rather than two different experiments.
+Warning: the official arm passes the same convergence criterion -- last-20-epoch window-mean
+increments **+0.0019 / +0.0007 / +0.0025**, the same order as ALIF's +0.0016 / -0.0037 / +0.0025.
+**But all three are positive** (ALIF had both signs), so what is judged here is **magnitude**, not
+sign: epoch-to-epoch val fluctuation in that arm is about ±0.009, the standard error of a 20-epoch
+mean is ~0.002, and the three increments sit within 0.35-1.25 standard errors -- noise level. That
+is written out because "all positive" differs literally from ALIF's "both signs": a later reader
+should see the criterion, not only the verdict.
 
 ### Two budgets: 30 epochs (acceptance) and 100 epochs (opened up)
 
