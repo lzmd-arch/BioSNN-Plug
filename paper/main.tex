@@ -190,14 +190,27 @@ chance. We cite them as precedents for the architecture and for nothing measured
 Machine learning as a field has a protocol-level answer to this problem, and a
 recent one: the NeurIPS 2019 reproducibility program added a code submission
 policy, a community-wide reproducibility challenge, and the checklist that is now
-standard at submission time \citep{pineau2021}. To our knowledge no equivalent
-protocol-level standard exists for local-rule SNN training. The field reports
-accuracies, but the conditions under which they were obtained --- optimizer, seed
-count, budget, and what evaluation does with encoding noise --- are not a required
-part of the report, and the numbers surveyed above show the consequence: a
-baseline transcribed from a third party, an efficiency figure from a single
-setting, and a headline accuracy that no one has independently reproduced. This is
-the gap Section~3 is built to fill.
+standard at submission time \citep{pineau2021}. We searched for the equivalent in
+local-rule SNN training and did not find one; the sources, query strings, date and
+inclusion criteria are recorded in Appendix~\ref{app:search}, and no entry meets
+all three criteria for counting as a standard. What the search did return is a set
+of near neighbours, and naming them is the honest form of the claim. Benchmarking
+frameworks now fix tasks and metrics for comparing SNN learning algorithms,
+including e-prop, with stated fairness goals \citep{neuroseqbench2025}, and for
+neuromorphic computing more broadly across algorithm and system tracks
+\citep{neurobench2023}; spiking transformers have their own evaluation platform
+\citep{step2025}. Closest in theme is a benchmark that stratifies SNN learning
+methods by locality \citep{benchmarks2024locality}: it controls architecture and
+dataset, but the compute budget, seed count and optimizer of the compared methods
+are not disclosed --- we differ in that our target is measurement protocol
+discipline rather than method comparison. On the simulation side, reproducibility
+guidance for spiking network models predates all of this, and it already documents
+the phenomenon our protocol is built around: runs differing only in random seed
+land in different dynamical states, 87\% against 13\% \citep{pauli2018reproducing}.
+What none of them prescribes is what a report of local-rule training must contain
+--- optimizer, seed count, budget, and what evaluation does with encoding noise
+--- and those are the conditions under which the accuracies surveyed above were
+obtained. This is the gap Section~3 is built to fill.
 % One sentence per citation: "difference from ours". Grouping lives in docs/references.md
 % and docs/related_projects.md.（原注释指向 docs/related_work.md，该文件在本仓不存在。）
 
@@ -251,5 +264,51 @@ the gap Section~3 is built to fill.
 \section{Full configuration dumps}   % verbatim config dump per acceptance run
 \section{Reproduction checklist}       % examples/paper_*.py mapped one-to-one
 \section{Triviality analysis details} % alpha degeneracy sweep curves
+
+% ------------------------------------------------------------
+\section{Search specification}
+\label{app:search}
+The claim in Section~2.4 --- that no protocol-level standard exists for local-rule
+SNN training --- rests on the search recorded here, run on 2026-10-15. An entry
+counts only if all three of the following hold: it is a standard (a checklist, a
+policy, or a mandatory submission item) rather than one paper's own practice; it
+targets local-rule SNN training, or at least SNN training; and it prescribes what
+a report must contain. Entries meeting all three: none. The near neighbours the
+search did return are cited in Section~2.4, each with its per-criterion assessment
+recorded in the evidence ledger.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}p{0.16\textwidth}p{0.58\textwidth}rr@{}}
+\toprule
+Source & Query string / target & Ret. & Incl. \\
+\midrule
+WebSearch & \texttt{reproducibility checklist spiking neural network training standard} & $\sim$10 & 2 \\
+WebSearch & \texttt{neuromorphic benchmarking standard checklist NeuroBench reporting protocol} & $\sim$10 & 1 \\
+WebSearch & \texttt{local learning rules spiking neural networks benchmark comparison protocol budget seeds reporting} & $\sim$10 & 2 \\
+WebSearch & \texttt{``spiking neural network'' benchmark reporting requirement multiple seeds training budget local learning rule standard} & $\sim$10 & 2 \\
+fetch & TechRxiv \texttt{10.36227/techrxiv.175322635.58911591} (practical guidelines for SNNs) & --- & 0 \\
+fetch & arXiv:2402.01782, benchmarking SNN learning methods by locality & --- & 1 \\
+fetch & arXiv:2304.04640, NeuroBench & --- & 1 \\
+fetch & arXiv:2505.11151, STEP & --- & 1 \\
+fetch & \textit{Frontiers in Neuroinformatics} 12:46, reproducing polychronization & --- & 1 \\
+fetch & \texttt{github.com/liyc5929/neuroseqbench} & --- & 1 \\
+\bottomrule
+\end{tabular}
+\caption{Search log. ``Ret.'' is the number of link entries returned (approximate:
+one query repeats items across blocks); ``Incl.'' is how many reached the
+assessment above. Excluded items were unrelated to how a report should be written
+--- chiefly reproducibility-checklist pages embedded in individual papers, which
+are artefacts of a submission template rather than the standard itself.}
+\end{table}
+
+The sources are a US-region web search index and direct fetches of individual
+URLs. There was no in-database search of ACM DL, IEEE Xplore, Scopus or Web of
+Science, so what this supports is ``with these queries, on this date, on this
+index, nothing was found'' --- not ``no such thing exists''. It is a survey, not a
+systematic review. \todo{One hit, a TechRxiv practical-guidelines document for
+SNNs, returned HTTP 403 and was never read; it is the entry whose title most
+resembles a standard, and it remains unchecked.}
 
 \end{document}

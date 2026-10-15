@@ -10,8 +10,10 @@ The resulting `main.pdf` is a **local build artifact and is not committed** — 
 Status: **skeleton v0.2 + Related Work drafted** — all four subsections of §2 are written
 (see the draft log at the end); §1 and §3–§7 are still structure and section plan.
 Outstanding work is marked in-file with `\todo{}` (rendered red), so
-`grep -c '\todo{' main.tex` counts the open items — **6**, unchanged by either drafting
-batch, since no `\todo{}` sits in §2.
+`grep -c '\todo{' main.tex` counts the open items — **7**. Six are the original skeleton
+placeholders (untouched by the drafting); the seventh was added by the search-specification
+appendix, and it is deliberate: it marks the TechRxiv document that returned HTTP 403 and was
+never read, which is the one hit whose title most resembles a standard.
 
 ## Compile status
 
@@ -28,7 +30,14 @@ checks the syntax of all 19 `refs.bib` entries. Watch that job, not a committed 
 Last verified locally 2026-10-15 (TinyTeX + pdflatex), after the second drafting batch:
 `pdflatex → bibtex → pdflatex ×2`, no errors and no warnings, **7 pages**. `bibtex` now
 resolves **14 of the 19** entries — it no longer prints `I found no \citation commands`,
-which it did while the body was still citation-free. (The five uncited entries —
+which it did while the body was still citation-free.
+
+⚠️ **The batch after that (the five near-neighbour citations, the §2.4 rewrite and the new
+search-specification appendix) was NOT built locally.** The machine was running the LIF-250ep
+training job under a standing rule that it may do nothing else until 23:00, so no pdflatex was
+run. It is verified by CI's `tectonic` job instead — which is this repo's stated policy anyway
+("watch that job, not a committed PDF"). By `grep` rather than by bibtex, the file now cites
+**19 distinct keys out of 24 entries**; those counts are a proxy, not a build. (The five uncited entries —
 `fremaux2010`, `pogodin2020kernelized`, `shen2025taaf`, `hu2026pssnn`, `hajizada2026clp` —
 belong to §3 and later.)
 
@@ -43,7 +52,7 @@ Recorded here as a correction rather than quietly deleted:
 
 ## Known gaps
 
-1. **`refs.bib` has grown from the task list's 15 to 19, in two moves.** First, three keys had
+1. **`refs.bib` has grown from the task list's 15 to 24, in three moves.** First, three keys had
    zero hits in this repo's ledgers and were resolved by verification, recorded in
    `docs/references.md` [24][25][26]:
    - `miconi2018differentiable` — ICML 2018, PMLR 80, pp. 3559–3568;
@@ -57,6 +66,11 @@ Recorded here as a correction rather than quietly deleted:
    - `wang2026braintrace` — Nature Communications, registered as [28]. ⚠️ **The identifier
      given in the ruling was wrong** (`arXiv:2609.08070` is a different paper by different
      authors); see the draft log below before touching this entry.
+   And five more the same day, from the protocol-standard search, registered as [29]–[33]:
+   `pauli2018reproducing`, `benchmarks2024locality`, `neurobench2023`, `neuroseqbench2025`,
+   `step2025`. These are the **near neighbours** — the reason §2.4 can name what it is *not*
+   rather than merely assert absence. Each one's per-criterion assessment is in its ledger
+   entry, and §2.4 cross-references the search log in Appendix A.4.
 
    ⚠️ **The third carries a venue correction worth reading.** The task list's key was
    `neurips2025switching`, which assumed a **main-conference** paper. It is a **workshop**
@@ -247,3 +261,50 @@ to ACM DL / IEEE Xplore / Scopus / Web of Science. It supports "with these queri
 this index, nothing was found" — not "no such thing exists". One hit (a TechRxiv practical-guidelines
 document, the title that looks most like a standard) returned **403** and was never read; it is
 flagged in the file as the priority for next time.
+
+## Draft log — the upgrade landed (2026-10-15)
+
+The ruling came back with all three approvals at once, and with a reframing worth recording
+because it changes how the section should be read: **the near neighbours are an asset, not a
+threat.** "We found no equivalent" is a weak claim; "we searched, here are the four nearest
+things, and here is why each fails a criterion" is a strong one — and it is *harder* to attack,
+because the reviewer's obvious question has been answered in advance.
+
+**Landed, in three parts:**
+
+1. **Five ledger entries [29]–[33], each carrying its per-criterion assessment** (which of the
+   three criteria it meets and which it misses) — that column is what Appendix A.4 and §2.4
+   cross-reference. Written into all three language versions of `docs/references.md`.
+   - `pauli2018reproducing` — fails all three (a guide; simulation, not training; nothing
+     mandatory) yet is the batch's most useful **supporting** citation, because it reports seed
+     sensitivity itself: 87% vs 13% of runs land in different dynamical states. Cited in the
+     §2.4 body, not listed as a near neighbour.
+   - `benchmarks2024locality` — the ruling required one more fetch before registering, to settle
+     whether it fixes budget/seeds. **It does not**: the full text's only control statement is
+     "consistent neural network architectures and training datasets", and its two repetition
+     counts (CKA over 10 initialisations, a backdoor experiment over 5 random draws) are not
+     training runs. That is the factual basis for the delimiting clause the ruling asked to give
+     weight to.
+   - `neurobench2023` — half on criteria 1 and 3, fails 2. ⚠️ Volume and article number were not
+     obtained (nature.com → IdP login, PMC → browser check), so the arXiv version is registered
+     and the journal version plus DOI live in `note`.
+   - `neuroseqbench2025` — the closest hit found: it benchmarks `E-prop` beside STBP/OTTT/SLTT.
+     Recorded as the entry needing the most care, since what it lacks is exactly what this paper
+     controls.
+   - `step2025` — fails all three, registered anyway on the ruling's instruction, so its
+     "fair and reproducible benchmarking" wording is cited and bounded before a reviewer asks.
+2. **§2.4 rewritten**, using the sentence prepared in the survey file, with the search log
+   cross-referenced. **This replaces the defensive "To our knowledge ..." wording** — that is a
+   claim-shape change, made under the ruling's explicit approval.
+3. **A new appendix section, "Search specification"** (`\label{app:search}`): the three criteria,
+   the ten search rows verbatim (source, query string, returned, included), the
+   inclusion/exclusion rule, and the coverage boundary — a US-region index and per-URL fetches,
+   no in-database ACM DL / IEEE Xplore / Scopus / Web of Science, so it is a **survey, not a
+   systematic review**, and supports "with these queries, on this date, on this index, nothing
+   was found", not "no such thing exists". The TechRxiv 403 item is carried as a `\todo{}` in the
+   appendix — hence the open-item count moving 6 → 7. Keeping it red is the point: it is the one
+   hit whose title most resembles a standard and it is still unread.
+
+⚠️ **Not built locally.** The machine was under the ruling's training-only discipline, so no
+pdflatex ran on this batch; CI's `tectonic` job is the verification channel. If it goes red, the
+likely culprits are the appendix table's column widths or the `\ref{app:search}` label.

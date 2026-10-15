@@ -5,9 +5,11 @@
 %  每一条都必须能在 docs/references.md 或 docs/related_projects.md 里
 %  找到对应的已点验条目——本文件**不新增**任何仓库里没有的引用。
 %
-%  当前 **19 条**：15 条与任务清单对齐，另 4 条是 2026-10-15 经裁决补入的——
+%  当前 **24 条**：15 条与任务清单对齐，另 9 条是 2026-10-15 经裁决补入的——
 %  membrain2026 / javis2026 是三语台账 [10][16] 的 bib 化（不是仓库外新引用）；
-%  pineau2021 与 wang2026braintrace 是**新登记**条目，已同步进台账 [27][28]。
+%  pineau2021 与 wang2026braintrace 是新登记条目（[27][28]）；
+%  pauli2018reproducing / benchmarks2024locality / neurobench2023 / neuroseqbench2025 /
+%  step2025 是协议级标准专项检索的最近邻（[29]–[33]），§2.4 与附录 A.4 交叉引用它们。
 %
 %  2026-10-15：清单里有三条在本仓 docs/ 下**零命中**，查证后全部补入——
 %  两条来自联网核实（miconi2018differentiable、zanardi2024metaplasticity），
@@ -246,4 +248,65 @@
   url          = {https://github.com/BEKO2210/Javis},
   urldate      = {2026-10-15},
   note         = {Accessed 2026-10-15},
+}
+
+% ---- 2026-10-15 经裁决补入的五条（台账 [29]–[33]）----
+%
+%  来源：附录 A.4「检索规格」记录的那次专项检索。它们**不是**等价标准，而是**最近邻**：
+%  每条的判据对照（三条判据里满足/缺失哪条）写在 docs/references.md 的对应条目里。
+%  §2.4 点名它们，是为了让"没有对应物"这句话变成可被审查的强主张，而不是弱主张。
+
+@article{pauli2018reproducing,
+  author  = {Pauli, Robin and Weidel, Philipp and Kunkel, Susanne and Morrison, Abigail},
+  title   = {Reproducing Polychronization: A Guide to Maximizing the Reproducibility of
+             Spiking Network Models},
+  journal = {Frontiers in Neuroinformatics},
+  volume  = {12},
+  pages   = {46},
+  year    = {2018},
+  doi     = {10.3389/fninf.2018.00046},
+  url     = {https://doi.org/10.3389/fninf.2018.00046},
+}
+
+@misc{benchmarks2024locality,
+  author       = {Lin, Jiaqi and Lu, Sen and Bal, Malyaban and Sengupta, Abhronil},
+  title        = {Benchmarking Spiking Neural Network Learning Methods with Varying Locality},
+  howpublished = {arXiv:2402.01782},
+  year         = {2024},
+  note         = {Published in IEEE Access, 26 June 2025. Controls architectures and datasets,
+                  but does not disclose compute budget, seed count or optimizer},
+  url          = {https://arxiv.org/abs/2402.01782},
+}
+
+@misc{neurobench2023,
+  author       = {Yik, Jason and others},
+  title        = {{NeuroBench}: A Framework for Benchmarking Neuromorphic Computing Algorithms
+                  and Systems},
+  howpublished = {arXiv:2304.04640},
+  year         = {2023},
+  note         = {Appeared in Nature Communications (2025), DOI 10.1038/s41467-025-56739-4.
+                  100 authors},
+  url          = {https://arxiv.org/abs/2304.04640},
+}
+
+@misc{neuroseqbench2025,
+  author       = {liyc5929},
+  title        = {{NeuroSeqBench}: a benchmark suite for evaluating spiking neural networks on
+                  temporal processing tasks},
+  howpublished = {GitHub repository},
+  year         = {2025},
+  url          = {https://github.com/liyc5929/neuroseqbench},
+  urldate      = {2026-10-15},
+  note         = {Accessed 2026-10-15. Benchmarks e-prop alongside STBP/OTTT/SLTT},
+}
+
+@inproceedings{step2025,
+  author    = {Shen, Sicheng and Zhao, Dongcheng and Feng, Linghao and Yue, Zeyang and
+               Li, Jindong and Li, Tenglong and Shen, Guobin and Zeng, Yi},
+  title     = {{STEP}: A Unified Spiking Transformer Evaluation Platform for Fair and
+               Reproducible Benchmarking},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS 2025),
+               Datasets and Benchmarks Track},
+  year      = {2025},
+  url       = {https://arxiv.org/abs/2505.11151},
 }
