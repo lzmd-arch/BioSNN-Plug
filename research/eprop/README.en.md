@@ -42,8 +42,8 @@ Two points, both written into the known boundaries below: **the learning rate ma
 than the neuron model** -- moving lr from 2e-3 to 1e-2 alone is **+2.38 percentage points** at
 30 epochs; and **the 250-epoch setting finally converges** (last-20-epoch window-mean increments
 +0.0016 / -0.0037 / +0.0025, both signs present), so "every W2 number is budget-truncated" **stops
-being true here**. There is also a **counter**-finding on boundary 8: at the default learning rate
-**LIF scores 1.04 points higher than ALIF**.
+being true here**. There is also a **counter**-finding on boundary 8: **LIF scores higher than ALIF
+at every one of the four learning rates** (+0.93 / +1.04 / +1.05 / +1.23 points).
 
 ### Two budgets: 30 epochs (acceptance) and 100 epochs (opened up)
 
@@ -511,25 +511,34 @@ This section matters more than the conclusion.
    does not yet exist". That statement has been superseded by this report.
 7. **A single hidden layer.** `EPropLearner` is one ALIF layer plus a linear readout. §2.2's
    cognitive core is a multi-layer RSNN; stacking layers is not implemented.
-8. **ALIF's gain over LIF is negative at the default learning rate -- and this is not settled.**
+8. **ALIF's gain over LIF is negative at every one of the four learning rates -- this is now
+   settled.** (Rewritten 2026-10-15; it previously read "and this is not settled".)
    `--beta 0` degenerates `ALIFCell` into a LIF, which allows a same-architecture, same-budget,
-   same-seed control: [`sweep_results/w2_lif/`](../../sweep_results/w2_lif/) (30 epochs x 5 seeds,
-   lr 2e-3, LIF) against [`sweep_results/w2_lr002/`](../../sweep_results/w2_lr002/) (ALIF, same lr,
-   same seeds):
+   same-seed control. Group 4 filled in four learning rates for LIF (30 epochs x 5 seeds, at the
+   **same lr values and the same seeds** as ALIF):
 
-   | Same lr = 2e-3 | Mean test accuracy | Range |
-   | :--- | ---: | :--- |
-   | LIF (beta=0) | **0.7867** | 0.7801-0.7899 |
-   | ALIF (beta=0.07) | 0.7764 | 0.7678-0.7857 |
+   | Same lr | LIF (beta=0) | ALIF (beta=0.07) | Delta |
+   | :--- | ---: | ---: | ---: |
+   | 1e-3 | **0.7657** (0.7616-0.7689) | 0.7564 | +0.93 pp |
+   | 2e-3 | **0.7867** (0.7801-0.7899) | 0.7764 | +1.04 pp |
+   | 5e-3 | **0.8088** (0.7989-0.8216) | 0.7983 | +1.05 pp |
+   | 1e-2 | **0.8125** (0.8016-0.8230) | 0.8002 | +1.23 pp |
 
-   **LIF scores 1.04 percentage points higher, and the two per-seed ranges do not overlap.** So at
-   the default learning rate the adaptation term is a drag; ALIF only overtakes LIF's 2e-3 score
-   once its lr is raised past 5e-3 (0.7983 / 0.8002).
+   **LIF is higher at all four, and no two of the eight per-seed ranges overlap**; moreover LIF is
+   still climbing where ALIF has already flattened (5e-3 -> 1e-2 gains ALIF only +0.19 pp but LIF
+   +0.37 pp). So the conclusion is not "the neuron type does not matter" -- it is that **at this
+   task, this scale and this budget, the adaptation term is a net drag**.
 
-   ⚠️ **But "is ALIF worth it" cannot be answered yet.** **The LIF arm only ever ran at 2e-3; its
-   learning rate was never swept** -- and ALIF's +2.38 points came entirely from sweeping lr. For
-   "ALIF brings a gain" to hold, LIF needs a learning-rate sweep of the same size (about 4 values x
-   5 seeds); until then this item can only report the **single-point** fact that **at one shared
-   learning rate, LIF scores higher** -- it cannot be turned around into "LIF is better". This is
-   the same class of problem as item 3 (the activity fraction has no discriminating power):
-   **a choice treated as a premise of the acceptance configuration was itself never controlled.**
+   ⚠️ **This was unanswerable before only because LIF had run at 2e-3 alone** -- and ALIF's +2.38
+   points came entirely from sweeping lr, so comparing a single point against a swept curve did
+   not hold up. Group 4 removed that objection. **But a boundary remains**: LIF has **not
+   flattened** across these four values (1e-3 -> 1e-2 rises monotonically), so "ALIF is worse than
+   LIF under all conditions" **cannot** be inferred -- what these four support is "**at this task,
+   this scale and this budget, LIF is always higher**". Whether to extend the grid further is
+   governed by a **pre-registered** rule and stopping condition, in
+   [`sweep_results/w2_lif_lr020_prereg.md`](../../sweep_results/w2_lif_lr020_prereg.md).
+
+   This item and item 3 (the activity fraction has no discriminating power) were the same class of
+   problem: **a choice treated as a premise of the acceptance configuration** (here beta=0.07)
+   **was itself never controlled**. It has now been controlled, and the result is that it brings
+   **no** gain.
