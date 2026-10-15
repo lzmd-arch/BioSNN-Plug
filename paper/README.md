@@ -210,3 +210,40 @@ bibliography, not by assuming.
 **Verification this batch:** local TinyTeX `pdflatex → bibtex → pdflatex ×2`, no errors, no
 warnings, **7 pages**; 14 of 19 `refs.bib` entries cited. `check_references.py` (3 languages),
 `check_md_tables.py` (87 files) and `check_translations.py` (78 files) all pass.
+
+## Draft log — the search re-run, and why §2.4 did not get upgraded (2026-10-15)
+
+A logged re-run of the literature search was authorised so that §2.4 could move from "to our
+knowledge" to "a search of [sources] on [date] with [queries] found none". It landed at
+`docs/literature_scans/2026-10-15-protocol-level-standard-survey.md` (three languages) with the
+sources, query strings, date, return counts and inclusion/exclusion criteria recorded verbatim.
+
+**The upgrade was not applied, because the search did not produce the clean result the upgrade
+assumed.** Zero entries meet all three criteria — but there are **near neighbours**, and naming
+them is unavoidable once the sentence claims to be search-backed:
+
+- **NeuroSeqBench** — a benchmark suite that places `E-prop` alongside STBP/OTTT/SLTT and claims
+  fairness guidelines; closest on "targets local-rule SNN training", but it is a code suite, and
+  its visible content fixes neither seed counts nor a compute budget.
+- **NeuroBench** — a neuromorphic benchmarking framework (algorithm + system tracks); its abstract
+  does not touch learning rules at all.
+- **arXiv:2402.01782** — a benchmark comparing SNN learning methods *stratified by locality*.
+- **Pauli et al. 2018** — a reproducibility best-practices guide for spiking model *simulation*;
+  it reports seed sensitivity itself (87% vs 13% land in different dynamical states), which
+  **supports** our claim rather than refuting it.
+
+Two things block the upgrade, neither technical: (1) naming them means **citing** them, and
+`refs.bib`'s own rule forbids adding citations the repository does not have — they would need
+ledger entries first, and **none of them is a ledger entry today** (recording them in the survey
+file is not registration); (2) the "a search of ..." phrasing requires the search specification to
+appear in the paper, i.e. an appendix section, or a reviewer has nothing to check against. Ledger
+entry [27] carries the same warning in all three languages. **§2.4 therefore still reads "To our
+knowledge ..."** — the surveyed sentence is written out in the survey file, ready to apply the day
+the two blockers clear.
+
+Also recorded in the survey, because it bounds what the file may be used for: coverage is **not
+exhaustive**. It used a US-region web search index and per-URL fetches, with no in-database access
+to ACM DL / IEEE Xplore / Scopus / Web of Science. It supports "with these queries, on this day, on
+this index, nothing was found" — not "no such thing exists". One hit (a TechRxiv practical-guidelines
+document, the title that looks most like a standard) returned **403** and was never read; it is
+flagged in the file as the priority for next time.
