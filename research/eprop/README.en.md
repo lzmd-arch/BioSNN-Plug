@@ -537,6 +537,10 @@ This section matters more than the conclusion.
    this scale and this budget, LIF is always higher**". Whether to extend the grid further is
    governed by a **pre-registered** rule and stopping condition, in
    [`sweep_results/w2_lif_lr020_prereg.md`](../../sweep_results/w2_lif_lr020_prereg.md).
+   **That probe has since run**: at 2e-2 the 5-seed mean is **0.8140**, only **+0.14 pp** above
+   1e-2 -- inside the seed noise (spreads 1.22 and 2.14 pp), where 5e-3 -> 1e-2 was +0.37 pp. So
+   the curve **flattens between 1e-2 and 2e-2**, the official operating point **stays at 1e-2**,
+   and by the pre-registered stopping rule no 5e-2 point is added.
 
    This item and item 3 (the activity fraction has no discriminating power) were the same class of
    problem: **a choice treated as a premise of the acceptance configuration** (here beta=0.07)
