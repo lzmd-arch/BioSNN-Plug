@@ -157,6 +157,16 @@ date (to 2027-09).
 
 ## Raw experiment artefacts
 
+**The identifier for the authoritative copy**: Zenodo record A (2026-10-15, a deposit of the
+findings and the protocol): version DOI `10.5281/zenodo.23388709` (concept DOI
+`10.5281/zenodo.23388708`). When you come to this checklist looking for the authoritative copy,
+**read that DOI first instead of digging through git history**.
+Warning: that record holds **document snapshots** (`sweep_results/README.md` and
+`research/eprop/README.en.md`); **the raw json and log files are not in it** — those remain
+authoritative in this repository. The DOI supplies an independent timestamp and a citable
+identifier, not a substitute for the data: the two stand as index and corpus, not as backups of
+each other.
+
 Every number in the table above can be traced back to a **raw artefact**, and those live in
 [`sweep_results/`](../sweep_results/) and are now **tracked in this repository** (since 2026-09-23 --
 until then the directory was in `.gitignore`, which meant the data existed on exactly one disk; that
