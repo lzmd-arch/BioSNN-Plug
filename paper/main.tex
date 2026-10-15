@@ -73,7 +73,14 @@ can be avoided in a recurrent core, which is the setting we measure; on the
 paper's own N-MNIST table it is e-prop, not TP, that takes the higher number
 (97.90 against 97.33). We accordingly treat TP as a parallel rule rather than a
 drop-in replacement, and do not use it as the storage argument for our
-recurrent model.
+recurrent model. The same memory question has since been answered at the system
+level rather than at the level of the rule: BrainTrace \citep{wang2026braintrace}
+compiles a family of online rules --- D-RTRL and pp-prop among them --- onto
+user-specified spiking models, and reports linear memory in sequence length
+together with an online fit of a whole-brain-scale \textit{Drosophila} network.
+That is a toolchain contribution, measured in memory footprint, throughput and
+scale; closer to our setting, it does not report what any single rule does at a
+fixed accuracy budget, which is the axis this paper measures.
 
 \citet{espp2024} take a different route: EchoSpike predictive plasticity (ESPP)
 uses the whole spike train of the previous sample as a prediction target, and
@@ -147,22 +154,52 @@ mixed; it supplies no accuracy number, and we borrow none.
 \citet{turcu2025switching} are the closest neighbour. Their synapses change
 their governing plasticity rule independently during training, switching between
 a weak Hebbian-like pre-post rule for weak synapses and a strong
-credit-assignment rule (backpropagation) for strong ones; the switching network
+credit-assignment rule for strong ones, which the abstract labels backpropagation
+(BP); the switching network
 is reported to learn with fewer examples than a backpropagation-only baseline,
 and to develop a more antisymmetric recurrent weight matrix. Two differences
 separate it from our setting. They switch discretely between rules where we mix
-two rule updates continuously, and their strong rule is backpropagation, so the
-mixture is not itself purely local. Closer to our setting, the question that
+two rule updates continuously, and their strong rule is labelled backpropagation,
+so the mixture is not itself purely local. Closer to our setting, the question that
 remains is the one we pose: what must arbitration satisfy so that mixing two
 updates does not degrade what either rule has already retained.
 
-\subsection{SNN--LLM hybrid architectures}               % EMBER; MEMBRAIN; Javis (quote its learning-rule status verbatim and honestly)
-  % 未写：MEMBRAIN [10] 与 Javis [16] 是 docs/references.md 里的条目，但 refs.bib 只收了
-  % EMBER；按 refs.bib 顶部的规则，这三个键要一起动才能写这一段。
-\subsection{Reproducibility protocols in SNN training}  % sparse literature; our Section 3 fills the gap
+\subsection{SNN--LLM hybrid architectures}
+A third line couples a spiking network to a large language model and divides the
+work between them. In EMBER \citep{savage2026ember} the SNN is the substrate and
+the LLM the swappable engine: the spiking network decides when to act and which
+associations surface, the language model decides what the action or the sentence
+is. Its learning rule is depression-dominated STDP ($A_- = 1.05\,A_+$,
+$\tau_+ = 20$~ms, $\tau_- = 30$~ms) with an eligibility trace gated by a global
+dopamine signal --- no backpropagation, and no e-prop. The evidence, however, is a
+single run without error bars: the report carries N=1, code was promised at
+publication and has not appeared, and the author flags LLM confabulation as a
+scoring risk in the same document. Two further projects take the complementary
+split, letting the spiking network decide what enters the context rather than when
+to act. Javis \citep{javis2026} stores knowledge as cell assemblies and recovers
+them by pattern completion from a partial cue, using STDP-family rules only.
+MEMBRAIN \citep{membrain2026} replaces the representation stage with FlyHash
+sparse encoding over Nengo populations and cleans up with attractor dynamics.
+Both are self-reported: neither has a paper or a DOI, neither has been reproduced
+by a third party, and each README is contradicted by its own repository's
+benchmark --- MEMBRAIN's headline completion figure sits alongside 0.35 in its own
+store at 0.2 noise, and Javis records that both of its reward arms stayed at
+chance. We cite them as precedents for the architecture and for nothing measured.
+
+\subsection{Reproducibility protocols in SNN training}
+Machine learning as a field has a protocol-level answer to this problem, and a
+recent one: the NeurIPS 2019 reproducibility program added a code submission
+policy, a community-wide reproducibility challenge, and the checklist that is now
+standard at submission time \citep{pineau2021}. To our knowledge no equivalent
+protocol-level standard exists for local-rule SNN training. The field reports
+accuracies, but the conditions under which they were obtained --- optimizer, seed
+count, budget, and what evaluation does with encoding noise --- are not a required
+part of the report, and the numbers surveyed above show the consequence: a
+baseline transcribed from a third party, an efficiency figure from a single
+setting, and a headline accuracy that no one has independently reproduced. This is
+the gap Section~3 is built to fill.
 % One sentence per citation: "difference from ours". Grouping lives in docs/references.md
 % and docs/related_projects.md.（原注释指向 docs/related_work.md，该文件在本仓不存在。）
-  % 未写：D-RTRL / pp-prop —— refs.bib 无对应条目，且按顶部规则不得新增仓库外引用。
 
 % ------------------------------------------------------------
 \section{Methods}

@@ -5,7 +5,9 @@
 %  每一条都必须能在 docs/references.md 或 docs/related_projects.md 里
 %  找到对应的已点验条目——本文件**不新增**任何仓库里没有的引用。
 %
-%  当前 **15 条**，与任务清单的 15 条对齐。
+%  当前 **19 条**：15 条与任务清单对齐，另 4 条是 2026-10-15 经裁决补入的——
+%  membrain2026 / javis2026 是三语台账 [10][16] 的 bib 化（不是仓库外新引用）；
+%  pineau2021 与 wang2026braintrace 是**新登记**条目，已同步进台账 [27][28]。
 %
 %  2026-10-15：清单里有三条在本仓 docs/ 下**零命中**，查证后全部补入——
 %  两条来自联网核实（miconi2018differentiable、zanardi2024metaplasticity），
@@ -188,5 +190,60 @@
   author    = {Turcu, Denis and Cornford, Jonathan and Dorkenwald, Sven and Mihalas, Stefan},
   booktitle = {NeurIPS 2025 Workshop on Unifying Representations in Neural Models (UniReps)},
   year      = {2025},
-  url       = {https://openreview.net/forum?id=SfYSE9c2}
+  url       = {https://openreview.net/forum?id=SfYSE9c2},
+  note      = {bioRxiv preprint: 10.64898/2026.06.10.731456 (v1 2026-06-11; v3
+               2026-08-30, retitled ``Synaptic-state-dependent plasticity routes
+               learning signals in recurrent circuits'')},
+}
+
+% ---- 2026-10-15 经裁决补入的四条（见 docs/references.md [27][28] 与台账 [10][16]）----
+%
+%  ⚠️ 键名 `wang2026braintrace` 是**核验后定的**。裁决时给的标识是「arXiv:2609.08070
+%  （BrainTrace）」，但那个编号下的论文是 Zhang et al. 的 *A Gradient-based yet
+%  Spike-Timing-Dependent Solution...*，既不是 BrainTrace、作者里也没有 Wang。
+%  BrainTrace 的本体是 Nature Communications 这篇（第一作者 Chaoming Wang，2026-01-19
+%  上线，**无 arXiv 预印本**——arXiv 标题检索 0 命中）。条目按核验到的本体登记。
+
+@article{pineau2021,
+  author  = {Pineau, Joelle and Vincent-Lamarre, Philippe and Sinha, Koustuv and
+             Larivi{\`e}re, Vincent and Beygelzimer, Alina and d'Alch{\'e}-Buc, Florence and
+             Fox, Emily and Larochelle, Hugo},
+  title   = {Improving Reproducibility in Machine Learning Research (A Report from the
+             NeurIPS 2019 Reproducibility Program)},
+  journal = {Journal of Machine Learning Research},
+  volume  = {22},
+  number  = {164},
+  pages   = {1--20},
+  year    = {2021},
+  url     = {https://www.jmlr.org/papers/v22/20-303.html},
+}
+
+@article{wang2026braintrace,
+  author  = {Wang, Chaoming and Dong, Xingsi and Ji, Zilong and Xiao, Mingqing and
+             Jiang, Jiedong and Liu, Xiao and Huan, Yuxiang and Wu, Si},
+  title   = {Model-agnostic linear-memory online learning in spiking neural networks},
+  journal = {Nature Communications},
+  year    = {2026},
+  doi     = {10.1038/s41467-026-68453-w},
+  url     = {https://doi.org/10.1038/s41467-026-68453-w},
+}
+
+@misc{membrain2026,
+  author       = {tfatykhov},
+  title        = {{MEMBRAIN}: Neuromorphic Memory Bridge for {LLM} Agents},
+  howpublished = {GitHub repository},
+  year         = {2026},
+  url          = {https://github.com/tfatykhov/membrain},
+  urldate      = {2026-10-15},
+  note         = {Accessed 2026-10-15},
+}
+
+@misc{javis2026,
+  author       = {{BEKO2210}},
+  title        = {Javis: An associative {SNN} memory co-processor for {LLM} agents},
+  howpublished = {GitHub repository},
+  year         = {2026},
+  url          = {https://github.com/BEKO2210/Javis},
+  urldate      = {2026-10-15},
+  note         = {Accessed 2026-10-15},
 }

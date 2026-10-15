@@ -7,10 +7,11 @@ reproduction record under `research/`, per the project plan's §12.4 rule.
 Build: `latexmk -pdf main.tex` (or `pdflatex main && bibtex main && pdflatex main && pdflatex main`).
 The resulting `main.pdf` is a **local build artifact and is not committed** — see below.
 
-Status: **skeleton v0.2 + first body text** — §2.1 and §2.2 of Related Work are drafted
-(see the draft log at the end); the rest is still structure and section plan. Outstanding
-work is marked in-file with `\todo{}` (rendered red), so `grep -c '\todo{' main.tex` counts
-the open items — **6**, unchanged by the Related Work draft.
+Status: **skeleton v0.2 + Related Work drafted** — all four subsections of §2 are written
+(see the draft log at the end); §1 and §3–§7 are still structure and section plan.
+Outstanding work is marked in-file with `\todo{}` (rendered red), so
+`grep -c '\todo{' main.tex` counts the open items — **6**, unchanged by either drafting
+batch, since no `\todo{}` sits in §2.
 
 ## Compile status
 
@@ -22,12 +23,14 @@ committing it would add a binary diff to every documentation-only change.
 
 **Compilability is guaranteed by CI instead**: the `latex-build` job runs `tectonic main.tex`
 on every push. Tectonic pulls packages on demand and runs BibTeX itself, so the job also
-checks the syntax of all 15 `refs.bib` entries. Watch that job, not a committed PDF.
+checks the syntax of all 19 `refs.bib` entries. Watch that job, not a committed PDF.
 
-Last verified locally 2026-10-15 (TinyTeX + pdflatex), after the Related Work draft:
-`pdflatex → bibtex → pdflatex ×2`, no errors and no warnings, **5 pages**. `bibtex` now
-resolves **9 of the 15** entries — it no longer prints `I found no \citation commands`,
-which it did while the body was still citation-free.
+Last verified locally 2026-10-15 (TinyTeX + pdflatex), after the second drafting batch:
+`pdflatex → bibtex → pdflatex ×2`, no errors and no warnings, **7 pages**. `bibtex` now
+resolves **14 of the 19** entries — it no longer prints `I found no \citation commands`,
+which it did while the body was still citation-free. (The five uncited entries —
+`fremaux2010`, `pogodin2020kernelized`, `shen2025taaf`, `hu2026pssnn`, `hajizada2026clp` —
+belong to §3 and later.)
 
 Two things in the skeleton **looked** like they would fail to compile. **Both were wrong** —
 asserted from memory before any LaTeX was installed, and the real build disproved both.
@@ -40,11 +43,20 @@ Recorded here as a correction rather than quietly deleted:
 
 ## Known gaps
 
-1. **`refs.bib` now has all 15 entries.** Three keys had zero hits in this repo's ledgers and
-   were resolved by verification, recorded in `docs/references.md` [24][25][26]:
+1. **`refs.bib` has grown from the task list's 15 to 19, in two moves.** First, three keys had
+   zero hits in this repo's ledgers and were resolved by verification, recorded in
+   `docs/references.md` [24][25][26]:
    - `miconi2018differentiable` — ICML 2018, PMLR 80, pp. 3559–3568;
    - `zanardi2024metaplasticity` — Phys. Rev. E 110(5), 054304;
    - `turcu2025switching` — NeurIPS 2025 **UniReps workshop**.
+   Then four more on 2026-10-15, by explicit ruling, so that §2.3 and §2.4 could be written
+   and so the D-RTRL/pp-prop slot had a home:
+   - `membrain2026`, `javis2026` — **not new references**: these are the `@misc` forms of
+     ledger entries [10] and [16], which already existed;
+   - `pineau2021` — JMLR 22(164):1–20, the anchor for §2.4, registered as [27];
+   - `wang2026braintrace` — Nature Communications, registered as [28]. ⚠️ **The identifier
+     given in the ruling was wrong** (`arXiv:2609.08070` is a different paper by different
+     authors); see the draft log below before touching this entry.
 
    ⚠️ **The third carries a venue correction worth reading.** The task list's key was
    `neurips2025switching`, which assumed a **main-conference** paper. It is a **workshop**
@@ -133,9 +145,60 @@ the opening sentence was delivered as finished text.
   *State-dependent plasticity routes learning signals in recurrent circuits*). The bioRxiv
   fetch itself returns **403**, the same block the ledger already records. Syncing that into
   `docs/references.md` means syncing three languages, so it is left to a deliberate edit rather
-  than done here.
+  than done here. *(Superseded the same day by the "three rulings" log below, which does sync it.)*
 - **Zanardi et al.: the paragraph in §2.2 rests on the abstract** (arXiv:2403.13967) — a biased
   random walk on a cyclic feed-forward network with several levels, a Hebbian term plus a
   metaplastic reinforcement term on grouped edges, three regimes, and retrieval of a stored path
   after weights are reset to zero. The ledger's [25] entry previously recorded metadata only,
   which is not enough to write a sentence about what the paper shows.
+
+## Draft log — §2.3, §2.4, and the three rulings (2026-10-15)
+
+**What was written:** §2.3 (SNN–LLM hybrids) and §2.4 (reproducibility protocols), which
+completes §2. Plus a half-paragraph appended to the §2.1 TP paragraph for BrainTrace, the
+D-RTRL/pp-prop slot.
+
+**All three rulings were carried out. Two of their premises did not hold**, and in both cases
+it is the premise — not the goal — that was dropped:
+
+1. **Turcu wording: implemented the goal, not the letter.** The ruling asked for
+   "backpropagation-like", on the stated ground that the abstract writes "strong
+   credit-assignment (BP-like)". The abstract does not say that. Re-fetched 2026-10-15, it
+   reads "a strong, credit-assignment rule governing strong synapses (**backpropagation, BP**)".
+   Writing "backpropagation-like" would therefore have been *less* faithful than the text it
+   replaced, and "BP-like" appears nowhere in the source. The prose now says the abstract
+   **labels** it backpropagation (BP) — which is what the ruling was actually after (leaving
+   room, by attributing the label instead of asserting it).
+2. **BrainTrace: the identifier in the ruling was wrong.** `arXiv:2609.08070` is *A
+   Gradient-based yet Spike-Timing-Dependent Solution to the Feedback Learning Problem in
+   Neural Microcircuits* (Zhang et al.) — not BrainTrace, and no Wang among its authors. The
+   real work is **Nature Communications**, "Model-agnostic linear-memory online learning in
+   spiking neural networks" (Chaoming Wang et al., online 2026-01-19), with **no arXiv
+   preprint** (title search: 0 hits). It is registered as [28] and cited as
+   `wang2026braintrace`; the key name the ruling proposed happens to be right for the real
+   paper. Metadata came from the Janelia BibTeX export, since nature.com redirects to an IdP
+   login; the algorithm list (D-RTRL, pp-prop) is from the project's own docs site.
+3. **The Turcu bioRxiv sync was carried out as a deliberate trilingual edit**, into all three
+   ledgers. The DOI in the ruling (`10.64898/2026.06.06.10.731456`) has an extra segment; the
+   verified DOI is `10.64898/2026.06.10.731456`. And it is not just v2: bioRxiv is at **v3**
+   (2026-08-30), retitled *Synaptic-state-dependent plasticity routes learning signals in
+   recurrent circuits*; the licence is `cc_by_nc_nd`, so **no figure may be reused**.
+   `refs.bib` keeps OpenReview as the canonical link and carries the bioRxiv provenance in
+   `note`.
+
+**One provenance gap this batch created, and did not close.** §2.4's core sentence is the
+defensive "To our knowledge no equivalent protocol-level standard exists for local-rule SNN
+training", and the ruling states its evidence is a **2026-10-14 literature scan**. That scan
+is **not recorded anywhere in this repository** — a repo-wide search for it comes back empty.
+`pineau2021` anchors how another field does this; it is not evidence for the absence claim.
+The registration in `docs/references.md` [27] says the same, so whichever of the two reads
+first will find it. Either the scan gets registered, or the sentence loses its floor.
+
+⚠️ **`urldate` in the two `@misc` entries does nothing.** `plainnat.bst` has no `urldate`
+field; bibtex ignores it silently and the access date reaches the PDF only through the `note`
+field ("Accessed 2026-10-15"), which is why both are present. Verified by reading the rendered
+bibliography, not by assuming.
+
+**Verification this batch:** local TinyTeX `pdflatex → bibtex → pdflatex ×2`, no errors, no
+warnings, **7 pages**; 14 of 19 `refs.bib` entries cited. `check_references.py` (3 languages),
+`check_md_tables.py` (87 files) and `check_translations.py` (78 files) all pass.
