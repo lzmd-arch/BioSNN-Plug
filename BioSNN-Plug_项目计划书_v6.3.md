@@ -285,6 +285,13 @@
 >    **静默损坏**，而两个文件都「看起来正常」。已用编辑工具重写修好，并用**控制字符扫描**
 >    验证三个文件都不含被吞转义的指纹。**结论：写含反斜杠的内容（LaTeX / bib）必须走编辑
 >    工具，不要经过 shell 字符串。**
+> ㉚ **2026-10-15：首个 Zenodo DOI 落袋（A 记录，发现存证）**。版本 DOI `10.5281/zenodo.23388709`、
+>    概念 DOI `10.5281/zenodo.23388708`。A 记录存的是**发现与协议**——`sweep_results/README.md`
+>    与 `research/eprop/README.en.md` 两份仓内文档，类型 Report、许可 Apache-2.0（按文件原生归属，
+>    不混搭）；**不含论文 PDF**。论文是 10/22 的记录 B（Zenodo + arXiv，CC-BY-4.0）。两个记录
+>    互挂 related identifiers、互为兄弟，**A 不是 B 的草稿或残次前身**。投递前扫描：凭据 /
+>    本机路径 / 仓外专有物件各 0 命中；上传后从 Zenodo 侧回读 md5 与本地逐字节核对一致。
+>    登记与 10/22 的预批清单见 `paper/README.md` 的 Publication batch 一节。
 
 ---
 

@@ -372,18 +372,21 @@ paper, and it forced one licence onto files that have two different native ones.
   are repository documents, so this is their native licence and a single one. **No PDF.** Dropping
   the PDF also retires the `\todo{email}` blocker, because the paper is not part of A.
   Package built at `Desktop/zenodo_v0.1/` (metadata JSON + upload steps + the pre-deposit scan).
-  **Status 2026-10-15: a private draft exists and is verified — it is not published.**
-  Draft id `23388709`, <https://zenodo.org/deposit/23388709>, state `unsubmitted`. Both
-  attachments were uploaded and then verified **byte-for-byte against the local files, from
-  Zenodo's side** — md5 and size both match (18,154 and 35,937 bytes); this is not the upload
-  response being taken on trust. As stored by Zenodo: `publication` / `report`, `apache2.0`,
-  `v0.1`, creator `lzmd-arch`, description 1,505 characters.
-  ⚠️ **Publishing was blocked by this environment's permission classifier** ("Create Public
-  Surface"): minting a public DOI is reserved for a human action. It is one click on the draft
-  page above. ⚠️ **The sandbox route the ruling asked for was not available**:
-  `sandbox.zenodo.org` is a separate service requiring its own token, and only the production
-  `ZENODO_TOKEN` is set. The production draft serves the same purpose — an unsubmitted deposition
-  is invisible to everyone but its owner — and the whole pipeline was exercised through it.
+  **Status 2026-10-15: PUBLISHED.** Version DOI **`10.5281/zenodo.23388709`**, concept DOI
+  **`10.5281/zenodo.23388708`**; record created 2026-10-15T08:17:13Z.
+  - **Verified from Zenodo's public API**, not from the upload response and not from this
+    transcript: DOI, concept DOI, title, `publication` / `report`, `apache2.0`, `v0.1`, creator
+    `lzmd-arch`, and both files at 18,154 and 35,937 bytes — md5 and size match the local copies
+    byte-for-byte.
+  - **The publish step itself was blocked by this environment's permission classifier** ("Create
+    Public Surface"): minting a public DOI is reserved for a human action here. The ruling's
+    sandbox route was also unavailable — `sandbox.zenodo.org` is a separate service needing its
+    own token, and only production `ZENODO_TOKEN` is set. So a **private production draft** stood
+    in for the sandbox run (an unsubmitted deposition is invisible to everyone but its owner), the
+    pipeline was exercised through it end to end, and the human clicked Publish.
+  - **What this DOI is, and is not.** It identifies the *findings and protocol record* (a report).
+    It is **not** the software's DOI and **not** the paper's, so it does not belong in
+    `CITATION.cff`'s `doi:` field — that field describes the repository itself.
 - **Record B — 2026-10-22: the full paper**, Zenodo + arXiv, `publication_type = preprint`,
   licence CC-BY-4.0.
 
@@ -391,8 +394,11 @@ paper, and it forced one licence onto files that have two different native ones.
 
 1. **Contact method = the GitHub repository URL, not an email.** It replaces the author block's
    `\todo{email}`: zero new exposure, functionally equivalent.
-2. **Cross-reference A's DOI** among B's related identifiers, and edit A to point back — the two
-   records must be seen as siblings, not as drafts of each other.
+2. **Cross-reference A's DOI — the value is now known: `10.5281/zenodo.23388709` (version) /
+   `10.5281/zenodo.23388708` (concept).** Add it to B's related identifiers (relation
+   `isSupplementedBy` or `references`, decide when B's metadata is written), and edit A's record
+   to point back at B once B exists — the two must read as siblings, never as a draft and its
+   sequel.
 3. ⚠️ **arXiv requires an endorsement for a first submission.** Verified against arXiv's own pages
    on 2026-10-15: a new submitter needs one "before submitting their first paper to arXiv or a new
    category", obtained either automatically (needs an institutional email address, which this
