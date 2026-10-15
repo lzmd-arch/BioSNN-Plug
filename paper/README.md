@@ -186,13 +186,21 @@ it is the premise — not the goal — that was dropped:
    `refs.bib` keeps OpenReview as the canonical link and carries the bioRxiv provenance in
    `note`.
 
-**One provenance gap this batch created, and did not close.** §2.4's core sentence is the
-defensive "To our knowledge no equivalent protocol-level standard exists for local-rule SNN
-training", and the ruling states its evidence is a **2026-10-14 literature scan**. That scan
-is **not recorded anywhere in this repository** — a repo-wide search for it comes back empty.
-`pineau2021` anchors how another field does this; it is not evidence for the absence claim.
-The registration in `docs/references.md` [27] says the same, so whichever of the two reads
-first will find it. Either the scan gets registered, or the sentence loses its floor.
+**The provenance gap behind §2.4's core sentence — partially closed, and the residual is
+written into the file itself.** §2.4's central sentence is the defensive "To our knowledge no
+equivalent protocol-level standard exists for local-rule SNN training", and the ruling says
+its evidence is a **2026-10-14 literature scan**. That scan's own queries and sources are
+**in no file in this repository** (searched the repo and the desktop on 2026-10-15; the only
+10-14 commits are about the `biosnn-bus` 0.2.0 release). By a further ruling the scan record
+now exists at `docs/literature_scans/2026-10-14-local-learning-landscape.md` (three
+languages): what question the scan was meant to settle, the three criteria a counterexample
+would have to meet, the ledger entries it swept with a per-entry "why this is not a standard"
+column, and what it did not hit. ⚠️ **That file states plainly that it is a narrative compiled
+from ledger entries on 2026-10-15, not a replay of the scan's procedure** — so what it gives
+the sentence is a floor of "here is what we looked at and what each thing is", not "we swept
+the field reproducibly". `pineau2021` anchors how another field does this; it is not evidence
+for the absence claim. Ledger entry [27] carries the same warning. §2.4's wording therefore
+stays defensive; escalating it needs the scan's actual query log first.
 
 ⚠️ **`urldate` in the two `@misc` entries does nothing.** `plainnat.bst` has no `urldate`
 field; bibtex ignores it silently and the access date reaches the PDF only through the `note`
