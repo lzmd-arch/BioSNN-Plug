@@ -331,11 +331,11 @@ likely culprits are the appendix table's column widths or the `\ref{app:search}`
 
 **Trigger: the 250-epoch LIF run's plateau verdict.** Until it lands, nothing below is executed.
 Recorded here because it is a standing instruction, not a one-off: when the trigger fires, the
-five edits go in **without further sign-off**.
+six edits go in **without further sign-off**.
 
 The official headline number for W2 becomes **LIF @ lr=1e-2 @ 250 epochs** (the arm the
 pre-registered decision rule selected), and ALIF's **0.8831** is demoted to a **control** value.
-The five locations, inventoried before the trigger so the execution is mechanical:
+The six locations, inventoried before the trigger so the execution is mechanical:
 
 | # | Location | Action |
 | :--- | :--- | :--- |
@@ -344,16 +344,18 @@ The five locations, inventoried before the trigger so the execution is mechanica
 | 3 | `README.md:58` / `README.en.md:66` / `README.ja.md:64` — the "current status" table's W2 row | LIF leads across the sweep; official = LIF@1e-2@250ep; ALIF 0.8831 (control). **All three languages** |
 | 4 | `research/eprop/README.{md,en.md,ja.md}` (the extended-budget row and the convergence discussion) + `sweep_results/README.md:86` | **Add a pointer, do not rewrite history.** The ALIF run really did produce 0.8831 — that entry is a true record. What moves is the *role*: mark 0.8831 as the control and say the official number's only source is the LIF run |
 | 5 | `grep -rn "0.8831" paper/` | **Must come back empty.** Today it returns three hits: the two above plus `main.tex:240`, a comment on the Budget-extension subsubsection. A result-table control row is the one allowed exception — and §5.2 is not written yet, so it is out of this batch's grep either way |
+| 6 | `BioSNN-Plug_项目计划书_v6.3.md:860` — approved as a sixth location after the fact | Append a note in the same format the `research/` docs use: **「官方收官数字 = LIF@1e-2@250ep = 0.XXXX（见 `sweep_results/w2_lif_long`）；本行 0.8831 为 ALIF 对照收敛值」**. The plan is a **living document**: it may grow more complete, it may not become false. ⚠️ **The value slot is filled from the same run as locations 1–3, in one edit** — writing the note early would leave a hole in the plan, which is neither "more complete" nor "false", and the plan currently carries no placeholders at all |
 
 **Two edge cases, decided in advance:**
 
 - **If the plateau criterion fails** (the last-20-epoch window increments have not settled to
   noise), the number still goes in but the word "converges" does **not**. That is a claim-strength
   issue and therefore outside the pre-approval — it comes back for a ruling.
-- **`BioSNN-Plug_项目计划书_v6.3.md:860` also carries 0.8831** ("已实测 ... 且已收敛"). The plan is
-  **not** among the five locations, so it is left alone. Worth noting that the line is a record of
-  what was measured rather than a claim about which arm is official, so it does not become *false*
-  — it becomes *incomplete*. Completing it is a separate call.
+- **`BioSNN-Plug_项目计划书_v6.3.md:860` also carries 0.8831** ("已实测 ... 且已收敛"). It was
+  **approved as a sixth location on 2026-10-15**, on the ruling that the plan is a living document:
+  it may grow more complete, it may not become false. As it stands the line is a record of what was
+  measured rather than a claim about which arm is official, so it does not become *false* — it
+  becomes *incomplete*, and row 6 above completes it in a single edit alongside the others.
 
 **Not to be touched:** `sweep_results/w2_long*` (the log and the seed JSONs). Those are
 reproduction records; the batch changes the *documentation's* role assignment, never the evidence.
