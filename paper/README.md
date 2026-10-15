@@ -326,3 +326,34 @@ because the reviewer's obvious question has been answered in advance.
 ⚠️ **Not built locally.** The machine was under the ruling's training-only discipline, so no
 pdflatex ran on this batch; CI's `tectonic` job is the verification channel. If it goes red, the
 likely culprits are the appendix table's column widths or the `\ref{app:search}` label.
+
+## Pre-approval on record — the "W2 official number" batch (2026-10-15)
+
+**Trigger: the 250-epoch LIF run's plateau verdict.** Until it lands, nothing below is executed.
+Recorded here because it is a standing instruction, not a one-off: when the trigger fires, the
+five edits go in **without further sign-off**.
+
+The official headline number for W2 becomes **LIF @ lr=1e-2 @ 250 epochs** (the arm the
+pre-registered decision rule selected), and ALIF's **0.8831** is demoted to a **control** value.
+The five locations, inventoried before the trigger so the execution is mechanical:
+
+| # | Location | Action |
+| :--- | :--- | :--- |
+| 1 | `main.tex:35` — Contributions, "Convergence evidence" | `0.8831` → the official LIF value, four decimals, same convention as the ALIF number |
+| 2 | `main.tex:24` — the abstract's `\todo{}` (its number preview says "converges at 0.8831 (250ep)") | use the official value when the abstract is written; `0.8831` must not appear in the abstract |
+| 3 | `README.md:58` / `README.en.md:66` / `README.ja.md:64` — the "current status" table's W2 row | LIF leads across the sweep; official = LIF@1e-2@250ep; ALIF 0.8831 (control). **All three languages** |
+| 4 | `research/eprop/README.{md,en.md,ja.md}` (the extended-budget row and the convergence discussion) + `sweep_results/README.md:86` | **Add a pointer, do not rewrite history.** The ALIF run really did produce 0.8831 — that entry is a true record. What moves is the *role*: mark 0.8831 as the control and say the official number's only source is the LIF run |
+| 5 | `grep -rn "0.8831" paper/` | **Must come back empty.** Today it returns three hits: the two above plus `main.tex:240`, a comment on the Budget-extension subsubsection. A result-table control row is the one allowed exception — and §5.2 is not written yet, so it is out of this batch's grep either way |
+
+**Two edge cases, decided in advance:**
+
+- **If the plateau criterion fails** (the last-20-epoch window increments have not settled to
+  noise), the number still goes in but the word "converges" does **not**. That is a claim-strength
+  issue and therefore outside the pre-approval — it comes back for a ruling.
+- **`BioSNN-Plug_项目计划书_v6.3.md:860` also carries 0.8831** ("已实测 ... 且已收敛"). The plan is
+  **not** among the five locations, so it is left alone. Worth noting that the line is a record of
+  what was measured rather than a claim about which arm is official, so it does not become *false*
+  — it becomes *incomplete*. Completing it is a separate call.
+
+**Not to be touched:** `sweep_results/w2_long*` (the log and the seed JSONs). Those are
+reproduction records; the batch changes the *documentation's* role assignment, never the evidence.
