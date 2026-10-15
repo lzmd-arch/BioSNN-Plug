@@ -35,6 +35,16 @@ hash changes on every rebuild and it is never an identity; and it lives as long 
 retention window (Actions' default), not forever. If you need a build from a specific commit and
 the artifact has expired, re-run that run — or build locally.
 
+⚠️ **Green does not mean warning-free.** The job fails on errors, not on box warnings, and
+tectonic does emit some (verified by reading the run log of 2026-10-15, run 38689701424):
+**Overfull** at `main.tex:33-34` and `:36-37` — the two long Contributions bullets, which predate
+the drafting batches and are not caused by them; and **Underfull** (badness 10000) at
+`main.tex:287-290` — the appendix A.4 search-log table, where narrow `p{}` columns stretch short
+cell content. Underfull there is cosmetic; what would matter is *Overfull* in the table, and there
+is none, so the table fits inside the text width. The 8-page artifact was downloaded and its text
+extracted to confirm §2.4 and the appendix table are actually in the PDF, not merely in the
+source.
+
 Last verified locally 2026-10-15 (TinyTeX + pdflatex), after the second drafting batch:
 `pdflatex → bibtex → pdflatex ×2`, no errors and no warnings, **7 pages**. `bibtex` now
 resolves **14 of the 19** entries — it no longer prints `I found no \citation commands`,
