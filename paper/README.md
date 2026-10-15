@@ -57,8 +57,12 @@ Recorded here as a correction rather than quietly deleted:
    rules", with no workshop qualifier). It has since been **corrected in place** — see gap 3.
 2. **`hajizada2026clp` is dated 2026** here, matching the task list and `docs/references.md`
    [8]. Note the project plan's prose says 2025; the two disagree.
-3. **`main.tex` has three edits against the delivered file.** Two are comment-only; the third is
-   **body text** and is called out as such below.
+3. **Three edits against the delivered file came from the reference-ledger work.** Two are
+   comment-only; the third is **body text** and is called out as such below. ⚠️ This list is
+   scoped to *that* work — it is **not** a running total of how far the file has diverged: the
+   §2 Related Work draft changed it much further and logs its own changes in the **Draft log**
+   section at the end of this file. Read the two together before drawing conclusions about what
+   the file used to say.
    - (a) *comment* — line 44's comment said "NeurIPS 2025 switching rules" and now says "Turcu et
      al. 2025, UniReps workshop (switching rules; closest neighbor -- cite AND delimit)" — the
      venue correction;
