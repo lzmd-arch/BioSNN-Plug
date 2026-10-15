@@ -359,3 +359,38 @@ The six locations, inventoried before the trigger so the execution is mechanical
 
 **Not to be touched:** `sweep_results/w2_long*` (the log and the seed JSONs). Those are
 reproduction records; the batch changes the *documentation's* role assignment, never the evidence.
+
+## Publication batch — pre-approval on record (split decided 2026-10-15, for 2026-10-22)
+
+**Two records, not two versions of one.** The earlier "v0.1 today / v0.2 on 10-22" framing was
+dropped: versioning a skeleton invites reading today's deposit as a defective predecessor of the
+paper, and it forced one licence onto files that have two different native ones.
+
+- **Record A — today (2026-10-15): a findings report, not the paper.** Attachments:
+  `sweep_results/README.md` plus the English edition of the W2 README
+  (`research/eprop/README.en.md`), `publication_type = report`, licence **Apache-2.0** — both files
+  are repository documents, so this is their native licence and a single one. **No PDF.** Dropping
+  the PDF also retires the `\todo{email}` blocker, because the paper is not part of A.
+  Package built at `Desktop/zenodo_v0.1/` (metadata JSON + upload steps + the pre-deposit scan).
+  ⚠️ **Not deposited yet — there is no Zenodo token in this environment.**
+- **Record B — 2026-10-22: the full paper**, Zenodo + arXiv, `publication_type = preprint`,
+  licence CC-BY-4.0.
+
+**Standing items for B:**
+
+1. **Contact method = the GitHub repository URL, not an email.** It replaces the author block's
+   `\todo{email}`: zero new exposure, functionally equivalent.
+2. **Cross-reference A's DOI** among B's related identifiers, and edit A to point back — the two
+   records must be seen as siblings, not as drafts of each other.
+3. ⚠️ **arXiv requires an endorsement for a first submission.** Verified against arXiv's own pages
+   on 2026-10-15: a new submitter needs one "before submitting their first paper to arXiv or a new
+   category", obtained either automatically (needs an institutional email address, which this
+   project does not have) or personally, by requesting it from an established arXiv author in the
+   category. **That has lead time — it cannot be arranged on 10-22.** If B is going to arXiv,
+   finding an endorser starts now.
+4. ⚠️ **arXiv's identity policy is the sharper question.** The same pages state: "It is a violation
+   of our policies to misrepresent your identity or organizational affiliation", with misrepresentation
+   grounds for "immediate and permanent suspension". Pseudonyms are **not** explicitly banned, so
+   this is not a hard no — but it is a grey zone, and item 1's repository URL solves the contact half
+   of it, not the identity half. **This one needs a human decision before 10-22**, not a mechanical
+   edit.
