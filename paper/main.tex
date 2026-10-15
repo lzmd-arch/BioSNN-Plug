@@ -9,6 +9,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage{natbib}   % \citet/\citep；须在 hyperref 之前载入。plainnat.bst 随 TinyTeX 发布
 \usepackage{booktabs, graphicx, hyperref, amsmath, xcolor}
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 \title{Local Learning Rules Under Honest Measurement:\\A Reproducibility-First Benchmark of e-prop, Hebbian, and R-STDP\\on Consumer Hardware}
@@ -40,13 +41,128 @@
 
 % ------------------------------------------------------------
 \section{Related Work}
-\subsection{Local learning rules for spiking networks}  % Bellec 2020; TP (Pes 2025); ESPP; event-driven e-prop (Korcsak-Gorzo 2025); deep e-prop (Millidge 2025); D-RTRL/pp-prop
-\subsection{Meta-learned plasticity and arbitration}    % Confavreux 2025; Miconi/ABCD; meta-plasticity (Zanardi 2024); Turcu et al. 2025, UniReps workshop (switching rules; closest neighbor -- cite AND delimit)
-  % Delimit, same source as docs/references.md [26]: they switch discretely between plasticity
-  % rules per synapse; we mix continuously under a retention constraint.
+\subsection{Local learning rules for spiking networks}
+A family of learning rules for spiking neural networks (SNNs) restricts synaptic
+updates to quantities available at the synapse --- presynaptic and postsynaptic
+activity together with a broadcast modulation signal --- thereby avoiding
+backpropagation through time (BPTT) and its requirement to store complete
+activation histories. We refer to these as \emph{local learning rules} and
+review the five most directly relevant lines of work.
+
+\citet{bellec2020eprop} introduced e-prop, a three-factor rule in which each
+synapse maintains a decaying eligibility trace computed from local spike
+events, while a learning signal broadcast from the readout layer supplies the
+third factor. The rule requires O(1) memory in sequence length and was shown to
+approach BPTT-level performance on speech and sequence tasks with adaptive
+LIF (ALIF) neurons. Published e-prop results, however, are typically reported
+at a single hyperparameter setting with a small number of seeds, leaving the
+rule's sensitivity to optimization choices largely uncharacterized. In this
+work we treat such sensitivity as a first-class measurement target rather
+than a nuisance variable.
+
+\citet{pes2025tp} move the trace from the synapse to the neuron: traces
+propagation (TP) keeps two decaying activity traces per neuron rather than an
+eligibility trace per synapse, and derives the learning signal from a layer-wise
+contrastive loss, for a space complexity of $O(LH)$ against the $LH^{2}$ the
+same paper tabulates for e-prop. Its measurements, however, are taken on fully
+connected feedforward architectures with LIF neurons, and part of the SHD
+comparison it prints is transcribed from a third party rather than re-run under
+its own protocol --- the paper footnotes those rows as such. TP therefore does
+not establish that the per-synapse traces which make e-prop's storage quadratic
+can be avoided in a recurrent core, which is the setting we measure; on the
+paper's own N-MNIST table it is e-prop, not TP, that takes the higher number
+(97.90 against 97.33). We accordingly treat TP as a parallel rule rather than a
+drop-in replacement, and do not use it as the storage argument for our
+recurrent model.
+
+\citet{espp2024} take a different route: EchoSpike predictive plasticity (ESPP)
+uses the whole spike train of the previous sample as a prediction target, and
+pulls same-label samples together while pushing different-label ones apart, a
+layer-local rule that never invokes automatic differentiation. The rule also
+decides for itself which time steps are worth updating --- a threshold on input
+activity plus a threshold on the loss --- and the authors report that weight
+updates are executed on only 18--27\% of time steps, a fraction that decreases
+during training, alongside an SHD accuracy of 84.32\%. Both figures come from a
+single configuration and are self-reported; we are not aware of an independent
+reproduction. ESPP is also not an e-prop variant: it is a
+predictive/contrastive layer-local rule, and the selective updating it performs
+is a different mechanism from the event-driven form discussed next, with which
+it is easily confused.
+
+\citet{korcsak2025event} keep the rule and change when it is evaluated: a
+synapse updates only when it receives a spike event, and the implementation is
+embedded in a large-scale simulation framework (NEST). It reproduces the
+original rule's performance on pattern generation, evidence accumulation and
+N-MNIST, and weak- and strong-scales to two million neurons on sparse networks;
+to satisfy strict locality it also removes one violation of that principle in
+the original rule --- the eligibility filter as published depends on the time
+constant of the output neuron, which a synapse cannot know. Those are
+measurements taken at HPC scale, and the regime we can afford is a single
+consumer GPU with networks roughly four orders of magnitude smaller, where the
+question is not whether event-driven updating scales but whether it changes the
+numbers at all. Closer to our setting, this is the variant we would reach for
+first if scale became the binding constraint; it is not, however, the object of
+the benchmark below, which covers the form we can reproduce bit-for-bit on one
+machine.
+
+\citet{millidge2025deep} generalize the trace recursion itself, from a single
+recurrent layer to arbitrary depth and arbitrary DAGs, arguing that the cost
+stays linear in depth. The note contains no experiments --- its author states
+that none were run --- so it can support the methodological claim that a
+multi-layer recurrent SNN is trainable by purely local rules in principle, and
+cannot support any accuracy figure. Its own stated limitations cut against the
+word ``online'': e-prop as specified updates weights at the end of an episode
+rather than during it, and keeping one set of traces per parameter group becomes,
+in the author's phrase, quickly unmanageable with depth. We cite it for those two
+statements and for nothing measured.
+
+\subsection{Meta-learned plasticity and arbitration}
+A second line does not ask which local rule to use but how the rules themselves
+should change: plasticity becomes a learned or slowly varying quantity.
+
+\citet{confavreux2025} meta-learn co-activity plasticity rules for recurrent
+spiking networks with an evolutionary-strategy outer loop, over
+parameterizations of increasing complexity. Their result is itself a caution:
+beyond a certain complexity the meta-learned strategies begin to fail, and
+specifying a loss that constrains the emerging dynamics a priori is hard. We do
+not meta-learn --- the rules stay fixed and any arbitration between them is
+specified by hand --- so the question we can measure is a different one: what a
+fixed mixture buys at a matched optimization budget.
+
+\citet{miconi2018differentiable} sit at the other end of the same axis, training
+the plasticity coefficients themselves by backpropagation through a plastic
+network. That is meta-learning with a global gradient, and we cite it as a
+contrast rather than as support: its results say nothing about what purely local
+rules achieve, which is the question this paper is built around.
+
+\citet{zanardi2024metaplasticity} analyse metaplasticity as a memory mechanism
+rather than as a training algorithm: on a cyclic feed-forward network with
+several levels, where a Hebbian term and a metaplastic reinforcement term act on
+grouped edges, the dynamics separate into three regimes, and in two of them a
+stored path can still be retrieved after the weights have been reset to zero ---
+retention that survives at the slower level after the fast one has been erased.
+That is the mechanism behind the retention constraint we impose when rules are
+mixed; it supplies no accuracy number, and we borrow none.
+
+\citet{turcu2025switching} are the closest neighbour. Their synapses change
+their governing plasticity rule independently during training, switching between
+a weak Hebbian-like pre-post rule for weak synapses and a strong
+credit-assignment rule (backpropagation) for strong ones; the switching network
+is reported to learn with fewer examples than a backpropagation-only baseline,
+and to develop a more antisymmetric recurrent weight matrix. Two differences
+separate it from our setting. They switch discretely between rules where we mix
+two rule updates continuously, and their strong rule is backpropagation, so the
+mixture is not itself purely local. Closer to our setting, the question that
+remains is the one we pose: what must arbitration satisfy so that mixing two
+updates does not degrade what either rule has already retained.
+
 \subsection{SNN--LLM hybrid architectures}               % EMBER; MEMBRAIN; Javis (quote its learning-rule status verbatim and honestly)
+  % 未写：MEMBRAIN [10] 与 Javis [16] 是 docs/references.md 里的条目，但 refs.bib 只收了
+  % EMBER；按 refs.bib 顶部的规则，这三个键要一起动才能写这一段。
 \subsection{Reproducibility protocols in SNN training}  % sparse literature; our Section 3 fills the gap
-% One sentence per citation: "difference from ours". Reuse the grouping from docs/related_work.md.
+% One sentence per citation: "difference from ours". Grouping lives in docs/references.md
+% and docs/related_projects.md.（原注释指向 docs/related_work.md，该文件在本仓不存在。）
+  % 未写：D-RTRL / pp-prop —— refs.bib 无对应条目，且按顶部规则不得新增仓库外引用。
 
 % ------------------------------------------------------------
 \section{Methods}

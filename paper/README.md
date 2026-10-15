@@ -7,8 +7,10 @@ reproduction record under `research/`, per the project plan's §12.4 rule.
 Build: `latexmk -pdf main.tex` (or `pdflatex main && bibtex main && pdflatex main && pdflatex main`).
 The resulting `main.pdf` is a **local build artifact and is not committed** — see below.
 
-Status: **skeleton v0.2** — structure and section plan only. Outstanding work is marked
-in-file with `\todo{}` (rendered red), so `grep -c '\todo{' main.tex` counts the open items.
+Status: **skeleton v0.2 + first body text** — §2.1 and §2.2 of Related Work are drafted
+(see the draft log at the end); the rest is still structure and section plan. Outstanding
+work is marked in-file with `\todo{}` (rendered red), so `grep -c '\todo{' main.tex` counts
+the open items — **6**, unchanged by the Related Work draft.
 
 ## Compile status
 
@@ -22,9 +24,10 @@ committing it would add a binary diff to every documentation-only change.
 on every push. Tectonic pulls packages on demand and runs BibTeX itself, so the job also
 checks the syntax of all 15 `refs.bib` entries. Watch that job, not a committed PDF.
 
-Last verified locally 2026-10-15 (TinyTeX + pdflatex): clean, **3 pages**. `bibtex` prints
-`I found no \citation commands` — **expected at skeleton stage**, since the body still has no
-`\cite{}` (the single grep hit sits inside a comment).
+Last verified locally 2026-10-15 (TinyTeX + pdflatex), after the Related Work draft:
+`pdflatex → bibtex → pdflatex ×2`, no errors and no warnings, **5 pages**. `bibtex` now
+resolves **9 of the 15** entries — it no longer prints `I found no \citation commands`,
+which it did while the body was still citation-free.
 
 Two things in the skeleton **looked** like they would fail to compile. **Both were wrong** —
 asserted from memory before any LaTeX was installed, and the real build disproved both.
@@ -81,3 +84,54 @@ Recorded here as a correction rather than quietly deleted:
    bytes are the same" as evidence — `main.pdf` embeds a creation timestamp, so its **hash
    changes on every rebuild** even when the source is untouched (observed on the venue-correction
    commit: same 103,970 bytes, different blob hash).
+
+## Draft log — §2 Related Work (2026-10-15)
+
+**What was written:** §2.1 (five paragraphs) and §2.2 (four paragraphs) in full. §2.3 and §2.4
+are still empty; §2.1/§2.2 keep the paragraph template the drafting plan prescribes — what the
+work is, what it establishes, the gap, then a connective to our own setting.
+
+**Two preamble/comment edits this required, both called out because neither is prose:**
+
+- **`\usepackage{natbib}` added before `hyperref`.** The drafted text uses `\citet`, which is a
+  natbib command — without the package the build fails with `Undefined control sequence`. The
+  existing note above (line ~36) is still true as far as it goes (`plainnat.bst` resolves on its
+  own), but it does **not** cover `\citet`, so the package is now loaded explicitly.
+- **The `docs/related_work.md` pointer in the §2 comment was stale** — that file has never
+  existed in this repo (checked with `git log --all`). The comment now points at
+  `docs/references.md` and `docs/related_projects.md`, which are the actual grouping sources.
+
+**One number in the delivered §2.1 opening was changed: "four" → "five" lines of work.** The
+drafting plan enumerated four paragraphs (Bellec / TP / ESPP / event-driven); Millidge 2025 is
+also listed for this subsection in the skeleton comment and is in `refs.bib`, so it is drafted
+as a fifth paragraph and the count in the opening sentence was brought in line. Flagged because
+the opening sentence was delivered as finished text.
+
+**Open items inside §2, recorded as source comments rather than prose:**
+
+- **D-RTRL / pp-prop** — named in the original skeleton comment, but there is no `refs.bib` entry
+  for either, and that file's own rule forbids adding citations with no ledger entry. Left
+  unwritten.
+- **§2.3 (SNN–LLM hybrids)** — `savage2026ember` is in `refs.bib`; MEMBRAIN ([10]) and Javis
+  ([16]) are `docs/references.md` entries but have no `refs.bib` keys. The subsection needs all
+  three keys to be added together before it can be drafted.
+- **§2.4 (reproducibility protocols)** — unwritten. The claim it rests on ("the literature is
+  sparse") needs its own search record before it goes into prose.
+
+**Two literature facts verified on 2026-10-15 while drafting, neither previously in the ledger:**
+
+- **Turcu et al.: the "per synapse" clause in the old §2.2 comment is now confirmed.** The
+  NeurIPS virtual page returns the abstract server-side: synapses "can independently change
+  their governing plasticity rule during training", switching between a weak Hebbian-like
+  pre-post rule and a strong credit-assignment rule (*backpropagation*) — so the strong rule is
+  not local, which §2.2 now states. ⚠️ **The ledger's "[26] has no arXiv preprint" is still true
+  but incomplete**: a **bioRxiv preprint exists** (10.64898/2026.06.10.731456, v2 titled
+  *State-dependent plasticity routes learning signals in recurrent circuits*). The bioRxiv
+  fetch itself returns **403**, the same block the ledger already records. Syncing that into
+  `docs/references.md` means syncing three languages, so it is left to a deliberate edit rather
+  than done here.
+- **Zanardi et al.: the paragraph in §2.2 rests on the abstract** (arXiv:2403.13967) — a biased
+  random walk on a cyclic feed-forward network with several levels, a Hebbian term plus a
+  metaplastic reinforcement term on grouped edges, three regimes, and retrieval of a stored path
+  after weights are reset to zero. The ledger's [25] entry previously recorded metadata only,
+  which is not enough to write a sentence about what the paper shows.
