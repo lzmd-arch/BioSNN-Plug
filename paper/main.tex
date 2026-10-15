@@ -30,7 +30,7 @@
 \subsection{Contributions}
 \begin{itemize}
   \item \textbf{Honest benchmark}: three local-rule lines under one unified protocol (budget/seeds/protocols fully public). \todo{fill numbers}
-  \item \textbf{Interaction finding}: neuron type x learning rate interaction; at default hyperparameters the adaptation term can hurt (same-budget LIF leads ALIF by 1.04pp).
+  \item \textbf{Interaction finding}: neuron type x learning rate swept as a controlled grid; the adaptation term is a net drag at every learning rate tested (same-budget LIF leads ALIF by 0.93-1.23pp over lr 1e-3 to 1e-2; 5 seeds each).
   \item \textbf{Convergence evidence}: e-prop + ALIF converges at 0.8831 (250 epochs), lower edge of the e-prop literature band.
   \item \textbf{Methodology}: bit-exact reproduction, retention-joint reporting, degeneracy analysis, frozen-noise evaluation protocol.
   \item \textbf{Open assets}: all code/configs/scripts open (biosnn-bus on PyPI); comparison table with evidence ledger for 5 sibling projects.
