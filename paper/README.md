@@ -353,8 +353,13 @@ sign-off**.
   repository.** They had been written to `data/w2_lif_long/`, and `data/` is gitignored — so the
   "only source of the official number" sat *outside* version control while its control sat inside.
   Copied to `sweep_results/w2_lif_long/` plus the log, following the existing practice for accepted
-  runs, and verified md5-identical to the source. Without this, §5.2 and the 2026-10-22 deposit
-  would both cite a path that git does not carry.
+  runs. ⚠️ **The "byte-identical" claim needs its scope stated**: the two sides were byte-identical
+  at the moment of copying (md5 equal), but `.gitattributes` mandates `eol=lf`, so the committed
+  copies are LF while `data/`'s working copies are CRLF — **same content, different line endings**
+  (equal again once CR is stripped), which is how this repo stores every text record. A reader who
+  compares `git show … | md5sum` against `data/` will see a mismatch; it is the line-ending
+  normalisation, not the data. Without the move, §5.2 and the 2026-10-22 deposit would both cite a
+  path that git does not carry.
 
 The official headline number for W2 becomes **LIF @ lr=1e-2 @ 250 epochs** (the arm the
 pre-registered decision rule selected), and ALIF's **0.8831** is demoted to a **control** value.
