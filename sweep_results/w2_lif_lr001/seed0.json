@@ -1,0 +1,141 @@
+{
+  "seed": 0,
+  "test_accuracy": 0.7623999714851379,
+  "active_fraction": 1.0,
+  "n_classes": 10,
+  "elapsed_s": 2463.5170585999995,
+  "curve": [
+    {
+      "epoch": 1.0,
+      "val_accuracy": 0.42283332347869873
+    },
+    {
+      "epoch": 2.0,
+      "val_accuracy": 0.4699999988079071
+    },
+    {
+      "epoch": 3.0,
+      "val_accuracy": 0.5059999823570251
+    },
+    {
+      "epoch": 4.0,
+      "val_accuracy": 0.528166651725769
+    },
+    {
+      "epoch": 5.0,
+      "val_accuracy": 0.5558333396911621
+    },
+    {
+      "epoch": 6.0,
+      "val_accuracy": 0.5694999694824219
+    },
+    {
+      "epoch": 7.0,
+      "val_accuracy": 0.5920000076293945
+    },
+    {
+      "epoch": 8.0,
+      "val_accuracy": 0.6133333444595337
+    },
+    {
+      "epoch": 9.0,
+      "val_accuracy": 0.6261666417121887
+    },
+    {
+      "epoch": 10.0,
+      "val_accuracy": 0.6411666870117188
+    },
+    {
+      "epoch": 11.0,
+      "val_accuracy": 0.6489999890327454
+    },
+    {
+      "epoch": 12.0,
+      "val_accuracy": 0.6620000004768372
+    },
+    {
+      "epoch": 13.0,
+      "val_accuracy": 0.6748332977294922
+    },
+    {
+      "epoch": 14.0,
+      "val_accuracy": 0.6818333268165588
+    },
+    {
+      "epoch": 15.0,
+      "val_accuracy": 0.6928333044052124
+    },
+    {
+      "epoch": 16.0,
+      "val_accuracy": 0.6953333020210266
+    },
+    {
+      "epoch": 17.0,
+      "val_accuracy": 0.7055000066757202
+    },
+    {
+      "epoch": 18.0,
+      "val_accuracy": 0.7129999995231628
+    },
+    {
+      "epoch": 19.0,
+      "val_accuracy": 0.7136666774749756
+    },
+    {
+      "epoch": 20.0,
+      "val_accuracy": 0.7131666541099548
+    },
+    {
+      "epoch": 21.0,
+      "val_accuracy": 0.7264999747276306
+    },
+    {
+      "epoch": 22.0,
+      "val_accuracy": 0.7251666784286499
+    },
+    {
+      "epoch": 23.0,
+      "val_accuracy": 0.7273333072662354
+    },
+    {
+      "epoch": 24.0,
+      "val_accuracy": 0.734499990940094
+    },
+    {
+      "epoch": 25.0,
+      "val_accuracy": 0.7378333210945129
+    },
+    {
+      "epoch": 26.0,
+      "val_accuracy": 0.7413333058357239
+    },
+    {
+      "epoch": 27.0,
+      "val_accuracy": 0.7413333058357239
+    },
+    {
+      "epoch": 28.0,
+      "val_accuracy": 0.746999979019165
+    },
+    {
+      "epoch": 29.0,
+      "val_accuracy": 0.7493333220481873
+    },
+    {
+      "epoch": 30.0,
+      "val_accuracy": 0.7578333020210266
+    }
+  ],
+  "config": {
+    "dataset": "smnist",
+    "epochs": 30,
+    "n_rec": 256,
+    "batch_size": 64,
+    "beta": 0.0,
+    "threshold": 0.62,
+    "learning_rate_in": 0.001,
+    "learning_rate_rec": 0.001,
+    "learning_rate_out": 0.05,
+    "device": "cuda"
+  }
+}
