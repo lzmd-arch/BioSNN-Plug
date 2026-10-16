@@ -32,7 +32,7 @@ import statistics
 import time
 from pathlib import Path
 
-from research.common.device import select_device
+from research.common.device import measure_peak_memory, select_device
 from research.eprop.train_sequential import build_parser, train
 
 # 三条验证线只共享 research/common/，**互不 import**——所以这个解析器各自带一份
@@ -116,7 +116,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\n{'=' * 78}\n种子 {seed}\n{'=' * 78}", flush=True)
         started = time.perf_counter()
         history: list[dict[str, float]] = []
-        accuracy, active, n_classes = train(train_args, device, history)
+        # 显存峰值：口径与 W3 一致（PyTorch 分配器，不是 nvidia-smi——后者含其它进程与缓存，
+        # 会把结果抬高到无法归因）。2026-10-16 补上，为的是 §5.5 的规模-资源曲线；
+        # 此前 W2 的产物只有 elapsed_s，没有显存字段。
+        with measure_peak_memory(device) as memory:
+            accuracy, active, n_classes = train(train_args, device, history)
         elapsed = time.perf_counter() - started
         record = {
             "seed": seed,
@@ -124,6 +128,7 @@ def main(argv: list[str] | None = None) -> int:
             "active_fraction": active,
             "n_classes": n_classes,
             "elapsed_s": elapsed,
+            "peak_mb": memory["peak_mb"],
             #: 逐 epoch 的验证准确率——论文画「epoch–准确率」曲线用的就是它。
             "curve": history,
             "config": {
