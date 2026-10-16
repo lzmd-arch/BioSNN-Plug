@@ -26,17 +26,17 @@ Local learning rules for spiking neural networks are usually compared across
 papers rather than within one, and rarely at matched budgets. We benchmark three
 purely local rule lines --- e-prop on a recurrent spiking network, kernelized
 information-bottleneck Hebbian feature learning, and reward-modulated STDP with
-a TD-LTP critic --- under one measurement protocol, on one consumer GPU. Three
-findings, one of them negative. The neuron model is not a detail: with
+a TD-LTP critic --- under one measurement protocol, on one consumer GPU. Four
+findings, two of them uncomfortable. The neuron model is not a detail: with
 everything else fixed, a non-adaptive LIF neuron beats the adaptive ALIF neuron
-at \emph{every} learning rate we swept (0.93--1.23 pp, five seeds each), so at
-this scale the adaptation term is a net drag rather than an asset. e-prop with
-LIF reaches 0.8889 on sequential MNIST, but only after an eight-fold budget
-extension --- which is exactly why single-setting reports are not comparable to
-one another. And the same pipeline does not learn SHD at all (5.34\% against a
-5\% chance level), a gap we report as it stands. We contribute the protocol, the
-bit-exact reproductions behind every number, and an analysis of the degenerate
-solutions a benchmark of this kind invites.
+at \emph{every} learning rate we swept (0.93--1.23 pp, five seeds each). e-prop
+with LIF reaches 0.8889 on sequential MNIST, but only after an eight-fold budget
+extension. A matched-budget backpropagation-through-time control, each side tuned
+at its own best recipe, reaches \textbf{0.9630} --- 7.41 points ahead, the
+largest effect measured anywhere in this paper. And the same local pipeline does
+not learn SHD at all (5.34\% against a 5\% chance level). We contribute the
+protocol, the bit-exact reproductions behind every number, and an analysis of the
+degenerate solutions a benchmark of this kind invites.
 \end{abstract}
 
 % ------------------------------------------------------------
@@ -553,11 +553,48 @@ who checks only the sign would reach a different conclusion than a reader who
 checks the magnitude.
 
 \subsubsection{Comparison with BPTT}
-\todo{Headline control-arm number at a matched budget. The BPTT arm's recipe
-(learning rate $\times$ optimizer variant) is being selected by a pre-registered
-pre-sweep at the time of writing; the matched-budget run and the resulting gap
-follow it. The existing gap report was taken at a different budget and with each
-arm at a different learning rate, so it is not usable here.}
+The control arm: same architecture, same loss, same seeds, same budget, same
+neuron model ($\beta=0$) --- the only difference is the learning rule, which is
+backpropagation through time rather than a local one. Each side runs at its
+\emph{own} best recipe, selected in advance: e-prop's learning rate by its sweep
+(Section~\ref{sec:results}), BPTT's learning rate \emph{and} optimizer
+formulation by a pre-registered pre-sweep, so neither arm is handicapped by the
+other's hyperparameters.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrr}
+\toprule
+Arm & Seeds & Mean & Range \\
+\midrule
+BPTT, $10^{-2}$ hidden / $5\times10^{-2}$ readout & 0,1,2 & \textbf{0.9630} & 0.9615--0.9647 \\
+e-prop + LIF, $10^{-2}$ (official) & 0,1,2 & 0.8889 & 0.8851--0.8962 \\
+\bottomrule
+\end{tabular}
+\caption{W2 at 250 epochs, matched budget. The gap is \textbf{7.41 points} in
+BPTT's favour.}
+\label{tab:bptt}
+\end{table}
+
+\textbf{The control wins, by a wide margin.} BPTT reaches 0.9630 against e-prop's
+0.8889 --- 7.41 points, the largest single effect measured anywhere in this
+paper, and it points away from the rule family the paper set out to benchmark.
+We report it as measured. Two observations sharpen what it means. First, the gap
+\emph{narrows} with budget rather than staying fixed: at 30 epochs the same two
+recipes are 0.9530 against 0.8125, a gap of about 14 points. So local learning
+does close part of the distance as the budget grows, and would close none of it
+if the truncation were the whole story --- but seven points remain at
+convergence, and that is the honest number. Second, BPTT's advantage survives
+the fairness corrections rather than resting on them: the pre-sweep showed its
+optimizer formulation matters most at small learning rates (+8.53 pp at
+$10^{-3}$) and least at the rate finally chosen (+0.88 pp, inside the tie band),
+so at the operating point the two arms really are comparable recipes.
+
+The plateau criterion was applied here with the same window and the same
+comparison as for e-prop. The increments are $+0.0003$, $-0.0001$ and $-0.0002$
+--- mixed signs, and an order of magnitude \emph{smaller} than e-prop's
+($+0.0019$, $+0.0007$, $+0.0025$), roughly a tenth of the within-window standard
+deviation. Both arms are converged; neither is a truncated reading.
 
 \subsection{W3: R-STDP with Critic correction}
 The acceptance batch uses twenty seeds that were never used for tuning:
@@ -711,11 +748,13 @@ in this paper are reported as observations, not as benchmarks. Energy is not
 reported at all (Section~\ref{sec:setup}: no power monitor, and a number
 inferred from TDP would not be a measurement).
 
-\emph{The control arm is incomplete.} The same-budget BPTT comparison is the one
-place where this paper does not yet deliver what its protocol promises; the
-recipe selection and the matched run are in progress and are marked as such in
-Section~\ref{sec:results}. We would rather leave a visible hole than fill it
-with a number taken at a different budget.
+\emph{The comparison is against one control, not against the field.} The
+same-budget BPTT arm is measured and reported (Section~\ref{sec:results}), and it
+wins by 7.41 points. That is one control at one scale on one task family; it says
+nothing about whether the gap persists at 50{,}000 neurons, on a task with
+longer temporal structure, or against a differently tuned backprop baseline. It
+does say that a paper reporting local-rule accuracy without a matched,
+same-recipe backprop control is reporting a number with no denominator.
 
 \section{Conclusion}
 Honest measurement is a prerequisite for local-learning research, not a

@@ -7,14 +7,13 @@ reproduction record under `research/`, per the project plan's §12.4 rule.
 Build: `latexmk -pdf main.tex` (or `pdflatex main && bibtex main && pdflatex main && pdflatex main`).
 The resulting `main.pdf` is a **local build artifact and is not committed** — see below.
 
-Status: **full draft** — §1–§7 and all four appendices are written. What is left is not
-prose but three measured items, marked in-file with `\todo{}` (rendered red). `grep -c '\todo{'
-main.tex` returns **5** lines, but two of them are comments — the macro's own documentation at
-the top of the file, and a note on the bibliography block — so the count of **open items in the
-body is 3**: (i) the BPTT control arm's matched-budget number (its recipe pre-sweep is running),
-(ii) memory/throughput as a function of network size, which has not been measured at all, and
-(iii) the TechRxiv document that returned HTTP 403 in the search build, which is the one hit
-whose title most resembles a standard.
+Status: **full draft, one measurement short** — §1–§7 and all four appendices are written, and the
+headline control arm (BPTT) has landed. What is left is not prose but **two measured items**, marked
+in-file with `\todo{}` (rendered red). `grep -c '\todo{' main.tex` returns **3** lines, one of which
+is a comment (the macro's own documentation), so the count of **open items in the body is 2**:
+(i) memory/throughput as a function of network size, whose runner and pre-registration are in place
+and whose measurement is queued behind the GPU work, and (ii) the TechRxiv document that returned
+HTTP 403 in the search build, which is the one hit whose title most resembles a standard.
 
 **Figures.** Two of the repository's generated figures are in the paper —
 `f2-w2-epoch-accuracy.png` (§5.2.3) and `f3-w3-greedy-curves.png` (§5.3). Both are regenerated
@@ -577,3 +576,40 @@ because that note was added to it earlier today.
 `refs.bib` went 24 → 26 entries, and **neither is a new reference**: `fremaux2013` and
 `bellec2018lsnn` are ledger entries [12] and [22], verified there with verbatim quotes from the
 sources. The paper was missing them, not the repository.
+
+## Draft log — the control arm lands (2026-10-17)
+
+**BPTT 0.9630 against e-prop 0.8889: a 7.41-point gap in the control's favour**, at matched
+learning rate, seeds, budget and neuron model, with each side tuned at its own best recipe — the
+control's recipe chosen by a pre-registered pre-sweep, so the comparison does not rest on the
+optimizer asymmetry that the pre-sweep was built to expose. In fact it does not rest on it at all:
+at the learning rate finally chosen, the two optimizer variants differ by 0.88 pp, inside the
+pre-registered tie band.
+
+**The plateau criterion was applied here too, and it passes more cleanly than e-prop's.** The
+increments are +0.0003 / −0.0001 / −0.0002 — mixed signs, and roughly a tenth of the within-window
+standard deviation, against e-prop's +0.0019 / +0.0007 / +0.0025. This matters because the two
+claims share a sentence shape: "converges at X" now has the same evidential basis on both sides.
+
+**What the number does to the paper.** It is the largest single effect measured anywhere in this
+work, and it points away from the family the paper set out to benchmark. Two things were changed
+rather than left standing:
+
+- **§5.2.4** was written to report it as measured, including the budget dynamics: the gap
+  *narrows* from about 14 points at 30 epochs to 7.41 at 250, so budget closes part of the
+  distance and none of the story is "the local rule simply loses".
+- ⚠️ **The abstract now carries it** ("Four findings, two of them uncomfortable"). That is a change
+  to the paper's headline framing, not a factual touch-up to a number — flagged here for review.
+  The alternative, an abstract that omits the paper's largest measured effect, did not seem
+  defensible.
+
+**One item in §6.3 had become false and was rewritten**: "the control arm is incomplete" was true
+yesterday and is not true now. It is replaced by what the completed control does and does not
+license — one control, one scale, one task family, and the observation that a local-rule paper
+reporting accuracy without a matched same-recipe backprop control is reporting a number with no
+denominator.
+
+**Recorded with its caveat:** the arm's wall clocks (2.59 / 3.77 / 3.05 h) grow across three
+identical consecutive runs, and the fastest rate observed anywhere in this work (0.59 min/epoch,
+baseline 0.92) came from this arm. Neither is attributed to a cause, and neither enters a
+performance baseline — see the pre-registration and `docs/reproducibility.md`.

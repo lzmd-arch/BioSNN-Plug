@@ -1,0 +1,846 @@
+BPTT 臂：3 个种子（0–2），数据集 smnist，变体 B，eta=0.01，eta_out=0.05，epochs=250，设备 cuda
+
+==============================================================================
+种子 0
+==============================================================================
+epoch   1  train_ce 1.1957  val_acc 0.7345
+epoch   2  train_ce 0.6018  val_acc 0.8312
+epoch   3  train_ce 0.4503  val_acc 0.8542
+epoch   4  train_ce 0.3758  val_acc 0.8703
+epoch   5  train_ce 0.3274  val_acc 0.9062
+epoch   6  train_ce 0.2934  val_acc 0.9117
+epoch   7  train_ce 0.2605  val_acc 0.9153
+epoch   8  train_ce 0.2402  val_acc 0.9098
+epoch   9  train_ce 0.2326  val_acc 0.9233
+epoch  10  train_ce 0.2167  val_acc 0.9307
+epoch  11  train_ce 0.2028  val_acc 0.9315
+epoch  12  train_ce 0.1938  val_acc 0.9287
+epoch  13  train_ce 0.1875  val_acc 0.9332
+epoch  14  train_ce 0.1755  val_acc 0.9423
+epoch  15  train_ce 0.1704  val_acc 0.9400
+epoch  16  train_ce 0.1654  val_acc 0.9330
+epoch  17  train_ce 0.1641  val_acc 0.9362
+epoch  18  train_ce 0.1535  val_acc 0.9482
+epoch  19  train_ce 0.1506  val_acc 0.9428
+epoch  20  train_ce 0.1457  val_acc 0.9423
+epoch  21  train_ce 0.1404  val_acc 0.9463
+epoch  22  train_ce 0.1389  val_acc 0.9460
+epoch  23  train_ce 0.1376  val_acc 0.9403
+epoch  24  train_ce 0.1352  val_acc 0.9483
+epoch  25  train_ce 0.1308  val_acc 0.9543
+epoch  26  train_ce 0.1240  val_acc 0.9548
+epoch  27  train_ce 0.1235  val_acc 0.9517
+epoch  28  train_ce 0.1219  val_acc 0.9500
+epoch  29  train_ce 0.1177  val_acc 0.9420
+epoch  30  train_ce 0.1153  val_acc 0.9498
+epoch  31  train_ce 0.1145  val_acc 0.9457
+epoch  32  train_ce 0.1126  val_acc 0.9562
+epoch  33  train_ce 0.1087  val_acc 0.9512
+epoch  34  train_ce 0.1082  val_acc 0.9470
+epoch  35  train_ce 0.1032  val_acc 0.9457
+epoch  36  train_ce 0.1069  val_acc 0.9558
+epoch  37  train_ce 0.1023  val_acc 0.9558
+epoch  38  train_ce 0.1032  val_acc 0.9492
+epoch  39  train_ce 0.0976  val_acc 0.9557
+epoch  40  train_ce 0.0998  val_acc 0.9500
+epoch  41  train_ce 0.0930  val_acc 0.9515
+epoch  42  train_ce 0.0917  val_acc 0.9527
+epoch  43  train_ce 0.0957  val_acc 0.9560
+epoch  44  train_ce 0.0921  val_acc 0.9570
+epoch  45  train_ce 0.0896  val_acc 0.9507
+epoch  46  train_ce 0.0882  val_acc 0.9563
+epoch  47  train_ce 0.0869  val_acc 0.9537
+epoch  48  train_ce 0.0828  val_acc 0.9562
+epoch  49  train_ce 0.0869  val_acc 0.9548
+epoch  50  train_ce 0.0841  val_acc 0.9550
+epoch  51  train_ce 0.0820  val_acc 0.9465
+epoch  52  train_ce 0.0820  val_acc 0.9538
+epoch  53  train_ce 0.0790  val_acc 0.9582
+epoch  54  train_ce 0.0803  val_acc 0.9443
+epoch  55  train_ce 0.0779  val_acc 0.9598
+epoch  56  train_ce 0.0780  val_acc 0.9550
+epoch  57  train_ce 0.0740  val_acc 0.9593
+epoch  58  train_ce 0.0723  val_acc 0.9548
+epoch  59  train_ce 0.0755  val_acc 0.9583
+epoch  60  train_ce 0.0772  val_acc 0.9568
+epoch  61  train_ce 0.0717  val_acc 0.9583
+epoch  62  train_ce 0.0687  val_acc 0.9585
+epoch  63  train_ce 0.0710  val_acc 0.9628
+epoch  64  train_ce 0.0697  val_acc 0.9585
+epoch  65  train_ce 0.0663  val_acc 0.9597
+epoch  66  train_ce 0.0681  val_acc 0.9575
+epoch  67  train_ce 0.0649  val_acc 0.9617
+epoch  68  train_ce 0.0662  val_acc 0.9607
+epoch  69  train_ce 0.0655  val_acc 0.9582
+epoch  70  train_ce 0.0633  val_acc 0.9635
+epoch  71  train_ce 0.0625  val_acc 0.9627
+epoch  72  train_ce 0.0634  val_acc 0.9543
+epoch  73  train_ce 0.0673  val_acc 0.9637
+epoch  74  train_ce 0.0624  val_acc 0.9612
+epoch  75  train_ce 0.0610  val_acc 0.9595
+epoch  76  train_ce 0.0590  val_acc 0.9568
+epoch  77  train_ce 0.0604  val_acc 0.9588
+epoch  78  train_ce 0.0606  val_acc 0.9623
+epoch  79  train_ce 0.0591  val_acc 0.9605
+epoch  80  train_ce 0.0569  val_acc 0.9637
+epoch  81  train_ce 0.0574  val_acc 0.9620
+epoch  82  train_ce 0.0549  val_acc 0.9580
+epoch  83  train_ce 0.0555  val_acc 0.9652
+epoch  84  train_ce 0.0559  val_acc 0.9600
+epoch  85  train_ce 0.0541  val_acc 0.9598
+epoch  86  train_ce 0.0559  val_acc 0.9642
+epoch  87  train_ce 0.0563  val_acc 0.9542
+epoch  88  train_ce 0.0538  val_acc 0.9617
+epoch  89  train_ce 0.0526  val_acc 0.9622
+epoch  90  train_ce 0.0512  val_acc 0.9610
+epoch  91  train_ce 0.0526  val_acc 0.9640
+epoch  92  train_ce 0.0509  val_acc 0.9620
+epoch  93  train_ce 0.0501  val_acc 0.9587
+epoch  94  train_ce 0.0476  val_acc 0.9648
+epoch  95  train_ce 0.0497  val_acc 0.9618
+epoch  96  train_ce 0.0536  val_acc 0.9623
+epoch  97  train_ce 0.0492  val_acc 0.9662
+epoch  98  train_ce 0.0473  val_acc 0.9618
+epoch  99  train_ce 0.0465  val_acc 0.9635
+epoch 100  train_ce 0.0461  val_acc 0.9622
+epoch 101  train_ce 0.0426  val_acc 0.9648
+epoch 102  train_ce 0.0481  val_acc 0.9587
+epoch 103  train_ce 0.0439  val_acc 0.9595
+epoch 104  train_ce 0.0462  val_acc 0.9635
+epoch 105  train_ce 0.0463  val_acc 0.9647
+epoch 106  train_ce 0.0448  val_acc 0.9642
+epoch 107  train_ce 0.0441  val_acc 0.9642
+epoch 108  train_ce 0.0433  val_acc 0.9620
+epoch 109  train_ce 0.0442  val_acc 0.9643
+epoch 110  train_ce 0.0430  val_acc 0.9583
+epoch 111  train_ce 0.0452  val_acc 0.9670
+epoch 112  train_ce 0.0424  val_acc 0.9618
+epoch 113  train_ce 0.0400  val_acc 0.9632
+epoch 114  train_ce 0.0412  val_acc 0.9643
+epoch 115  train_ce 0.0415  val_acc 0.9627
+epoch 116  train_ce 0.0380  val_acc 0.9630
+epoch 117  train_ce 0.0411  val_acc 0.9625
+epoch 118  train_ce 0.0394  val_acc 0.9597
+epoch 119  train_ce 0.0398  val_acc 0.9632
+epoch 120  train_ce 0.0379  val_acc 0.9633
+epoch 121  train_ce 0.0400  val_acc 0.9657
+epoch 122  train_ce 0.0367  val_acc 0.9675
+epoch 123  train_ce 0.0378  val_acc 0.9628
+epoch 124  train_ce 0.0375  val_acc 0.9670
+epoch 125  train_ce 0.0371  val_acc 0.9608
+epoch 126  train_ce 0.0372  val_acc 0.9635
+epoch 127  train_ce 0.0390  val_acc 0.9648
+epoch 128  train_ce 0.0374  val_acc 0.9635
+epoch 129  train_ce 0.0362  val_acc 0.9655
+epoch 130  train_ce 0.0350  val_acc 0.9668
+epoch 131  train_ce 0.0373  val_acc 0.9613
+epoch 132  train_ce 0.0345  val_acc 0.9645
+epoch 133  train_ce 0.0367  val_acc 0.9555
+epoch 134  train_ce 0.0329  val_acc 0.9637
+epoch 135  train_ce 0.0336  val_acc 0.9632
+epoch 136  train_ce 0.0347  val_acc 0.9618
+epoch 137  train_ce 0.0358  val_acc 0.9657
+epoch 138  train_ce 0.0351  val_acc 0.9628
+epoch 139  train_ce 0.0320  val_acc 0.9660
+epoch 140  train_ce 0.0337  val_acc 0.9535
+epoch 141  train_ce 0.0349  val_acc 0.9602
+epoch 142  train_ce 0.0315  val_acc 0.9590
+epoch 143  train_ce 0.0302  val_acc 0.9625
+epoch 144  train_ce 0.0314  val_acc 0.9645
+epoch 145  train_ce 0.0314  val_acc 0.9595
+epoch 146  train_ce 0.0325  val_acc 0.9640
+epoch 147  train_ce 0.0298  val_acc 0.9623
+epoch 148  train_ce 0.0331  val_acc 0.9617
+epoch 149  train_ce 0.0330  val_acc 0.9622
+epoch 150  train_ce 0.0308  val_acc 0.9600
+epoch 151  train_ce 0.0326  val_acc 0.9623
+epoch 152  train_ce 0.0302  val_acc 0.9662
+epoch 153  train_ce 0.0298  val_acc 0.9662
+epoch 154  train_ce 0.0317  val_acc 0.9668
+epoch 155  train_ce 0.0265  val_acc 0.9647
+epoch 156  train_ce 0.0323  val_acc 0.9613
+epoch 157  train_ce 0.0286  val_acc 0.9650
+epoch 158  train_ce 0.0305  val_acc 0.9630
+epoch 159  train_ce 0.0303  val_acc 0.9662
+epoch 160  train_ce 0.0280  val_acc 0.9662
+epoch 161  train_ce 0.0306  val_acc 0.9652
+epoch 162  train_ce 0.0268  val_acc 0.9642
+epoch 163  train_ce 0.0261  val_acc 0.9647
+epoch 164  train_ce 0.0274  val_acc 0.9687
+epoch 165  train_ce 0.0278  val_acc 0.9645
+epoch 166  train_ce 0.0272  val_acc 0.9657
+epoch 167  train_ce 0.0267  val_acc 0.9640
+epoch 168  train_ce 0.0259  val_acc 0.9667
+epoch 169  train_ce 0.0261  val_acc 0.9633
+epoch 170  train_ce 0.0275  val_acc 0.9605
+epoch 171  train_ce 0.0292  val_acc 0.9600
+epoch 172  train_ce 0.0265  val_acc 0.9683
+epoch 173  train_ce 0.0256  val_acc 0.9628
+epoch 174  train_ce 0.0269  val_acc 0.9640
+epoch 175  train_ce 0.0255  val_acc 0.9602
+epoch 176  train_ce 0.0260  val_acc 0.9667
+epoch 177  train_ce 0.0235  val_acc 0.9663
+epoch 178  train_ce 0.0245  val_acc 0.9640
+epoch 179  train_ce 0.0267  val_acc 0.9655
+epoch 180  train_ce 0.0229  val_acc 0.9643
+epoch 181  train_ce 0.0235  val_acc 0.9603
+epoch 182  train_ce 0.0248  val_acc 0.9630
+epoch 183  train_ce 0.0243  val_acc 0.9618
+epoch 184  train_ce 0.0258  val_acc 0.9618
+epoch 185  train_ce 0.0241  val_acc 0.9628
+epoch 186  train_ce 0.0245  val_acc 0.9615
+epoch 187  train_ce 0.0253  val_acc 0.9633
+epoch 188  train_ce 0.0250  val_acc 0.9622
+epoch 189  train_ce 0.0238  val_acc 0.9610
+epoch 190  train_ce 0.0252  val_acc 0.9565
+epoch 191  train_ce 0.0251  val_acc 0.9665
+epoch 192  train_ce 0.0222  val_acc 0.9628
+epoch 193  train_ce 0.0242  val_acc 0.9643
+epoch 194  train_ce 0.0227  val_acc 0.9662
+epoch 195  train_ce 0.0226  val_acc 0.9622
+epoch 196  train_ce 0.0244  val_acc 0.9625
+epoch 197  train_ce 0.0243  val_acc 0.9628
+epoch 198  train_ce 0.0226  val_acc 0.9625
+epoch 199  train_ce 0.0224  val_acc 0.9648
+epoch 200  train_ce 0.0220  val_acc 0.9662
+epoch 201  train_ce 0.0234  val_acc 0.9665
+epoch 202  train_ce 0.0217  val_acc 0.9628
+epoch 203  train_ce 0.0224  val_acc 0.9652
+epoch 204  train_ce 0.0225  val_acc 0.9627
+epoch 205  train_ce 0.0231  val_acc 0.9655
+epoch 206  train_ce 0.0213  val_acc 0.9648
+epoch 207  train_ce 0.0224  val_acc 0.9667
+epoch 208  train_ce 0.0214  val_acc 0.9650
+epoch 209  train_ce 0.0218  val_acc 0.9637
+epoch 210  train_ce 0.0235  val_acc 0.9598
+epoch 211  train_ce 0.0228  val_acc 0.9620
+epoch 212  train_ce 0.0210  val_acc 0.9665
+epoch 213  train_ce 0.0207  val_acc 0.9655
+epoch 214  train_ce 0.0206  val_acc 0.9627
+epoch 215  train_ce 0.0236  val_acc 0.9668
+epoch 216  train_ce 0.0218  val_acc 0.9667
+epoch 217  train_ce 0.0214  val_acc 0.9658
+epoch 218  train_ce 0.0210  val_acc 0.9640
+epoch 219  train_ce 0.0220  val_acc 0.9660
+epoch 220  train_ce 0.0208  val_acc 0.9662
+epoch 221  train_ce 0.0238  val_acc 0.9595
+epoch 222  train_ce 0.0198  val_acc 0.9653
+epoch 223  train_ce 0.0222  val_acc 0.9663
+epoch 224  train_ce 0.0240  val_acc 0.9572
+epoch 225  train_ce 0.0208  val_acc 0.9645
+epoch 226  train_ce 0.0206  val_acc 0.9640
+epoch 227  train_ce 0.0228  val_acc 0.9620
+epoch 228  train_ce 0.0222  val_acc 0.9648
+epoch 229  train_ce 0.0198  val_acc 0.9650
+epoch 230  train_ce 0.0211  val_acc 0.9680
+epoch 231  train_ce 0.0192  val_acc 0.9663
+epoch 232  train_ce 0.0196  val_acc 0.9632
+epoch 233  train_ce 0.0202  val_acc 0.9648
+epoch 234  train_ce 0.0195  val_acc 0.9677
+epoch 235  train_ce 0.0183  val_acc 0.9668
+epoch 236  train_ce 0.0194  val_acc 0.9613
+epoch 237  train_ce 0.0213  val_acc 0.9667
+epoch 238  train_ce 0.0199  val_acc 0.9630
+epoch 239  train_ce 0.0189  val_acc 0.9657
+epoch 240  train_ce 0.0228  val_acc 0.9668
+epoch 241  train_ce 0.0207  val_acc 0.9653
+epoch 242  train_ce 0.0189  val_acc 0.9627
+epoch 243  train_ce 0.0174  val_acc 0.9642
+epoch 244  train_ce 0.0180  val_acc 0.9645
+epoch 245  train_ce 0.0193  val_acc 0.9645
+epoch 246  train_ce 0.0168  val_acc 0.9650
+epoch 247  train_ce 0.0177  val_acc 0.9658
+epoch 248  train_ce 0.0160  val_acc 0.9663
+epoch 249  train_ce 0.0176  val_acc 0.9617
+epoch 250  train_ce 0.0171  val_acc 0.9632
+
+测试准确率：0.9629（10 类随机基线 0.10）
+活跃神经元比例：1.0000
+脉冲稀疏度：0.8633
+
+```text
+实验名称：eprop/bptt-smnist
+日期：2026-10-16 19:15:28 中国标准时间
+Git commit：fd286a4fcb052618da9a6ba5dda2e3caf31863c8
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=0；全局种子=1741413617；划分验证集=1435468909；权重初始化=3486733650；每批打乱=3990329895；脉冲编码=1681094898
+依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57
+运行命令：sweep_bptt.py --seeds 0-2 --device cuda --out-dir data/w2_bptt_final --epochs 250 --beta 0 --variant B --learning-rate 1e-2 --learning-rate-out 5e-2
+耗时：9326.7 s
+显存峰值：808.6 MiB（§6.2 硬约束 8GB）
+备注：BPTT 臂（对照 e-prop 同种子运行）：n_rec=256, beta=0.0, thr=0.62, eta=0.01, decay_out=0.95, epochs=250, batch=64
+备注：预算由构造保证：训练集同样是从全量里切掉 10% 验证集，划分/初始化/打乱/编码四处的种子与 e-prop 那次逐位相同（用途名派生，与顺序无关）
+备注：优化器变体 B：参数分组，隐层 lr=0.01、读出层 lr=0.05（镜像 e-prop 的 eta_out），两组合用 momentum=0.9
+备注：代理梯度穿过脉冲函数；与 e-prop 的差别只在学习规则
+```
+[落盘] data\w2_bptt_final\seed0.json
+
+==============================================================================
+种子 1
+==============================================================================
+epoch   1  train_ce 1.1841  val_acc 0.7423
+epoch   2  train_ce 0.6199  val_acc 0.8313
+epoch   3  train_ce 0.4609  val_acc 0.8775
+epoch   4  train_ce 0.3896  val_acc 0.8952
+epoch   5  train_ce 0.3343  val_acc 0.8995
+epoch   6  train_ce 0.3025  val_acc 0.8973
+epoch   7  train_ce 0.2754  val_acc 0.9160
+epoch   8  train_ce 0.2538  val_acc 0.9215
+epoch   9  train_ce 0.2409  val_acc 0.9302
+epoch  10  train_ce 0.2237  val_acc 0.9345
+epoch  11  train_ce 0.2130  val_acc 0.9442
+epoch  12  train_ce 0.2006  val_acc 0.9352
+epoch  13  train_ce 0.1973  val_acc 0.9398
+epoch  14  train_ce 0.1899  val_acc 0.9452
+epoch  15  train_ce 0.1822  val_acc 0.9435
+epoch  16  train_ce 0.1729  val_acc 0.9482
+epoch  17  train_ce 0.1673  val_acc 0.9473
+epoch  18  train_ce 0.1625  val_acc 0.9495
+epoch  19  train_ce 0.1585  val_acc 0.9508
+epoch  20  train_ce 0.1496  val_acc 0.9493
+epoch  21  train_ce 0.1492  val_acc 0.9490
+epoch  22  train_ce 0.1445  val_acc 0.9545
+epoch  23  train_ce 0.1412  val_acc 0.9528
+epoch  24  train_ce 0.1357  val_acc 0.9533
+epoch  25  train_ce 0.1354  val_acc 0.9535
+epoch  26  train_ce 0.1330  val_acc 0.9542
+epoch  27  train_ce 0.1266  val_acc 0.9515
+epoch  28  train_ce 0.1272  val_acc 0.9522
+epoch  29  train_ce 0.1239  val_acc 0.9533
+epoch  30  train_ce 0.1212  val_acc 0.9575
+epoch  31  train_ce 0.1193  val_acc 0.9535
+epoch  32  train_ce 0.1147  val_acc 0.9563
+epoch  33  train_ce 0.1130  val_acc 0.9503
+epoch  34  train_ce 0.1080  val_acc 0.9568
+epoch  35  train_ce 0.1095  val_acc 0.9515
+epoch  36  train_ce 0.1071  val_acc 0.9563
+epoch  37  train_ce 0.1039  val_acc 0.9610
+epoch  38  train_ce 0.1049  val_acc 0.9597
+epoch  39  train_ce 0.1018  val_acc 0.9580
+epoch  40  train_ce 0.1002  val_acc 0.9552
+epoch  41  train_ce 0.0999  val_acc 0.9563
+epoch  42  train_ce 0.1010  val_acc 0.9550
+epoch  43  train_ce 0.0946  val_acc 0.9568
+epoch  44  train_ce 0.0932  val_acc 0.9612
+epoch  45  train_ce 0.0906  val_acc 0.9595
+epoch  46  train_ce 0.0928  val_acc 0.9622
+epoch  47  train_ce 0.0894  val_acc 0.9625
+epoch  48  train_ce 0.0870  val_acc 0.9642
+epoch  49  train_ce 0.0870  val_acc 0.9615
+epoch  50  train_ce 0.0838  val_acc 0.9582
+epoch  51  train_ce 0.0858  val_acc 0.9567
+epoch  52  train_ce 0.0817  val_acc 0.9633
+epoch  53  train_ce 0.0823  val_acc 0.9585
+epoch  54  train_ce 0.0814  val_acc 0.9602
+epoch  55  train_ce 0.0763  val_acc 0.9605
+epoch  56  train_ce 0.0800  val_acc 0.9622
+epoch  57  train_ce 0.0784  val_acc 0.9590
+epoch  58  train_ce 0.0780  val_acc 0.9585
+epoch  59  train_ce 0.0764  val_acc 0.9643
+epoch  60  train_ce 0.0756  val_acc 0.9610
+epoch  61  train_ce 0.0735  val_acc 0.9620
+epoch  62  train_ce 0.0727  val_acc 0.9560
+epoch  63  train_ce 0.0739  val_acc 0.9635
+epoch  64  train_ce 0.0694  val_acc 0.9597
+epoch  65  train_ce 0.0720  val_acc 0.9613
+epoch  66  train_ce 0.0694  val_acc 0.9593
+epoch  67  train_ce 0.0705  val_acc 0.9603
+epoch  68  train_ce 0.0660  val_acc 0.9627
+epoch  69  train_ce 0.0672  val_acc 0.9672
+epoch  70  train_ce 0.0654  val_acc 0.9647
+epoch  71  train_ce 0.0658  val_acc 0.9608
+epoch  72  train_ce 0.0649  val_acc 0.9672
+epoch  73  train_ce 0.0630  val_acc 0.9665
+epoch  74  train_ce 0.0631  val_acc 0.9615
+epoch  75  train_ce 0.0668  val_acc 0.9660
+epoch  76  train_ce 0.0629  val_acc 0.9630
+epoch  77  train_ce 0.0590  val_acc 0.9588
+epoch  78  train_ce 0.0588  val_acc 0.9637
+epoch  79  train_ce 0.0584  val_acc 0.9673
+epoch  80  train_ce 0.0588  val_acc 0.9657
+epoch  81  train_ce 0.0564  val_acc 0.9582
+epoch  82  train_ce 0.0599  val_acc 0.9638
+epoch  83  train_ce 0.0587  val_acc 0.9642
+epoch  84  train_ce 0.0573  val_acc 0.9642
+epoch  85  train_ce 0.0532  val_acc 0.9673
+epoch  86  train_ce 0.0559  val_acc 0.9683
+epoch  87  train_ce 0.0559  val_acc 0.9643
+epoch  88  train_ce 0.0555  val_acc 0.9660
+epoch  89  train_ce 0.0541  val_acc 0.9628
+epoch  90  train_ce 0.0531  val_acc 0.9598
+epoch  91  train_ce 0.0537  val_acc 0.9667
+epoch  92  train_ce 0.0544  val_acc 0.9645
+epoch  93  train_ce 0.0476  val_acc 0.9695
+epoch  94  train_ce 0.0519  val_acc 0.9665
+epoch  95  train_ce 0.0498  val_acc 0.9655
+epoch  96  train_ce 0.0481  val_acc 0.9643
+epoch  97  train_ce 0.0497  val_acc 0.9658
+epoch  98  train_ce 0.0525  val_acc 0.9648
+epoch  99  train_ce 0.0475  val_acc 0.9637
+epoch 100  train_ce 0.0473  val_acc 0.9615
+epoch 101  train_ce 0.0501  val_acc 0.9638
+epoch 102  train_ce 0.0443  val_acc 0.9615
+epoch 103  train_ce 0.0470  val_acc 0.9620
+epoch 104  train_ce 0.0465  val_acc 0.9618
+epoch 105  train_ce 0.0446  val_acc 0.9645
+epoch 106  train_ce 0.0471  val_acc 0.9628
+epoch 107  train_ce 0.0446  val_acc 0.9652
+epoch 108  train_ce 0.0449  val_acc 0.9635
+epoch 109  train_ce 0.0478  val_acc 0.9670
+epoch 110  train_ce 0.0428  val_acc 0.9692
+epoch 111  train_ce 0.0390  val_acc 0.9618
+epoch 112  train_ce 0.0439  val_acc 0.9623
+epoch 113  train_ce 0.0429  val_acc 0.9652
+epoch 114  train_ce 0.0439  val_acc 0.9662
+epoch 115  train_ce 0.0429  val_acc 0.9650
+epoch 116  train_ce 0.0425  val_acc 0.9617
+epoch 117  train_ce 0.0399  val_acc 0.9675
+epoch 118  train_ce 0.0408  val_acc 0.9652
+epoch 119  train_ce 0.0407  val_acc 0.9635
+epoch 120  train_ce 0.0394  val_acc 0.9623
+epoch 121  train_ce 0.0415  val_acc 0.9638
+epoch 122  train_ce 0.0384  val_acc 0.9665
+epoch 123  train_ce 0.0385  val_acc 0.9677
+epoch 124  train_ce 0.0389  val_acc 0.9660
+epoch 125  train_ce 0.0408  val_acc 0.9680
+epoch 126  train_ce 0.0403  val_acc 0.9665
+epoch 127  train_ce 0.0399  val_acc 0.9660
+epoch 128  train_ce 0.0394  val_acc 0.9652
+epoch 129  train_ce 0.0388  val_acc 0.9673
+epoch 130  train_ce 0.0371  val_acc 0.9625
+epoch 131  train_ce 0.0388  val_acc 0.9658
+epoch 132  train_ce 0.0373  val_acc 0.9660
+epoch 133  train_ce 0.0365  val_acc 0.9622
+epoch 134  train_ce 0.0359  val_acc 0.9627
+epoch 135  train_ce 0.0379  val_acc 0.9632
+epoch 136  train_ce 0.0366  val_acc 0.9692
+epoch 137  train_ce 0.0390  val_acc 0.9652
+epoch 138  train_ce 0.0359  val_acc 0.9685
+epoch 139  train_ce 0.0382  val_acc 0.9685
+epoch 140  train_ce 0.0326  val_acc 0.9678
+epoch 141  train_ce 0.0348  val_acc 0.9698
+epoch 142  train_ce 0.0319  val_acc 0.9658
+epoch 143  train_ce 0.0343  val_acc 0.9672
+epoch 144  train_ce 0.0356  val_acc 0.9643
+epoch 145  train_ce 0.0359  val_acc 0.9663
+epoch 146  train_ce 0.0333  val_acc 0.9625
+epoch 147  train_ce 0.0361  val_acc 0.9692
+epoch 148  train_ce 0.0325  val_acc 0.9647
+epoch 149  train_ce 0.0339  val_acc 0.9705
+epoch 150  train_ce 0.0352  val_acc 0.9665
+epoch 151  train_ce 0.0332  val_acc 0.9647
+epoch 152  train_ce 0.0342  val_acc 0.9672
+epoch 153  train_ce 0.0329  val_acc 0.9690
+epoch 154  train_ce 0.0332  val_acc 0.9680
+epoch 155  train_ce 0.0316  val_acc 0.9662
+epoch 156  train_ce 0.0335  val_acc 0.9705
+epoch 157  train_ce 0.0325  val_acc 0.9630
+epoch 158  train_ce 0.0341  val_acc 0.9630
+epoch 159  train_ce 0.0311  val_acc 0.9683
+epoch 160  train_ce 0.0279  val_acc 0.9675
+epoch 161  train_ce 0.0272  val_acc 0.9667
+epoch 162  train_ce 0.0307  val_acc 0.9673
+epoch 163  train_ce 0.0302  val_acc 0.9587
+epoch 164  train_ce 0.0293  val_acc 0.9698
+epoch 165  train_ce 0.0322  val_acc 0.9637
+epoch 166  train_ce 0.0300  val_acc 0.9628
+epoch 167  train_ce 0.0289  val_acc 0.9682
+epoch 168  train_ce 0.0285  val_acc 0.9707
+epoch 169  train_ce 0.0286  val_acc 0.9662
+epoch 170  train_ce 0.0306  val_acc 0.9685
+epoch 171  train_ce 0.0279  val_acc 0.9682
+epoch 172  train_ce 0.0253  val_acc 0.9663
+epoch 173  train_ce 0.0272  val_acc 0.9612
+epoch 174  train_ce 0.0265  val_acc 0.9688
+epoch 175  train_ce 0.0269  val_acc 0.9667
+epoch 176  train_ce 0.0258  val_acc 0.9637
+epoch 177  train_ce 0.0282  val_acc 0.9658
+epoch 178  train_ce 0.0303  val_acc 0.9672
+epoch 179  train_ce 0.0259  val_acc 0.9675
+epoch 180  train_ce 0.0285  val_acc 0.9673
+epoch 181  train_ce 0.0285  val_acc 0.9698
+epoch 182  train_ce 0.0276  val_acc 0.9668
+epoch 183  train_ce 0.0268  val_acc 0.9685
+epoch 184  train_ce 0.0262  val_acc 0.9688
+epoch 185  train_ce 0.0244  val_acc 0.9650
+epoch 186  train_ce 0.0256  val_acc 0.9708
+epoch 187  train_ce 0.0250  val_acc 0.9698
+epoch 188  train_ce 0.0268  val_acc 0.9653
+epoch 189  train_ce 0.0267  val_acc 0.9705
+epoch 190  train_ce 0.0261  val_acc 0.9697
+epoch 191  train_ce 0.0237  val_acc 0.9672
+epoch 192  train_ce 0.0256  val_acc 0.9712
+epoch 193  train_ce 0.0225  val_acc 0.9697
+epoch 194  train_ce 0.0240  val_acc 0.9672
+epoch 195  train_ce 0.0250  val_acc 0.9650
+epoch 196  train_ce 0.0229  val_acc 0.9688
+epoch 197  train_ce 0.0224  val_acc 0.9667
+epoch 198  train_ce 0.0244  val_acc 0.9708
+epoch 199  train_ce 0.0237  val_acc 0.9672
+epoch 200  train_ce 0.0254  val_acc 0.9643
+epoch 201  train_ce 0.0242  val_acc 0.9673
+epoch 202  train_ce 0.0237  val_acc 0.9672
+epoch 203  train_ce 0.0230  val_acc 0.9692
+epoch 204  train_ce 0.0240  val_acc 0.9625
+epoch 205  train_ce 0.0232  val_acc 0.9670
+epoch 206  train_ce 0.0233  val_acc 0.9687
+epoch 207  train_ce 0.0229  val_acc 0.9677
+epoch 208  train_ce 0.0223  val_acc 0.9683
+epoch 209  train_ce 0.0231  val_acc 0.9687
+epoch 210  train_ce 0.0226  val_acc 0.9678
+epoch 211  train_ce 0.0214  val_acc 0.9673
+epoch 212  train_ce 0.0205  val_acc 0.9673
+epoch 213  train_ce 0.0211  val_acc 0.9668
+epoch 214  train_ce 0.0235  val_acc 0.9668
+epoch 215  train_ce 0.0239  val_acc 0.9663
+epoch 216  train_ce 0.0212  val_acc 0.9662
+epoch 217  train_ce 0.0200  val_acc 0.9697
+epoch 218  train_ce 0.0204  val_acc 0.9645
+epoch 219  train_ce 0.0195  val_acc 0.9638
+epoch 220  train_ce 0.0236  val_acc 0.9680
+epoch 221  train_ce 0.0198  val_acc 0.9635
+epoch 222  train_ce 0.0212  val_acc 0.9627
+epoch 223  train_ce 0.0193  val_acc 0.9687
+epoch 224  train_ce 0.0214  val_acc 0.9667
+epoch 225  train_ce 0.0211  val_acc 0.9660
+epoch 226  train_ce 0.0198  val_acc 0.9682
+epoch 227  train_ce 0.0191  val_acc 0.9647
+epoch 228  train_ce 0.0213  val_acc 0.9638
+epoch 229  train_ce 0.0210  val_acc 0.9682
+epoch 230  train_ce 0.0212  val_acc 0.9670
+epoch 231  train_ce 0.0198  val_acc 0.9657
+epoch 232  train_ce 0.0204  val_acc 0.9668
+epoch 233  train_ce 0.0198  val_acc 0.9642
+epoch 234  train_ce 0.0203  val_acc 0.9632
+epoch 235  train_ce 0.0182  val_acc 0.9683
+epoch 236  train_ce 0.0185  val_acc 0.9693
+epoch 237  train_ce 0.0176  val_acc 0.9647
+epoch 238  train_ce 0.0219  val_acc 0.9685
+epoch 239  train_ce 0.0174  val_acc 0.9630
+epoch 240  train_ce 0.0196  val_acc 0.9647
+epoch 241  train_ce 0.0166  val_acc 0.9662
+epoch 242  train_ce 0.0182  val_acc 0.9695
+epoch 243  train_ce 0.0184  val_acc 0.9655
+epoch 244  train_ce 0.0192  val_acc 0.9660
+epoch 245  train_ce 0.0190  val_acc 0.9673
+epoch 246  train_ce 0.0188  val_acc 0.9660
+epoch 247  train_ce 0.0201  val_acc 0.9675
+epoch 248  train_ce 0.0196  val_acc 0.9645
+epoch 249  train_ce 0.0179  val_acc 0.9662
+epoch 250  train_ce 0.0176  val_acc 0.9673
+
+测试准确率：0.9647（10 类随机基线 0.10）
+活跃神经元比例：1.0000
+脉冲稀疏度：0.8598
+
+```text
+实验名称：eprop/bptt-smnist
+日期：2026-10-16 23:01:44 中国标准时间
+Git commit：fd286a4fcb052618da9a6ba5dda2e3caf31863c8
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=1；全局种子=1741413616；划分验证集=1435468908；权重初始化=3486733651；每批打乱=3990329894；脉冲编码=1681094899
+依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57
+运行命令：sweep_bptt.py --seeds 0-2 --device cuda --out-dir data/w2_bptt_final --epochs 250 --beta 0 --variant B --learning-rate 1e-2 --learning-rate-out 5e-2
+耗时：13574.6 s
+显存峰值：808.6 MiB（§6.2 硬约束 8GB）
+备注：BPTT 臂（对照 e-prop 同种子运行）：n_rec=256, beta=0.0, thr=0.62, eta=0.01, decay_out=0.95, epochs=250, batch=64
+备注：预算由构造保证：训练集同样是从全量里切掉 10% 验证集，划分/初始化/打乱/编码四处的种子与 e-prop 那次逐位相同（用途名派生，与顺序无关）
+备注：优化器变体 B：参数分组，隐层 lr=0.01、读出层 lr=0.05（镜像 e-prop 的 eta_out），两组合用 momentum=0.9
+备注：代理梯度穿过脉冲函数；与 e-prop 的差别只在学习规则
+```
+[落盘] data\w2_bptt_final\seed1.json
+
+==============================================================================
+种子 2
+==============================================================================
+epoch   1  train_ce 1.1935  val_acc 0.7493
+epoch   2  train_ce 0.6317  val_acc 0.8142
+epoch   3  train_ce 0.4694  val_acc 0.8440
+epoch   4  train_ce 0.3862  val_acc 0.8817
+epoch   5  train_ce 0.3297  val_acc 0.8885
+epoch   6  train_ce 0.2934  val_acc 0.9093
+epoch   7  train_ce 0.2702  val_acc 0.9153
+epoch   8  train_ce 0.2476  val_acc 0.9155
+epoch   9  train_ce 0.2308  val_acc 0.9198
+epoch  10  train_ce 0.2180  val_acc 0.9298
+epoch  11  train_ce 0.2061  val_acc 0.9335
+epoch  12  train_ce 0.1975  val_acc 0.9367
+epoch  13  train_ce 0.1824  val_acc 0.9348
+epoch  14  train_ce 0.1798  val_acc 0.9333
+epoch  15  train_ce 0.1713  val_acc 0.9423
+epoch  16  train_ce 0.1629  val_acc 0.9370
+epoch  17  train_ce 0.1556  val_acc 0.9363
+epoch  18  train_ce 0.1529  val_acc 0.9442
+epoch  19  train_ce 0.1496  val_acc 0.9412
+epoch  20  train_ce 0.1446  val_acc 0.9295
+epoch  21  train_ce 0.1396  val_acc 0.9480
+epoch  22  train_ce 0.1366  val_acc 0.9507
+epoch  23  train_ce 0.1313  val_acc 0.9505
+epoch  24  train_ce 0.1290  val_acc 0.9447
+epoch  25  train_ce 0.1241  val_acc 0.9468
+epoch  26  train_ce 0.1254  val_acc 0.9347
+epoch  27  train_ce 0.1197  val_acc 0.9487
+epoch  28  train_ce 0.1181  val_acc 0.9435
+epoch  29  train_ce 0.1151  val_acc 0.9512
+epoch  30  train_ce 0.1173  val_acc 0.9512
+epoch  31  train_ce 0.1125  val_acc 0.9502
+epoch  32  train_ce 0.1098  val_acc 0.9495
+epoch  33  train_ce 0.1048  val_acc 0.9527
+epoch  34  train_ce 0.1024  val_acc 0.9475
+epoch  35  train_ce 0.1016  val_acc 0.9540
+epoch  36  train_ce 0.1002  val_acc 0.9473
+epoch  37  train_ce 0.0993  val_acc 0.9518
+epoch  38  train_ce 0.0976  val_acc 0.9545
+epoch  39  train_ce 0.0957  val_acc 0.9513
+epoch  40  train_ce 0.0955  val_acc 0.9463
+epoch  41  train_ce 0.0935  val_acc 0.9547
+epoch  42  train_ce 0.0886  val_acc 0.9535
+epoch  43  train_ce 0.0911  val_acc 0.9540
+epoch  44  train_ce 0.0872  val_acc 0.9533
+epoch  45  train_ce 0.0860  val_acc 0.9498
+epoch  46  train_ce 0.0836  val_acc 0.9518
+epoch  47  train_ce 0.0833  val_acc 0.9530
+epoch  48  train_ce 0.0831  val_acc 0.9542
+epoch  49  train_ce 0.0824  val_acc 0.9503
+epoch  50  train_ce 0.0800  val_acc 0.9523
+epoch  51  train_ce 0.0801  val_acc 0.9542
+epoch  52  train_ce 0.0781  val_acc 0.9528
+epoch  53  train_ce 0.0749  val_acc 0.9548
+epoch  54  train_ce 0.0762  val_acc 0.9473
+epoch  55  train_ce 0.0767  val_acc 0.9502
+epoch  56  train_ce 0.0754  val_acc 0.9463
+epoch  57  train_ce 0.0744  val_acc 0.9555
+epoch  58  train_ce 0.0712  val_acc 0.9557
+epoch  59  train_ce 0.0724  val_acc 0.9558
+epoch  60  train_ce 0.0709  val_acc 0.9508
+epoch  61  train_ce 0.0701  val_acc 0.9462
+epoch  62  train_ce 0.0708  val_acc 0.9507
+epoch  63  train_ce 0.0683  val_acc 0.9508
+epoch  64  train_ce 0.0679  val_acc 0.9547
+epoch  65  train_ce 0.0655  val_acc 0.9528
+epoch  66  train_ce 0.0639  val_acc 0.9550
+epoch  67  train_ce 0.0642  val_acc 0.9508
+epoch  68  train_ce 0.0636  val_acc 0.9530
+epoch  69  train_ce 0.0633  val_acc 0.9550
+epoch  70  train_ce 0.0607  val_acc 0.9557
+epoch  71  train_ce 0.0609  val_acc 0.9598
+epoch  72  train_ce 0.0605  val_acc 0.9550
+epoch  73  train_ce 0.0597  val_acc 0.9525
+epoch  74  train_ce 0.0616  val_acc 0.9533
+epoch  75  train_ce 0.0585  val_acc 0.9537
+epoch  76  train_ce 0.0580  val_acc 0.9515
+epoch  77  train_ce 0.0554  val_acc 0.9577
+epoch  78  train_ce 0.0550  val_acc 0.9488
+epoch  79  train_ce 0.0589  val_acc 0.9560
+epoch  80  train_ce 0.0535  val_acc 0.9605
+epoch  81  train_ce 0.0538  val_acc 0.9555
+epoch  82  train_ce 0.0574  val_acc 0.9533
+epoch  83  train_ce 0.0533  val_acc 0.9563
+epoch  84  train_ce 0.0530  val_acc 0.9578
+epoch  85  train_ce 0.0526  val_acc 0.9538
+epoch  86  train_ce 0.0516  val_acc 0.9518
+epoch  87  train_ce 0.0510  val_acc 0.9565
+epoch  88  train_ce 0.0515  val_acc 0.9568
+epoch  89  train_ce 0.0509  val_acc 0.9482
+epoch  90  train_ce 0.0511  val_acc 0.9560
+epoch  91  train_ce 0.0502  val_acc 0.9557
+epoch  92  train_ce 0.0494  val_acc 0.9548
+epoch  93  train_ce 0.0492  val_acc 0.9572
+epoch  94  train_ce 0.0473  val_acc 0.9530
+epoch  95  train_ce 0.0490  val_acc 0.9473
+epoch  96  train_ce 0.0471  val_acc 0.9587
+epoch  97  train_ce 0.0470  val_acc 0.9550
+epoch  98  train_ce 0.0496  val_acc 0.9542
+epoch  99  train_ce 0.0470  val_acc 0.9555
+epoch 100  train_ce 0.0466  val_acc 0.9552
+epoch 101  train_ce 0.0438  val_acc 0.9553
+epoch 102  train_ce 0.0427  val_acc 0.9522
+epoch 103  train_ce 0.0448  val_acc 0.9507
+epoch 104  train_ce 0.0448  val_acc 0.9558
+epoch 105  train_ce 0.0463  val_acc 0.9557
+epoch 106  train_ce 0.0425  val_acc 0.9573
+epoch 107  train_ce 0.0421  val_acc 0.9527
+epoch 108  train_ce 0.0436  val_acc 0.9585
+epoch 109  train_ce 0.0413  val_acc 0.9573
+epoch 110  train_ce 0.0416  val_acc 0.9608
+epoch 111  train_ce 0.0427  val_acc 0.9602
+epoch 112  train_ce 0.0399  val_acc 0.9572
+epoch 113  train_ce 0.0405  val_acc 0.9565
+epoch 114  train_ce 0.0403  val_acc 0.9542
+epoch 115  train_ce 0.0389  val_acc 0.9613
+epoch 116  train_ce 0.0399  val_acc 0.9567
+epoch 117  train_ce 0.0376  val_acc 0.9562
+epoch 118  train_ce 0.0404  val_acc 0.9543
+epoch 119  train_ce 0.0395  val_acc 0.9585
+epoch 120  train_ce 0.0390  val_acc 0.9583
+epoch 121  train_ce 0.0396  val_acc 0.9573
+epoch 122  train_ce 0.0369  val_acc 0.9588
+epoch 123  train_ce 0.0355  val_acc 0.9587
+epoch 124  train_ce 0.0351  val_acc 0.9582
+epoch 125  train_ce 0.0359  val_acc 0.9592
+epoch 126  train_ce 0.0360  val_acc 0.9572
+epoch 127  train_ce 0.0352  val_acc 0.9572
+epoch 128  train_ce 0.0353  val_acc 0.9630
+epoch 129  train_ce 0.0354  val_acc 0.9492
+epoch 130  train_ce 0.0338  val_acc 0.9568
+epoch 131  train_ce 0.0392  val_acc 0.9585
+epoch 132  train_ce 0.0362  val_acc 0.9568
+epoch 133  train_ce 0.0349  val_acc 0.9560
+epoch 134  train_ce 0.0331  val_acc 0.9560
+epoch 135  train_ce 0.0343  val_acc 0.9587
+epoch 136  train_ce 0.0374  val_acc 0.9575
+epoch 137  train_ce 0.0323  val_acc 0.9632
+epoch 138  train_ce 0.0322  val_acc 0.9620
+epoch 139  train_ce 0.0330  val_acc 0.9550
+epoch 140  train_ce 0.0327  val_acc 0.9463
+epoch 141  train_ce 0.0349  val_acc 0.9615
+epoch 142  train_ce 0.0321  val_acc 0.9570
+epoch 143  train_ce 0.0304  val_acc 0.9598
+epoch 144  train_ce 0.0315  val_acc 0.9578
+epoch 145  train_ce 0.0319  val_acc 0.9547
+epoch 146  train_ce 0.0290  val_acc 0.9597
+epoch 147  train_ce 0.0321  val_acc 0.9553
+epoch 148  train_ce 0.0300  val_acc 0.9555
+epoch 149  train_ce 0.0284  val_acc 0.9625
+epoch 150  train_ce 0.0295  val_acc 0.9598
+epoch 151  train_ce 0.0316  val_acc 0.9545
+epoch 152  train_ce 0.0295  val_acc 0.9568
+epoch 153  train_ce 0.0279  val_acc 0.9560
+epoch 154  train_ce 0.0292  val_acc 0.9602
+epoch 155  train_ce 0.0301  val_acc 0.9587
+epoch 156  train_ce 0.0290  val_acc 0.9612
+epoch 157  train_ce 0.0311  val_acc 0.9583
+epoch 158  train_ce 0.0303  val_acc 0.9607
+epoch 159  train_ce 0.0268  val_acc 0.9597
+epoch 160  train_ce 0.0290  val_acc 0.9602
+epoch 161  train_ce 0.0270  val_acc 0.9573
+epoch 162  train_ce 0.0319  val_acc 0.9630
+epoch 163  train_ce 0.0276  val_acc 0.9597
+epoch 164  train_ce 0.0277  val_acc 0.9627
+epoch 165  train_ce 0.0288  val_acc 0.9602
+epoch 166  train_ce 0.0278  val_acc 0.9587
+epoch 167  train_ce 0.0284  val_acc 0.9558
+epoch 168  train_ce 0.0287  val_acc 0.9595
+epoch 169  train_ce 0.0277  val_acc 0.9565
+epoch 170  train_ce 0.0263  val_acc 0.9537
+epoch 171  train_ce 0.0278  val_acc 0.9600
+epoch 172  train_ce 0.0278  val_acc 0.9612
+epoch 173  train_ce 0.0274  val_acc 0.9598
+epoch 174  train_ce 0.0250  val_acc 0.9627
+epoch 175  train_ce 0.0248  val_acc 0.9577
+epoch 176  train_ce 0.0279  val_acc 0.9563
+epoch 177  train_ce 0.0256  val_acc 0.9587
+epoch 178  train_ce 0.0264  val_acc 0.9593
+epoch 179  train_ce 0.0251  val_acc 0.9598
+epoch 180  train_ce 0.0260  val_acc 0.9583
+epoch 181  train_ce 0.0248  val_acc 0.9580
+epoch 182  train_ce 0.0265  val_acc 0.9580
+epoch 183  train_ce 0.0249  val_acc 0.9620
+epoch 184  train_ce 0.0256  val_acc 0.9630
+epoch 185  train_ce 0.0246  val_acc 0.9572
+epoch 186  train_ce 0.0231  val_acc 0.9622
+epoch 187  train_ce 0.0222  val_acc 0.9607
+epoch 188  train_ce 0.0235  val_acc 0.9602
+epoch 189  train_ce 0.0252  val_acc 0.9608
+epoch 190  train_ce 0.0233  val_acc 0.9593
+epoch 191  train_ce 0.0242  val_acc 0.9620
+epoch 192  train_ce 0.0235  val_acc 0.9600
+epoch 193  train_ce 0.0250  val_acc 0.9623
+epoch 194  train_ce 0.0243  val_acc 0.9608
+epoch 195  train_ce 0.0203  val_acc 0.9613
+epoch 196  train_ce 0.0225  val_acc 0.9575
+epoch 197  train_ce 0.0224  val_acc 0.9607
+epoch 198  train_ce 0.0219  val_acc 0.9598
+epoch 199  train_ce 0.0249  val_acc 0.9600
+epoch 200  train_ce 0.0226  val_acc 0.9603
+epoch 201  train_ce 0.0223  val_acc 0.9615
+epoch 202  train_ce 0.0230  val_acc 0.9595
+epoch 203  train_ce 0.0217  val_acc 0.9615
+epoch 204  train_ce 0.0214  val_acc 0.9605
+epoch 205  train_ce 0.0231  val_acc 0.9608
+epoch 206  train_ce 0.0224  val_acc 0.9575
+epoch 207  train_ce 0.0217  val_acc 0.9567
+epoch 208  train_ce 0.0233  val_acc 0.9525
+epoch 209  train_ce 0.0230  val_acc 0.9605
+epoch 210  train_ce 0.0182  val_acc 0.9630
+epoch 211  train_ce 0.0194  val_acc 0.9600
+epoch 212  train_ce 0.0219  val_acc 0.9583
+epoch 213  train_ce 0.0216  val_acc 0.9605
+epoch 214  train_ce 0.0216  val_acc 0.9622
+epoch 215  train_ce 0.0228  val_acc 0.9588
+epoch 216  train_ce 0.0226  val_acc 0.9608
+epoch 217  train_ce 0.0197  val_acc 0.9632
+epoch 218  train_ce 0.0216  val_acc 0.9608
+epoch 219  train_ce 0.0190  val_acc 0.9620
+epoch 220  train_ce 0.0193  val_acc 0.9630
+epoch 221  train_ce 0.0194  val_acc 0.9570
+epoch 222  train_ce 0.0196  val_acc 0.9627
+epoch 223  train_ce 0.0185  val_acc 0.9547
+epoch 224  train_ce 0.0216  val_acc 0.9608
+epoch 225  train_ce 0.0206  val_acc 0.9610
+epoch 226  train_ce 0.0212  val_acc 0.9600
+epoch 227  train_ce 0.0203  val_acc 0.9620
+epoch 228  train_ce 0.0185  val_acc 0.9627
+epoch 229  train_ce 0.0190  val_acc 0.9610
+epoch 230  train_ce 0.0202  val_acc 0.9605
+epoch 231  train_ce 0.0190  val_acc 0.9620
+epoch 232  train_ce 0.0194  val_acc 0.9622
+epoch 233  train_ce 0.0181  val_acc 0.9593
+epoch 234  train_ce 0.0163  val_acc 0.9633
+epoch 235  train_ce 0.0153  val_acc 0.9637
+epoch 236  train_ce 0.0169  val_acc 0.9563
+epoch 237  train_ce 0.0192  val_acc 0.9578
+epoch 238  train_ce 0.0191  val_acc 0.9607
+epoch 239  train_ce 0.0159  val_acc 0.9605
+epoch 240  train_ce 0.0189  val_acc 0.9583
+epoch 241  train_ce 0.0175  val_acc 0.9625
+epoch 242  train_ce 0.0168  val_acc 0.9585
+epoch 243  train_ce 0.0150  val_acc 0.9595
+epoch 244  train_ce 0.0181  val_acc 0.9605
+epoch 245  train_ce 0.0182  val_acc 0.9635
+epoch 246  train_ce 0.0188  val_acc 0.9605
+epoch 247  train_ce 0.0191  val_acc 0.9563
+epoch 248  train_ce 0.0196  val_acc 0.9607
+epoch 249  train_ce 0.0174  val_acc 0.9617
+epoch 250  train_ce 0.0180  val_acc 0.9602
+
+测试准确率：0.9615（10 类随机基线 0.10）
+活跃神经元比例：1.0000
+脉冲稀疏度：0.8658
+
+```text
+实验名称：eprop/bptt-smnist
+日期：2026-10-17 02:04:47 中国标准时间
+Git commit：fd286a4fcb052618da9a6ba5dda2e3caf31863c8
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=2；全局种子=1741413619；划分验证集=1435468911；权重初始化=3486733648；每批打乱=3990329893；脉冲编码=1681094896
+依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57
+运行命令：sweep_bptt.py --seeds 0-2 --device cuda --out-dir data/w2_bptt_final --epochs 250 --beta 0 --variant B --learning-rate 1e-2 --learning-rate-out 5e-2
+耗时：10980.6 s
+显存峰值：808.6 MiB（§6.2 硬约束 8GB）
+备注：BPTT 臂（对照 e-prop 同种子运行）：n_rec=256, beta=0.0, thr=0.62, eta=0.01, decay_out=0.95, epochs=250, batch=64
+备注：预算由构造保证：训练集同样是从全量里切掉 10% 验证集，划分/初始化/打乱/编码四处的种子与 e-prop 那次逐位相同（用途名派生，与顺序无关）
+备注：优化器变体 B：参数分组，隐层 lr=0.01、读出层 lr=0.05（镜像 e-prop 的 eta_out），两组合用 momentum=0.9
+备注：代理梯度穿过脉冲函数；与 e-prop 的差别只在学习规则
+```
+[落盘] data\w2_bptt_final\seed2.json
+
+==============================================================================
+BPTT 臂汇总（3 个种子：0–2，smnist）
+==============================================================================
+  种子   0  准确率 0.9629  活跃比例 1.0000  耗时 9327 s
+  种子   1  准确率 0.9647  活跃比例 1.0000  耗时 13575 s
+  种子   2  准确率 0.9615  活跃比例 1.0000  耗时 10981 s
+
+  测试准确率        均值 0.9630  最小 0.9615  最大 0.9647  极差 0.32 个百分点
+  活跃神经元比例      均值 1.0000
+  JSON 落在 data\w2_bptt_final/，逐种子可查
