@@ -425,6 +425,24 @@ paper, and it forced one licence onto files that have two different native ones.
   - **What this DOI is, and is not.** It identifies the *findings and protocol record* (a report).
     It is **not** the software's DOI and **not** the paper's, so it does not belong in
     `CITATION.cff`'s `doi:` field — that field describes the repository itself.
+  - **The attachments are frozen, and had gone stale — the record now says so.** A published
+    Zenodo record's files **cannot be replaced**; only a new version can change them. One day
+    after the deposit, the W2 official number moved arms (LIF 0.8889 replacing ALIF 0.8831 as the
+    headline, with 0.8831 demoted to control), so the attached record index — the 2026-10-15
+    snapshot — was stating a superseded number **with nothing to mark it as superseded**. Fixed
+    the surgical way, on 2026-10-16: a **metadata-only** edit appending an update note to the
+    record's description (`Numbers updated after this deposit ... 0.8889 ... the attachments are
+    the 2026-10-15 snapshot`). Verified from the public API afterwards: DOI and concept DOI
+    unchanged, status `published`, description 1,988 characters carrying the note, and **both
+    attachments byte-identical to what was deposited** (18,154 and 35,937 bytes).
+    ⚠️ Why not a new version: A is a *timestamp*, and version-churning it would turn a dated
+    snapshot into a moving target. Why not leave it to B: B is a separate record and will not
+    retro-fix A — a reader who lands on A alone needs the correction *on A*.
+    ⚠️ **Mechanics worth remembering**: editing a published Zenodo record goes
+    unlock (`actions/edit`) → `PUT` metadata → re-publish. A failure between the first two steps
+    leaves the record as a **draft, invisible to the public** — so the script that did this
+    re-publishes on every failure path. Editing metadata does **not** mint a new DOI; replacing
+    files would.
   - ⚠️ **A private URL in a tracked file fails CI, and local checks will not tell you.**
     The intermediate commit `3d5c3b0` recorded the *draft* page (`https://zenodo.org/deposit/23388709`)
     in this file; an unsubmitted deposition is visible only to its owner, so lychee got 403/404 and the
