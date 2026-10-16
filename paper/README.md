@@ -65,7 +65,11 @@ search-specification appendix) was NOT built locally.** The machine was running 
 training job under a standing rule that it may do nothing else until 23:00, so no pdflatex was
 run. It is verified by CI's `tectonic` job instead — which is this repo's stated policy anyway
 ("watch that job, not a committed PDF"). By `grep` rather than by bibtex, the file now cites
-**19 distinct keys out of 24 entries**; those counts are a proxy, not a build. (The five uncited entries —
+**19 distinct keys out of 24 entries**; those counts are a proxy, not a build.
+
+*(Superseded 2026-10-16: after the two entries added that day, `refs.bib` holds **26** and the body
+cites **23**; the three uncited ones — `shen2025taaf`, `hu2026pssnn`, `hajizada2026clp` — are
+plan-phase topics this paper does not discuss.)* (The five uncited entries —
 `fremaux2010`, `pogodin2020kernelized`, `shen2025taaf`, `hu2026pssnn`, `hajizada2026clp` —
 belong to §3 and later.)
 
@@ -535,3 +539,41 @@ rather than the code that produced it.
 **`f3-w3-greedy-curves.png` regenerates byte-identically** from the acceptance records, which is
 how we know the committed copy was current — checked by running the generator and finding no
 diff, not by trusting its date.
+
+## Draft log — correctness pass (2026-10-16)
+
+A read-through looking for **claims that were wrong or unsourced**, rather than for prose to
+improve. It found one of each plus a missing standard section.
+
+**① A misattribution the repository had already corrected elsewhere.** The paper said the W3
+critic is trained by "the TD-LTP rule of Frémaux et al. (2010)". TD-LTP's **name and form** come
+from the **2013** paper; the 2010 paper is where the *bias* of reward-modulated STDP is analysed
+— which is precisely the phenomenon §5.3 reproduces structurally. `docs/references.md` [12]
+records this correction for the project plan; the paper never got it. Both papers are now cited,
+each for what it actually says, and the sentence states the distinction rather than hiding it.
+⚠️ Worth noting how this happened: the error was in the **delivered** text and survived several
+passes because it reads correctly. It was caught by checking the citation against the ledger,
+not by re-reading the sentence.
+
+**② An unsourced literature claim.** §5.4 said "the e-prop literature reports SHD in the 63–81%
+range" with no citation. The range comes from the e-prop rows in the traces-propagation paper's
+comparison table, which those rows footnote as transcribed from a third party — a fact the
+sentence already asserts, so it was odd not to cite. Now cited.
+
+**③ A vague comparison replaced by a real one.** The Contributions bullet said 0.8889 sits at the
+"lower edge of the e-prop literature band". There is no such band in the ledger: the comparable
+sMNIST numbers in this repository's records belong to the **LSNN**, trained by **BPTT + DEEP R**,
+not by e-prop, and they average 93.8–94.2 across twelve runs. Rather than drop the comparison,
+the bullet now states it with its source and its size: the local-rule gap at this scale is four
+to five points. Also note what the old phrasing would have implied — that 0.8889 is merely
+"literature-typical", when the honest reading is that it is *below* a non-local baseline on the
+same task.
+
+**④ A standard section that was simply missing**: "Data and code availability", carrying the
+deposit's version and concept DOIs. It states that the archived record is a **snapshot** whose
+attachments are frozen and whose metadata records what was superseded — which is only true
+because that note was added to it earlier today.
+
+`refs.bib` went 24 → 26 entries, and **neither is a new reference**: `fremaux2013` and
+`bellec2018lsnn` are ledger entries [12] and [22], verified there with verbatim quotes from the
+sources. The paper was missing them, not the repository.

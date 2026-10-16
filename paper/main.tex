@@ -81,9 +81,12 @@ conventions are left implicit.
     tested (same-budget LIF leads ALIF by 0.93--1.23 pp over lr $10^{-3}$ to
     $10^{-2}$; five seeds each).
   \item \textbf{Convergence evidence}: e-prop with LIF neurons converges at
-    0.8889 (250 epochs), lower edge of the e-prop literature band --- and the
-    budget extension that gets there is eight times the truncated one, which is
-    itself the argument for reporting budgets.
+    \textbf{0.8889} (250 epochs). For scale: on the same task, the same family's
+    published baseline --- an LSNN trained by BPTT with DEEP R rather than by a
+    local rule --- averages 93.8--94.2 over twelve runs
+    \citep{bellec2018lsnn}. The local-rule gap at this scale is therefore four to
+    five points, and the budget extension that reaches even this much is eight
+    times the truncated one, which is itself the argument for reporting budgets.
   \item \textbf{Methodology}: bit-exact reproduction (two independent runs of the
     same configuration agree at every epoch, not just in the mean),
     retention-joint reporting, degenerate-solution analysis, and a frozen-noise
@@ -312,7 +315,10 @@ Section~\ref{sec:results} reports both. The readout has its own learning rate,
 mirroring the source implementation.
 
 \textbf{W3: R-STDP with a TD-LTP critic.} A reward-modulated STDP actor with a
-critic trained by the TD-LTP rule of \citet{fremaux2010}. Two honest deviations
+critic trained by TD-LTP \citep{fremaux2013}. The rule's name and form come from
+the 2013 paper, not the 2010 one: the earlier paper is where the \emph{bias} of
+reward-modulated STDP is analysed, and that analysis is what Section~\ref{sec:results}
+reproduces structurally \citep{fremaux2010}. Two honest deviations
 from the source: this implementation is \emph{rate-based} rather than spiking
 (the spiking form is scheduled, not done --- see Section~\ref{sec:discussion}),
 and the critic is a population rather than a single unit, which is what made it
@@ -599,8 +605,9 @@ critic reaches 9.3 steps on the acceptance configuration (seed 0): the
 population critic is not a refinement, it is what makes the rule work here. And
 a structural reproduction of the source paper's central phenomenon --- that
 reward-modulated STDP is biased by a stimulus-independent baseline, and that a
-per-stimulus predictor removes the bias --- succeeded where the numerical
-reproduction did not: the offset scales with the per-stimulus reward spread, and
+per-stimulus predictor removes the bias \citep{fremaux2010} --- succeeded where
+the numerical reproduction did not: the offset scales with the per-stimulus
+reward spread, and
 the global-baseline arm's post-training performance falls monotonically as that
 spread grows.
 
@@ -621,11 +628,12 @@ Training cross-entropy & 2.9948 $\rightarrow$ 2.9529 & $\ln 20 = 2.996$ \\
 configuration is not learning.}
 \end{table}
 
-The attribution matters more than the number. The e-prop literature reports SHD
-in the 63--81\% range, but not for this configuration: those runs use a
-different neuron count, a different time-step budget and a different
+The attribution matters more than the number. The literature does report e-prop on
+SHD in the 63--81\% range \citep{pes2025tp}, but not for this configuration: those
+runs use a different neuron count, a different time-step budget and a different
 architecture (feed-forward rather than recurrent), and the comparison table
-carrying them reproduces them from a third party rather than running them. We
+carrying them reproduces them from a third party rather than running them --- its
+own footnote says so. We
 did not tune for SHD --- no hyperparameter search was run for it --- so what
 this measures is that \emph{this} configuration does not transfer, not that the
 rule does not apply to the task. The distinction is the difference between a
@@ -721,8 +729,26 @@ rules' own claims would matter, which would need a multi-layer network, a
 scaling curve, and a task whose difficulty is not MNIST's.
 
 % ------------------------------------------------------------
+\section*{Data and code availability}
+The source of this paper, the configurations, and the evidence ledger behind
+every number are public. Each reported number traces to a directory of per-run
+JSON files, and each JSON carries the configuration that produced it; the
+directory-to-claim mapping is part of the repository, and the two figures in
+this paper are regenerated from those records by a single script. Minimal
+standalone reproductions of each core reference are in \texttt{examples/}.
+Datasets are not redistributed here; a downloader with per-file checksums
+fetches them.
+
+An archived snapshot of the measurement protocol and the findings record is
+deposited at \url{https://doi.org/10.5281/zenodo.23388709} (concept DOI
+\url{https://doi.org/10.5281/zenodo.23388708}). It is a \emph{snapshot}: its
+attachments are frozen at the date of deposit, and its own metadata records
+which numbers were superseded afterwards. Cite that record for the protocol, and
+this paper for the result.
+
+% ------------------------------------------------------------
 \bibliographystyle{plainnat}
-\bibliography{refs}   % refs.bib: 24 条（本文件不新增仓库里没有的引用，见其顶部规则）
+\bibliography{refs}   % refs.bib: 26 条，本文引用 23（未引的 3 条属后续阶段议题）
 
 \appendix
 \section{Full configuration dumps}
