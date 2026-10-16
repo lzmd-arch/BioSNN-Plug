@@ -1,0 +1,186 @@
+BPTT 臂：3 个种子（0–2），数据集 smnist，变体 A，eta=0.003，epochs=30，设备 cuda
+
+==============================================================================
+种子 0
+==============================================================================
+epoch   1  train_ce 2.0017  val_acc 0.4788
+epoch   2  train_ce 1.5676  val_acc 0.5882
+epoch   3  train_ce 1.2528  val_acc 0.6720
+epoch   4  train_ce 1.0535  val_acc 0.7143
+epoch   5  train_ce 0.9185  val_acc 0.7473
+epoch   6  train_ce 0.8169  val_acc 0.7605
+epoch   7  train_ce 0.7355  val_acc 0.7907
+epoch   8  train_ce 0.6713  val_acc 0.8092
+epoch   9  train_ce 0.6186  val_acc 0.8182
+epoch  10  train_ce 0.5740  val_acc 0.8365
+epoch  11  train_ce 0.5349  val_acc 0.8388
+epoch  12  train_ce 0.5027  val_acc 0.8467
+epoch  13  train_ce 0.4732  val_acc 0.8592
+epoch  14  train_ce 0.4472  val_acc 0.8615
+epoch  15  train_ce 0.4256  val_acc 0.8660
+epoch  16  train_ce 0.4037  val_acc 0.8737
+epoch  17  train_ce 0.3870  val_acc 0.8793
+epoch  18  train_ce 0.3694  val_acc 0.8850
+epoch  19  train_ce 0.3553  val_acc 0.8835
+epoch  20  train_ce 0.3417  val_acc 0.8915
+epoch  21  train_ce 0.3281  val_acc 0.8982
+epoch  22  train_ce 0.3201  val_acc 0.8998
+epoch  23  train_ce 0.3089  val_acc 0.9043
+epoch  24  train_ce 0.3027  val_acc 0.8975
+epoch  25  train_ce 0.2923  val_acc 0.9048
+epoch  26  train_ce 0.2823  val_acc 0.9062
+epoch  27  train_ce 0.2751  val_acc 0.9115
+epoch  28  train_ce 0.2704  val_acc 0.9035
+epoch  29  train_ce 0.2643  val_acc 0.9055
+epoch  30  train_ce 0.2605  val_acc 0.9115
+
+测试准确率：0.9198（10 类随机基线 0.10）
+活跃神经元比例：1.0000
+脉冲稀疏度：0.8403
+
+```text
+实验名称：eprop/bptt-smnist
+日期：2026-10-16 10:45:22 中国标准时间
+Git commit：4ccb276adbc1205ad189da5059e14e397685403b
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=0；全局种子=1741413617；划分验证集=1435468909；权重初始化=3486733650；每批打乱=3990329895；脉冲编码=1681094898
+依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57
+运行命令：sweep_bptt.py --seeds 0-2 --device cuda --out-dir data/w2_bptt_lr003_vA --epochs 30 --beta 0.0 --variant A --learning-rate 3e-3
+耗时：1069.6 s
+显存峰值：808.6 MiB（§6.2 硬约束 8GB）
+备注：BPTT 臂（对照 e-prop 同种子运行）：n_rec=256, beta=0.0, thr=0.62, eta=0.003, decay_out=0.95, epochs=30, batch=64
+备注：预算由构造保证：训练集同样是从全量里切掉 10% 验证集，划分/初始化/打乱/编码四处的种子与 e-prop 那次逐位相同（用途名派生，与顺序无关）
+备注：优化器变体 A：单个 SGD(momentum=0.9) 覆盖全部参数，读出层与隐层同 lr（0.003）——与 w2_bptt.log 那份 artifact 同配方，对 BPTT 不利，作为 handicap 对照保留
+备注：代理梯度穿过脉冲函数；与 e-prop 的差别只在学习规则
+```
+[落盘] data\w2_bptt_lr003_vA\seed0.json
+
+==============================================================================
+种子 1
+==============================================================================
+epoch   1  train_ce 2.0028  val_acc 0.4657
+epoch   2  train_ce 1.5281  val_acc 0.5838
+epoch   3  train_ce 1.2316  val_acc 0.6767
+epoch   4  train_ce 1.0251  val_acc 0.7080
+epoch   5  train_ce 0.8865  val_acc 0.7408
+epoch   6  train_ce 0.7903  val_acc 0.7725
+epoch   7  train_ce 0.7199  val_acc 0.7952
+epoch   8  train_ce 0.6635  val_acc 0.8148
+epoch   9  train_ce 0.6121  val_acc 0.8278
+epoch  10  train_ce 0.5721  val_acc 0.8417
+epoch  11  train_ce 0.5373  val_acc 0.8453
+epoch  12  train_ce 0.5035  val_acc 0.8575
+epoch  13  train_ce 0.4756  val_acc 0.8672
+epoch  14  train_ce 0.4524  val_acc 0.8747
+epoch  15  train_ce 0.4330  val_acc 0.8873
+epoch  16  train_ce 0.4122  val_acc 0.8848
+epoch  17  train_ce 0.3943  val_acc 0.8967
+epoch  18  train_ce 0.3731  val_acc 0.8962
+epoch  19  train_ce 0.3636  val_acc 0.8947
+epoch  20  train_ce 0.3498  val_acc 0.9020
+epoch  21  train_ce 0.3367  val_acc 0.9003
+epoch  22  train_ce 0.3255  val_acc 0.9095
+epoch  23  train_ce 0.3138  val_acc 0.9137
+epoch  24  train_ce 0.3036  val_acc 0.9097
+epoch  25  train_ce 0.2988  val_acc 0.9082
+epoch  26  train_ce 0.2892  val_acc 0.9207
+epoch  27  train_ce 0.2831  val_acc 0.9188
+epoch  28  train_ce 0.2719  val_acc 0.9198
+epoch  29  train_ce 0.2667  val_acc 0.9138
+epoch  30  train_ce 0.2608  val_acc 0.9165
+
+测试准确率：0.9157（10 类随机基线 0.10）
+活跃神经元比例：1.0000
+脉冲稀疏度：0.8443
+
+```text
+实验名称：eprop/bptt-smnist
+日期：2026-10-16 11:04:48 中国标准时间
+Git commit：4ccb276adbc1205ad189da5059e14e397685403b
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=1；全局种子=1741413616；划分验证集=1435468908；权重初始化=3486733651；每批打乱=3990329894；脉冲编码=1681094899
+依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57
+运行命令：sweep_bptt.py --seeds 0-2 --device cuda --out-dir data/w2_bptt_lr003_vA --epochs 30 --beta 0.0 --variant A --learning-rate 3e-3
+耗时：1164.2 s
+显存峰值：808.6 MiB（§6.2 硬约束 8GB）
+备注：BPTT 臂（对照 e-prop 同种子运行）：n_rec=256, beta=0.0, thr=0.62, eta=0.003, decay_out=0.95, epochs=30, batch=64
+备注：预算由构造保证：训练集同样是从全量里切掉 10% 验证集，划分/初始化/打乱/编码四处的种子与 e-prop 那次逐位相同（用途名派生，与顺序无关）
+备注：优化器变体 A：单个 SGD(momentum=0.9) 覆盖全部参数，读出层与隐层同 lr（0.003）——与 w2_bptt.log 那份 artifact 同配方，对 BPTT 不利，作为 handicap 对照保留
+备注：代理梯度穿过脉冲函数；与 e-prop 的差别只在学习规则
+```
+[落盘] data\w2_bptt_lr003_vA\seed1.json
+
+==============================================================================
+种子 2
+==============================================================================
+epoch   1  train_ce 2.0115  val_acc 0.4758
+epoch   2  train_ce 1.5793  val_acc 0.5832
+epoch   3  train_ce 1.2720  val_acc 0.6582
+epoch   4  train_ce 1.0603  val_acc 0.7063
+epoch   5  train_ce 0.9152  val_acc 0.7322
+epoch   6  train_ce 0.8129  val_acc 0.7542
+epoch   7  train_ce 0.7351  val_acc 0.7757
+epoch   8  train_ce 0.6705  val_acc 0.7982
+epoch   9  train_ce 0.6209  val_acc 0.8143
+epoch  10  train_ce 0.5738  val_acc 0.8280
+epoch  11  train_ce 0.5358  val_acc 0.8403
+epoch  12  train_ce 0.5010  val_acc 0.8458
+epoch  13  train_ce 0.4731  val_acc 0.8448
+epoch  14  train_ce 0.4460  val_acc 0.8550
+epoch  15  train_ce 0.4230  val_acc 0.8612
+epoch  16  train_ce 0.4004  val_acc 0.8677
+epoch  17  train_ce 0.3871  val_acc 0.8788
+epoch  18  train_ce 0.3719  val_acc 0.8807
+epoch  19  train_ce 0.3576  val_acc 0.8860
+epoch  20  train_ce 0.3433  val_acc 0.8923
+epoch  21  train_ce 0.3305  val_acc 0.8937
+epoch  22  train_ce 0.3209  val_acc 0.8902
+epoch  23  train_ce 0.3127  val_acc 0.8992
+epoch  24  train_ce 0.3007  val_acc 0.8842
+epoch  25  train_ce 0.2945  val_acc 0.8992
+epoch  26  train_ce 0.2843  val_acc 0.9028
+epoch  27  train_ce 0.2790  val_acc 0.9077
+epoch  28  train_ce 0.2707  val_acc 0.9057
+epoch  29  train_ce 0.2645  val_acc 0.9117
+epoch  30  train_ce 0.2610  val_acc 0.9098
+
+测试准确率：0.9142（10 类随机基线 0.10）
+活跃神经元比例：1.0000
+脉冲稀疏度：0.8461
+
+```text
+实验名称：eprop/bptt-smnist
+日期：2026-10-16 11:25:02 中国标准时间
+Git commit：e20c06d7a66a6610f09d5b9c590f746cb9a4d6a4
+Git 状态：干净
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=2；全局种子=1741413619；划分验证集=1435468911；权重初始化=3486733648；每批打乱=3990329893；脉冲编码=1681094896
+依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57
+运行命令：sweep_bptt.py --seeds 0-2 --device cuda --out-dir data/w2_bptt_lr003_vA --epochs 30 --beta 0.0 --variant A --learning-rate 3e-3
+耗时：1212.9 s
+显存峰值：808.6 MiB（§6.2 硬约束 8GB）
+备注：BPTT 臂（对照 e-prop 同种子运行）：n_rec=256, beta=0.0, thr=0.62, eta=0.003, decay_out=0.95, epochs=30, batch=64
+备注：预算由构造保证：训练集同样是从全量里切掉 10% 验证集，划分/初始化/打乱/编码四处的种子与 e-prop 那次逐位相同（用途名派生，与顺序无关）
+备注：优化器变体 A：单个 SGD(momentum=0.9) 覆盖全部参数，读出层与隐层同 lr（0.003）——与 w2_bptt.log 那份 artifact 同配方，对 BPTT 不利，作为 handicap 对照保留
+备注：代理梯度穿过脉冲函数；与 e-prop 的差别只在学习规则
+```
+[落盘] data\w2_bptt_lr003_vA\seed2.json
+
+==============================================================================
+BPTT 臂汇总（3 个种子：0–2，smnist）
+==============================================================================
+  种子   0  准确率 0.9198  活跃比例 1.0000  耗时 1070 s
+  种子   1  准确率 0.9157  活跃比例 1.0000  耗时 1164 s
+  种子   2  准确率 0.9142  活跃比例 1.0000  耗时 1213 s
+
+  测试准确率        均值 0.9166  最小 0.9142  最大 0.9198  极差 0.56 个百分点
+  活跃神经元比例      均值 1.0000
+  JSON 落在 data\w2_bptt_lr003_vA/，逐种子可查
