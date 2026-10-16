@@ -8,14 +8,22 @@ Build: `latexmk -pdf main.tex` (or `pdflatex main && bibtex main && pdflatex mai
 The resulting `main.pdf` is a **local build artifact and is not committed** — see below.
 
 Status: **full draft** — §1–§7 and all four appendices are written. What is left is not
-prose but four measured items, marked in-file with `\todo{}` (rendered red). `grep -c '\todo{'
-main.tex` returns **6** lines, but two of them are comments — the macro's own documentation at
+prose but three measured items, marked in-file with `\todo{}` (rendered red). `grep -c '\todo{'
+main.tex` returns **5** lines, but two of them are comments — the macro's own documentation at
 the top of the file, and a note on the bibliography block — so the count of **open items in the
-body is 4**: (i) the BPTT control arm's matched-budget number (its recipe pre-sweep is running),
-(ii) the convergence-curve figure for the extended arms (the repository's existing per-epoch
-figure stops at 100 epochs and cannot be reused), (iii) memory/throughput as a function of
-network size, which has not been measured at all, and (iv) the TechRxiv document that returned
-HTTP 403 in the search build, which is the one hit whose title most resembles a standard.
+body is 3**: (i) the BPTT control arm's matched-budget number (its recipe pre-sweep is running),
+(ii) memory/throughput as a function of network size, which has not been measured at all, and
+(iii) the TechRxiv document that returned HTTP 403 in the search build, which is the one hit
+whose title most resembles a standard.
+
+**Figures.** Two of the repository's generated figures are in the paper —
+`f2-w2-epoch-accuracy.png` (§5.2.3) and `f3-w3-greedy-curves.png` (§5.3). Both are regenerated
+from ingested records by `scripts/make_figures.py`, which now writes each one **twice**: to
+`figures/` (the canonical copy the READMEs cite) and to `paper/figures/` (the copy the paper
+includes). The duplication is deliberate — see the script's docstring: including the canonical
+copy via `../figures/` would make the paper read outside `paper/`, and that path's behaviour
+under the CI engine (tectonic) has never been verified in this repository. Two generated copies
+cannot drift; a hand-maintained second copy could.
 
 ## Compile status
 
@@ -483,3 +491,29 @@ equivalent). That is also why the open-item count moved by one.
 discipline applies and no pdflatex ran. CI's `tectonic` job is the verification channel for this
 batch, as the repo's own policy states; the run is being watched, and a compile error will be
 fixed as soon as it appears rather than left for the next reader.
+
+## Draft log — figures (2026-10-16)
+
+**The figure problem was not "a figure is missing" but "the figure that exists is stale".** The
+repository's per-epoch W2 figure stopped at 100 epochs, because it was drawn before the
+250-epoch arms existed; including it beside text that runs to 250 would have been exactly the
+kind of mismatch this paper argues against. So the figure was **extended rather than swapped**:
+`make_w2_curve` now reads four batches — 30, 100, and the two 250-epoch arms — and shades the
+last-twenty-epoch window, because that is where the convergence criterion is computed and a
+criterion whose sampling region is invisible is not checkable by a reader. The 30/100 prefix
+overlap still verifies exactly (maximum pointwise difference 0.000000).
+
+**What the figure shows is deliberately unflattering to the paper's own story**: the two
+250-epoch arms are 0.8889 and 0.8831, half a percentage point apart, and the two curves sit on
+top of each other. They were not separated for legibility.
+
+**Two caption corrections made by looking at the render, not at the script.** The W3 caption
+first claimed the ensemble "wanders above and below the threshold for the whole run" — the
+figure says otherwise: the individual runs swing from ~10 to ~500 steps, but the *median* stays
+below the threshold until roughly episode 700. The caption now describes what the figure shows.
+This is the second time in this repository that a claim was corrected by reading the artifact
+rather than the code that produced it.
+
+**`f3-w3-greedy-curves.png` regenerates byte-identically** from the acceptance records, which is
+how we know the committed copy was current — checked by running the generator and finding no
+diff, not by trusting its date.

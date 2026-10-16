@@ -522,6 +522,21 @@ same learning rate, same seeds, same budget --- so the difference between them
 is the neuron model's contribution at convergence.}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/f2-w2-epoch-accuracy.png}
+\caption{W2 under four budgets on one axis. The 30-epoch batch (red, ending at
+the dotted line) is a pointwise prefix of the 100-epoch batch (orange) --- two
+independent runs, all five seeds, all thirty epochs identical --- which is what
+makes the budget differences below it readable rather than mysterious. The two
+250-epoch arms are a paired comparison: same learning rate, same seeds, same
+budget, differing only in the neuron model. The grey band marks the last twenty
+epochs, which is the window the convergence criterion is computed over. Note
+that the curves plot \emph{validation} accuracy while the headline numbers are
+\emph{test} accuracy; the inset keeps the two apart deliberately.}
+\label{fig:w2-budget}
+\end{figure}
+
 The paired 30-epoch to 250-epoch difference on the same seeds (0.8036 to 0.8831)
 is $+7.95$ pp, and a 100-epoch batch sits between them. Both extended arms pass
 a pre-registered plateau criterion --- the change in the mean of the last twenty
@@ -530,11 +545,6 @@ epochs versus the twenty before it --- landing at the noise floor, whereas the
 than pooling them, because they do not have the same sign pattern, and a reader
 who checks only the sign would reach a different conclusion than a reader who
 checks the magnitude.
-
-\todo{Figure: the convergence curves for both extended arms. The existing
-per-epoch figure in the repository predates the 250-epoch runs and stops at 100
-epochs, so it cannot be included as-is --- a figure that stops where the text
-continues is the kind of mismatch this paper argues against.}
 
 \subsubsection{Comparison with BPTT}
 \todo{Headline control-arm number at a matched budget. The BPTT arm's recipe
@@ -561,12 +571,28 @@ Peak median steps & 389.8 & 441.7 & diagnostic only \\
 selection effect and is reported as one rather than averaged away.}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/f3-w3-greedy-curves.png}
+\caption{W3 on CartPole, acceptance seeds (never used for tuning). The thick line
+is the median across seeds, the thin lines the individual runs, and the dashed
+line the acceptance threshold. Two features matter. Individual runs swing from
+roughly ten steps to roughly five hundred within a single run, so any one
+checkpoint says very little about a configuration. And the median crosses the
+threshold only in the last hundred episodes --- a shorter run would have reported
+a failure that the full budget does not support. The headline quantity is the
+median over ten greedy episodes on the final weights; the per-seed training peaks
+(median 389.8 steps) are a diagnostic of how far the trajectories overshoot, not
+a result.}
+\label{fig:w3-greedy}
+\end{figure}
+
 The tuning-to-acceptance drop is about 27\%, and it is the single most useful
 number in this subsection: a rule tuned on seeds 25--44 and reported on those
 same seeds would have claimed 319.8. The peak-median row is a diagnostic, not an
 acceptance quantity --- it records that the policy is still wandering rather than
 settled, which is why the median over ten greedy episodes is the quantity we
-report and the peak is not.
+report and the peak is not (Figure~\ref{fig:w3-greedy}).
 
 Two negative findings from the same line are worth recording. A single-unit
 critic reaches 9.3 steps on the acceptance configuration (seed 0): the
