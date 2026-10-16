@@ -424,8 +424,9 @@ machine, and inferring energy from nominal TDP would produce a number that looks
 measured and is not. What is reported instead is wall-clock time and peak device
 memory, both recorded per run: the largest peak we observed is 3{,}220.6 MiB
 (the SHD arm, whose time dimension is 100 steps), against the 8 GiB budget.
-Resource behaviour as a function of network size is not measured here --- see
-Section~\ref{sec:discussion}.
+Resource behaviour as a function of network size is measured over six layer sizes
+in Section~\ref{sec:results}; what remains unmeasured is anything beyond 2{,}048
+neurons, which is where the device itself gives out. See Section~\ref{sec:discussion}.
 
 % ------------------------------------------------------------
 \section{Results}
@@ -685,9 +686,57 @@ activations over time rather than by the traces. The sequential-MNIST runs at
 5.9--6.1 hours per seed at 250 epochs, against 25--30 minutes per seed at 30
 epochs --- the budget is the binding cost, not the device.
 
-\todo{Memory and throughput as a function of network size: the log-log curve
-this subsection calls for has not been measured. Everything above is at one
-size, and no scaling claim can be made from it.}
+We also swept the recurrent layer size, two epochs per point, measuring peak
+allocated memory and time per epoch:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rrr}
+\toprule
+$n_{\text{rec}}$ & Peak memory (MiB) & Seconds per epoch \\
+\midrule
+64 & 603.9 & 46.3 \\
+128 & 966.1 & 44.3 \\
+256 & 1{,}688.6 & 55.6 \\
+512 & 3{,}116.2 & 133.3 \\
+1{,}024 & 5{,}989.7 & 435.3 \\
+2{,}048 & 11{,}744.8 & 2{,}646.8 \\
+\bottomrule
+\end{tabular}
+\caption{Peak device memory and time per epoch against recurrent layer size. The
+last row \emph{exceeds the device}: the card holds 8{,}151 MiB, and the run
+allocated 11{,}744.8 MiB --- Windows fell back to shared system memory, so that
+row's throughput is a paging measurement, not a compute one.}
+\label{tab:scale}
+\end{table}
+
+\textbf{The measurement contradicts the expectation we built it on.} Fitting
+log-log slopes over the six points gives \textbf{0.86 for memory} and 1.15 for
+time. Memory therefore grows \emph{sub}-linearly here, not quadratically ---
+and this is not a small discrepancy to be explained away, because the quadratic
+term is not what dominates at these sizes. e-prop's eligibility traces are stored
+per synapse, so their footprint scales as $N^2$; at $n_{\text{rec}} = 2{,}048$
+that term is $2{,}048^2 \times 4$ bytes $\approx$ 17 MiB, against an observed peak
+of 11.7 GiB. What dominates is stored activation over time, $\sim T \cdot B \cdot N$,
+which is \emph{linear} in the layer size: at 784 time steps this dwarfs the traces
+by three orders of magnitude.
+
+So this curve does \emph{not} corroborate the per-synapse trace accounting that
+Section~\ref{sec:related} reports from the source paper --- it is consistent with
+it (the traces are there, just small) while being entirely explained by a
+different term. Establishing the $N^2$ behaviour empirically would need either
+sizes three orders of magnitude larger, where the traces take over, or a
+measurement that isolates the trace tensors from activations. We have neither,
+and we state the scaling claim as the source paper's accounting rather than as
+our measurement. It follows that the trace-factorization question this sweep was
+also meant to touch --- whether the $\beta = 0$ path could be collapsed to
+$O(B \cdot N)$ --- cannot be settled by it either, for the same reason: the traces
+are not the term being measured.
+
+The practical reading is narrower but real: up to a thousand recurrent neurons
+this pipeline fits comfortably in a consumer card's memory, and the constraint
+that binds is time, not capacity --- with a cliff at the point where it stops
+fitting, which is where the last row sits.
 
 % ------------------------------------------------------------
 \section{Discussion}
@@ -730,11 +779,17 @@ reported at one setting is a point, not a claim.
 \subsection{Limits}
 Four boundaries, stated rather than implied.
 
-\emph{Scale.} Everything here is at 256 recurrent neurons. The claims that
-motivate local rules --- on-chip learning, long sequences, energy --- are about
-scales two to three orders of magnitude larger, and nothing in this paper
-demonstrates that the behaviour transfers. We do not have a scaling curve; the
-resource measurements are at one size.
+\emph{Scale.} The accuracy results here are at 256 recurrent neurons. The claims
+that motivate local rules --- on-chip learning, long sequences, energy --- are
+about scales two to three orders of magnitude larger, and nothing in this paper
+demonstrates that the behaviour transfers. We do have a resource scaling curve,
+and it is informative about a ceiling rather than about the rules: up to 1{,}024
+neurons the pipeline fits in a consumer card, and at 2{,}048 it spills out of one.
+It also fails to corroborate the quadratic trace accounting, for a reason that
+generalises --- at these sizes the activations, not the traces, are what fills
+the card (Section~\ref{sec:results}). A reader looking for evidence that local
+learning is cheap at scale will not find it here; a reader looking for where the
+measurement stops will.
 
 \emph{Substrate.} W2 is spiking; W1 and W3 are rate-based implementations of
 rules whose source papers are defined on rate or on spikes respectively. The

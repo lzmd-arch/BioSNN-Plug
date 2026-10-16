@@ -1,0 +1,30 @@
+{
+  "seed": 0,
+  "test_accuracy": 0.6976000070571899,
+  "active_fraction": 1.0,
+  "n_classes": 10,
+  "elapsed_s": 870.6468343999877,
+  "peak_mb": 5989.697265625,
+  "curve": [
+    {
+      "epoch": 1.0,
+      "val_accuracy": 0.5646666884422302
+    },
+    {
+      "epoch": 2.0,
+      "val_accuracy": 0.6944999694824219
+    }
+  ],
+  "config": {
+    "dataset": "smnist",
+    "epochs": 2,
+    "n_rec": 1024,
+    "batch_size": 64,
+    "beta": 0.0,
+    "threshold": 0.62,
+    "learning_rate_in": 0.01,
+    "learning_rate_rec": 0.01,
+    "learning_rate_out": 0.05,
+    "device": "cuda"
+  }
+}

@@ -7,13 +7,12 @@ reproduction record under `research/`, per the project plan's §12.4 rule.
 Build: `latexmk -pdf main.tex` (or `pdflatex main && bibtex main && pdflatex main && pdflatex main`).
 The resulting `main.pdf` is a **local build artifact and is not committed** — see below.
 
-Status: **full draft, one measurement short** — §1–§7 and all four appendices are written, and the
-headline control arm (BPTT) has landed. What is left is not prose but **two measured items**, marked
-in-file with `\todo{}` (rendered red). `grep -c '\todo{' main.tex` returns **3** lines, one of which
-is a comment (the macro's own documentation), so the count of **open items in the body is 2**:
-(i) memory/throughput as a function of network size, whose runner and pre-registration are in place
-and whose measurement is queued behind the GPU work, and (ii) the TechRxiv document that returned
-HTTP 403 in the search build, which is the one hit whose title most resembles a standard.
+Status: **full draft, one open item** — §1–§7, all four appendices, both figures, the headline
+control arm and the resource scaling curve have all landed. `grep -c '\todo{' main.tex` returns
+**2** lines, one of which is a comment (the macro's own documentation), so the count of **open
+items in the body is 1**: the TechRxiv document that returned HTTP 403 in the search build, which
+is the one hit whose title most resembles a standard. Every other number in the paper is measured
+and recorded.
 
 **Figures.** Two of the repository's generated figures are in the paper —
 `f2-w2-epoch-accuracy.png` (§5.2.3) and `f3-w3-greedy-curves.png` (§5.3). Both are regenerated
@@ -613,3 +612,35 @@ denominator.
 identical consecutive runs, and the fastest rate observed anywhere in this work (0.59 min/epoch,
 baseline 0.92) came from this arm. Neither is attributed to a cause, and neither enters a
 performance baseline — see the pre-registration and `docs/reproducibility.md`.
+
+## Draft log — the scaling curve, and a claim it does not support (2026-10-17)
+
+**The sweep ran clean and the result is a negative one.** Six layer sizes, two epochs each, on a
+quiet machine (pre-run check: 2,108 MiB, no Ollama, 1-epoch probe 0.98 min/epoch against a 0.92
+baseline). Log-log slopes: **0.86 for peak memory**, 1.15 for time per epoch.
+
+**What that does to the paper's own framing.** The curve was built to corroborate the per-synapse
+trace accounting — e-prop's traces scale as $N^2$, which is the storage argument §2.1 carries from
+the source paper. It does not corroborate it, and the reason is not a subtlety: at $n_{\text{rec}}=2{,}048$
+the quadratic term is about **17 MiB** against an observed peak of **11.7 GiB**. What fills the
+card is activation stored over time, which is linear in the layer size. So the paper now cites the
+quadratic accounting as **the source paper's**, explicitly not as our measurement, and §5.5 says
+why in one paragraph. The pre-registration anticipated exactly this branch ("the slope is a result,
+not a premise") — this is that branch being taken.
+
+**The largest size did not fit, in a way the pre-registration had not enumerated.** It did not
+OOM: all six points returned `rc=0`. But the 2,048 point *allocated 11,744.8 MiB on an 8,151 MiB
+card* — Windows fell back to shared memory — so its throughput (2,646.8 s/epoch, six times the
+next point) is a paging measurement. The record keeps the number and labels it rather than
+replacing it with an estimate, and the prereg's execution record names the third outcome it
+hadn't listed.
+
+**Two sentences elsewhere had become false and were rewritten**: §4 said resource behaviour by
+size "is not measured here", and §6.3's limits said "we do not have a scaling curve". Both are
+updated to what the curve does and does not license — including the part that is genuinely useful:
+up to 1,024 neurons this pipeline fits a consumer card, and the binding constraint is time, not
+capacity.
+
+This is the third time in this paper's drafting that a measurement has contradicted the claim it
+was commissioned for (the LIF/ALIF interaction, the BPTT control, and now the scaling curve). All
+three are reported; two of them are now in the abstract.
