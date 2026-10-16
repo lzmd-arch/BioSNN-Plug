@@ -223,6 +223,46 @@ GPU experiments additionally need to record:
 - Training duration and energy-related quantities (§9's energy-efficiency metrics are
   reported in the form of an "invocation-frequency vs. energy curve")
 
+## Pre-run machine check
+
+**This section exists because the same accident happened three times** — on one machine, a long
+run's wall clock was quietly inflated by something else, and nobody noticed at the time:
+
+1. **1.61×** (September 2026, already on record): the person measuring was running heavy work on
+   the same machine;
+2. **1.5×** (morning of 2026-10-16): the same 30-epoch configuration measured 56 s/epoch before
+   09:00 and 84 s/epoch after 11:00;
+3. **4×** (afternoon of 2026-10-16, mid-way through the sixth BPTT pre-sweep arm): *within one
+   arm*, seed 1 measured 3.8 min/epoch while seed 0 and seed 2 measured 0.92 and 0.65.
+
+The common thread: **accuracy is unaffected, the wall clock is polluted, and the pollution is
+only ever discovered afterwards.** The rule, therefore: before any run expected to exceed **one
+hour**, walk the five steps below, and write step ①'s snapshot into the driver log.
+
+| # | Step | How |
+| :--- | :--- | :--- |
+| ① | **Snapshot memory and utilisation** | `nvidia-smi --query-gpu=memory.used,utilization.gpu --format=csv,noheader`, into the driver log. Without that baseline there is no way afterwards to tell whether a run was slow |
+| ② | **List compute processes** | `nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv`; if something unfamiliar is there, find out what it is before starting |
+| ③ | **Stop Ollama** | `Get-Process \| Where-Object ProcessName -match 'ollama' \| Stop-Process -Force`. The memory terminal loads embedding models on demand and the **daemon keeps them resident for minutes after the last call** — a window that easily covers the middle of a long run. Stopping the daemon makes such a call fail fast instead of quietly taking the card |
+| ④ | **Clear the desktop** | A wallpaper engine (`kwallpaperplayer`), browsers/WebView and chat apps (`Weixin`) all hold device memory; an observed snapshot had a screenful of them |
+| ⑤ | **1-epoch probe** | Run one epoch at the **target configuration** and compare min/epoch against that configuration's historical baseline. **If it is > 1.5×, do not start the long run** — find the cause first, and start once the rate is back at baseline |
+
+**Two rules about what slow timings do and do not invalidate** (they sit alongside the retention
+rules in "Raw experiment artefacts"):
+
+* **Accuracy is not polluted by a slowdown.** Slowness changes time, not arithmetic — runs caught
+  inside a slow window keep their **accuracy**, and do not need re-running. `w2_bptt_lr010_vB` on
+  2026-10-16 is the case in point: its three seeds went into the mean as normal.
+* **Wall clocks from a polluted window must never enter a performance baseline.** Record them as
+  an anomalous segment, usable for progress only. `w2_bptt_lr_driver.log` and the running
+  `w2_bptt_final.log` both contain such a segment.
+
+Warning: **the cause of the 4× episode was never confirmed.** The prime suspect is the Ollama
+model that was loaded at the time, but by the time we looked it had already unloaded (`ollama ps`
+was empty and `nvidia-smi` did not list it) — **the evidence had evaporated**. So what this
+section records is a **procedure**, not a confirmed culprit; next time it happens, step ①'s
+snapshot is the evidence that should have existed.
+
 ## Data
 
 Per the project plan §12.1, this repository **ships no data mirror**.
