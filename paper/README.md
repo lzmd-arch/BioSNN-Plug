@@ -7,13 +7,15 @@ reproduction record under `research/`, per the project plan's §12.4 rule.
 Build: `latexmk -pdf main.tex` (or `pdflatex main && bibtex main && pdflatex main && pdflatex main`).
 The resulting `main.pdf` is a **local build artifact and is not committed** — see below.
 
-Status: **skeleton v0.2 + Related Work drafted** — all four subsections of §2 are written
-(see the draft log at the end); §1 and §3–§7 are still structure and section plan.
-Outstanding work is marked in-file with `\todo{}` (rendered red), so
-`grep -c '\todo{' main.tex` counts the open items — **7**. Six are the original skeleton
-placeholders (untouched by the drafting); the seventh was added by the search-specification
-appendix, and it is deliberate: it marks the TechRxiv document that returned HTTP 403 and was
-never read, which is the one hit whose title most resembles a standard.
+Status: **full draft** — §1–§7 and all four appendices are written. What is left is not
+prose but four measured items, marked in-file with `\todo{}` (rendered red). `grep -c '\todo{'
+main.tex` returns **6** lines, but two of them are comments — the macro's own documentation at
+the top of the file, and a note on the bibliography block — so the count of **open items in the
+body is 4**: (i) the BPTT control arm's matched-budget number (its recipe pre-sweep is running),
+(ii) the convergence-curve figure for the extended arms (the repository's existing per-epoch
+figure stops at 100 epochs and cannot be reused), (iii) memory/throughput as a function of
+network size, which has not been measured at all, and (iv) the TechRxiv document that returned
+HTTP 403 in the search build, which is the one hit whose title most resembles a standard.
 
 ## Compile status
 
@@ -447,3 +449,37 @@ paper, and it forced one licence onto files that have two different native ones.
    this is not a hard no — but it is a grey zone, and item 1's repository URL solves the contact half
    of it, not the identity half. **This one needs a human decision before 10-22**, not a mechanical
    edit.
+
+## Draft log — the full draft (2026-10-16)
+
+**What was written:** §1 (motivation, the measurement gap, contributions, positioning), §3
+(methods: systems under test, the evaluation protocol written out in full, the triviality
+analysis, the boundary statement), §4 (setup), §5 (all five result subsections), §6
+(discussion), §7 (conclusion), and appendices A.1–A.3. The abstract is written too. §2 was
+already complete.
+
+**Every number traces to a record**, per the file header's rule: W1's two readouts and the
+five-seed range from `w1_seeds/`, the four learning rates and their LIF counterparts from the
+`w2_lr*`/`w2_lif_lr*` series, the extended arms from `w2_long/` and `w2_lif_long/`, W3's
+acceptance and tuning batches from `step14_confirm`/`step13_lr001`, SHD from `w2_shd/`, and the
+memory peaks from the same runs. Where a number does not exist, the text says so and marks it
+rather than reaching for a neighbouring one — the BPTT subsection, the convergence figure, and
+the size-scaling curve are the three cases.
+
+**Two claims deliberately narrowed while writing:**
+
+- **W1's accuracy is presented as a joint result** of local features and a supervised readout,
+  at the point where the number appears, not in a footnote. The source paper's tables invite the
+  opposite reading.
+- **The SHD arm is attributed to the configuration, not to the rule.** The text states that no
+  hyperparameter search was run for SHD, so the 5.34% measures this configuration's
+  non-transfer, and explicitly refuses the stronger reading.
+
+**One author-block change, under a standing ruling:** `\todo{email}` is replaced by the
+repository URL (the 2026-10-15 ruling: contact method = repo URL, zero new exposure, functionally
+equivalent). That is also why the open-item count moved by one.
+
+⚠️ **Not built locally.** The machine is running the BPTT pre-sweep, so the training-only
+discipline applies and no pdflatex ran. CI's `tectonic` job is the verification channel for this
+batch, as the repo's own policy states; the run is being watched, and a compile error will be
+fixed as soon as it appears rather than left for the next reader.
