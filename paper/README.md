@@ -7,12 +7,13 @@ reproduction record under `research/`, per the project plan's §12.4 rule.
 Build: `latexmk -pdf main.tex` (or `pdflatex main && bibtex main && pdflatex main && pdflatex main`).
 The resulting `main.pdf` is a **local build artifact and is not committed** — see below.
 
-Status: **full draft, one open item** — §1–§7, all four appendices, both figures, the headline
-control arm and the resource scaling curve have all landed. `grep -c '\todo{' main.tex` returns
-**2** lines, one of which is a comment (the macro's own documentation), so the count of **open
-items in the body is 1**: the TechRxiv document that returned HTTP 403 in the search build, which
-is the one hit whose title most resembles a standard. Every other number in the paper is measured
-and recorded.
+Status: **complete draft — zero open items in the body.** §1–§7, all four appendices, three
+figures, the headline control arm and the resource scaling curve have all landed. The last open
+item, the TechRxiv document that returned HTTP 403 in the search build, is now written up in the
+appendix as a **stated limitation** rather than a red marker: it exists, every route to it was
+blocked from this environment, and it is the single most likely candidate to falsify §2.4's claim
+--- which is exactly why it is recorded with its DOI for a reader who can reach it. `grep -c
+'\todo{' main.tex` returns **1**, and that one is a comment documenting the macro itself.
 
 **Figures.** Two of the repository's generated figures are in the paper —
 `f2-w2-epoch-accuracy.png` (§5.2.3) and `f3-w3-greedy-curves.png` (§5.3). Both are regenerated
@@ -621,12 +622,21 @@ baseline). Log-log slopes: **0.86 for peak memory**, 1.15 for time per epoch.
 
 **What that does to the paper's own framing.** The curve was built to corroborate the per-synapse
 trace accounting — e-prop's traces scale as $N^2$, which is the storage argument §2.1 carries from
-the source paper. It does not corroborate it, and the reason is not a subtlety: at $n_{\text{rec}}=2{,}048$
-the quadratic term is about **17 MiB** against an observed peak of **11.7 GiB**. What fills the
-card is activation stored over time, which is linear in the layer size. So the paper now cites the
-quadratic accounting as **the source paper's**, explicitly not as our measurement, and §5.5 says
-why in one paragraph. The pre-registration anticipated exactly this branch ("the slope is a result,
-not a premise") — this is that branch being taken.
+the source paper. It does not corroborate it as the *dominant* term, and the magnitudes matter:
+by the project's own formula for the four per-synapse tensors, the traces are about 2.0 GB at
+$n_{\text{rec}}=2{,}048$ against an observed peak of 11.7 GB — **17.7%**, rising from 0.34% at the
+bottom of the sweep. So they are present and their share climbs fastest, but what fills the card
+at these sizes is a sub-linear term. The paper now cites the quadratic accounting as **the source
+paper's**, explicitly not as our measurement, and §5.5 says why. The pre-registration anticipated
+exactly this branch ("the slope is a result, not a premise").
+
+⚠️ **A self-caught error, recorded because of how it was made.** The first version of that
+paragraph said the trace term was "about 17 MiB, three orders of magnitude below the peak". That
+came from computing **one** $N^2$ tensor and forgetting the batch dimension — the same mistake the
+project plan had already corrected once for the same formula. The number is now ~2.0 GB and the
+conclusion survives the correction, but the error was in the *flattering* direction: it made the
+measurement look like stronger evidence than it is. Found by checking the paper's number against
+the plan's own arithmetic rather than by re-reading the sentence.
 
 **The largest size did not fit, in a way the pre-registration had not enumerated.** It did not
 OOM: all six points returned `rc=0`. But the 2,048 point *allocated 11,744.8 MiB on an 8,151 MiB

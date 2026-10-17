@@ -265,7 +265,9 @@ policy, a community-wide reproducibility challenge, and the checklist that is no
 standard at submission time \citep{pineau2021}. We searched for the equivalent in
 local-rule SNN training and did not find one; the sources, query strings, date and
 inclusion criteria are recorded in Appendix~\ref{app:search}, and no entry meets
-all three criteria for counting as a standard. What the search did return is a set
+all three criteria for counting as a standard --- with one candidate that could not
+be opened at all, recorded there as an open item rather than assumed away. What
+the search did return is a set
 of near neighbours, and naming them is the honest form of the claim. Benchmarking
 frameworks now fix tasks and metrics for comparing SNN learning algorithms,
 including e-prop, with stated fairness goals \citep{neuroseqbench2025}, and for
@@ -724,27 +726,31 @@ panel is therefore a paging measurement, not a compute one.}
 
 \textbf{The measurement contradicts the expectation we built it on.} Fitting
 log-log slopes over the six points (Figure~\ref{fig:w2-scale}) gives
-\textbf{0.86 for memory} and 1.15 for
-time. Memory therefore grows \emph{sub}-linearly here, not quadratically ---
-and this is not a small discrepancy to be explained away, because the quadratic
-term is not what dominates at these sizes. e-prop's eligibility traces are stored
-per synapse, so their footprint scales as $N^2$; at $n_{\text{rec}} = 2{,}048$
-that term is $2{,}048^2 \times 4$ bytes $\approx$ 17 MiB, against an observed peak
-of 11.7 GiB. What dominates is stored activation over time, $\sim T \cdot B \cdot N$,
-which is \emph{linear} in the layer size: at 784 time steps this dwarfs the traces
-by three orders of magnitude.
+\textbf{0.86 for memory} and 1.15 for time. Memory therefore grows
+\emph{sub}-linearly here, not quadratically.
+
+The traces are not absent from that peak, and the honest accounting matters.
+e-prop's eligibility traces are stored per synapse, so their footprint scales as
+$N^2$. By this project's own accounting --- four per-synapse tensors, cross-checked
+against the implementation's stated sizes at the acceptance shape --- that is about
+2.0 GB at $n_{\text{rec}} = 2{,}048$ with batch 64 in fp32. Against an observed peak
+of 11.7 GB, the traces are therefore roughly a fifth of it; at $n_{\text{rec}} = 64$
+they are one part in three hundred. They are present, and their share grows faster
+than anything else in the sweep (from 0.3\% to 17.7\% across 32-fold growth in
+size), but they are not what fills the card at these sizes. Something sub-linear is,
+and at 784 time steps that term is large enough to hide them for now.
 
 So this curve does \emph{not} corroborate the per-synapse trace accounting that
 Section~\ref{sec:related} reports from the source paper --- it is consistent with
-it (the traces are there, just small) while being entirely explained by a
-different term. Establishing the $N^2$ behaviour empirically would need either
-sizes three orders of magnitude larger, where the traces take over, or a
-measurement that isolates the trace tensors from activations. We have neither,
-and we state the scaling claim as the source paper's accounting rather than as
-our measurement. It follows that the trace-factorization question this sweep was
-also meant to touch --- whether the $\beta = 0$ path could be collapsed to
-$O(B \cdot N)$ --- cannot be settled by it either, for the same reason: the traces
-are not the term being measured.
+it, and it shows the trace term climbing towards dominance, while leaving the
+observed peak explained by something else entirely. Establishing the $N^2$
+behaviour empirically would need either a larger sweep, since the traces' share is
+still rising at the top of this one, or a measurement that isolates the trace
+tensors from activations. We have neither, and we state the scaling claim as the
+source paper's accounting rather than as our measurement. It follows that the
+trace-factorization question this sweep was also meant to touch --- whether the
+$\beta = 0$ path could be collapsed to $O(B \cdot N)$ --- cannot be settled by it
+either, for the same reason: the traces are not the term being measured.
 
 The practical reading is narrower but real: up to a thousand recurrent neurons
 this pipeline fits comfortably in a consumer card's memory, and the constraint
@@ -947,8 +953,17 @@ The sources are a US-region web search index and direct fetches of individual
 URLs. There was no in-database search of ACM DL, IEEE Xplore, Scopus or Web of
 Science, so what this supports is ``with these queries, on this date, on this
 index, nothing was found'' --- not ``no such thing exists''. It is a survey, not a
-systematic review. \todo{One hit, a TechRxiv practical-guidelines document for
-SNNs, returned HTTP 403 and was never read; it is the entry whose title most
-resembles a standard, and it remains unchecked.}
+systematic review.
+
+One retrieved hit could not be assessed, and we record it rather than drop it: a
+TechRxiv preprint, \emph{Practical Guidelines for Spiking Neural Networks} (DOI
+\texttt{10.36227/techrxiv.175322635.58911591}). Every route to it returned HTTP
+403 from this environment --- both canonical TechRxiv URLs, the DOI resolver, and
+the third-party indexes we tried --- and the scholarly APIs we queried do not
+index it. Its title is the closest of any hit to the thing Section~2.4 says does
+not exist, which makes it the single most likely candidate to falsify that claim;
+a reader with institutional access should check it. We state this as an open item
+rather than a settled one: what is recorded here is that the document exists and
+was unreachable from here, not that it was read and found insufficient.
 
 \end{document}
