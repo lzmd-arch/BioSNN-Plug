@@ -117,7 +117,7 @@ def select_hyperparameters(
 
 
 def evaluate_direction(
-    associator: HebbianAssociator,
+    associator: HebbianAssociator | DeltaAssociator,
     queries: np.ndarray,
     gallery: np.ndarray,
     *,
@@ -127,3 +127,111 @@ def evaluate_direction(
     """把查询翻到候选空间，算 R@K。"""
     predicted = associator.transform(queries)
     return {f"r{k}": recall_at_k(predicted, gallery, k=k, direction=direction).recall for k in ks}
+
+
+# --------------------------------------------------------------------------
+# 第二轮：Widrow–Hoff delta 规则
+# --------------------------------------------------------------------------
+
+#: 第二轮的选参网格（预注册写死）。
+DELTA_ETA_GRID = (0.001, 0.01, 0.1)
+DELTA_EPOCH_GRID = (1, 5, 20)
+
+
+@dataclass
+class DeltaAssociator:
+    """带误差修正的局部规则：``W ← W + η(v − W t) tᵀ``，逐样本。
+
+    ⚠️ **它需要教师信号**：误差项里的 ``v`` 是配对训练时给出的目标。所以它是
+    **有教师的局部规则**，不是无监督 Hebb，也不等于反向传播——每个突触只用自己
+    两端的前/后活动加一个误差信号，不经过链式法则。
+    """
+
+    eta: float = 0.01
+    epochs: int = 5
+    seed: int = 0
+    weight: np.ndarray | None = None
+
+    def fit(self, source: np.ndarray, target: np.ndarray) -> DeltaAssociator:
+        source = np.asarray(source, dtype=np.float64)
+        target = np.asarray(target, dtype=np.float64)
+        if source.ndim != 2 or target.ndim != 2:
+            raise ValueError("source 与 target 都必须是二维 (n, d)。")
+        if source.shape[0] != target.shape[0]:
+            raise ValueError(f"样本数必须相同，收到 {source.shape[0]} 与 {target.shape[0]}。")
+        if self.epochs < 1:
+            raise ValueError(f"epochs 至少为 1，收到 {self.epochs}。")
+
+        weight = np.zeros((target.shape[1], source.shape[1]), dtype=np.float64)
+        rng = np.random.default_rng(self.seed)
+        diverged = False
+        with np.errstate(over="ignore", invalid="ignore"):
+            for _ in range(self.epochs):
+                for index in rng.permutation(source.shape[0]):
+                    t = source[index]
+                    error = target[index] - weight @ t
+                    weight += self.eta * np.outer(error, t)
+                if not np.all(np.isfinite(weight)):
+                    diverged = True
+                    break
+        self.weight = weight
+        self.diverged = diverged
+        return self
+
+    def transform(self, source: np.ndarray) -> np.ndarray:
+        if self.weight is None:
+            raise RuntimeError("先 fit() 再 transform()。")
+        return np.asarray(source, dtype=np.float64) @ self.weight.T
+
+    def __repr__(self) -> str:
+        shape = None if self.weight is None else self.weight.shape
+        return f"DeltaAssociator(eta={self.eta}, epochs={self.epochs}, weight={shape})"
+
+
+def select_delta_hyperparameters(
+    source: np.ndarray,
+    target: np.ndarray,
+    *,
+    eta_grid: tuple[float, ...] = DELTA_ETA_GRID,
+    epoch_grid: tuple[int, ...] = DELTA_EPOCH_GRID,
+    folds: int = 5,
+    seed: int = 0,
+) -> tuple[float, int, dict[tuple[float, int], float]]:
+    """在训练集上做 **k 折交叉验证**选 ``(eta, epochs)``。
+
+    ⚠️ 这里**不能用留一法**：delta 是迭代的，去掉一条样本后的解不是"整体解减去那一项"
+    （外积 Hebb 才是那样）。所以退回 k 折，并在预注册里写明。
+    """
+    source = np.asarray(source, dtype=np.float64)
+    target = np.asarray(target, dtype=np.float64)
+    n = source.shape[0]
+    if folds < 2 or folds > n:
+        raise ValueError(f"folds 必须落在 [2, {n}]，收到 {folds}。")
+
+    rng = np.random.default_rng(seed)
+    order = rng.permutation(n)
+    chunks = [chunk for chunk in np.array_split(order, folds) if len(chunk) > 0]
+
+    scores: dict[tuple[float, int], float] = {}
+    for eta in eta_grid:
+        for epochs in epoch_grid:
+            hits = 0
+            total = 0
+            for fold in chunks:
+                held = {int(i) for i in fold}
+                train_idx = [i for i in range(n) if i not in held]
+                model = DeltaAssociator(eta=eta, epochs=epochs, seed=seed).fit(
+                    source[train_idx], target[train_idx]
+                )
+                if model.diverged:
+                    # 发散 = 这个组合在这折上无效：记 0 分，而不是让它把平均值变成 NaN
+                    total += len(held)
+                    continue
+                predicted = model.transform(source[list(held)])
+                scores_fold = recall_at_k(predicted, target[list(held)], k=1, direction="cv").recall
+                hits += scores_fold * len(held)
+                total += len(held)
+            scores[(eta, epochs)] = hits / total
+
+    best = max(scores, key=lambda key: (scores[key], -key[0], -key[1]))
+    return best[0], best[1], scores

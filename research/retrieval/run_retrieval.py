@@ -37,8 +37,10 @@ from research.common.provenance import collect
 from .association import (
     DECAY_GRID,
     ETA_GRID,
+    DeltaAssociator,
     HebbianAssociator,
     evaluate_direction,
+    select_delta_hyperparameters,
     select_hyperparameters,
 )
 from .encode import CachedEmbedding, build_bus, encode_items
@@ -47,6 +49,7 @@ from .procedural import generate, split
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO_ROOT / "sweep_results" / "retrieval_procedural"
+DEFAULT_DELTA_OUT = REPO_ROOT / "sweep_results" / "retrieval_delta"
 DEFAULT_CACHE = REPO_ROOT / "data" / "embeddings" / "nomic-embed-text.json"
 
 __all__ = ["main", "run_seed"]
@@ -58,6 +61,7 @@ def run_seed(
     bus_dim: int,
     test_fraction: float,
     backend_factory,
+    associator_kind: str = "hebb",
     verbose: bool = True,
 ) -> dict:
     """跑一个种子，返回该种子的全部指标。"""
@@ -89,19 +93,52 @@ def run_seed(
     }
 
     # 验收线：在**训练集**上选参并拟合，再到**测试集**上评。
-    eta_t2i, decay_t2i, grid_t2i = select_hyperparameters(
-        train_repr.text_bus, train_repr.image_bus, eta_grid=ETA_GRID, decay_grid=DECAY_GRID
-    )
-    eta_i2t, decay_i2t, grid_i2t = select_hyperparameters(
-        train_repr.image_bus, train_repr.text_bus, eta_grid=ETA_GRID, decay_grid=DECAY_GRID
-    )
-
-    assoc_t2i = HebbianAssociator(eta=eta_t2i, decay=decay_t2i).fit(
-        train_repr.text_bus, train_repr.image_bus
-    )
-    assoc_i2t = HebbianAssociator(eta=eta_i2t, decay=decay_i2t).fit(
-        train_repr.image_bus, train_repr.text_bus
-    )
+    if associator_kind == "hebb":
+        eta_t2i, decay_t2i, grid_t2i = select_hyperparameters(
+            train_repr.text_bus, train_repr.image_bus, eta_grid=ETA_GRID, decay_grid=DECAY_GRID
+        )
+        eta_i2t, decay_i2t, grid_i2t = select_hyperparameters(
+            train_repr.image_bus, train_repr.text_bus, eta_grid=ETA_GRID, decay_grid=DECAY_GRID
+        )
+        assoc_t2i = HebbianAssociator(eta=eta_t2i, decay=decay_t2i).fit(
+            train_repr.text_bus, train_repr.image_bus
+        )
+        assoc_i2t = HebbianAssociator(eta=eta_i2t, decay=decay_i2t).fit(
+            train_repr.image_bus, train_repr.text_bus
+        )
+        hyper = {
+            "text2image": {"eta": eta_t2i, "decay": decay_t2i},
+            "image2text": {"eta": eta_i2t, "decay": decay_i2t},
+        }
+        loo_best = {"text2image": max(grid_t2i.values()), "image2text": max(grid_i2t.values())}
+    elif associator_kind == "delta":
+        eta_t2i, epochs_t2i, grid_t2i = select_delta_hyperparameters(
+            train_repr.text_bus, train_repr.image_bus, seed=seed
+        )
+        eta_i2t, epochs_i2t, grid_i2t = select_delta_hyperparameters(
+            train_repr.image_bus, train_repr.text_bus, seed=seed
+        )
+        assoc_t2i = DeltaAssociator(eta=eta_t2i, epochs=epochs_t2i, seed=seed).fit(
+            train_repr.text_bus, train_repr.image_bus
+        )
+        assoc_i2t = DeltaAssociator(eta=eta_i2t, epochs=epochs_i2t, seed=seed).fit(
+            train_repr.image_bus, train_repr.text_bus
+        )
+        hyper = {
+            "text2image": {
+                "eta": eta_t2i,
+                "epochs": epochs_t2i,
+                "diverged": bool(assoc_t2i.diverged),
+            },
+            "image2text": {
+                "eta": eta_i2t,
+                "epochs": epochs_i2t,
+                "diverged": bool(assoc_i2t.diverged),
+            },
+        }
+        loo_best = {"text2image": max(grid_t2i.values()), "image2text": max(grid_i2t.values())}
+    else:  # pragma: no cover - argparse 已限制取值
+        raise ValueError(f"未知的联想规则：{associator_kind!r}")
 
     forward = evaluate_direction(
         assoc_t2i, test_repr.text_bus, test_repr.image_bus, direction="text2image"
@@ -117,14 +154,9 @@ def run_seed(
         "chance_r1": 1.0 / len(test),
         "control_within": control_within,
         "bus_direct": direct,
-        "hyperparameters": {
-            "text2image": {"eta": eta_t2i, "decay": decay_t2i},
-            "image2text": {"eta": eta_i2t, "decay": decay_i2t},
-        },
-        "loo_best_r1": {
-            "text2image": max(grid_t2i.values()),
-            "image2text": max(grid_i2t.values()),
-        },
+        "associator": associator_kind,
+        "hyperparameters": hyper,
+        "selection_best_r1": loo_best,
         "bus_associated": {
             "text2image": forward,
             "image2text": backward,
@@ -148,12 +180,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seeds", default="0,1,2,3,4", help="逗号分隔的种子，默认 0..4")
     parser.add_argument("--bus-dim", type=int, default=128, help="总线维度，默认 128")
     parser.add_argument("--test-fraction", type=float, default=0.2, help="测试集比例，默认 0.2")
-    parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="记录输出目录")
+    parser.add_argument(
+        "--associator", choices=("hebb", "delta"), default="hebb", help="联想规则，默认 hebb"
+    )
+    parser.add_argument("--out", type=Path, default=None, help="记录输出目录")
     parser.add_argument("--cache", type=Path, default=DEFAULT_CACHE, help="token embedding 缓存")
     parser.add_argument("--model", default="nomic-embed-text", help="Ollama embedding 模型")
     args = parser.parse_args(argv)
 
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
+    if args.out is None:
+        args.out = DEFAULT_OUT if args.associator == "hebb" else DEFAULT_DELTA_OUT
     started = time.perf_counter()
     cache = CachedEmbedding(OllamaEmbedding(model=args.model), args.cache, model=args.model)
 
@@ -168,12 +205,14 @@ def main(argv: list[str] | None = None) -> int:
                 bus_dim=args.bus_dim,
                 test_fraction=args.test_fraction,
                 backend_factory=backend_factory,
+                associator_kind=args.associator,
             )
         )
         cache.save()
 
     summary = {
-        "experiment": "cross-modal retrieval, procedural paired set",
+        "experiment": f"cross-modal retrieval, procedural paired set ({args.associator})",
+        "associator": args.associator,
         "dataset": "procedural (4 shapes x 3 shades x 6 positions x 2 sizes = 144)",
         "bus_dim": args.bus_dim,
         "test_fraction": args.test_fraction,

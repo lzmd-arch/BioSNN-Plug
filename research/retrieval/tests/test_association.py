@@ -6,8 +6,10 @@ import numpy as np
 import pytest
 
 from research.retrieval.association import (
+    DeltaAssociator,
     HebbianAssociator,
     evaluate_direction,
+    select_delta_hyperparameters,
     select_hyperparameters,
 )
 
@@ -64,3 +66,38 @@ class TestSelectHyperparameters:
         target = rng.normal(size=(40, 5))
         _, _, grid = select_hyperparameters(source, target, eta_grid=(1.0,), decay_grid=(0.0,))
         assert grid[(1.0, 0.0)] < 0.2
+
+
+class TestDeltaAssociator:
+    def test_learns_a_linear_map_better_than_the_outer_product(self):
+        source, target = _linear_problem()
+        hebb = HebbianAssociator(eta=1.0, decay=0.0).fit(source, target)
+        delta = DeltaAssociator(eta=0.01, epochs=20, seed=0).fit(source, target)
+        hebb_r1 = evaluate_direction(hebb, source, target, direction="t2i")["r1"]
+        delta_r1 = evaluate_direction(delta, source, target, direction="t2i")["r1"]
+        assert delta_r1 >= hebb_r1
+
+    def test_unfitted_raises(self):
+        with pytest.raises(RuntimeError, match="fit"):
+            DeltaAssociator().transform(np.zeros((2, 3)))
+
+    def test_rejects_zero_epochs(self):
+        with pytest.raises(ValueError, match="epochs"):
+            DeltaAssociator(epochs=0).fit(np.zeros((2, 2)), np.zeros((2, 2)))
+
+    def test_cv_selection_returns_a_grid_point(self):
+        source, target = _linear_problem()
+        eta, epochs, grid = select_delta_hyperparameters(
+            source, target, eta_grid=(0.01,), epoch_grid=(1, 3), folds=3
+        )
+        assert (eta, epochs) in grid
+        assert set(grid) == {(0.01, 1), (0.01, 3)}
+
+
+class TestDeltaDivergence:
+    def test_a_huge_step_is_flagged_not_silently_nan(self):
+        """大步长会发散；发散必须被标出来，否则 NaN 会顺着选参污染平均值。"""
+        source, target = _linear_problem()
+        model = DeltaAssociator(eta=1e6, epochs=5, seed=0).fit(source, target)
+        assert model.diverged
+        assert not np.all(np.isfinite(model.weight))

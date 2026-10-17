@@ -12,7 +12,7 @@ The pre-registration is at
 [`sweep_results/retrieval_procedural_prereg.md`](../../sweep_results/retrieval_procedural_prereg.md),
 written **before the data**. Read it before reading the result.
 
-## Current result (2026-10-17, five seeds)
+## Round one: outer-product Hebbian (2026-10-17, five seeds)
 
 **The bar is not met. R@1 = 0.141** (0.121–0.172 across seeds), chance 0.034;
 **R@5 = 0.528**.
@@ -25,6 +25,31 @@ written **before the data**. Read it before reading the result.
 
 R@5 reaching 0.528 while R@1 sits at 0.141 says the association **does** carry cross-modal
 information, but the top of the ranking is diffuse: the correct item is often nearby, rarely first.
+
+## Round two: the delta rule (2026-10-17)
+
+Pre-registration: [`retrieval_delta_prereg.md`](../../sweep_results/retrieval_delta_prereg.md).
+Same data, split, seeds and encoders; only the association rule changes.
+
+| Association rule | R@1 (mean of five seeds) | R@5 |
+| :--- | ---: | ---: |
+| Outer-product Hebbian (round one) | 0.141 | 0.528 |
+| **delta (Widrow–Hoff, this round)** | **0.359** | **0.845** |
+
+**Still short of 50%.** But R@5 rose from 0.528 to 0.845 and R@1 from 0.141 to 0.359, which
+confirms the diagnosis from round one: the outer-product sum only averages training targets
+weighted by similarity and has nothing to suppress near neighbours; error correction does tighten
+the top of the ranking.
+
+⚠️ **delta is not unsupervised Hebbian**: the target `v` in the error term is a teacher signal
+supplied during paired training, so this is a **supervised local rule** — each synapse uses only
+its own pre- and post-activity plus an error, with no chain rule. That boundary is not negotiable.
+
+⚠️ **Large step sizes diverge**: some grid points at η=0.1 overflow to inf/NaN. Divergence is now
+flagged explicitly and scored zero in cross-validation, so it cannot poison the average into NaN.
+The first version lacked that step and the log carried
+`RuntimeWarning: invalid value encountered` — **that warning is not noise; it is a selection
+being contaminated by NaN**.
 
 ## One finding that has to be recorded: this rule has no tunable hyperparameter
 
