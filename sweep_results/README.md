@@ -141,6 +141,7 @@
 | 目录 | 内容 |
 | :--- | :--- |
 | `rstdp_spiking/td_seeded/`、`pop_*_seeded/` | **可复现的记录**（训练回合已播种，见 [`rstdp_spiking_seeding_fix.md`](rstdp_spiking_seeding_fix.md)） |
+| `rstdp_spiking/{td,pop_gradient,pop_opg16}_10seeds/` | **10 种子对照**（唯一可用于比较的三档）：中位数 50.4 / 55.0 / 37.1，区间全部重叠，均 0/10 |
 | `rstdp_spiking/{pop,pop_gradient,pop_signed,pop_nonorm,pop_signed_nonorm,pop_opg16,pop_homeo005,pop_opg16_signed}/` | ⚠️ **2026-10-18 之前产生、训练未播种，重跑得不到同一个数——不得引用**；仅留作历史，可复现版本见同名的 `*_seeded/` 目录 |
 | `rstdp_spiking/pop/`、`pop_gradient/`、`pop_signed/`、`pop_nonorm/`、`pop_signed_nonorm/` | TD-LTP 群体 Critic 的五组消融（各 5 种子 × 800 回合）：读出、后因子、行归一化逐项开关 |
 | `rstdp_spiking/pop_opg16/` | 群体 Critic 的**工作点**（`bias=0, gain=16`）：5 种子 × 800 回合，均值 64.8；预注册见 [`rstdp_spiking_operating_point_prereg.md`](rstdp_spiking_operating_point_prereg.md) |
@@ -151,7 +152,7 @@
 评测曲线 `eval_scores` 与逐回合回报 `returns`。口径与边界见
 [`research/rstdp_spiking/README.md`](../research/rstdp_spiking/README.md)。
 
-⚠️ **这不是验收结果**，且**上面 2026-10-18 之前的数字已作废**：训练回合曾漏了环境种子，同一配置重跑得不到同一个数。修复后的 5 种子为线性 TD 51.0、群体（工作点）40.0、群体+稳态 53.7，全部 0/5；排序与旧结论相反。速率版（`step14_confirm`）仍是唯一通过验收的实现。
+⚠️ **这不是验收结果**，且**上面 2026-10-18 之前的数字已作废**：训练回合曾漏了环境种子，同一配置重跑得不到同一个数。修复后 10 种子对照：线性 TD 中位数 50.4、群体默认 55.0、工作点 37.1，**区间全部重叠、均 0/10**——三个主臂分不开，也没有一条越过 200。速率版（`step14_confirm`）仍是唯一通过验收的实现。
 
 ### 批次日志（一个 `.log` 覆盖多个目录）
 

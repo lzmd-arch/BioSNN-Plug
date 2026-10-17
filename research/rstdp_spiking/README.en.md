@@ -50,6 +50,27 @@ seeds and overlapping intervals.
 (2) "removing normalisation is better" (60.5 without vs 82.2 with); (3) "the `b=0, g=16` operating
 point is better" (40.0, below the original default).
 
+### Ten-seed comparison: the three main arms are indistinguishable (2026-10-18)
+
+| Configuration | Median | IQR | Min–Max | Mean | Over 200 |
+| :--- | ---: | :--- | :--- | ---: | ---: |
+| linear TD (1200 episodes) | 50.4 | 12.9 – 128.9 | 9.3 – 156.9 | 64.8 | 0/10 |
+| population, `gradient` + uniform + norm (default) | **55.0** | 36.0 – 65.6 | 23.3 – 147.5 | 59.8 | 0/10 |
+| population, operating point `b=0, g=16` | 37.1 | 29.7 – 54.7 | 9.5 – 67.8 | 40.1 | 0/10 |
+
+**Conclusion: all three intervals overlap, no configuration is distinguishable, and none reaches
+200.**
+
+* The linear TD median (50.4) cannot be told apart from the population default (55.0); its interval
+  is in fact the **widest** (12.9–128.9), meaning this critic behaves very unstably on this harness.
+* The `b=0, g=16` operating point (37.1) sits below the default (55.0) with overlapping intervals —
+  the earlier "the operating point is better" claim fails under both readings.
+* The **maxima** (156.9 / 147.5 / 67.8) show how unstable the task is with this hyperparameter set:
+  occasionally ~150, most of the time 10–60.
+
+⚠️ **Every number and mechanism explanation in the earlier (2026-10-17) sections below came from
+unseeded training**; they are kept only to record what was thought at the time, not as evidence.
+
 ## Historical result (2026-10-17, five seeds, 1200 episodes each, **unseeded, void**)
 
 **It learns, but unstably: only 1 of 5 seeds crosses the 200-step bar.**
