@@ -26,6 +26,30 @@ the original default configuration came out on top). The sections below are kept
 numbers and the conclusions drawn from them **no longer hold**. New conclusions rest on the
 10-seed comparison at the end of this page.
 
+### Records after the fix (reproducible, 2026-10-18)
+
+| Configuration | Mean | Per seed |
+| :--- | ---: | :--- |
+| population, `gradient` + uniform + norm (original default `b=0.4, g=8`) | **82.2** | 65.6 / 81.3 / 55.1 / 61.3 / 147.5 |
+| population, `gradient` + uniform + no norm | 60.5 | 44.6 / 69.0 / 73.9 / 58.1 / 56.9 |
+| population + unit homeostasis | 53.7 | 36.0 / 101.8 / 69.8 / 40.1 / 20.6 |
+| linear TD (1200 episodes) | 51.0 | 61.5 / 156.9 / 17.3 / 9.3 / 9.9 |
+| population, operating point `b=0, g=16` | 40.0 | 64.6 / 54.7 / 35.2 / 15.8 / 29.7 |
+| population, `rate` + uniform + norm | 37.2 | 9.2 / 80.9 / 64.0 / 20.4 / 11.7 |
+| population, fixed input subspace `p=0.5` | 37.0 | 79.1 / 51.5 / 30.9 / 9.2 / 14.1 |
+| population, signed readout | 27.7 | 71.8 / 9.2 / 22.9 / 25.4 / 9.3 |
+| population, operating point + signed readout | 21.2 | 9.2 / 9.2 / 26.5 / 51.5 / 9.4 |
+| population, signed + no norm | 17.2 | 9.5 / 9.2 / 49.0 / 9.2 / 9.3 |
+
+⚠️ **The ranking of these means is not trustworthy**: individual seeds range from 17 to 157, and the
+standard error at five seeds is the same order as the gaps between configurations. The table exists
+to show which old conclusions reversed, not to rank configurations; a meaningful comparison needs ten
+seeds and overlapping intervals.
+
+**Three old conclusions refuted**: (1) "linear TD is the only critic that learns" (51.0, 0/5);
+(2) "removing normalisation is better" (60.5 without vs 82.2 with); (3) "the `b=0, g=16` operating
+point is better" (40.0, below the original default).
+
 ## Historical result (2026-10-17, five seeds, 1200 episodes each, **unseeded, void**)
 
 **It learns, but unstably: only 1 of 5 seeds crosses the 200-step bar.**
