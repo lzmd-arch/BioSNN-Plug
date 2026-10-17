@@ -446,6 +446,21 @@ paper, and it forced one licence onto files that have two different native ones.
     leaves the record as a **draft, invisible to the public** — so the script that did this
     re-publishes on every failure path. Editing metadata does **not** mint a new DOI; replacing
     files would.
+  - **v0.2 published 2026-10-17 — this time the fix *was* a new version.** Version DOI
+    **`10.5281/zenodo.23428426`**; the concept DOI is unchanged (`10.5281/zenodo.23388708`), and
+    v0.1 keeps its own DOI and its frozen attachments. What changed is the point: last time only
+    the *description* had gone stale, so metadata sufficed; this time the **attachments** were what
+    needed updating, and a published record's files cannot be replaced. New attachments are the
+    current `sweep_results/README.md` (23,645 B) and `research/eprop/README.en.md` (37,245 B),
+    **verified byte-identical from Zenodo's side** after upload.
+    Three measurements landed between the versions, and the attached index now carries all three:
+    the W2 official arm moving to LIF (0.8889), the matched-budget BPTT control (0.9630, a 7.41-point
+    gap), and the six-size resource sweep. **The paper is deliberately not in this deposit** — it is
+    record B, planned for 2026-10-22.
+    ⚠️ **Two version numbers, one distinction worth keeping straight**: v0.1's metadata note and
+    v0.2's contents say different things about the W2 headline, and that is correct — v0.1 is a
+    timestamp of 2026-10-15, v0.2 of 2026-10-17. A reader who lands on v0.1 should follow the note;
+    a reader on v0.2 has the current numbers.
   - ⚠️ **A private URL in a tracked file fails CI, and local checks will not tell you.**
     The intermediate commit `3d5c3b0` recorded the *draft* page (`https://zenodo.org/deposit/23388709`)
     in this file; an unsubmitted deposition is visible only to its owner, so lychee got 403/404 and the
