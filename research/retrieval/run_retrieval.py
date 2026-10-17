@@ -36,6 +36,7 @@ from research.common.provenance import collect
 
 from .association import (
     DECAY_GRID,
+    DELTA_EPOCH_GRID,
     ETA_GRID,
     CompetitiveAssociator,
     DeltaAssociator,
@@ -83,6 +84,8 @@ def run_seed(
     train_items: list | None = None,
     test_items: list | None = None,
     precomputed: dict | None = None,
+    delta_epoch_grid: tuple[int, ...] | None = None,
+    cv_folds: int = 5,
     verbose: bool = True,
 ) -> dict:
     """跑一个种子，返回该种子的全部指标。"""
@@ -150,11 +153,12 @@ def run_seed(
         }
         loo_best = {"text2image": max(grid_t2i.values()), "image2text": max(grid_i2t.values())}
     elif associator_kind == "delta":
+        epoch_grid = delta_epoch_grid or DELTA_EPOCH_GRID
         eta_t2i, epochs_t2i, grid_t2i = select_delta_hyperparameters(
-            train_text, train_image, seed=seed
+            train_text, train_image, seed=seed, epoch_grid=epoch_grid, folds=cv_folds
         )
         eta_i2t, epochs_i2t, grid_i2t = select_delta_hyperparameters(
-            train_image, train_text, seed=seed
+            train_image, train_text, seed=seed, epoch_grid=epoch_grid, folds=cv_folds
         )
         assoc_t2i = DeltaAssociator(eta=eta_t2i, epochs=epochs_t2i, seed=seed).fit(
             train_text, train_image
@@ -312,6 +316,12 @@ def main(argv: list[str] | None = None) -> int:
         help="spikes=现有插件编码；frozen=冻结预训练前端（仅 Flickr8k）",
     )
     parser.add_argument("--out", type=Path, default=None, help="记录输出目录")
+    parser.add_argument(
+        "--delta-epochs",
+        default=None,
+        help="覆盖 delta 的 epochs 网格，逗号分隔（真实数据上要收窄，见第十轮预注册）",
+    )
+    parser.add_argument("--cv-folds", type=int, default=5, help="交叉验证折数，默认 5")
     parser.add_argument("--cache", type=Path, default=DEFAULT_CACHE, help="token embedding 缓存")
     parser.add_argument("--model", default="nomic-embed-text", help="Ollama embedding 模型")
     args = parser.parse_args(argv)
@@ -381,6 +391,12 @@ def main(argv: list[str] | None = None) -> int:
                 train_items=train_items,
                 test_items=test_items,
                 precomputed=precomputed,
+                delta_epoch_grid=(
+                    tuple(int(x) for x in args.delta_epochs.split(","))
+                    if args.delta_epochs
+                    else None
+                ),
+                cv_folds=args.cv_folds,
                 associator_kind=args.associator,
                 representation=args.representation,
             )

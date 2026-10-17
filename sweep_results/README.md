@@ -111,6 +111,7 @@
 | `retrieval_competitive/` | 第七轮：竞争联想记忆（赢者通吃）；[`retrieval_competitive_prereg.md`](retrieval_competitive_prereg.md) |
 | `retrieval_flickr8k/spikes_knn/` | 第八轮：**真实数据**（Flickr8k 官方切分），现有插件编码，kNN |
 | `retrieval_flickr8k/frozen_ridge/`、`frozen_knn/` | 第九轮：**冻结 ResNet18 + 整句 nomic**（未联合训练），线性上界与 kNN |
+| `retrieval_flickr8k/frozen_delta/` | 第十轮：同一份冻结特征上的 delta（**欠训练**：epochs∈{1,3}、3 折、单种子），用于算恢复率；预注册见 [`retrieval_recovery_prereg.md`](retrieval_recovery_prereg.md) |
 
 每个 `seedN.json` 的键：
 
@@ -130,6 +131,8 @@
 ⚠️ **结论不是「达标」**：唯一越过 50% 的是 kNN，而它不学习；让竞争记忆逼近它需要 M ≈ 训练样本数，那就是**记忆化**。在程序生成配对集上，这条 50% 的线可以被平凡地满足，因此它不构成「局部学习成立」的证据。
 
 **真实数据（Flickr8k，官方切分，随机 0.1%）**：现有插件编码的 kNN = **0.002**（随机水平）；换成冻结 ResNet18 + 整句 nomic（未联合训练）后，线性上界 **0.076**、kNN **0.052**。**要在这条数据上到 50%，只能靠联合训练过的跨模态编码器（CLIP 一类），而那时对齐由预训练完成、局部规则无事可做——这条验收线在这里失去了区分力。** 详见 `research/retrieval/README.md`。
+
+**第十轮把标准重述为「恢复率」**（局部规则拿回线性上界的比例）：合成集 **0.752**、Flickr8k 冻结前端 **0.673**——两个数据集都过 50%，这是九轮里第一个跨数据集稳定的结论。⚠️ 绝对 R@1 仍然标 ❌，两者并列；Flickr8k 上的 delta 欠训练，0.673 是下界。
 
 ### 批次日志（一个 `.log` 覆盖多个目录）
 

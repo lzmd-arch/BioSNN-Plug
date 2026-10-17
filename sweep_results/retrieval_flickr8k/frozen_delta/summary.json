@@ -1,0 +1,62 @@
+{
+  "experiment": "cross-modal retrieval, procedural paired set (delta, bus@128)",
+  "associator": "delta",
+  "dataset": "procedural (4 shapes x 3 shades x 6 positions x 2 sizes = 144)",
+  "bus_dim": 128,
+  "test_fraction": 0.2,
+  "embedding_model": "nomic-embed-text",
+  "seeds": [
+    0
+  ],
+  "mean_r1": 0.051500000000000004,
+  "mean_r5": 0.179,
+  "mean_chance": 0.001,
+  "per_seed": [
+    {
+      "seed": 0,
+      "n_train": 6000,
+      "n_test": 1000,
+      "chance_r1": 0.001,
+      "control_within": {
+        "text": 1.0,
+        "image": 1.0
+      },
+      "bus_direct": {
+        "text2image": null,
+        "image2text": null,
+        "note": "维度不同，直接比较无定义"
+      },
+      "associator": "delta",
+      "representation": "bus",
+      "hyperparameters": {
+        "text2image": {
+          "eta": 0.1,
+          "epochs": 3,
+          "diverged": false
+        },
+        "image2text": {
+          "eta": 0.1,
+          "epochs": 3,
+          "diverged": false
+        }
+      },
+      "selection_best_r1": {
+        "text2image": 0.0325,
+        "image2text": 0.026833333333333334
+      },
+      "bus_associated": {
+        "text2image": {
+          "r1": 0.047,
+          "r5": 0.17
+        },
+        "image2text": {
+          "r1": 0.056,
+          "r5": 0.188
+        },
+        "mean_r1": 0.051500000000000004,
+        "mean_r5": 0.179
+      }
+    }
+  ],
+  "repro": "```text\n实验名称：检索线 W4：跨模态 R@K（程序生成配对集）\n日期：2026-10-17 16:59:39 中国标准时间\nGit commit：1cf604f3f88ed3249a0485f27b793d174cfc6dc3\nGit 状态：有 3 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120\n随机种子：0\n依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57\n运行命令：run_retrieval.py --dataset flickr8k --frontend frozen --associator delta --delta-epochs 1,3 --cv-folds 3 --seeds 0 --out sweep_results/retrieval_flickr8k/frozen_delta\n耗时：4422.1 s\n备注：bus_dim=128\n备注：embedding=nomic-embed-text（冻结前端）\n备注：零联想对照与联想结果分开报；见预注册\n```"
+}
