@@ -216,5 +216,5 @@
       }
     }
   ],
-  "repro": "```text\n实验名称：检索线 W4：跨模态 R@K（程序生成配对集）\n日期：2026-10-17 11:20:30 中国标准时间\nGit commit：8c17688546045aa0e966e1783c93ca7cfbd0a708\nGit 状态：有 14 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57\n运行命令：run_retrieval.py --seeds 0,1,2,3,4\n耗时：8.6 s\n备注：bus_dim=128\n备注：embedding=nomic-embed-text（冻结前端）\n备注：零联想对照与联想结果分开报；见预注册\n```"
+  "repro": "```text\n实验名称：检索线 W4：跨模态 R@K（程序生成配对集）\n日期：2026-10-17 11:21:08 中国标准时间\nGit commit：fedd7b8286edfd7ec771a8fe5bdafdbe8aa8a30f\nGit 状态：有 1 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57\n运行命令：run_retrieval.py --seeds 0,1,2,3,4\n耗时：8.4 s\n备注：bus_dim=128\n备注：embedding=nomic-embed-text（冻结前端）\n备注：零联想对照与联想结果分开报；见预注册\n```"
 }
