@@ -167,7 +167,7 @@ recovery = (R_local − R_zero) / (R_upper − R_zero)
 | Dataset | local (delta) | linear ceiling (ridge) | zero association | **recovery** |
 | :--- | ---: | ---: | ---: | ---: |
 | procedural paired set (bus@128) | 0.359 | 0.466 | 0.034 | **0.752** |
-| Flickr8k (frozen ResNet + nomic) | 0.052 | 0.076 | 0.001 | **0.673** |
+| Flickr8k (frozen ResNet + nomic, **full grid**) | 0.060 | 0.076 | 0.001 | **0.787** |
 
 **Both datasets clear 50%.** This is the first cross-dataset-stable conclusion in nine rounds: a
 purely local, teacher-signalled rule recovers two thirds to three quarters of what a linear
@@ -176,8 +176,10 @@ upper bound achieves.
 ⚠️ Three caveats that must be read together:
 1. **This is not a quiet loosening of the old bar.** The absolute R@1 stays marked ❌ and is
    reported alongside; a high recovery rate does not change that verdict.
-2. **delta on Flickr8k is under-trained** (`epochs ∈ {1,3}`, 3 folds, one seed — the compute cap
-   declared in the pre-registration), so 0.673 is a **lower bound**.
+2. **delta on Flickr8k now has the full grid** (`eta ∈ {0.001,0.01,0.1} × epochs ∈ {5,20}`, 5 folds):
+   R@1 rises from 0.052 (under-trained) to **0.060**, recovery **0.787**. The earlier 0.673 was a
+   **lower bound** from the truncated grid and is superseded; the two datasets' recovery rates now
+   sit in the same band (75%–79%).
 3. **The ceiling itself is low** (7.6%). Recovery answers "how far the local rule is from the
    linear ceiling"; it does **not** answer "is this front end good enough" — that remains open.
 

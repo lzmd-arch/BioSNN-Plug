@@ -112,6 +112,7 @@
 | `retrieval_flickr8k/spikes_knn/` | 第八轮：**真实数据**（Flickr8k 官方切分），现有插件编码，kNN |
 | `retrieval_flickr8k/frozen_ridge/`、`frozen_knn/` | 第九轮：**冻结 ResNet18 + 整句 nomic**（未联合训练），线性上界与 kNN |
 | `retrieval_flickr8k/frozen_delta/` | 第十轮：同一份冻结特征上的 delta（**欠训练**：epochs∈{1,3}、3 折、单种子），用于算恢复率；预注册见 [`retrieval_recovery_prereg.md`](retrieval_recovery_prereg.md) |
+| `retrieval_flickr8k/frozen_delta_full/` | 第十轮补跑：**完整网格**（eta∈{0.001,0.01,0.1} × epochs∈{5,20}、5 折）→ R@1 0.060、恢复率 **0.787**，取代截断网格的 0.673 |
 | `retrieval_frontend_probe/` | 第十一轮：**前端验收口径**——caption 内容词的线性探针（图像侧 AUC 中位数 0.790、文本侧自查 1.000）；[`retrieval_frontend_probe_prereg.md`](retrieval_frontend_probe_prereg.md) |
 
 每个 `seedN.json` 的键：
@@ -133,7 +134,7 @@
 
 **真实数据（Flickr8k，官方切分，随机 0.1%）**：现有插件编码的 kNN = **0.002**（随机水平）；换成冻结 ResNet18 + 整句 nomic（未联合训练）后，线性上界 **0.076**、kNN **0.052**。**要在这条数据上到 50%，只能靠联合训练过的跨模态编码器（CLIP 一类），而那时对齐由预训练完成、局部规则无事可做——这条验收线在这里失去了区分力。** 详见 `research/retrieval/README.md`。
 
-**第十轮把标准重述为「恢复率」**（局部规则拿回线性上界的比例）：合成集 **0.752**、Flickr8k 冻结前端 **0.673**——两个数据集都过 50%，这是九轮里第一个跨数据集稳定的结论。⚠️ 绝对 R@1 仍然标 ❌，两者并列；Flickr8k 上的 delta 欠训练，0.673 是下界。
+**第十轮把标准重述为「恢复率」**（局部规则拿回线性上界的比例）：合成集 **0.752**、Flickr8k 冻结前端 **0.787**（完整网格；截断网格时是 0.673，为下界）——两个数据集都过 50%，落在同一区间（75%–79%）。⚠️ 绝对 R@1 仍然标 ❌，两者并列。
 
 ### 批次日志（一个 `.log` 覆盖多个目录）
 
