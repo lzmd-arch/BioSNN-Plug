@@ -8,14 +8,18 @@
 
 | 有 | 没有 |
 | :--- | :--- |
-| `neurons.py` LIF 层 | 群体 Critic（TD-LTP） |
-| `plasticity.py` **带真实 Δt 的成对 STDP** + 资格痕迹 | CartPole 训练/评测入口 |
-| `encoding.py` 群体编码 + 脉冲编码 | 任何**训练结果**——本目录跑不出「多少步」这个数 |
-| `actor.py` 脉冲 R-STDP Actor | README（按讨论，随第三阶段一起写） |
-| `tests/` 31 条，全过 | |
+| `neurons.py` LIF 层 | **TD-LTP 群体 Critic**（现在接的是线性 TD(0) Critic） |
+| `plasticity.py` **带真实 Δt 的成对 STDP** + 资格痕迹 | 多层堆叠 |
+| `encoding.py` 群体编码 + 脉冲编码 | 系统超参扫描 |
+| `actor.py` 脉冲 R-STDP Actor | |
+| `critic.py` 线性 TD(0) Critic | |
+| `cartpole.py` 训练 / 冻结随机流评测入口 + 结果 | |
+| `README.md`（三语） | |
+| `tests/` 单元测试，全过 | |
 
 **计划书 §七 第三阶段**写着这条任务与它的评测协议（**冻结随机流**），见修订记录 ⑪。
-第一阶段到此为止，`research/rstdp/` 的速率型实现仍然是唯一的验收对象。
+`research/rstdp/` 的速率型实现仍是**唯一通过验收**的那一个（中位数 237.8 步）；
+本目录的脉冲实现能学但**不稳定**——5 个种子里只有 1 个越过 200 步，详见 README。
 
 ## 为什么留着它而不是等第三阶段从头写
 
