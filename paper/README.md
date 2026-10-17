@@ -931,3 +931,7 @@ convention. This paper is about that gap.` — and `gap` hands directly to the n
 The general lesson, recorded because it has now cost two rounds: **text extracted from a PDF
 truncates at page breaks and degrades at glyph level, so a reported truncation is a hypothesis about
 the source, not evidence about it.** `grep` the source first; fix only what the source shows.
+
+**Build of record:** commit `14808e2`, 20 pages, tectonic reports **zero** overfull boxes,
+sha256 `4f011fedae…`. The hash identifies *this* build; it is not a reproducibility claim --- the PDF
+embeds a creation date, so a rebuild will differ byte for byte.
