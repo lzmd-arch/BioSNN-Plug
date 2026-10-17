@@ -156,6 +156,46 @@ The inference holds: with a `gradient` post-factor the trace is always non-negat
 `σ' > 0`) and the readout is all positive, so their product pushes every unit's weights toward the
 **same non-negative direction**, and the units converge.
 
+### Unit-level homeostasis: units come alive, homogenisation stays (same day)
+
+Pre-registration:
+[`rstdp_spiking_homeostasis_prereg.md`](../../sweep_results/rstdp_spiking_homeostasis_prereg.md).
+
+Rule: `b_j ← b_j + β(y_j − y*)`, using **only that unit's own activity and a constant target** —
+it reads no other unit and does not pass through `δ` (homeostasis is a second local rule running
+in parallel with TD-LTP).
+
+Screening (one seed, 300 episodes): `y*=0.05, β=0.01` was best (69.0); the others gave 30.6 / 26.9 /
+25.7. ⚠️ **Screening pointed the wrong way**: at the same 300 episodes the non-homeostatic
+configuration scored **123.4**, so homeostasis looked worse; by 800 episodes the non-homeostatic one
+falls to 64.8 while the homeostatic one holds at 69.4 — **the one without homeostasis degrades over
+time, the one with it does not**.
+
+Confirmation (five seeds × 800, `y*=0.05, β=0.01`): **mean 69.4**, per seed 72.9 / 87.1 / 57.8 /
+52.4 / 76.6, against 64.8 (33.2–89.4) without. **The worst seed rises from 33.2 to 52.4 and all five
+are ≥ 52** — markedly more stable. **Still 0/5.**
+
+### The mechanism is not broken: activity level is not the cause of homogenisation
+
+Same measurement (800 episodes):
+
+| Quantity | No homeostasis | Homeostasis |
+| :--- | ---: | ---: |
+| unit-to-unit cosine | +0.823 | **+0.778** |
+| effective rank | 0.025 | **0.024** |
+| mean activity | 0.003 | **0.089** |
+| `V` range | 14.4 – 17.6 | **11.7 – 202.4** |
+| mean unit threshold | 0 | −5.15 |
+
+**The units are pulled back into a working range (0.003 → 0.089) and the weights converge all the
+same (cosine +0.78, effective rank 0.024).** Silence is therefore not the cause of homogenisation —
+the common-mode push comes from the sign structure of the trace and is independent of activity
+level.
+
+⚠️ **`V` hit the `value_scale=200` ceiling** (202.4 measured). The pre-registration says: record
+that configuration as failed and **do not secretly change the scale**. This also explains why the
+score did not follow: δ is contaminated by a clipped signal.
+
 ### Signed readout: retested at the fixed operating point, still harmful
 
 The earlier 14.3 came from the **saturated** operating point, where the units barely moved and the

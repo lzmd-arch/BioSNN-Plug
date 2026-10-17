@@ -79,6 +79,9 @@ def train_and_measure(
     gain: float = 16.0,
     critic_rate: float = 0.1,
     features: int = 64,
+    homeostasis: bool = False,
+    homeostatic_rate: float = 0.01,
+    activity_target: float = 0.1,
 ) -> dict:
     """训练一个群体 Critic，返回训练前后的同质化度量。"""
     import gymnasium
@@ -96,6 +99,9 @@ def train_and_measure(
         learning_rate=critic_rate,
         trace_post_factor="gradient",
         normalize=False,
+        homeostasis=homeostasis,
+        homeostatic_rate=homeostatic_rate,
+        activity_target=activity_target,
         generator=generator,
     )
 
@@ -142,6 +148,7 @@ def train_and_measure(
         "activity_correlation": _activity_correlation(torch.stack(activities)),
         "value_range": (float(min(values)), float(max(values))),
         "mean_activity": float(torch.stack(activities).mean()),
+        "mean_threshold": float(critic.bias_per_unit.mean() if homeostasis else critic.bias),
     }
 
 
@@ -149,14 +156,33 @@ def measure(**kwargs) -> dict:
     return train_and_measure(**kwargs)
 
 
-def main() -> int:
-    row = train_and_measure()
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="群体 Critic 的同质化度量")
+    parser.add_argument("--homeostasis", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--homeostatic-rate", type=float, default=0.01)
+    parser.add_argument("--activity-target", type=float, default=0.1)
+    parser.add_argument("--bias", type=float, default=0.0)
+    parser.add_argument("--gain", type=float, default=16.0)
+    parser.add_argument("--episodes", type=int, default=800)
+    args = parser.parse_args(argv)
+
+    row = train_and_measure(
+        episodes=args.episodes,
+        bias=args.bias,
+        gain=args.gain,
+        homeostasis=args.homeostasis,
+        homeostatic_rate=args.homeostatic_rate,
+        activity_target=args.activity_target,
+    )
     print(
         f"单元间余弦 {row['before']['cosine']:+.4f} → {row['after']['cosine']:+.4f}   "
         f"有效秩 {row['before']['rank']:.3f} → {row['after']['rank']:.3f}   "
         f"活动相关 {row['activity_correlation']:+.3f}   "
         f"平均活动 {row['mean_activity']:.3f}   "
-        f"V∈[{row['value_range'][0]:.1f}, {row['value_range'][1]:.1f}]"
+        f"V∈[{row['value_range'][0]:.1f}, {row['value_range'][1]:.1f}]   "
+        f"阈值 {row['mean_threshold']:+.2f}"
     )
     return 0
 

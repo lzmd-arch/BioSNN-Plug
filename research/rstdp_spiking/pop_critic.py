@@ -56,6 +56,16 @@ class PopulationCritic:
     `bias=0, gain=16` 把 `corr(V,G)` 从 −0.50 提到 +0.70。默认值保留原样是为了不悄悄改变
     任何既有结果；要用好的那组请显式传参。
 
+    ## 稳态（homeostasis，可选）
+
+    ``b_j ← b_j + β(y_j − y*)``：**只用该单元自己的活动与一个常数目标**，不读别单元、
+    不经过 ``δ``。它是与 TD-LTP **并行的另一条局部规则**，不是 TD 的一部分。
+
+    实测（800 回合）：把平均活动从 0.003 拉回 0.089、最差种子从 33.2 抬到 52.4，
+    **但没有打破权重同质化**（单元间余弦 +0.82 → +0.78，有效秩 0.025 → 0.024）。
+    即「单元静默」不是同质化的原因；共模推力来自痕迹的符号结构。
+    默认 **关闭**——它是实验性规则，不改任何既有结果。
+
     Attributes:
         weights: ``(n_units, n_features)``，每行是一个单元的 ``w_j``。
         trace: 同形状的资格痕迹。
@@ -77,6 +87,9 @@ class PopulationCritic:
         trace_post_factor: str = "rate",
         readout: str = "uniform",
         normalize: bool = True,
+        homeostasis: bool = False,
+        homeostatic_rate: float = 0.01,
+        activity_target: float = 0.1,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
     ) -> None:
@@ -110,6 +123,15 @@ class PopulationCritic:
         self.trace_post_factor = trace_post_factor
         self.readout_kind = readout
         self.normalize = bool(normalize)
+        self.homeostasis = bool(homeostasis)
+        self.homeostatic_rate = float(homeostatic_rate)
+        self.activity_target = float(activity_target)
+        if homeostasis and not 0.0 < activity_target < 1.0:
+            raise ValueError(f"activity_target 应在 (0, 1) 内，收到 {activity_target}。")
+        # 稳态需要**每个单元自己的**阈值，所以 bias 扩成向量（只在开启时用）
+        self.bias_per_unit = torch.full((n_units,), float(bias), device=device)
+        if homeostasis:
+            self.bias_per_unit = torch.full((n_units,), float(bias), device=device)
 
         gen = generator or torch.Generator(device=device)
         weights = torch.randn(n_units, n_features, generator=gen, device=device)
@@ -130,7 +152,8 @@ class PopulationCritic:
     def rates(self, features: torch.Tensor) -> torch.Tensor:
         """``(n_units,)`` 的单元活动。"""
         x = features.detach().flatten()
-        return torch.sigmoid(self.gain * (self.weights @ x - self.bias))
+        thresholds = self.bias_per_unit if self.homeostasis else self.bias
+        return torch.sigmoid(self.gain * (self.weights @ x - thresholds))
 
     def _post_factor(self, y: torch.Tensor) -> torch.Tensor:
         """痕迹的第二因子：``rate`` 用发放率，``gradient`` 用 σ 对输入的导数。"""
@@ -166,6 +189,10 @@ class PopulationCritic:
             norms = self.weights.norm(dim=1, keepdim=True) + 1e-12
             self.weights.div_(norms)
         self.out_bias.add_(self.bias_learning_rate * delta)
+        if self.homeostasis:
+            # 稳态：只用**该单元自己的**活动与一个常数目标，不读别单元、不经过 δ。
+            # y_j > y* ⇒ 抬高阈值（降活动）；反之降低。
+            self.bias_per_unit.add_(self.homeostatic_rate * (y - self.activity_target))
         return delta
 
     def reset_trace(self) -> None:

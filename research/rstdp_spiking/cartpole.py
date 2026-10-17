@@ -159,6 +159,9 @@ def train(
     pop_units: int = 64,
     pop_bias: float = 0.4,
     pop_gain: float = 8.0,
+    pop_homeostasis: bool = False,
+    pop_homeostatic_rate: float = 0.01,
+    pop_activity_target: float = 0.1,
     warmup: int,
     device: torch.device,
 ) -> TrainResult:
@@ -191,6 +194,9 @@ def train(
             trace_post_factor=pop_post,
             readout=pop_readout,
             normalize=pop_normalize,
+            homeostasis=pop_homeostasis,
+            homeostatic_rate=pop_homeostatic_rate,
+            activity_target=pop_activity_target,
             generator=generator,
             device=device,
         )
@@ -275,6 +281,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--pop-bias", type=float, default=0.4, help="群体 Critic 的单元阈值 b")
     parser.add_argument("--pop-gain", type=float, default=8.0, help="群体 Critic 的增益 g")
     parser.add_argument(
+        "--pop-homeostasis",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="单元级活动归一化（稳态可塑性）",
+    )
+    parser.add_argument("--pop-homeostatic-rate", type=float, default=0.01, help="稳态步长 β")
+    parser.add_argument("--pop-activity-target", type=float, default=0.1, help="目标活动率 y*")
+    parser.add_argument(
         "--pop-readout",
         choices=("uniform", "random"),
         default="uniform",
@@ -319,6 +333,9 @@ def main(argv: list[str] | None = None) -> int:
             pop_units=args.pop_units,
             pop_bias=args.pop_bias,
             pop_gain=args.pop_gain,
+            pop_homeostasis=args.pop_homeostasis,
+            pop_homeostatic_rate=args.pop_homeostatic_rate,
+            pop_activity_target=args.pop_activity_target,
             device=device,
         )
         results.append(outcome)
@@ -347,6 +364,9 @@ def main(argv: list[str] | None = None) -> int:
             "pop_units": args.pop_units,
             "pop_bias": args.pop_bias,
             "pop_gain": args.pop_gain,
+            "pop_homeostasis": args.pop_homeostasis,
+            "pop_homeostatic_rate": args.pop_homeostatic_rate,
+            "pop_activity_target": args.pop_activity_target,
             "gamma": args.gamma,
             "warmup": args.warmup,
         },
