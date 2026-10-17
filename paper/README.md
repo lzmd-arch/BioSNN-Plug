@@ -980,9 +980,13 @@ the description now reads "was published on 2026-10-17 as a separate record (con
 23429027; current version doi:…23429379)", and the related identifiers carry
 `isReferencedBy → B's concept DOI`. **The two records now read as siblings in both directions.**
 
-⚠️ **One inconsistency on A is left standing**: its title still says "reproduction records v0.1"
-while its `version` field says `v0.2`. Retitling a published record is a separate decision —
-flagged, not taken.
+**The title was retitled too.** A still said "reproduction records v0.1" while its `version` field
+said `v0.2`, so the version number now lives only in `version`; the title reads "BioSNN-Plug
+reproduction records: measurement protocol and findings for local learning rules in spiking neural
+networks". Verified from the public API: DOI, concept DOI, `version = v0.2` and both attachments
+(37,245 and 23,645 bytes) unchanged, record still `published`, and the description keeps the
+correction written into it a step earlier. v0.1 keeps its own frozen title, which is accurate for
+that version.
 
 **And one item the check raised that is not an edit but a decision.** The paper's Data and code
 availability section cites A's **v0.1 version DOI** (`10.5281/zenodo.23388709`), which was current
