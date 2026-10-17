@@ -139,10 +139,39 @@ SHD = DatasetSpec(
     parse_kind="gunzip",
 )
 
+#: Flickr8k（Hodosh, Young & Hockenmaier, 2013, JAIR 47:853-899）。
+#:
+#: **分发来源是 Jason Brownlee 的 GitHub Release，不是官方页面**——官方发布是表单制、
+#: 没有稳定直链。这个镜像是分发便利，不代表官方背书；本仓库只给下载脚本，不镜像。
+#:
+#: ⚠️ **两个 MD5 是"自算 + 长度核对"，不是第三方公布值**（与 SHD 同一性质，见文件开头
+#: 关于 MD5 来源的那一节）。第一次下载时 `Flickr8k_Dataset.zip` 被截断在 375,697,580 字节
+#: 而 curl 退出码是 0——不看长度就会把半截文件当成功。续传补齐到服务端 `Content-Length`
+#: 1,115,419,746 之后才算出的值，如下。
+FLICKR8K = DatasetSpec(
+    name="flickr8k",
+    mirrors=("https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/",),
+    files=(
+        DataFile("Flickr8k_Dataset.zip", "f18a1e2920de5bd84dae7cf08ec78978"),
+        DataFile("Flickr8k_text.zip", "bf6c1abcb8e4a833b7f922104de18627"),
+    ),
+    license_note=(
+        "Flickr8k：8000 张 Flickr 照片、每张五条人工描述（Hodosh, Young & Hockenmaier 2013）。"
+        "图片版权归各 Flickr 用户，发布方明确用于研究与教学；本仓库不镜像、不再分发。"
+        "下载源为 GitHub Release 镜像，非官方。"
+    ),
+    parse={
+        "Flickr8k_Dataset.zip": "Flicker8k_Dataset",
+        "Flickr8k_text.zip": "Flickr8k.token.txt",
+    },
+    parse_kind="unzip",
+)
+
 #: 数据集注册表。**新增数据集时在这里加一项，其余代码不用动。**
 DATASETS: dict[str, DatasetSpec] = {
     MNIST.name: MNIST,
     SHD.name: SHD,
+    FLICKR8K.name: FLICKR8K,
 }
 
 
@@ -267,6 +296,17 @@ def preprocess(spec: DatasetSpec, raw_path: Path, out_path: Path) -> None:
         with gzip.open(raw_path, "rb") as src, out_path.open("wb") as dst:
             shutil.copyfileobj(src, dst, 1 << 20)
         print(f"  解压    {out_path.name}  {out_path.stat().st_size / 1e6:.1f} MB")
+        return
+    if spec.parse_kind == "unzip":
+        # 解压到**数据集根目录**（out_path 的父目录），``parse`` 里的值只当"解压完成的
+        # 标记"用——因为一个 zip 会装很多文件，不能只落一个 out_path。
+        import zipfile
+
+        dest = out_path.parent
+        with zipfile.ZipFile(raw_path) as archive:
+            members = [m for m in archive.namelist() if not m.startswith("__MACOSX/")]
+            archive.extractall(dest, members=members)
+        print(f"  解压    {raw_path.name}  {len(members)} 个成员 -> {dest.name}/")
         return
     if spec.parse_kind != "idx":
         raise ValueError(f"未知的 parse_kind：{spec.parse_kind!r}")

@@ -119,6 +119,39 @@ set, "R@1 ≥ 50%" is satisfiable by **memorisation**, and satisfying it says no
 local learning works. This is the trap this repository keeps recording — **a number can pass a bar
 trivially**.
 
+## Rounds eight and nine: real data (Flickr8k) — the current front ends sit at chance (2026-10-17)
+
+Pre-registrations:
+[`retrieval_flickr8k_prereg.md`](../../sweep_results/retrieval_flickr8k_prereg.md),
+[`retrieval_frozen_frontend_prereg.md`](../../sweep_results/retrieval_frozen_frontend_prereg.md).
+Official split (train 6000 / test 1000); chance is **0.1%**.
+
+| Front end | Readout | R@1 | Note |
+| :--- | :--- | ---: | :--- |
+| current plugins (24×24 DVS + per-token) | kNN | **0.002** | essentially chance |
+| current plugins | — | — | the ceiling is already at chance; local rules need not be run |
+| **frozen ResNet18 + whole-sentence nomic** (never co-trained) | ridge (linear ceiling) | **0.076** | 76× chance, far from 50% |
+| frozen ResNet18 + whole-sentence nomic | kNN | 0.052 | nonlinearity does not help |
+
+Two conclusions:
+
+1. **The current encoders carry no cross-modal signal on real data.** A three-frame 24×24
+   greyscale difference code paired with per-token sentence embeddings is at chance on 1000-way
+   retrieval.
+2. **Two individually strong frozen front ends still give a linear ceiling of 7.6%.** They were
+   **never trained together**, so stitching the two modalities remains entirely the association
+   layer's job — and that is all the association layer can recover.
+
+⚠️ **The 50% bar has lost its discriminating power here.** The only practical way to reach 50%
+on Flickr8k is a **jointly trained cross-modal encoder** (CLIP-like) — but then the alignment is
+already done by pretraining, the local association rule has nothing to do, and passing the bar
+says nothing about local learning. **This is a problem with the criterion, not with the
+implementation.**
+
+If this line continues, the next step is to **restate the criterion** — for example, measure how
+much of an aligned-encoder oracle's alignment a local rule recovers — rather than tuning against
+a measure that cannot distinguish the two.
+
 ## One finding that has to be recorded: this rule has no tunable hyperparameter
 
 The pre-registration named two hyperparameters, `η` (learning rate) and `λ` (forgetting).

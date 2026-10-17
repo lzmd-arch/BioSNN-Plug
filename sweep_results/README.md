@@ -109,6 +109,8 @@
 | `retrieval_knn/` | 第五轮：kNN 非线性上界探针（**非学习规则**），bus@256 与 plugin 两档；[`retrieval_knn_prereg.md`](retrieval_knn_prereg.md) |
 | `retrieval_randomfeatures/` | 第六轮：固定随机特征 + delta（bus@256）；[`retrieval_randomfeatures_prereg.md`](retrieval_randomfeatures_prereg.md) |
 | `retrieval_competitive/` | 第七轮：竞争联想记忆（赢者通吃）；[`retrieval_competitive_prereg.md`](retrieval_competitive_prereg.md) |
+| `retrieval_flickr8k/spikes_knn/` | 第八轮：**真实数据**（Flickr8k 官方切分），现有插件编码，kNN |
+| `retrieval_flickr8k/frozen_ridge/`、`frozen_knn/` | 第九轮：**冻结 ResNet18 + 整句 nomic**（未联合训练），线性上界与 kNN |
 
 每个 `seedN.json` 的键：
 
@@ -125,7 +127,9 @@
 
 汇总（5 种子均值）：外积 Hebb **0.141**；delta **0.359–0.407**；线性上界（ridge，非局部）**0.466–0.479**；**kNN 非线性上界 0.555/0.562（无学习）**；固定随机特征 + delta **0.383**；竞争记忆（M≤64）**0.114**；随机 0.034。
 
-⚠️ **结论不是「达标」**：唯一越过 50% 的是 kNN，而它不学习；让竞争记忆逼近它需要 M ≈ 训练样本数，那就是**记忆化**。在程序生成配对集上，这条 50% 的线可以被平凡地满足，因此它不构成「局部学习成立」的证据。详见 `research/retrieval/README.md`。
+⚠️ **结论不是「达标」**：唯一越过 50% 的是 kNN，而它不学习；让竞争记忆逼近它需要 M ≈ 训练样本数，那就是**记忆化**。在程序生成配对集上，这条 50% 的线可以被平凡地满足，因此它不构成「局部学习成立」的证据。
+
+**真实数据（Flickr8k，官方切分，随机 0.1%）**：现有插件编码的 kNN = **0.002**（随机水平）；换成冻结 ResNet18 + 整句 nomic（未联合训练）后，线性上界 **0.076**、kNN **0.052**。**要在这条数据上到 50%，只能靠联合训练过的跨模态编码器（CLIP 一类），而那时对齐由预训练完成、局部规则无事可做——这条验收线在这里失去了区分力。** 详见 `research/retrieval/README.md`。
 
 ### 批次日志（一个 `.log` 覆盖多个目录）
 

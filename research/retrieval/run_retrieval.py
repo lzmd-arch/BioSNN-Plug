@@ -80,34 +80,49 @@ def run_seed(
     backend_factory,
     associator_kind: str = "hebb",
     representation: str = "bus",
+    train_items: list | None = None,
+    test_items: list | None = None,
+    precomputed: dict | None = None,
     verbose: bool = True,
 ) -> dict:
     """跑一个种子，返回该种子的全部指标。"""
-    items = generate()
-    train, test = split(items, test_fraction=test_fraction, seed=seed)
+    if train_items is None or test_items is None:
+        items = generate()
+        train, test = split(items, test_fraction=test_fraction, seed=seed)
+    else:
+        train, test = train_items, test_items
 
-    bus = build_bus(bus_dim=bus_dim, seed=seed, backend=backend_factory())
-    train_repr = encode_items(bus, train)
-    test_repr = encode_items(bus, test)
+    if precomputed is not None:
+        # 冻结预训练前端：特征在种子循环外算一次，这里只取用。
+        train_text, train_image = precomputed["train_text"], precomputed["train_image"]
+        test_text, test_image = precomputed["test_text"], precomputed["test_image"]
+        control_within = {
+            "text": recall_at_k(test_text, test_text, k=1, direction="text2text").recall,
+            "image": recall_at_k(test_image, test_image, k=1, direction="image2image").recall,
+        }
+    else:
+        bus = build_bus(bus_dim=bus_dim, seed=seed, backend=backend_factory())
+        train_repr = encode_items(bus, train)
+        test_repr = encode_items(bus, test)
 
-    if representation == "bus":
-        train_text, train_image = train_repr.text_bus, train_repr.image_bus
-        test_text, test_image = test_repr.text_bus, test_repr.image_bus
-    elif representation == "plugin":
-        train_text, train_image = train_repr.text_plugin, train_repr.image_plugin
-        test_text, test_image = test_repr.text_plugin, test_repr.image_plugin
-    else:  # pragma: no cover - argparse 已限制取值
-        raise ValueError(f"未知的表示：{representation!r}")
+        if representation == "bus":
+            train_text, train_image = train_repr.text_bus, train_repr.image_bus
+            test_text, test_image = test_repr.text_bus, test_repr.image_bus
+        elif representation == "plugin":
+            train_text, train_image = train_repr.text_plugin, train_repr.image_plugin
+            test_text, test_image = test_repr.text_plugin, test_repr.image_plugin
+        else:  # pragma: no cover - argparse 已限制取值
+            raise ValueError(f"未知的表示：{representation!r}")
 
-    # 读法 (a)：同模态检索。编码保住身份的话这里应该很高。
-    control_within = {
-        "text": recall_at_k(
-            test_repr.text_plugin, test_repr.text_plugin, k=1, direction="text2text"
-        ).recall,
-        "image": recall_at_k(
-            test_repr.image_plugin, test_repr.image_plugin, k=1, direction="image2image"
-        ).recall,
-    }
+        # 读法 (a)：同模态检索。编码保住身份的话这里应该很高。
+        control_within = {
+            "text": recall_at_k(
+                test_repr.text_plugin, test_repr.text_plugin, k=1, direction="text2text"
+            ).recall,
+            "image": recall_at_k(
+                test_repr.image_plugin, test_repr.image_plugin, k=1, direction="image2image"
+            ).recall,
+        }
 
     # 读法 (b) 的零联想对照：直接拿两路表示比。预期 ≈ 随机。
     if test_text.shape[1] == test_image.shape[1]:
@@ -281,6 +296,21 @@ def main(argv: list[str] | None = None) -> int:
         default="bus",
         help="喂给联想层的表示：总线输出（默认）或插件原始输出",
     )
+    parser.add_argument(
+        "--dataset",
+        choices=("procedural", "flickr8k"),
+        default="procedural",
+        help="数据源，默认程序生成配对集",
+    )
+    parser.add_argument(
+        "--flickr-root", type=Path, default=REPO_ROOT / "data" / "flickr8k", help="Flickr8k 根目录"
+    )
+    parser.add_argument(
+        "--frontend",
+        choices=("spikes", "frozen"),
+        default="spikes",
+        help="spikes=现有插件编码；frozen=冻结预训练前端（仅 Flickr8k）",
+    )
     parser.add_argument("--out", type=Path, default=None, help="记录输出目录")
     parser.add_argument("--cache", type=Path, default=DEFAULT_CACHE, help="token embedding 缓存")
     parser.add_argument("--model", default="nomic-embed-text", help="Ollama embedding 模型")
@@ -302,6 +332,44 @@ def main(argv: list[str] | None = None) -> int:
     def backend_factory() -> CachedEmbedding:
         return cache
 
+    train_items = test_items = None
+    precomputed = None
+    if args.dataset == "flickr8k":
+        from .flickr8k import make_items
+
+        print(f"加载 Flickr8k：{args.flickr_root}")
+        decode = args.frontend == "spikes"
+        train_items = make_items(args.flickr_root, split="train", decode_frames=decode)
+        test_items = make_items(args.flickr_root, split="test", decode_frames=decode)
+        print(f"  train={len(train_items)}  test={len(test_items)}  （跳过 = 缺图或缺 caption）")
+
+        if args.frontend == "frozen":
+            from .frontends import resnet_features, text_features
+
+            cache_dir = args.flickr_root
+            print("计算冻结前端特征（训练集）…")
+            train_image = resnet_features(
+                [item.path for item in train_items], cache=cache_dir / "_resnet_train.npz"
+            )
+            train_text = text_features(
+                [item.caption for item in train_items], cache=cache_dir / "_nomic_train.npz"
+            )
+            print("计算冻结前端特征（测试集）…")
+            test_image = resnet_features(
+                [item.path for item in test_items], cache=cache_dir / "_resnet_test.npz"
+            )
+            test_text = text_features(
+                [item.caption for item in test_items], cache=cache_dir / "_nomic_test.npz"
+            )
+            precomputed = {
+                "train": train_items,
+                "test": test_items,
+                "train_text": train_text,
+                "train_image": train_image,
+                "test_text": test_text,
+                "test_image": test_image,
+            }
+
     results = []
     for seed in seeds:
         results.append(
@@ -310,6 +378,9 @@ def main(argv: list[str] | None = None) -> int:
                 bus_dim=args.bus_dim,
                 test_fraction=args.test_fraction,
                 backend_factory=backend_factory,
+                train_items=train_items,
+                test_items=test_items,
+                precomputed=precomputed,
                 associator_kind=args.associator,
                 representation=args.representation,
             )

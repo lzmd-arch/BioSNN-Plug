@@ -4,9 +4,22 @@
 
 ## 它现在做到哪一步
 
-**只做加载，不做下载。** 本仓库的约定是「不镜像数据，给下载脚本 + 逐文件校验」
-（计划书 §12.1）。Flickr8k 的下载来源与其校验和**尚未登记**，所以这里**不假装**能自动
-取到数据：`--root` 必须指向一个已经按官方结构摊好的目录。
+**只做加载，不做下载。** 下载由 `scripts/download_data.py flickr8k` 负责（计划书 §12.1
+的「不镜像数据，给下载脚本 + 逐文件校验」）：源是 **jbrownlee/Datasets 的 GitHub Release**
+（非官方镜像，稳定直链），两个 zip 的 MD5 已钉在该脚本里。下完解压到这个结构：
+
+```text
+data/flickr8k/
+├─ Flickr8k.token.txt                     # image.jpg#0<TAB>caption
+├─ Flickr_8k.trainImages.txt              # 每行一个 image.jpg
+├─ Flickr_8k.devImages.txt
+├─ Flickr_8k.testImages.txt
+└─ Flicker8k_Dataset/                     # 注意官方目录名就是 Flicker（少一个 r）
+   ├─ 1000268201_693b08cb0e.jpg
+   └─ ...
+```
+
+下面是官方结构本身（供人工摊放时对照）：
 
 ```text
 <root>/
@@ -54,6 +67,8 @@ class FlickrItem:
     image: np.ndarray
     caption: str
     image_id: str
+    path: Path | None = None
+    """原图路径。冻结预训练前端（ResNet）要读原图，而不是 24×24 的帧序列。"""
 
 
 def load_captions(root: Path | str) -> dict[str, list[str]]:
@@ -107,8 +122,13 @@ def make_items(
     split: str = "test",
     caption_index: int = 0,
     limit: int | None = None,
+    decode_frames: bool = True,
 ) -> list[FlickrItem]:
-    """把某个 split 摊成配对列表。取不到的图**跳过并计数**，不静默吞掉。"""
+    """把某个 split 摊成配对列表。取不到的图**跳过并计数**，不静默吞掉。
+
+    ``decode_frames=False`` 只记录路径、不把 JPEG 解成 24×24 帧序列——冻结前端要的是
+    原图，解一遍帧是白费（7000 张要几十秒到几分钟）。
+    """
     root = Path(root)
     captions = load_captions(root)
     ids = load_split(root, split)
@@ -129,9 +149,10 @@ def make_items(
             )
         items.append(
             FlickrItem(
-                image=_frames(path),
+                image=_frames(path) if decode_frames else np.zeros((0, CANVAS, CANVAS)),
                 caption=captions_for[caption_index],
                 image_id=image_id,
+                path=path,
             )
         )
     if missing:
