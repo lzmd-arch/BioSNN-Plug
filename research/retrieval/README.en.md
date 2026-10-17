@@ -53,8 +53,10 @@ unavailable the experiment does not run**; there is no fall back to a fake backe
 ## Known boundaries
 
 1. **The dataset is procedurally generated** (4 shapes × 3 shades × 6 positions × 2 sizes = 144)
-   and cannot be compared against the literature; neither the Flickr8k loader nor a run on
-   real data exists yet.
+   and cannot be compared against the literature. The **Flickr8k loader exists** (`flickr8k.py`:
+   load only, no download; the layout and the `Flicker8k_Dataset` spelling with one r are in the
+   module docstring), but **no run on real data has been made** — the download source and its
+   per-file checksums are not registered yet.
 2. **The two bus paths do not share a space**: `semantic` and `temporal` each go through an
    independently seeded random projection, so comparing them directly stays at chance. The
    control measured 0.034 = 1/29, exactly what that sentence predicts.

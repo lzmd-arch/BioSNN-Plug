@@ -26,7 +26,7 @@ from biosnn_bus import SpikeBus
 from biosnn_bus.plugins import DiffImagePlugin, TextZScorePlugin
 from biosnn_bus.plugins.text_zscore import EmbeddingBackend
 
-from .procedural import CANVAS, Item
+from .procedural import CANVAS
 
 __all__ = ["CachedEmbedding", "Representations", "build_bus", "encode_items"]
 
@@ -102,7 +102,7 @@ def _mean_over_time(data: np.ndarray) -> np.ndarray:
     return np.asarray(data, dtype=np.float64).mean(axis=0)
 
 
-def encode_items(bus: SpikeBus, items: list[Item]) -> Representations:
+def encode_items(bus: SpikeBus, items: list[Any]) -> Representations:
     """把每条样本分别以「只有文本」和「只有图像」送进总线。
 
     ⚠️ **分开送，不一起送**：一起送会得到两路之和，那是**配对**的表示，用来检索就等于
