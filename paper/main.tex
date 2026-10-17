@@ -9,11 +9,12 @@
 \usepackage[margin=1in]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage{CJKutf8}  % 作者名的中文正字；tectonic 按需从 CTAN 取包
 \usepackage{natbib}   % \citet/\citep；须在 hyperref 之前载入。plainnat.bst 随 TinyTeX 发布
 \usepackage{booktabs, graphicx, hyperref, amsmath, xcolor}
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 \title{Local Learning Rules Under Honest Measurement:\\A Reproducibility-First Benchmark of e-prop, Hebbian, and R-STDP\\on Consumer Hardware}
-\author{Jinyao Shen\thanks{Independent researcher. Correspondence:
+\author{Jinyao Shen \begin{CJK}{UTF8}{gbsn}沈锦垚\end{CJK}\thanks{Independent researcher. Correspondence:
   \url{https://github.com/lzmd-arch/BioSNN-Plug}.}\\ \small{github.com/lzmd-arch/BioSNN-Plug}}
 \date{October 2026}
 
