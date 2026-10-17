@@ -43,6 +43,7 @@ from research.common.provenance import collect
 from research.rstdp_spiking.actor import SpikingActor
 from research.rstdp_spiking.critic import LinearCritic
 from research.rstdp_spiking.encoding import encode_state, population_centers
+from research.rstdp_spiking.pop_critic import PopulationCritic
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT = REPO_ROOT / "sweep_results" / "rstdp_spiking"
@@ -77,7 +78,7 @@ def run_episode(
     learn: bool,
     greedy: bool = False,
     env_seed: int | None = None,
-    critic: LinearCritic | None = None,
+    critic: LinearCritic | PopulationCritic | None = None,
 ) -> float:
     """跑一个回合，返回存活步数。
 
@@ -171,11 +172,14 @@ def train(
         device=device,
     )
 
-    critic = (
-        LinearCritic(n_features, gamma=gamma, learning_rate=critic_rate)
-        if critic_kind == "td"
-        else None
-    )
+    if critic_kind == "td":
+        critic = LinearCritic(n_features, gamma=gamma, learning_rate=critic_rate)
+    elif critic_kind == "pop":
+        critic = PopulationCritic(
+            n_features, gamma=gamma, learning_rate=critic_rate, generator=generator, device=device
+        )
+    else:
+        critic = None
 
     returns: list[float] = []
     eval_scores: list[dict] = []
@@ -201,6 +205,8 @@ def train(
             baseline = (1 - baseline_decay) * baseline + baseline_decay * steps_alive
             actor.apply_success_signal(steps_alive - baseline)
         actor.end_episode()
+        if hasattr(critic, "reset_trace"):
+            critic.reset_trace()
 
         if warmup <= episode and (episode + 1) % eval_every == 0:
             score = evaluate(actor, centers, sigma, episodes=eval_episodes, seed=10_000 + seed)
@@ -232,9 +238,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--baseline-decay", type=float, default=0.05)
     parser.add_argument(
         "--critic",
-        choices=("td", "ema"),
+        choices=("td", "pop", "ema"),
         default="td",
-        help="td=线性 TD 群体 Critic；ema=只用回报基线（对照）",
+        help="td=线性 TD；pop=TD-LTP 群体 Critic；ema=只用回报基线（对照）",
     )
     parser.add_argument("--critic-rate", type=float, default=1e-2, help="Critic 的步长 β")
     parser.add_argument("--gamma", type=float, default=0.99)
