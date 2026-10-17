@@ -81,12 +81,11 @@ conventions are left implicit.
     tested (same-budget LIF leads ALIF by 0.93--1.23 pp over lr $10^{-3}$ to
     $10^{-2}$; five seeds each).
   \item \textbf{Convergence evidence}: e-prop with LIF neurons converges at
-    \textbf{0.8889} (250 epochs). For scale: on the same task, the same family's
-    published baseline --- an LSNN trained by BPTT with DEEP R rather than by a
-    local rule --- averages 93.8--94.2 over twelve runs
-    \citep{bellec2018lsnn}. The local-rule gap at this scale is therefore four to
-    five points, and the budget extension that reaches even this much is eight
-    times the truncated one, which is itself the argument for reporting budgets.
+    \textbf{0.8889} on sequential MNIST (250 epochs), with the plateau criterion
+    pre-registered before the run and met. What that number is worth against a
+    backpropagation control is Section~\ref{sec:results}'s to say, and it is the
+    paper's largest measured effect; the gap is deliberately not restated here,
+    because a number should have exactly one home.
   \item \textbf{Methodology}: bit-exact reproduction (two independent runs of the
     same configuration agree at every epoch, not just in the mean),
     retention-joint reporting, degenerate-solution analysis, and a frozen-noise
@@ -415,11 +414,11 @@ needed to find out.
 \label{sec:setup}
 All experiments ran on one machine: an \textbf{NVIDIA GeForce RTX 5060 with
 8{,}151 MiB} of device memory (compute capability sm\_120), on Windows, with
-Python $\geq$ 3.11, \texttt{torch}/\texttt{torchvision}/\texttt{torchaudio} from
-the CUDA 13.0 wheel index, \texttt{spikingjelly} 2.0.0rc1 and \texttt{gymnasium}
-for the research code. The skeleton library used for the plugin-facing parts is
-independent of all of this and depends only on \texttt{numpy} --- the GPU stack
-is a research dependency, not an architectural one.
+Python $\geq$ 3.11, \texttt{torch}, \texttt{torchvision} and \texttt{torchaudio}
+from the CUDA 13.0 wheel index, \texttt{spikingjelly} 2.0.0rc1 and
+\texttt{gymnasium} for the research code. The skeleton library used for the
+plugin-facing parts is independent of all of this and depends only on
+\texttt{numpy} --- the GPU stack is a research dependency, not an architectural one.
 
 \textbf{Energy.} We do not report energy. There is no power monitor on this
 machine, and inferring energy from nominal TDP would produce a number that looks
@@ -439,7 +438,8 @@ how much of that is the readout's doing:
 
 \begin{table}[h]
 \centering
-\begin{tabular}{lrl}
+\small
+\begin{tabular}{@{}lrp{0.44\textwidth}@{}}
 \toprule
 Readout & Accuracy & What it costs \\
 \midrule
@@ -447,9 +447,11 @@ Ridge, closed form (default) & 0.9779 & one solve over accumulated statistics \\
 Cross-entropy + SGD & 0.9801 & backpropagation, learning rate, momentum, 100 epochs \\
 \bottomrule
 \end{tabular}
-\caption{W1 MNIST accuracy. Both numbers are the joint result of locally learned
-features and a supervised readout; the 0.22 pp difference is what the supervised
-head buys.}
+\caption{W1 MNIST accuracy. Both numbers are from the acceptance run (seed 0);
+over five seeds the ridge configuration averages 0.9774 with a range of 0.14 pp.
+Both are the joint result of locally learned features and a supervised readout;
+the 0.22 pp difference is what the supervised head buys.}
+\label{tab:w1}
 \end{table}
 
 Over five seeds the ridge configuration gives a mean of \textbf{0.9774}
@@ -955,15 +957,18 @@ Science, so what this supports is ``with these queries, on this date, on this
 index, nothing was found'' --- not ``no such thing exists''. It is a survey, not a
 systematic review.
 
+\begin{sloppypar}
 One retrieved hit could not be assessed, and we record it rather than drop it: a
-TechRxiv preprint, \emph{Practical Guidelines for Spiking Neural Networks} (DOI
-\texttt{10.36227/techrxiv.175322635.58911591}). Every route to it returned HTTP
-403 from this environment --- both canonical TechRxiv URLs, the DOI resolver, and
+TechRxiv preprint, \emph{Practical Guidelines for Spiking Neural Networks}
+(\url{https://doi.org/10.36227/techrxiv.175322635.58911591}). Every route to it
+returned HTTP 403 from this environment --- both canonical TechRxiv URLs, the DOI
+resolver, and
 the third-party indexes we tried --- and the scholarly APIs we queried do not
 index it. Its title is the closest of any hit to the thing Section~2.4 says does
 not exist, which makes it the single most likely candidate to falsify that claim;
 a reader with institutional access should check it. We state this as an open item
 rather than a settled one: what is recorded here is that the document exists and
 was unreachable from here, not that it was read and found insufficient.
+\end{sloppypar}
 
 \end{document}

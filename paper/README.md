@@ -67,8 +67,31 @@ run. It is verified by CI's `tectonic` job instead — which is this repo's stat
 **19 distinct keys out of 24 entries**; those counts are a proxy, not a build.
 
 *(Superseded 2026-10-16: after the two entries added that day, `refs.bib` holds **26** and the body
-cites **23**; the three uncited ones — `shen2025taaf`, `hu2026pssnn`, `hajizada2026clp` — are
-plan-phase topics this paper does not discuss.)* (The five uncited entries —
+cites **22**; the four uncited ones — `shen2025taaf`, `hu2026pssnn`, `hajizada2026clp`,
+`bellec2018lsnn` — are either plan-phase topics this paper does not discuss or, in the last case, an
+entry added for a literature comparison that §1.3 no longer makes. `bellec2018lsnn` is kept: it is
+a verified ledger entry, and a later version of this paper may want it.)*
+
+## Release plan: two versions, one source
+
+**Decision (2026-10-17): this paper is managed as an arXiv full version plus a compressed
+conference version.** The measurement is 19 pages, which arXiv does not mind and IJCNN/WCCI
+(≈10 pages) will not accept. Rather than cut later under deadline pressure, the split is declared
+now and the cuts are chosen by what a compressed reader needs:
+
+- **First to go — appendices A–D.** They are evidence for claims, not claims: the full
+  configuration dumps, the reproduction checklist, the triviality details, and the search
+  specification. A conference version cites them and points at the repository and the archived
+  record; the arXiv version keeps them.
+- **Second — §4 (Experimental Setup) compresses into §3.2**, since the protocol is the substance
+  and the hardware list is not.
+- **Never cut, in either version**: §5.5's self-refutation paragraph, §1.4 and §6.3's stated
+  boundaries, §2.2's framing of Miconi as a contrast rather than support, and W3's disclosure of
+  the tuning-to-acceptance selection effect. Those are the paper's character, not its padding.
+  ⚠️ A compression pass must not silently turn any of them into a more flattering reading.
+
+⚠️ **The two versions must not diverge in numbers.** The conference version is a subset of the
+arXiv version at the same commit; if a number changes, both are rebuilt. (The five uncited entries —
 `fremaux2010`, `pogodin2020kernelized`, `shen2025taaf`, `hu2026pssnn`, `hajizada2026clp` —
 belong to §3 and later.)
 
@@ -669,3 +692,45 @@ capacity.
 This is the third time in this paper's drafting that a measurement has contradicted the claim it
 was commissioned for (the LIF/ALIF interaction, the BPTT control, and now the scaling curve). All
 three are reported; two of them are now in the abstract.
+
+## Draft log — the revision round (2026-10-17)
+
+Four issues were raised against the draft, and the useful part of this entry is **which of them
+were real** — because two were not, and the reporting of the two that were is where the lesson is.
+
+**① A self-contradiction in §1.3 — real, and the most serious.** The Contributions bullet carried
+a *second* gap claim: 0.8889 against an LSNN baseline from the literature, "four to five points".
+Written before the control arm existed, it now contradicted §5.2.4's measured 7.41 points — two
+different gaps in one paper — and it compared across configurations, which is exactly what the
+protocol forbids. The bullet now states the converged number and hands the comparison to §5.2.4
+alone: **a number gets one home.** `bellec2018lsnn` becomes the fourth uncited entry (kept, not
+deleted).
+
+**② Broken tables — real, but not where I first looked, and my first answer was wrong.** The
+report was that tables render with their rows crammed. Text extraction of the built PDF looked
+clean, and I said so. It was clean because **the text is still there**: an overfull table pushes
+its right-hand column past the margin rather than overlapping anything, so `pdftotext -layout`
+cannot see the defect. The compiler can: three `Overfull \hbox` warnings, two of them ~2 cm and
+~1.7 cm too wide. Cause, once located: **unbreakable content** — long `\texttt{}` strings (a
+package list, a DOI) and two table cells that were `l` columns with long prose in them. Fixed by
+making the text columns `p{}` and the strings breakable; the build now reports **zero** overfull
+boxes. ⚠️ **My earlier claim that the tables were fine came from reading a build log from before
+those tables existed** — the same mistake as trusting a stale artifact, one level up.
+
+**③ The abstract's last sentence is not truncated, and ④ the correspondence footnote is not
+empty.** Both render complete in the current PDF (`...a benchmark of this kind invites.`;
+`Correspondence: https://github.com/lzmd-arch/BioSNN-Plug`). Recorded rather than silently fixed,
+because the likely explanation is a **stale PDF in a viewer** — the same file name has now held
+three different builds, which is its own defect, and is why the Desktop copy now carries the
+commit hash in its name.
+
+**Consistency items carried out:** Table 1's caption now says the two accuracies are from the
+acceptance run (seed 0) and gives the five-seed mean beside them, so 0.9779 and 0.9774 no longer
+read as a typo. The NeuroBench entry's dangling "100 authors" fragment is reworded. The ESPP
+author name was checked against ledger [20] and **is correct** — no change.
+
+**And a process failure worth its own line:** fixing the last overfull box, I inserted
+`\end{sloppypar}` with `sed`, which **ate the backslash**, leaving `end{sloppypar}` in the source.
+Caught by printing the bytes. That is the fourth instance of the same shell-quoting family in one
+session, and it happened *after* I had written the rule and the memory entry about it. The rule
+works; using `sed` instead of the editor is what failed.
