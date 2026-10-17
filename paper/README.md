@@ -54,10 +54,15 @@ is none, so the table fits inside the text width. The 8-page artifact was downlo
 extracted to confirm §2.4 and the appendix table are actually in the PDF, not merely in the
 source.
 
-Last verified locally 2026-10-15 (TinyTeX + pdflatex), after the second drafting batch:
+First verified locally 2026-10-15 (TinyTeX + pdflatex), after the second drafting batch:
 `pdflatex → bibtex → pdflatex ×2`, no errors and no warnings, **7 pages**. `bibtex` now
 resolves **14 of the 19** entries — it no longer prints `I found no \citation commands`,
 which it did while the body was still citation-free.
+
+**Re-verified locally 2026-10-17 (revision 8)**, in a scratch copy outside the repository:
+`pdflatex → bibtex → pdflatex ×2`, 20 pages, **zero overfull boxes**. The local channel came
+back when `\usepackage{CJKutf8}` was dropped from the preamble --- see the author-name log
+below for why removing it was a net gain rather than a loss.
 
 ⚠️ **The batch after that (the five near-neighbour citations, the §2.4 rewrite and the new
 search-specification appendix) was NOT built locally.** The machine was running the LIF-250ep
@@ -851,41 +856,31 @@ handle, which also resolves the arXiv pseudonym question from the release plan i
 the real-name policy — and introduces a new requirement: **the double-blind submission must strip
 it**, along with the repository URL and both DOIs.
 
-⚠️ **The first attempt to typeset the Chinese form 沈锦垚 failed locally.** The experiment: adding
-`\usepackage{CJKutf8}` and the characters around the name fails here — **TinyTeX-1 does not ship
-`cjkutf8.sty`** — so the local build stopped at a missing package. The romanised form is what an
-English-language venue expects beside it anyway. Rendering the characters *locally* needs the
-`cjk` package installed into this TeX distribution first; that is a deliberate environment change
-and was not made. **(Superseded — see the resolution below: CI's `tectonic` fetches the package
-on demand, and the typeset byline does carry the characters.)**
+⚠️ **A first attempt to typeset the Chinese form 沈锦垚 did not survive verification.**
+Adding `\usepackage{CJKutf8}` and the characters around the name fails on this machine ---
+**TinyTeX-1 does not ship `cjkutf8.sty`** --- so the local build stopped at a missing package. CI's
+`tectonic` fetches the package on demand and went green, so the characters *were* in one build.
+Whether they *rendered* could not be checked from here: CJK bitmap glyphs carry no ToUnicode
+mapping, so extraction returns nothing for them, and this machine has no PDF renderer
+(`pdftoppm`, `pdffonts`, `mutool`, `qpdf` all absent). The page-1 check that would have settled it
+never happened.
+
+**Final decision (2026-10-17): the byline carries `Jinyao Shen` alone.** The Chinese form is not
+needed for the English submission; it belongs to a Chinese-language edition of the PDF, when one is
+made. `\usepackage{CJKutf8}` is gone with it, and so is the dependency it introduced: **the local
+build channel works again** --- verified this round with `pdflatex → bibtex → pdflatex ×2` in a
+scratch copy outside the repository, 20 pages, zero overfull boxes. The paper is not CI-only any
+more, and the unanswered glyph question goes away with the glyphs.
 
 ⚠️ **A third name lives in this repository**: `CITATION.cff` lists `name: "离中梦蝶"` with
 `alias: lzmd-arch`. The paper and the citation metadata now disagree. Aligning them is a decision
-about the repository's public identity, not a paper edit — flagged, not done.
+about the repository's public identity, not a paper edit --- flagged, not done.
 
-**Resolution (same day):** the ruling was **the real name goes in the paper only** —
-`CITATION.cff`, the Zenodo creator field, and every other identity field stay as they are. The
-paper's byline now carries **`Jinyao Shen 沈锦垚`**: the romanised form for the English typeset line,
-the characters beside it.
-
-⚠️ **This added a build dependency, and it changes which machine can build the paper.** The
-characters need `\usepackage{CJKutf8}` (bitmap `gbsn` fonts, no system font involved). CI's
-`tectonic` **fetches the package on demand and the build is green** — that was tested, not assumed.
-But **the local TinyTeX-1 does not ship `cjkutf8.sty`**, and its `tlmgr` refuses to install anything
-until it self-updates its own binaries (which it also failed to verify — pubkey missing, on two
-mirrors). So:
-
-- **local builds of the paper now fail** until someone runs `tlmgr update --self` and then
-  `tlmgr install cjk`; that is a change to the local TeX installation and was not made here;
-- **CI remains the build channel**, which is the repository's stated policy anyway, so nothing is
-  unverified that was verified before — but the local fallback is gone until the package is installed.
-
-⚠️ **And the one thing this cannot claim**: the build being green proves the package was found and a
-PDF was produced, **not that the three glyphs render correctly**. CJK bitmap glyphs carry no
-ToUnicode mapping, so text extraction returns nothing for them, and this machine has no PDF renderer
-(`pdftoppm`, `pdffonts`, `mutool`, `qpdf` all absent). **Page 1 of the built PDF has to be looked at
-once by a human** — the byline should read `Jinyao Shen 沈锦垚` with the characters legible. That is
-the same distinction as the overfull-box episode: compiling is not rendering.
+**Resolution on the identity question:** the real name goes in the paper only --- `CITATION.cff`,
+the Zenodo creator field, and every other identity field stay as they are. The byline is
+`Jinyao Shen`, and the double-blind submission will strip it along with the repository URL and both
+DOIs. The lesson from the glyph episode is the same one the overfull boxes taught, and it is kept
+even though the glyphs are gone: **compiling is not rendering.**
 
 ## Draft log — reading a stale copy, and the one defect that was real (2026-10-17)
 
