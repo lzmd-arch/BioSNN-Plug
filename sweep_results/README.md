@@ -112,6 +112,7 @@
 | `retrieval_flickr8k/spikes_knn/` | 第八轮：**真实数据**（Flickr8k 官方切分），现有插件编码，kNN |
 | `retrieval_flickr8k/frozen_ridge/`、`frozen_knn/` | 第九轮：**冻结 ResNet18 + 整句 nomic**（未联合训练），线性上界与 kNN |
 | `retrieval_flickr8k/frozen_delta/` | 第十轮：同一份冻结特征上的 delta（**欠训练**：epochs∈{1,3}、3 折、单种子），用于算恢复率；预注册见 [`retrieval_recovery_prereg.md`](retrieval_recovery_prereg.md) |
+| `retrieval_frontend_probe/` | 第十一轮：**前端验收口径**——caption 内容词的线性探针（图像侧 AUC 中位数 0.790、文本侧自查 1.000）；[`retrieval_frontend_probe_prereg.md`](retrieval_frontend_probe_prereg.md) |
 
 每个 `seedN.json` 的键：
 

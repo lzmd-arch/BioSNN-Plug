@@ -181,6 +181,34 @@ upper bound achieves.
 3. **The ceiling itself is low** (7.6%). Recovery answers "how far the local rule is from the
    linear ceiling"; it does **not** answer "is this front end good enough" — that remains open.
 
+## Round eleven: an acceptance criterion for the front end — linear probes (2026-10-17)
+
+Pre-registration:
+[`retrieval_frontend_probe_prereg.md`](../../sweep_results/retrieval_frontend_probe_prereg.md).
+This fills the hole left by ㉟: the recovery rate standardised the *rule*, but the front end had no
+measure of its own.
+
+**Definition**: for the 50 most frequent content words in the captions (each appearing in ≥50
+captions), a **linear probe** (closed-form ridge) predicts from image features whether the word is
+in that image's caption; AUC is measured on the test split.
+
+| Side | median AUC | words |
+| :--- | ---: | ---: |
+| **image (ResNet18)** | **0.790** | 45 (5 dropped for too few positives) |
+| text (whole-sentence nomic, self-check) | 1.000 | 45 |
+
+Against the pre-registered bar (≥ 0.75 on the image side), **the ResNet front end qualifies**: it
+does carry the semantics the captions describe.
+
+⚠️ **Together with the recovery rate this gives a more informative picture**: the semantics is
+**linearly readable** (AUC 0.79), yet **instance-level** alignment between the two spaces stays
+weak (linear ceiling 0.076). The front end can see; it is simply not in the same coordinate system
+as the text. That is exactly why the association layer exists — and why recovery (67%) is high
+while absolute R@1 is low.
+
+⚠️ The probe is **linear** and measures **necessity only**: high AUC does not guarantee
+cross-modal alignability, and low AUC does not rule out a nonlinear solution.
+
 ## One finding that has to be recorded: this rule has no tunable hyperparameter
 
 The pre-registration named two hyperparameters, `η` (learning rate) and `λ` (forgetting).

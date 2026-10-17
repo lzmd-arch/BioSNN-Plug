@@ -1,0 +1,669 @@
+{
+  "experiment": "front-end acceptance: caption content-word linear probes",
+  "dataset": "Flickr8k official split",
+  "image_frontend": "resnet18-imagenet1k-v1/224/avgpool",
+  "text_frontend": "nomic-embed-text (whole sentence)",
+  "image_side": {
+    "n_words": 45,
+    "mean_auc": 0.7971334450518526,
+    "median_auc": 0.7901162507904081,
+    "min_auc": 0.5689719278676334,
+    "max_auc": 0.9687309706491292,
+    "words": [
+      {
+        "word": "beach",
+        "auc": 0.9687309706491292,
+        "pos_train": 157,
+        "pos_test": 34,
+        "lam": 10.0
+      },
+      {
+        "word": "dog",
+        "auc": 0.9667775371287128,
+        "pos_train": 1256,
+        "pos_test": 192,
+        "lam": 0.1
+      },
+      {
+        "word": "street",
+        "auc": 0.9375853825136612,
+        "pos_train": 124,
+        "pos_test": 24,
+        "lam": 10.0
+      },
+      {
+        "word": "snow",
+        "auc": 0.9352373633879781,
+        "pos_train": 235,
+        "pos_test": 24,
+        "lam": 10.0
+      },
+      {
+        "word": "field",
+        "auc": 0.9325051229508197,
+        "pos_train": 193,
+        "pos_test": 24,
+        "lam": 10.0
+      },
+      {
+        "word": "grass",
+        "auc": 0.9322575869726129,
+        "pos_train": 217,
+        "pos_test": 35,
+        "lam": 1.0
+      },
+      {
+        "word": "dogs",
+        "auc": 0.9315928999538958,
+        "pos_train": 209,
+        "pos_test": 36,
+        "lam": 1.0
+      },
+      {
+        "word": "yellow",
+        "auc": 0.911918084579955,
+        "pos_train": 175,
+        "pos_test": 27,
+        "lam": 1.0
+      },
+      {
+        "word": "water",
+        "auc": 0.9108796851754092,
+        "pos_train": 390,
+        "pos_test": 67,
+        "lam": 10.0
+      },
+      {
+        "word": "brown",
+        "auc": 0.9086125142463171,
+        "pos_train": 589,
+        "pos_test": 77,
+        "lam": 10.0
+      },
+      {
+        "word": "running",
+        "auc": 0.8886220996576645,
+        "pos_train": 294,
+        "pos_test": 44,
+        "lam": 10.0
+      },
+      {
+        "word": "ball",
+        "auc": 0.8854457368667813,
+        "pos_train": 268,
+        "pos_test": 47,
+        "lam": 10.0
+      },
+      {
+        "word": "people",
+        "auc": 0.8531325665859564,
+        "pos_train": 331,
+        "pos_test": 56,
+        "lam": 10.0
+      },
+      {
+        "word": "shirt",
+        "auc": 0.823702137655626,
+        "pos_train": 314,
+        "pos_test": 54,
+        "lam": 10.0
+      },
+      {
+        "word": "sitting",
+        "auc": 0.8224013636847899,
+        "pos_train": 190,
+        "pos_test": 29,
+        "lam": 10.0
+      },
+      {
+        "word": "girl",
+        "auc": 0.8176727453730938,
+        "pos_train": 589,
+        "pos_test": 98,
+        "lam": 10.0
+      },
+      {
+        "word": "mouth",
+        "auc": 0.8162297824874511,
+        "pos_train": 150,
+        "pos_test": 22,
+        "lam": 10.0
+      },
+      {
+        "word": "black",
+        "auc": 0.8147646928855502,
+        "pos_train": 763,
+        "pos_test": 124,
+        "lam": 1.0
+      },
+      {
+        "word": "group",
+        "auc": 0.8128138528138528,
+        "pos_train": 341,
+        "pos_test": 55,
+        "lam": 10.0
+      },
+      {
+        "word": "jumping",
+        "auc": 0.8047152329709093,
+        "pos_train": 238,
+        "pos_test": 47,
+        "lam": 10.0
+      },
+      {
+        "word": "boy",
+        "auc": 0.8033450750621491,
+        "pos_train": 696,
+        "pos_test": 131,
+        "lam": 10.0
+      },
+      {
+        "word": "child",
+        "auc": 0.7945122904154852,
+        "pos_train": 227,
+        "pos_test": 47,
+        "lam": 10.0
+      },
+      {
+        "word": "pink",
+        "auc": 0.7901162507904081,
+        "pos_train": 125,
+        "pos_test": 21,
+        "lam": 1.0
+      },
+      {
+        "word": "front",
+        "auc": 0.7867799293630495,
+        "pos_train": 207,
+        "pos_test": 34,
+        "lam": 10.0
+      },
+      {
+        "word": "red",
+        "auc": 0.7831197929815703,
+        "pos_train": 378,
+        "pos_test": 68,
+        "lam": 10.0
+      },
+      {
+        "word": "little",
+        "auc": 0.782679496669134,
+        "pos_train": 175,
+        "pos_test": 35,
+        "lam": 10.0
+      },
+      {
+        "word": "children",
+        "auc": 0.7786458333333334,
+        "pos_train": 145,
+        "pos_test": 24,
+        "lam": 10.0
+      },
+      {
+        "word": "walking",
+        "auc": 0.7643342283999368,
+        "pos_train": 176,
+        "pos_test": 26,
+        "lam": 10.0
+      },
+      {
+        "word": "air",
+        "auc": 0.7603821704541129,
+        "pos_train": 139,
+        "pos_test": 27,
+        "lam": 10.0
+      },
+      {
+        "word": "white",
+        "auc": 0.7586931957749938,
+        "pos_train": 610,
+        "pos_test": 115,
+        "lam": 10.0
+      },
+      {
+        "word": "man",
+        "auc": 0.7518610421836228,
+        "pos_train": 1068,
+        "pos_test": 194,
+        "lam": 1.0
+      },
+      {
+        "word": "playing",
+        "auc": 0.7404491828343561,
+        "pos_train": 286,
+        "pos_test": 51,
+        "lam": 10.0
+      },
+      {
+        "word": "wearing",
+        "auc": 0.7401418439716312,
+        "pos_train": 351,
+        "pos_test": 60,
+        "lam": 10.0
+      },
+      {
+        "word": "woman",
+        "auc": 0.7323333118736454,
+        "pos_train": 357,
+        "pos_test": 49,
+        "lam": 10.0
+      },
+      {
+        "word": "through",
+        "auc": 0.7273440471662229,
+        "pos_train": 283,
+        "pos_test": 44,
+        "lam": 10.0
+      },
+      {
+        "word": "green",
+        "auc": 0.7225043502965304,
+        "pos_train": 192,
+        "pos_test": 29,
+        "lam": 10.0
+      },
+      {
+        "word": "blue",
+        "auc": 0.7222734254992319,
+        "pos_train": 323,
+        "pos_test": 70,
+        "lam": 10.0
+      },
+      {
+        "word": "holding",
+        "auc": 0.7105048974207853,
+        "pos_train": 191,
+        "pos_test": 37,
+        "lam": 10.0
+      },
+      {
+        "word": "down",
+        "auc": 0.7000520833333334,
+        "pos_train": 273,
+        "pos_test": 40,
+        "lam": 10.0
+      },
+      {
+        "word": "person",
+        "auc": 0.6797538461538462,
+        "pos_train": 143,
+        "pos_test": 25,
+        "lam": 10.0
+      },
+      {
+        "word": "another",
+        "auc": 0.6585696173351775,
+        "pos_train": 219,
+        "pos_test": 36,
+        "lam": 1.0
+      },
+      {
+        "word": "standing",
+        "auc": 0.6571121389159363,
+        "pos_train": 269,
+        "pos_test": 52,
+        "lam": 10.0
+      },
+      {
+        "word": "up",
+        "auc": 0.643760177646188,
+        "pos_train": 172,
+        "pos_test": 35,
+        "lam": 0.1
+      },
+      {
+        "word": "large",
+        "auc": 0.6371675130508896,
+        "pos_train": 131,
+        "pos_test": 29,
+        "lam": 10.0
+      },
+      {
+        "word": "stands",
+        "auc": 0.5689719278676334,
+        "pos_train": 123,
+        "pos_test": 22,
+        "lam": 10.0
+      }
+    ]
+  },
+  "text_side": {
+    "n_words": 45,
+    "mean_auc": 0.9974574292311952,
+    "median_auc": 0.9995738485031429,
+    "min_auc": 0.9796853388658368,
+    "max_auc": 1.0,
+    "words": [
+      {
+        "word": "boy",
+        "auc": 1.0,
+        "pos_train": 696,
+        "pos_test": 131,
+        "lam": 0.1
+      },
+      {
+        "word": "brown",
+        "auc": 1.0,
+        "pos_train": 589,
+        "pos_test": 77,
+        "lam": 0.1
+      },
+      {
+        "word": "red",
+        "auc": 1.0,
+        "pos_train": 378,
+        "pos_test": 68,
+        "lam": 0.1
+      },
+      {
+        "word": "front",
+        "auc": 1.0,
+        "pos_train": 207,
+        "pos_test": 34,
+        "lam": 0.1
+      },
+      {
+        "word": "field",
+        "auc": 1.0,
+        "pos_train": 193,
+        "pos_test": 24,
+        "lam": 0.1
+      },
+      {
+        "word": "yellow",
+        "auc": 1.0,
+        "pos_train": 175,
+        "pos_test": 27,
+        "lam": 0.1
+      },
+      {
+        "word": "beach",
+        "auc": 1.0,
+        "pos_train": 157,
+        "pos_test": 34,
+        "lam": 0.1
+      },
+      {
+        "word": "pink",
+        "auc": 1.0,
+        "pos_train": 125,
+        "pos_test": 21,
+        "lam": 10.0
+      },
+      {
+        "word": "girl",
+        "auc": 0.9999434363545862,
+        "pos_train": 589,
+        "pos_test": 98,
+        "lam": 0.1
+      },
+      {
+        "word": "grass",
+        "auc": 0.999940784603997,
+        "pos_train": 217,
+        "pos_test": 35,
+        "lam": 0.1
+      },
+      {
+        "word": "little",
+        "auc": 0.999940784603997,
+        "pos_train": 175,
+        "pos_test": 35,
+        "lam": 0.1
+      },
+      {
+        "word": "dog",
+        "auc": 0.9999355404290429,
+        "pos_train": 1256,
+        "pos_test": 192,
+        "lam": 0.1
+      },
+      {
+        "word": "jumping",
+        "auc": 0.999910696345248,
+        "pos_train": 238,
+        "pos_test": 47,
+        "lam": 0.1
+      },
+      {
+        "word": "air",
+        "auc": 0.9998477408549351,
+        "pos_train": 139,
+        "pos_test": 27,
+        "lam": 0.1
+      },
+      {
+        "word": "blue",
+        "auc": 0.9998463901689708,
+        "pos_train": 323,
+        "pos_test": 70,
+        "lam": 0.1
+      },
+      {
+        "word": "children",
+        "auc": 0.9998292349726776,
+        "pos_train": 145,
+        "pos_test": 24,
+        "lam": 0.1
+      },
+      {
+        "word": "down",
+        "auc": 0.9997916666666666,
+        "pos_train": 273,
+        "pos_test": 40,
+        "lam": 0.1
+      },
+      {
+        "word": "white",
+        "auc": 0.9997838368951117,
+        "pos_train": 610,
+        "pos_test": 115,
+        "lam": 0.1
+      },
+      {
+        "word": "man",
+        "auc": 0.9997505819753908,
+        "pos_train": 1068,
+        "pos_test": 194,
+        "lam": 0.1
+      },
+      {
+        "word": "woman",
+        "auc": 0.9996781046803579,
+        "pos_train": 357,
+        "pos_test": 49,
+        "lam": 0.1
+      },
+      {
+        "word": "group",
+        "auc": 0.9996344396344397,
+        "pos_train": 341,
+        "pos_test": 55,
+        "lam": 0.1
+      },
+      {
+        "word": "shirt",
+        "auc": 0.999628063581552,
+        "pos_train": 314,
+        "pos_test": 54,
+        "lam": 0.1
+      },
+      {
+        "word": "green",
+        "auc": 0.9995738485031429,
+        "pos_train": 192,
+        "pos_test": 29,
+        "lam": 0.1
+      },
+      {
+        "word": "street",
+        "auc": 0.999573087431694,
+        "pos_train": 124,
+        "pos_test": 24,
+        "lam": 0.1
+      },
+      {
+        "word": "dogs",
+        "auc": 0.9995677731673582,
+        "pos_train": 209,
+        "pos_test": 36,
+        "lam": 0.1
+      },
+      {
+        "word": "mouth",
+        "auc": 0.9995352295965793,
+        "pos_train": 150,
+        "pos_test": 22,
+        "lam": 0.1
+      },
+      {
+        "word": "black",
+        "auc": 0.9994016055383709,
+        "pos_train": 763,
+        "pos_test": 124,
+        "lam": 0.1
+      },
+      {
+        "word": "people",
+        "auc": 0.9992811743341404,
+        "pos_train": 331,
+        "pos_test": 56,
+        "lam": 0.1
+      },
+      {
+        "word": "ball",
+        "auc": 0.9991069634524793,
+        "pos_train": 268,
+        "pos_test": 47,
+        "lam": 0.1
+      },
+      {
+        "word": "snow",
+        "auc": 0.9988900273224044,
+        "pos_train": 235,
+        "pos_test": 24,
+        "lam": 0.1
+      },
+      {
+        "word": "walking",
+        "auc": 0.9988548412573053,
+        "pos_train": 176,
+        "pos_test": 26,
+        "lam": 0.1
+      },
+      {
+        "word": "large",
+        "auc": 0.9986860328846905,
+        "pos_train": 131,
+        "pos_test": 29,
+        "lam": 0.1
+      },
+      {
+        "word": "running",
+        "auc": 0.9978604031951313,
+        "pos_train": 294,
+        "pos_test": 44,
+        "lam": 0.1
+      },
+      {
+        "word": "standing",
+        "auc": 0.9972005842259006,
+        "pos_train": 269,
+        "pos_test": 52,
+        "lam": 0.1
+      },
+      {
+        "word": "water",
+        "auc": 0.997184495528787,
+        "pos_train": 390,
+        "pos_test": 67,
+        "lam": 0.1
+      },
+      {
+        "word": "sitting",
+        "auc": 0.9965197627756668,
+        "pos_train": 190,
+        "pos_test": 29,
+        "lam": 0.1
+      },
+      {
+        "word": "up",
+        "auc": 0.9960621761658031,
+        "pos_train": 172,
+        "pos_test": 35,
+        "lam": 0.1
+      },
+      {
+        "word": "through",
+        "auc": 0.9955068467097756,
+        "pos_train": 283,
+        "pos_test": 44,
+        "lam": 0.1
+      },
+      {
+        "word": "holding",
+        "auc": 0.9943307793775084,
+        "pos_train": 191,
+        "pos_test": 37,
+        "lam": 0.1
+      },
+      {
+        "word": "child",
+        "auc": 0.9942622401821795,
+        "pos_train": 227,
+        "pos_test": 47,
+        "lam": 0.1
+      },
+      {
+        "word": "playing",
+        "auc": 0.9924998450381206,
+        "pos_train": 286,
+        "pos_test": 51,
+        "lam": 0.1
+      },
+      {
+        "word": "stands",
+        "auc": 0.9887060791968767,
+        "pos_train": 123,
+        "pos_test": 22,
+        "lam": 0.1
+      },
+      {
+        "word": "person",
+        "auc": 0.9837948717948718,
+        "pos_train": 143,
+        "pos_test": 25,
+        "lam": 0.1
+      },
+      {
+        "word": "wearing",
+        "auc": 0.9820390070921986,
+        "pos_train": 351,
+        "pos_test": 60,
+        "lam": 0.1
+      },
+      {
+        "word": "another",
+        "auc": 0.9796853388658368,
+        "pos_train": 219,
+        "pos_test": 36,
+        "lam": 10.0
+      }
+    ]
+  },
+  "dropped_image": [
+    "jumps",
+    "runs",
+    "riding",
+    "behind",
+    "player"
+  ],
+  "dropped_text": [
+    "jumps",
+    "runs",
+    "riding",
+    "behind",
+    "player"
+  ],
+  "repro": "```text\n实验名称：检索线 W4：前端线性探针（第十一轮）\n日期：2026-10-17 17:34:38 中国标准时间\nGit commit：b37701a438fa136c106222a1f80dfdba43236a7a\nGit 状态：有 4 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120\n随机种子：0\n依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57\n运行命令：run_probe.py\n耗时：0.0 s\n备注：linear probe, ridge closed form, no sklearn\n备注：词表：train 中 df>=50 的前 50 个内容词\n```"
+}
