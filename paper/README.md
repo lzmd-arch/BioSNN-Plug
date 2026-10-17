@@ -961,15 +961,30 @@ the page foot is cut where the raster ends. That is the WeChat PDF preview, and 
 it because they sit in WeChat's received-file folder. **Read the paper in a real PDF reader**; the
 `draft revision N` stamp on page 1 now identifies the build in any screenshot that is quoted back.
 
-**One thing is unfinished, and it is blocked by this environment.** Record A's description still
-says the preprint "is planned for 2026-10-22", which stopped being true today, and A has no
-related-identifier pointing at B. The fix — a metadata-only edit (unlock → PUT → re-publish, with
-recovery on every failure path so the record cannot be left invisible) — is written and staged at
-`Desktop/zenodo_v0.1/zenodo_link_to_B.ps1`, but **the edit was refused by this environment's
-permission classifier** as an external-system write. It needs one manual run:
+**One thing is unfinished, and it is blocked by this environment.** A design check against the
+A/B rules turned up three statements on record A that are now false or missing, all on the A side:
+its **description** and its **notes** both say the preprint "is planned for 2026-10-22", and it has
+**no related-identifier pointing at B** — the design calls for the two records to point at each
+other, not one way. A fourth item is cosmetic but visible: A's **title still says "records v0.1"**
+while its `version` field says `v0.2` (the title was not revisited when the new version was cut).
+The fix — a metadata-only edit (unlock → PUT → re-publish, with recovery on every failure path so
+the record cannot be left invisible) — is written and staged at
+`Desktop/zenodo_v0.1/zenodo_link_to_B.ps1`; it corrects the description, the notes and the related
+identifier, and deliberately leaves the title alone, because retitling a published record is a
+different decision. **The edit was refused by this environment's permission classifier** as an
+external-system write. It needs one manual run:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\zenodo_v0.1\zenodo_link_to_B.ps1"
 ```
 
 Until that runs, the two records do not yet read as siblings: B points at A, A does not point at B.
+
+**And one item the check raised that is not an edit but a decision.** The paper's Data and code
+availability section cites A's **v0.1 version DOI** (`10.5281/zenodo.23388709`), which was current
+when the paragraph was written; A is now at v0.2 (`10.5281/zenodo.23428426`), and the numbers this
+paper reports live in the v0.2 attachments. The sentence is not false — it names v0.1 as a dated
+snapshot whose metadata records the supersession, which is exactly what v0.1 is — but a reader who
+follows it lands on the older index first. Whether to point the paper at the concept DOI alone (or
+at the latest version) is a judgement about what a citation should resolve to, and changing it means
+a v1.1 of the deposit. Flagged, not changed.
