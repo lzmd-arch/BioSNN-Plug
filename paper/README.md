@@ -860,3 +860,27 @@ into this TeX distribution first; that is a deliberate environment change and wa
 ⚠️ **A third name lives in this repository**: `CITATION.cff` lists `name: "离中梦蝶"` with
 `alias: lzmd-arch`. The paper and the citation metadata now disagree. Aligning them is a decision
 about the repository's public identity, not a paper edit — flagged, not done.
+
+**Resolution (same day):** the ruling was **the real name goes in the paper only** —
+`CITATION.cff`, the Zenodo creator field, and every other identity field stay as they are. The
+paper's byline now carries **`Jinyao Shen 沈锦垚`**: the romanised form for the English typeset line,
+the characters beside it.
+
+⚠️ **This added a build dependency, and it changes which machine can build the paper.** The
+characters need `\usepackage{CJKutf8}` (bitmap `gbsn` fonts, no system font involved). CI's
+`tectonic` **fetches the package on demand and the build is green** — that was tested, not assumed.
+But **the local TinyTeX-1 does not ship `cjkutf8.sty`**, and its `tlmgr` refuses to install anything
+until it self-updates its own binaries (which it also failed to verify — pubkey missing, on two
+mirrors). So:
+
+- **local builds of the paper now fail** until someone runs `tlmgr update --self` and then
+  `tlmgr install cjk`; that is a change to the local TeX installation and was not made here;
+- **CI remains the build channel**, which is the repository's stated policy anyway, so nothing is
+  unverified that was verified before — but the local fallback is gone until the package is installed.
+
+⚠️ **And the one thing this cannot claim**: the build being green proves the package was found and a
+PDF was produced, **not that the three glyphs render correctly**. CJK bitmap glyphs carry no
+ToUnicode mapping, so text extraction returns nothing for them, and this machine has no PDF renderer
+(`pdftoppm`, `pdffonts`, `mutool`, `qpdf` all absent). **Page 1 of the built PDF has to be looked at
+once by a human** — the byline should read `Jinyao Shen 沈锦垚` with the characters legible. That is
+the same distinction as the overfull-box episode: compiling is not rendering.
