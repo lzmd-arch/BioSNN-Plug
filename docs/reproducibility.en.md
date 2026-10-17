@@ -182,7 +182,7 @@ reproduced with `scripts/download_data.py` (per-file checksums), as §12.1 requi
 When writing a paper: draw curves from the `curve` field in the json; take medians and minima from the
 summary logs or aggregate the json yourself; and **only report acceptance numbers from the fresh-seed
 batch** (for W3 that is `step14_confirm`, seeds 45-64 -- the tuning batch is 25-44; both pass, but the
-~27% gap between them is itself part of the conclusion).
+~26% gap between them is itself part of the conclusion).
 
 ## Where later phases record this
 

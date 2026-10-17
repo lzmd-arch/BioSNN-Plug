@@ -479,13 +479,16 @@ learning rate and the neuron model:
 Learning rate & ALIF ($\beta=0.07$) & LIF ($\beta=0$) & LIF $-$ ALIF \\
 \midrule
 $10^{-3}$ & 0.7564 & \textbf{0.7657} & $+0.93$ pp \\
-$2\times10^{-3}$ & 0.7764 & \textbf{0.7867} & $+1.04$ pp \\
+$2\times10^{-3}$ & 0.7764 & \textbf{0.7867} & $+1.03$ pp \\
 $5\times10^{-3}$ & 0.7983 & \textbf{0.8088} & $+1.05$ pp \\
 $10^{-2}$ & 0.8002 & \textbf{0.8125} & $+1.23$ pp \\
 \bottomrule
 \end{tabular}
 \caption{W2 learning-rate sweep, five seeds per cell. The LIF rows were run
-after the ALIF rows, at matched seeds, on the same machine.}
+after the ALIF rows, at matched seeds, on the same machine. The last column is
+the difference of the two accuracies \emph{as printed}, so every row can be
+checked by subtracting the row --- computing it from the unrounded means instead
+would move one entry by 0.01 pp.}
 \label{tab:w2-lr}
 \end{table}
 
@@ -635,7 +638,7 @@ a result.}
 \label{fig:w3-greedy}
 \end{figure}
 
-The tuning-to-acceptance drop is about 27\%, and it is the single most useful
+The tuning-to-acceptance drop is about 26\%, and it is the single most useful
 number in this subsection: a rule tuned on seeds 25--44 and reported on those
 same seeds would have claimed 319.8. The peak-median row is a diagnostic, not an
 acceptance quantity --- it records that the policy is still wandering rather than

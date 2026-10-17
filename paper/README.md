@@ -74,25 +74,47 @@ a verified ledger entry, and a later version of this paper may want it.)*
 
 ## Release plan: two versions, one source
 
-**Decision (2026-10-17): this paper is managed as an arXiv full version plus a compressed
-conference version.** The measurement is 19 pages, which arXiv does not mind and IJCNN/WCCI
-(≈10 pages) will not accept. Rather than cut later under deadline pressure, the split is declared
-now and the cuts are chosen by what a compressed reader needs:
+**Venue facts, checked against the source on 2026-10-17** (IEEE WCCI 2026 *Information for
+authors*, <https://attend.ieee.org/wcci-2026/information-for-authors/> — WCCI is the congress that
+hosts IJCNN, so these govern an IJCNN submission):
 
-- **First to go — appendices A–D.** They are evidence for claims, not claims: the full
-  configuration dumps, the reproduction checklist, the triviality details, and the search
-  specification. A conference version cites them and points at the repository and the archived
-  record; the arXiv version keeps them.
-- **Second — §4 (Experimental Setup) compresses into §3.2**, since the protocol is the substance
-  and the hardware list is not.
-- **Never cut, in either version**: §5.5's self-refutation paragraph, §1.4 and §6.3's stated
-  boundaries, §2.2's framing of Miconi as a contrast rather than support, W3's disclosure of
-  the tuning-to-acceptance selection effect, and the two disclosure sections ("Data and code
-  availability", "Use of AI assistance"). Those are the paper's character, not its padding.
-  ⚠️ A compression pass must not silently turn any of them into a more flattering reading.
+| Requirement | What the venue says | What we have |
+| :--- | :--- | :--- |
+| **Page limit** | **up to 6 pages, *including references and appendices***; up to 2 extra pages for an added charge (8 max) | **20 pages** |
+| **Template** | IEEE conference proceedings template, 10 pt body; LaTeX: `\documentclass[10pt,conference]{IEEEtran}` | `article`, 11 pt, single column |
+| **Deviations** | "may result in desk rejection without further review" | — |
+| **Review** | **double blind**; the submission "should be anonymized" | author block + repository URL + two DOIs, all identifying |
+| **AI text** | "must be disclosed in **acknowledgements**" | disclosed in a standalone section |
+
+⚠️ **Correction to an earlier note in this file.** An earlier version of this plan said the limit was
+"≈10 pages" and proposed cutting appendices A–D plus merging §4 into §3.2. That was wrong on the
+number and, because of it, wrong on the plan: **6 pages including references is not a trim, it is a
+different paper.** Cutting all four appendices and §4 removes roughly four pages of a twenty-page
+manuscript. The honest statement is that **no compressed version exists yet**, and producing one is
+a rewrite task with its own budget, not a post-processing step.
+
+**What the compressed version has to decide**, in order:
+
+1. **Which of the three rule lines survives.** Three lines, a neuron-model × learning-rate grid, a
+   matched-budget BPTT control, a negative SHD result, a resource sweep, and a protocol — that is
+   five papers' worth of claims in six pages. The protocol and the control are the paper's
+   contribution; W1 or the resource sweep is the candidate to drop to a sentence.
+2. **Anonymisation.** Author block, repository URL, the Zenodo DOIs, and the "sole author" phrasing
+   all identify. Everything that points at the repository has to go or be neutralised for the
+   submission, and restored for the arXiv version.
+3. **The AI disclosure moves into Acknowledgements**, per the venue rule — carrying the substance,
+   with the full version's section cited as the detail.
+
+**What must survive *in substance* in the compressed version**, however short it gets: §5.5's
+self-refutation (the control wins by 7.41 points, and the resource curve does not support the
+quadratic claim), §1.4 and §6.3's stated boundaries, §2.2's framing of Miconi as a contrast rather
+than support, W3's disclosure of the tuning-to-acceptance selection effect, and the AI disclosure.
+⚠️ A compression pass may shorten these; it may not silently turn any of them into a more
+flattering reading, and it may not drop one to make room for a result.
 
 ⚠️ **The two versions must not diverge in numbers.** The conference version is a subset of the
-arXiv version at the same commit; if a number changes, both are rebuilt. (The five uncited entries —
+arXiv version at the same commit; if a number changes, both are rebuilt. And the arXiv version
+stays the record of what was measured — the compressed one is what fits. (The five uncited entries —
 `fremaux2010`, `pogodin2020kernelized`, `shen2025taaf`, `hu2026pssnn`, `hajizada2026clp` —
 belong to §3 and later.)
 
@@ -762,3 +784,42 @@ one that receives none.
 ⚠️ **One more overfull box came with it** — `\texttt{paper/README.md}`, unbreakable at the slash —
 fixed with `\allowbreak`. Worth noting because it is now the *second* time a new section has
 introduced a margin violation that the compiler flagged and text extraction did not.
+
+## Draft log — the verification round (2026-10-17)
+
+Verification was done **mechanically where possible**: a script recomputed every reported number
+from `sweep_results/` and checked for the resulting string in the source, rather than re-reading
+the paper for typos. 35 numbers, 34 clean, **1 real discrepancy**, plus a second one found by
+following the first.
+
+**① The learning-rate table's difference column mixed two arithmetic routes.** The LIF−ALIF
+column read +0.93 / +1.04 / +1.05 / +1.23. Recomputing: the 1e-3 value came from subtracting the
+*rounded* means (0.7657 − 0.7564) while the 2e-3 value came from the *unrounded* ones (0.7867 −
+0.7764 = 1.038). So a reader subtracting the table's own cells matched three rows and missed one.
+Fixed by choosing a convention and stating it: the differences are now of the accuracies **as
+printed**, and Table 2's caption says so and says what the alternative would move. Nine places
+across the paper, the W2 README (three languages) and the record index. ⚠️ **Two files were
+deliberately not touched**: `paper/README.md`'s quotation of the old delivered text (that is a
+historical record of an edit) and `w2_lif_lr020_prereg.md` (a pre-registration is a snapshot of
+what was written before the data — editing it would be the one thing this project cannot do).
+
+**② W3's "27% selection effect" had no arithmetic behind it.** The claim is that the tuning batch's
+median (319.8) falls to the acceptance batch's (237.8), "about 27%". It is 25.6% — and neither
+alternative reading (relative to the acceptance batch: 34.5%; as a ratio: 74.4%) gives 27 either.
+So it was a derived percentage that no computation produced, inherited from the record into the
+paper. Corrected to 26% in eight places: the paper, the R-STDP README (three languages), the
+reproducibility checklist (three languages), and the record index. ⚠️ The *other* "18–27%" in this
+repository is ESPP's self-reported fraction of updated time steps and is unrelated — left alone.
+
+**③ Citations: 22 of 22 verified against the ledger**, mechanically, on (first author, year).
+
+⚠️ **Both of my checking scripts lied first.** The number checker reported four false misses because
+the LaTeX writes thousands as `1{,}688.6`; the citation checker reported four false misses because
+`Fr{\'e}maux`, `Korcs{\'a}k-Gorzo` and `{BEKO2210}` are not the strings the ledger uses. A
+verification tool that has not been verified is not evidence — and this is the second time in this
+project that the checker, not the checked, was what needed fixing.
+
+**④ The venue check changed the plan.** See the release plan above: the target's limit is **6 pages
+including references**, not the ~10 assumed earlier, which makes the compressed version a rewrite
+rather than a trim, and the submission **double-blind**, which the current front matter and both
+DOIs are not.

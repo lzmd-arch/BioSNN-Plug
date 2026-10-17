@@ -15,7 +15,7 @@
 | (our own added "stable" condition) minimum | **121** | 109 | ≥ 100 ✓ |
 
 **Both seed batches pass**, and **no seed falls below 100**. To be honest about it, a gap of about
-27% remains between the two (319.8 → 237.8), so **a selection effect is real** — but both batches sit
+26% remains between the two (319.8 → 237.8), so **a selection effect is real** — but both batches sit
 above 200 at the median and above 100 at the minimum, and that is the part that matters.
 
 **Acceptance configuration** (now the defaults, see [ADR-0009](../../docs/adr/ADR-0009-w3-behaviour-policy-and-trace-centring.en.md)): Boltzmann behaviour policy +

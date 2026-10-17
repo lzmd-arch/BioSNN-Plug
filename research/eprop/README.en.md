@@ -44,7 +44,7 @@ than the neuron model** -- moving lr from 2e-3 to 1e-2 alone is **+2.38 percenta
 30 epochs; and **the 250-epoch setting finally converges** (last-20-epoch window-mean increments
 +0.0016 / -0.0037 / +0.0025, both signs present), so "every W2 number is budget-truncated" **stops
 being true here**. There is also a **counter**-finding on boundary 8: **LIF scores higher than ALIF
-at every one of the four learning rates** (+0.93 / +1.04 / +1.05 / +1.23 points).
+at every one of the four learning rates** (+0.93 / +1.03 / +1.05 / +1.23 points).
 
 **2026-10-16: the official number changes arms.** The official headline figure becomes **LIF @
 lr=1e-2 @ 250 epochs = 0.8889** (three seeds 0.8962 / 0.8854 / 0.8851, range 1.11 points; artefacts
@@ -535,7 +535,7 @@ This section matters more than the conclusion.
    | Same lr | LIF (beta=0) | ALIF (beta=0.07) | Delta |
    | :--- | ---: | ---: | ---: |
    | 1e-3 | **0.7657** (0.7616-0.7689) | 0.7564 | +0.93 pp |
-   | 2e-3 | **0.7867** (0.7801-0.7899) | 0.7764 | +1.04 pp |
+   | 2e-3 | **0.7867** (0.7801-0.7899) | 0.7764 | +1.03 pp |
    | 5e-3 | **0.8088** (0.7989-0.8216) | 0.7983 | +1.05 pp |
    | 1e-2 | **0.8125** (0.8016-0.8230) | 0.8002 | +1.23 pp |
 
