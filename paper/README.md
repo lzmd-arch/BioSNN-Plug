@@ -823,3 +823,40 @@ project that the checker, not the checked, was what needed fixing.
 including references**, not the ~10 assumed earlier, which makes the compressed version a rewrite
 rather than a trim, and the submission **double-blind**, which the current front matter and both
 DOIs are not.
+
+## Draft log — citation verification and the author name (2026-10-17)
+
+**Citations: all 22 verified against the ledger by title *and* year**, mechanically — a step past
+the earlier author-and-year check. One metadata action came out of it: `pes2025tp` is **published**
+(*Neuromorphic Computing and Engineering* 6(1):014002, 2026), which ledger entry [2] had flagged as
+"出处不完整". Its note now carries the journal version and DOI, while the arXiv version stays the
+cited one — that is the version whose table this paper's numbers were checked against.
+
+**The ledger's status column, read against what this paper actually cites**: `pes2025tp` is
+`metadata-error` (the dataset name — the paper already says N-MNIST, which is the corrected
+reading); `pogodin2020kernelized` is `partial` (an over-strong phrase in the *plan*, not in this
+paper); `membrain2026` is `metadata-error` about the author field (the entry already uses the GitHub
+handle). The remaining flagged entries are not cited here.
+
+⚠️ **The checker lied twice more before it worked** — and both times it was the checker, not the
+bib. First it reported 11 misses because normalising punctuation to spaces produces *double* spaces
+while the needle was single-spaced; then, fixing that line with `perl -pe`, the `\s` in the
+replacement lost its backslash and the regex became "delete every letter s", which made the misses
+worse. **That is the sixth shell-quoting failure of this session**, in the same family as ㉜, and it
+happened *while* fixing a checker. The rule is in the plan and in memory; what keeps failing is
+reaching for `sed`/`perl` instead of the editor.
+
+**Author name: `lzmd-arch` → `Jinyao Shen`.** The paper now carries a real name rather than the
+handle, which also resolves the arXiv pseudonym question from the release plan in the direction of
+the real-name policy — and introduces a new requirement: **the double-blind submission must strip
+it**, along with the repository URL and both DOIs.
+
+⚠️ **The Chinese form 沈锦垚 is not in the PDF, and could not be.** The experiment: adding
+`\usepackage{CJKutf8}` and the characters around the name fails here — **TinyTeX-1 does not ship
+`cjkutf8.sty`** — so the local build stopped at a missing package. The romanised form is what an
+English-language venue expects anyway. Rendering the characters needs the `cjk` package installed
+into this TeX distribution first; that is a deliberate environment change and was not made.
+
+⚠️ **A third name lives in this repository**: `CITATION.cff` lists `name: "离中梦蝶"` with
+`alias: lzmd-arch`. The paper and the citation metadata now disagree. Aligning them is a decision
+about the repository's public identity, not a paper edit — flagged, not done.
