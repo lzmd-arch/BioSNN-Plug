@@ -528,6 +528,13 @@ paper, and it forced one licence onto files that have two different native ones.
   Zenodo's **public** API after publishing, not from the upload response.
   ⚠️ **arXiv is still pending**: the endorsement question (standing item 3 below) is unresolved and
   is a human action, not a script.
+- **Record B, v1.1 — PUBLISHED 2026-10-17**, version DOI **`10.5281/zenodo.23429379`** (concept DOI
+  unchanged, `10.5281/zenodo.23429027`). Same benchmark and the same numbers; the new version carries
+  the corrected references, the cleaned title page and the availability paragraph that cites A by
+  concept DOI. Attachment `BioSNN-Plug_P2_paper_v1.1.pdf`, 658,813 bytes, `md5:c63ef633fb…`,
+  built from `b2c8694`. v1.0 (`10.5281/zenodo.23429028`) is untouched and remains fetchable; the
+  record's own description opens with a “What changed in v1.1” paragraph, so a reader landing on
+  either version can see which one they have.
 
 **Standing items for B:**
 
@@ -1024,7 +1031,7 @@ cites record A by its **concept DOI** with the **current version** spelled out
 (`23388708` / `23428426`), instead of a version DOI that resolved to the superseded 2026-10-15
 snapshot.
 
-⚠️ **Consequence for the deposit:** the source no longer produces the PDF that is published as
-`v1.0`. Either the Zenodo record moves to `v1.1` with this file, or the record stays at `v1.0` and
-the repository carries a newer source than the published artifact. That is a decision, not a
-mechanical step — flagged here, not taken.
+**Decision taken:** the source no longer produces the PDF published as `v1.0`, so the record moved to
+**v1.1** with this file (`10.5281/zenodo.23429379`). The alternative — leaving the record at `v1.0`
+while the repository carries a newer source — was rejected because it makes the published artifact
+reproducible from nothing. v1.0 stays fetchable at its own DOI, and its description points forward.
