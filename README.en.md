@@ -243,6 +243,17 @@ One maintainer; reports with a complete reproduction get priority.
 - code under `research/` makes no compatibility promises for its first 12 months (until 2027-09);
 - third-party modality plugins can simply be their own packages; no PR to this repository is needed ([ADR-0003](docs/adr/ADR-0003-entry-point-plugin-discovery.en.md)).
 
+## Acknowledgements
+
+Development of this project used **DeepSeek**'s large-model service: literature and API
+research, code drafts, debugging, and documentation editing all had it in the loop.
+
+The boundary is stated the way this repository always states it: **it produced no conclusion
+that is not reproducible**. Every number under `research/` and `sweep_results/` comes from a
+script that can be re-run and from a per-run record, guarded by tests and CI; claims and mistakes
+are the maintainer's. This is the same standard as the paper's AI-use disclosure, in the
+"Use of AI assistance" section of [paper/README.md](paper/README.md).
+
 ## License and citation
 
 Code [Apache-2.0](LICENSE); documentation and the project plan [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). Datasets follow the license of each data source; this repository ships no data mirrors — the download and preprocessing script is [scripts/download_data.py](scripts/download_data.py).

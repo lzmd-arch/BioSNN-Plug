@@ -226,6 +226,16 @@ scripts/               CI と pre-commit が使うチェックスクリプト
 - `research/` 配下のコードは最初の 12 か月（2027-09 まで）は互換性を約束しない；
 - サードパーティのモダリティプラグインは独立したパッケージにすればよく、本リポジトリに PR を出す必要はない（[ADR-0003](docs/adr/ADR-0003-entry-point-plugin-discovery.ja.md)）。
 
+## 謝辞
+
+本プロジェクトの開発では **DeepSeek** の大規模モデルサービスを利用した。文献と API の調査、
+コードの草案、デバッグ、ドキュメントの推敲の各段階に参加している。
+
+境界は本リポジトリが常に用いる書き方で明示する：**再現できない結論は一つも生んでいない**。
+`research/` と `sweep_results/` のすべての数値は、再実行できるスクリプトと実行ごとの記録に
+由来し、テストと CI が守っている。主張と誤りはメンテナの責任である。これは論文の AI 利用
+表明と同じ基準であり、[paper/README.md](paper/README.md) の「Use of AI assistance」節にある。
+
 ## ライセンスと引用
 
 コードは [Apache-2.0](LICENSE)、ドキュメントとプロジェクト計画書は [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)。データセットは各データソースのライセンスに従い、本リポジトリはデータミラーを提供しない；ダウンロードと前処理スクリプトは [scripts/download_data.py](scripts/download_data.py)。

@@ -210,6 +210,16 @@ scripts/               CI 与 pre-commit 用的检查脚本
 - `research/` 下的代码前 12 个月（至 2027-09）不做兼容性承诺；
 - 第三方模态插件独立成包即可，不需要往本仓库提 PR（[ADR-0003](docs/adr/ADR-0003-entry-point-plugin-discovery.md)）。
 
+## 致谢
+
+本项目的开发过程使用了 **DeepSeek** 的大模型服务：文献与接口调研、代码草稿、调试、
+文档润色等环节都有它参与。
+
+边界按本仓库一贯的写法写清楚：**它没有产生任何一条未经复现的结论**。`research/` 与
+`sweep_results/` 里的每个数字都来自可重跑的脚本与逐次记录，由测试与 CI 守住；主张与错误
+由维护者负责。这与论文里的 AI 使用声明是同一口径，见
+[paper/README.md](paper/README.md) 的 “Use of AI assistance” 一节。
+
 ## 许可证与引用
 
 代码 [Apache-2.0](LICENSE)，文档与计划书 [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)。数据集遵循各数据源许可，本仓库不提供数据镜像；下载与预处理脚本是 [scripts/download_data.py](scripts/download_data.py)。
