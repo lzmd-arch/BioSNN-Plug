@@ -988,3 +988,43 @@ snapshot whose metadata records the supersession, which is exactly what v0.1 is 
 follows it lands on the older index first. Whether to point the paper at the concept DOI alone (or
 at the latest version) is a judgement about what a citation should resolve to, and changing it means
 a v1.1 of the deposit. Flagged, not changed.
+
+## Draft log — every citation checked against its current version (2026-10-17)
+
+The request was to make sure no reference is stale. All 22 cited entries were checked against
+Crossref, OpenAlex and Semantic Scholar by DOI or title — not by recall — and four had a published
+version the bibliography was not pointing at:
+
+| entry | was | now |
+| --- | --- | --- |
+| `korcsak2025event` | arXiv:2511.21674 (2025) | *Neuromorphic Computing and Engineering* **6**(3):034024 (2026), doi `10.1088/2634-4386/ae96d1`. The journal title also dropped the preprint subtitle |
+| `benchmarks2024locality` | arXiv:2402.01782, note saying "published in IEEE Access" | *IEEE Access* **13**:113606–113617 (2025), doi `10.1109/ACCESS.2025.3582564` |
+| `neurobench2023` | arXiv:2304.04640, note saying "appeared in Nature Communications" | *Nature Communications* **16**:1545 (2025), doi `10.1038/s41467-025-56739-4`. The published title differs from the preprint's, and the entry now carries the published one |
+| `step2025` | NeurIPS 2025, arXiv URL only | same venue, now with pages 177212–177240 and doi `10.52202/085713-5334` |
+
+`wang2026braintrace` gained its volume and article number (**17**:1745); its DOI was already the
+published one.
+
+**One entry was deliberately left pointing at the preprint.** `pes2025tp` now has a journal version
+(*Neuromorphic Computing and Engineering* **6**(1):014002, 2026), and the entry says so with its DOI
+— but the arXiv version stays the cited one, because §5.4's 63–81% SHD range was read off *that*
+table. Promoting the citation would attribute a number to a version nobody re-checked. The note now
+says this explicitly rather than leaving the reader to guess.
+
+**Verified against a build, not against intent.** Local `pdflatex → bibtex → pdflatex ×2`: 20 pages,
+zero overfull boxes, no undefined citations, and `main.bbl` inspected for the four changed entries —
+the journal names and page ranges are where the bibliography style puts them. (Reading the PDF text
+back can misplace a journal name inside a hyphenated title line; the `.bbl` is the authority on
+what was typeset.)
+
+**Also in this batch:** the `\date` line lost its `draft revision 8` stamp and repository URL — the
+paper is a published `v1.0` on Zenodo now, so a draft counter both contradicted the record and
+repeated a URL that already appears twice on page 1. The Data and code availability section now
+cites record A by its **concept DOI** with the **current version** spelled out
+(`23388708` / `23428426`), instead of a version DOI that resolved to the superseded 2026-10-15
+snapshot.
+
+⚠️ **Consequence for the deposit:** the source no longer produces the PDF that is published as
+`v1.0`. Either the Zenodo record moves to `v1.1` with this file, or the record stays at `v1.0` and
+the repository carries a newer source than the published artifact. That is a decision, not a
+mechanical step — flagged here, not taken.
