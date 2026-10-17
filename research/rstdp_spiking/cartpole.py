@@ -153,6 +153,9 @@ def train(
     critic_kind: str,
     critic_rate: float,
     gamma: float,
+    pop_post: str = "rate",
+    pop_readout: str = "uniform",
+    pop_normalize: bool = True,
     warmup: int,
     device: torch.device,
 ) -> TrainResult:
@@ -176,7 +179,14 @@ def train(
         critic = LinearCritic(n_features, gamma=gamma, learning_rate=critic_rate)
     elif critic_kind == "pop":
         critic = PopulationCritic(
-            n_features, gamma=gamma, learning_rate=critic_rate, generator=generator, device=device
+            n_features,
+            gamma=gamma,
+            learning_rate=critic_rate,
+            trace_post_factor=pop_post,
+            readout=pop_readout,
+            normalize=pop_normalize,
+            generator=generator,
+            device=device,
         )
     else:
         critic = None
@@ -243,6 +253,24 @@ def main(argv: list[str] | None = None) -> int:
         help="td=线性 TD；pop=TD-LTP 群体 Critic；ema=只用回报基线（对照）",
     )
     parser.add_argument("--critic-rate", type=float, default=1e-2, help="Critic 的步长 β")
+    parser.add_argument(
+        "--pop-post",
+        choices=("rate", "gradient"),
+        default="rate",
+        help="群体 Critic 痕迹的第二因子",
+    )
+    parser.add_argument(
+        "--pop-normalize",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="群体 Critic 权重是否行归一化",
+    )
+    parser.add_argument(
+        "--pop-readout",
+        choices=("uniform", "random"),
+        default="uniform",
+        help="群体 Critic 的读出（random=有符号，须配 gradient）",
+    )
     parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--device", default="cpu")
@@ -276,6 +304,9 @@ def main(argv: list[str] | None = None) -> int:
             critic_kind=args.critic,
             critic_rate=args.critic_rate,
             gamma=args.gamma,
+            pop_post=args.pop_post,
+            pop_readout=args.pop_readout,
+            pop_normalize=args.pop_normalize,
             device=device,
         )
         results.append(outcome)
@@ -298,6 +329,9 @@ def main(argv: list[str] | None = None) -> int:
             "baseline_decay": args.baseline_decay,
             "critic": args.critic,
             "critic_rate": args.critic_rate,
+            "pop_post": args.pop_post,
+            "pop_readout": args.pop_readout,
+            "pop_normalize": args.pop_normalize,
             "gamma": args.gamma,
             "warmup": args.warmup,
         },

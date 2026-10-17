@@ -46,3 +46,63 @@ class TestPopulationCritic:
         critic.reset_trace()
         assert float(critic.trace.abs().sum()) == 0.0
         assert torch.equal(critic.weights, before)
+
+
+class TestAblationSwitches:
+    """两处「速率版有、精简移植漏了」的机制：gradient 后因子与有符号读出。"""
+
+    def test_gradient_post_factor_uses_the_sigmoid_derivative(self):
+        critic = PopulationCritic(
+            4, n_units=6, trace_post_factor="gradient", generator=torch.Generator().manual_seed(0)
+        )
+        y = critic.rates(torch.ones(4))
+        assert torch.allclose(critic._post_factor(y), y * (1 - y))
+
+    def test_rate_post_factor_passes_the_rate_through(self):
+        critic = PopulationCritic(
+            4, n_units=6, trace_post_factor="rate", generator=torch.Generator().manual_seed(0)
+        )
+        y = critic.rates(torch.ones(4))
+        assert torch.allclose(critic._post_factor(y), y)
+
+    def test_signed_readout_requires_gradient(self):
+        """与速率版同一条约束：有符号读出配 rate 后因子会让一半单元的更新方向反过来。"""
+        import pytest
+
+        with pytest.raises(ValueError, match="gradient"):
+            PopulationCritic(
+                4,
+                n_units=6,
+                readout="random",
+                trace_post_factor="rate",
+                generator=torch.Generator().manual_seed(0),
+            )
+
+    def test_signed_readout_has_both_signs(self):
+        critic = PopulationCritic(
+            4,
+            n_units=16,
+            readout="random",
+            trace_post_factor="gradient",
+            generator=torch.Generator().manual_seed(0),
+        )
+        assert float(critic.readout.min()) < 0 < float(critic.readout.max())
+
+    def test_signed_readout_can_compute_a_value(self):
+        """回归：读出曾是 float64 而活动是 float32，torch.dot 直接报 dtype 错。
+
+        这条断言的价值就在"真的算一次值"——只检查符号的测试放过了那个 bug。
+        """
+        critic = PopulationCritic(
+            4,
+            n_units=8,
+            readout="random",
+            trace_post_factor="gradient",
+            generator=torch.Generator().manual_seed(0),
+        )
+        value = critic.value(torch.ones(4))
+        assert value == value  # not NaN
+
+    def test_uniform_readout_is_positive(self):
+        critic = PopulationCritic(4, n_units=8, generator=torch.Generator().manual_seed(0))
+        assert float(critic.readout.min()) > 0

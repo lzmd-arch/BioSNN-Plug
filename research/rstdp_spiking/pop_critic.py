@@ -69,6 +69,9 @@ class PopulationCritic:
         value_scale: float = 200.0,
         gamma: float = 0.99,
         bias_learning_rate: float = 1e-2,
+        trace_post_factor: str = "rate",
+        readout: str = "uniform",
+        normalize: bool = True,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
     ) -> None:
@@ -78,6 +81,16 @@ class PopulationCritic:
             raise ValueError(f"trace_decay 应在 [0, 1) 内，收到 {trace_decay}。")
         if gain <= 0 or value_scale <= 0:
             raise ValueError(f"gain 与 value_scale 必须为正，收到 {gain}、{value_scale}。")
+        if trace_post_factor not in ("rate", "gradient"):
+            raise ValueError(
+                f"trace_post_factor 只能是 'rate' 或 'gradient'，收到 {trace_post_factor!r}。"
+            )
+        if readout not in ("uniform", "random"):
+            raise ValueError(f"readout 只能是 'uniform' 或 'random'，收到 {readout!r}。")
+        if readout == "random" and trace_post_factor != "gradient":
+            # 与速率版同一条约束：全正读出的符号论证只在 rate 后因子下成立。
+            # 有符号读出配 rate 后因子会让一半单元的更新方向反过来——不是保守，是避免静默的错。
+            raise ValueError("readout='random'（有符号）必须配 trace_post_factor='gradient'。")
 
         device = device or torch.device("cpu")
         self.n_features = int(n_features)
@@ -89,12 +102,20 @@ class PopulationCritic:
         self.value_scale = float(value_scale)
         self.gamma = float(gamma)
         self.bias_learning_rate = float(bias_learning_rate)
+        self.trace_post_factor = trace_post_factor
+        self.readout_kind = readout
+        self.normalize = bool(normalize)
 
         gen = generator or torch.Generator(device=device)
         weights = torch.randn(n_units, n_features, generator=gen, device=device)
         self.weights = weights / (weights.norm(dim=1, keepdim=True) + 1e-12)
         self.trace = torch.zeros_like(self.weights)
-        self.readout = torch.full((n_units,), value_scale / n_units, device=device)
+        if readout == "uniform":
+            self.readout = torch.full((n_units,), value_scale / n_units, device=device)
+        else:
+            signs = torch.randint(0, 2, (n_units,), generator=gen, device=device) * 2 - 1
+            # dtype 必须与 weights 一致：torch.dot 不接受 float64 读出去点 float32 活动
+            self.readout = signs.to(self.weights.dtype) * (value_scale / n_units)
         # 输出侧可学偏置。**不是**单元阈值：它平移的是值本身。
         # 没有它，群体读出到不了"临死那步真值≈0"，终止步会稳定拿到一个大负 δ，
         # 而那一次更新落在痕迹视野内、与动作无关（速率版记载为 −11.3 vs 内部 +0.07）。
@@ -105,6 +126,12 @@ class PopulationCritic:
         """``(n_units,)`` 的单元活动。"""
         x = features.detach().flatten()
         return torch.sigmoid(self.gain * (self.weights @ x - self.bias))
+
+    def _post_factor(self, y: torch.Tensor) -> torch.Tensor:
+        """痕迹的第二因子：``rate`` 用发放率，``gradient`` 用 σ 对输入的导数。"""
+        if self.trace_post_factor == "rate":
+            return y
+        return y * (1.0 - y)
 
     def value(self, features: torch.Tensor) -> float:
         return float(torch.dot(self.readout, self.rates(features)) + self.out_bias)
@@ -128,10 +155,11 @@ class PopulationCritic:
             terminated=terminated,
             gamma=self.gamma,
         )
-        self.trace.mul_(self.trace_decay).add_(torch.outer(y, x))
+        self.trace.mul_(self.trace_decay).add_(torch.outer(self._post_factor(y), x))
         self.weights.add_(self.learning_rate * delta * self.trace)
-        norms = self.weights.norm(dim=1, keepdim=True) + 1e-12
-        self.weights.div_(norms)
+        if self.normalize:
+            norms = self.weights.norm(dim=1, keepdim=True) + 1e-12
+            self.weights.div_(norms)
         self.out_bias.add_(self.bias_learning_rate * delta)
         return delta
 

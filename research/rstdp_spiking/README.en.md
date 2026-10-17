@@ -51,6 +51,7 @@ uv run pytest research/rstdp_spiking -q
 uv run python -m research.rstdp_spiking.cartpole --smoke
 uv run python -m research.rstdp_spiking.cartpole
 uv run python -m research.rstdp_spiking.cartpole --seeds 0,1,2,3,4 --episodes 1200 --learning-rate 1e-4
+uv run python -m research.rstdp_spiking.diagnose_critic
 ```
 
 **Evaluation protocol: the random stream is frozen.** A spiking network's output is itself random
@@ -82,23 +83,52 @@ cannot reach that low, so the terminal step gets a reliably large negative δ.
 | population, critic 5e-2 / 2e-1 / 3e-1 / 1.0 | 27.2 / 18.0 / 9.2 / 9.2 |
 | **population, five seeds at critic 1e-1, 800 episodes** | **36.2 / 12.9 / 9.4 / 40.8 / 15.7 — mean 23.0, 0/5** |
 
-Three readings:
+### Ablation: porting the omitted mechanisms shows the problem is elsewhere (same day)
 
-1. **It is brittle, not merely untuned.** The same configuration reaches 78.4 at 800 episodes and
-   collapses to 9.3 at 1200; neighbouring rates (0.05 / 0.2 / 0.3 / 1.0) all collapse. That shape —
-   move a knob and it breaks — looks like **unstable training dynamics**, not undertuning.
-2. **The output bias is not the problem here.** Adding it moves 28.9 to 20.8, the wrong direction,
-   so the terminal-step issue recorded by the rate version has not reproduced as the dominant one
-   on this line.
-3. **The most likely explanation: the mechanisms this port omitted are load-bearing.** The rate
-   implementation also has a signed readout with a `gradient` post-factor constraint, and a bias
-   learned with its own step size. This port is explicitly a **simplified** one. The negative
-   result therefore points at "those mechanisms cannot be dropped", not at "population critics do
-   not work".
+The earlier version's hypothesis was "the mechanisms this port omitted are load-bearing". After
+porting them, **the hypothesis refuted itself** — each one toggled separately, five seeds × 800
+episodes, everything else fixed:
+
+| Variant | Mean best | Per seed |
+| :--- | ---: | :--- |
+| `rate` post-factor + uniform readout + row norm (original) | 23.0 | 36.2 / 12.9 / 9.4 / 40.8 / 15.7 |
+| `gradient` post-factor + uniform + norm | 32.9 | 61.7 / 14.3 / 9.2 / 69.8 / 9.7 |
+| `gradient` + **signed readout** + norm | 14.3 | 9.2 / 9.2 / 34.4 / 9.2 / 9.7 |
+| `gradient` + uniform + **no row norm** | **56.8** | 69.2 / 37.3 / 104.9 / 63.1 / 9.3 |
+| `gradient` + signed + no norm | 41.3 | 49.2 / 9.2 / 105.1 / 33.9 / 9.3 |
+| reference: linear TD (not a population) | 109.8 | 102.8 / 39.0 / 19.6 / 138.5 / 249.0 |
+
+Readings:
+
+1. **The `gradient` post-factor helps a little** (23.0 → 32.9); **the signed readout hurts**
+   (32.9 → 14.3, and 56.8 → 41.3 without normalisation).
+2. **The biggest single factor is row normalisation**: removing it takes 32.9 → **56.8**. That
+   normalisation was copied from the rate version, where it prevents divergence; on this line it
+   flattens the dynamic range of the value.
+3. **Porting everything still misses 200, and does not even reach the linear TD critic's 109.8**
+   (0/5 against 1/5).
+
+### Diagnosis: the population critic never learns the value function
+
+`diagnose_critic.py` freezes the policy after training and compares `V(s_t)` with the Monte-Carlo
+return `G_t`:
+
+| Critic | corr(V, G) | V range | G range |
+| :--- | ---: | :--- | :--- |
+| linear TD(0) | **+0.965** | 0.8 – 17.2 | 1.0 – 10.5 |
+| population (gradient, row norm) | **−0.496** | **18.3 – 19.9** | 1.0 – 10.5 |
+| population (gradient, no norm) | +0.217 | 12.0 – 18.2 | 1.0 – 27.5 |
+
+The population critic's `V` wanders inside a range 1.6 wide and is anti-correlated with returns —
+**the actor is being fed noise**, which is why changing the readout or the step size does not
+rescue it. Removing normalisation moves it from "anti-correlated" to "weakly correlated": the
+right direction, still far from +0.965.
 
 ⚠️ **Do not read this as "the TD-LTP population critic is infeasible"**: it says that **this
-simplified port**, on **this harness**, does not learn. Locating the problem in the structure
-would require porting the remaining mechanisms one at a time and ablating them.
+implementation**, on **this harness**, does not learn. With the three known suspects
+(normalisation, gradient scale, readout sign) ruled out, what remains is "the population's capacity
+and initialisation do not match this 64-dimensional population code" — which needs its own
+pre-registered round.
 
 ## Known boundaries
 
