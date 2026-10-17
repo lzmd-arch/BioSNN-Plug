@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import statistics
 import subprocess
@@ -73,6 +74,12 @@ W2_ACCEPT_EPOCHS = 30
 W3_DIR = REPO_ROOT / "sweep_results" / "step14_confirm"
 #: §七 第一阶段的步数判据，画成参考线。
 W3_THRESHOLD = 200.0
+#: 规模-资源扫描的目录模式：`sweep_results/w2_scale_n<size>/`。
+W2_SCALE_GLOB = "w2_scale_n*"
+#: 本机显存上限（MiB）。画成参考线——2048 那档越过了它，而它只是个大数时看不出来。
+DEVICE_MEMORY_MIB = 8151.0
+#: 二次参考线的斜率。数据离它有多远，是规模这一节最重要的结论。
+QUADRATIC_REF = 2.0
 
 # PNG 里会写进 matplotlib 的版本串；去掉它，产物才能逐字节比对。
 PNG_METADATA = {"Software": None}
@@ -397,6 +404,155 @@ def make_w3_curve() -> Path:
     return out
 
 
+def _scale_points() -> list[dict]:
+    """读规模-资源扫描的六个点（每档一个种子）。
+
+    Raises:
+        SystemExit: 产物不足两个点——那说明扫描还没跑。
+    """
+    points = []
+    for path in sorted((REPO_ROOT / "sweep_results").glob(f"{W2_SCALE_GLOB}/seed*.json")):
+        record = json.loads(path.read_text(encoding="utf-8"))
+        config = record["config"]
+        points.append(
+            {
+                "n_rec": int(config["n_rec"]),
+                "epochs": int(config["epochs"]),
+                "peak_mb": float(record["peak_mb"]),
+                "s_per_epoch": float(record["elapsed_s"]) / int(config["epochs"]),
+            }
+        )
+    if len(points) < 2:
+        raise SystemExit(
+            "规模扫描的产物不足两个点。先跑：\n  uv run python -m research.eprop.sweep_scale"
+        )
+    points.sort(key=lambda point: point["n_rec"])
+    return points
+
+
+def _loglog_slope(points: list[dict], key: str) -> float:
+    xs = [math.log(point["n_rec"]) for point in points]
+    ys = [math.log(point[key]) for point in points]
+    mx, my = statistics.fmean(xs), statistics.fmean(ys)
+    return sum((x - mx) * (y - my) for x, y in zip(xs, ys, strict=True)) / sum(
+        (x - mx) ** 2 for x in xs
+    )
+
+
+def make_w2_scale() -> Path:
+    """f4：规模-资源曲线，双面板 log-log。
+
+    这张图要说三件事，画法上就三件硬要求：**两条轴的 log 刻度**（斜率才有意义）、
+    **显存上限画成参考线**（2048 那档越过了它，不画出来就只是个大数）、以及**二次参考线**
+    （数据离二次有多远，是这一节最重要的结论，不能只写斜率数字）。
+    """
+    plt = _plt()
+    points = _scale_points()
+    sizes = [point["n_rec"] for point in points]
+    peaks = [point["peak_mb"] for point in points]
+    times = [point["s_per_epoch"] for point in points]
+    peak_slope = _loglog_slope(points, "peak_mb")
+    time_slope = _loglog_slope(points, "s_per_epoch")
+    #: 越界点：分配超过显存上限的那些档（0.5% 容差）。
+    over = [point for point in points if point["peak_mb"] > DEVICE_MEMORY_MIB * 1.005]
+
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.3))
+
+    for ax, values, slope, ylabel, key in (
+        (axes[0], peaks, peak_slope, "peak allocated memory (MiB)", "peak_mb"),
+        (axes[1], times, time_slope, "seconds per epoch", "s_per_epoch"),
+    ):
+        ax.set_xscale("log", base=2)
+        ax.set_yscale("log")
+        ax.plot(sizes, values, color="C0", linewidth=2.0, marker="o", markersize=5)
+        # 越界点圈出来：它不是同一类测量。
+        if over:
+            ax.plot(
+                [point["n_rec"] for point in over],
+                [point[key] for point in over],
+                color="C3",
+                marker="o",
+                markersize=9,
+                markerfacecolor="none",
+                markeredgewidth=2.0,
+                linestyle="none",
+            )
+        # 二次参考线：从最小点出发、斜率 2，用来看数据离二次有多远。
+        anchor = values[0] / sizes[0] ** QUADRATIC_REF
+        ax.plot(
+            sizes,
+            [anchor * size**QUADRATIC_REF for size in sizes],
+            color="0.6",
+            linestyle="--",
+            linewidth=1.2,
+            label=f"quadratic reference (slope {QUADRATIC_REF:.0f})",
+        )
+        ax.plot(
+            [],
+            [],
+            color="C0",
+            linewidth=2.0,
+            marker="o",
+            markersize=5,
+            label=f"measured (fitted slope {slope:.2f})",
+        )
+        ax.set_xlabel("recurrent neurons $n_{\\mathrm{rec}}$")
+        ax.set_ylabel(ylabel)
+        ax.set_xticks(sizes)
+        ax.set_xticklabels([str(size) for size in sizes], fontsize=8)
+        ax.grid(alpha=0.3, which="both")
+
+    axes[0].axhline(
+        DEVICE_MEMORY_MIB,
+        color="C3",
+        linestyle=":",
+        linewidth=1.6,
+        label=f"device memory ({DEVICE_MEMORY_MIB:,.0f} MiB)",
+    )
+    if over:
+        axes[0].plot(
+            [],
+            [],
+            color="C3",
+            marker="o",
+            markersize=9,
+            markerfacecolor="none",
+            markeredgewidth=2.0,
+            linestyle="none",
+            label="exceeds device memory",
+        )
+        axes[0].annotate(
+            "exceeds the device:\nspills to shared memory",
+            xy=(over[0]["n_rec"], over[0]["peak_mb"]),
+            xytext=(-10, -46),
+            textcoords="offset points",
+            fontsize=8,
+            ha="right",
+            arrowprops={"arrowstyle": "->", "color": "C3"},
+        )
+    # 图例放到最后：显存参考线与越界标记都是后面才加的，早画会把它们漏在legend 外。
+    for ax in axes:
+        ax.legend(fontsize=8.5, loc="upper left")
+    fig.suptitle(
+        "W2 (e-prop, sMNIST): resources against recurrent layer size "
+        f"({len(points)} sizes, {points[0]['epochs']} epochs each)",
+        fontsize=11,
+    )
+    fig.tight_layout()
+
+    out = FIGURES / "f4-w2-scale.png"
+    fig.savefig(out, dpi=160, metadata=PNG_METADATA)
+    PAPER_FIGURES.mkdir(parents=True, exist_ok=True)
+    fig.savefig(PAPER_FIGURES / out.name, dpi=160, metadata=PNG_METADATA)
+    plt.close(fig)
+
+    print(
+        f"       斜率：显存 {peak_slope:.3f}、耗时 {time_slope:.3f}"
+        + (f"；越界点 {[p['n_rec'] for p in over]}" if over else "；无越界点")
+    )
+    return out
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=__doc__.splitlines()[0],
@@ -405,8 +561,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "figures",
         nargs="*",
-        default=["f1", "w2-curve", "w3-curve"],
-        help="要画哪些图（f1 / w2-curve / w3-curve；默认全部）",
+        default=["f1", "w2-curve", "w3-curve", "w2-scale"],
+        help="要画哪些图（f1 / w2-curve / w3-curve / w2-scale；默认全部）",
     )
     return parser
 
@@ -421,8 +577,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"[画好] {make_w2_curve().relative_to(REPO_ROOT)}")
         elif name == "w3-curve":
             print(f"[画好] {make_w3_curve().relative_to(REPO_ROOT)}")
+        elif name == "w2-scale":
+            print(f"[画好] {make_w2_scale().relative_to(REPO_ROOT)}")
         else:
-            raise SystemExit(f"没有这张图：{name!r}。可用：f1、w2-curve、w3-curve。")
+            raise SystemExit(f"没有这张图：{name!r}。可用：f1、w2-curve、w3-curve、w2-scale。")
     return 0
 
 

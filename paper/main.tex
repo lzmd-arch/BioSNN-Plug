@@ -710,8 +710,21 @@ row's throughput is a paging measurement, not a compute one.}
 \label{tab:scale}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/f4-w2-scale.png}
+\caption{Resources against recurrent layer size, both axes logarithmic. The grey
+dashed line is a quadratic reference anchored at the smallest point: the data
+falls far below it, which is the figure's main content. The dotted red line is
+the device's memory; the circled point at $n_{\text{rec}} = 2{,}048$ is above it,
+having allocated into shared system memory --- that point's position in the right
+panel is therefore a paging measurement, not a compute one.}
+\label{fig:w2-scale}
+\end{figure}
+
 \textbf{The measurement contradicts the expectation we built it on.} Fitting
-log-log slopes over the six points gives \textbf{0.86 for memory} and 1.15 for
+log-log slopes over the six points (Figure~\ref{fig:w2-scale}) gives
+\textbf{0.86 for memory} and 1.15 for
 time. Memory therefore grows \emph{sub}-linearly here, not quadratically ---
 and this is not a small discrepancy to be explained away, because the quadratic
 term is not what dominates at these sizes. e-prop's eligibility traces are stored
