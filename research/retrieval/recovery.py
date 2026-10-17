@@ -38,7 +38,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="按第十轮预注册算恢复率")
     parser.add_argument("--local", type=Path, required=True, help="delta 的 summary.json")
     parser.add_argument("--upper", type=Path, required=True, help="ridge 的 summary.json")
-    parser.add_argument("--zero", type=float, default=None, help="零联想分数；缺省用 local 的随机基线")
+    parser.add_argument(
+        "--zero", type=float, default=None, help="零联想分数；缺省用 local 的随机基线"
+    )
     args = parser.parse_args(argv)
 
     local = json.loads(args.local.read_text(encoding="utf-8"))
