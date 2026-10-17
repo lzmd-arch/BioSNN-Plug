@@ -106,6 +106,9 @@
 | `retrieval_delta/` | 第二轮（delta 规则）：同样的数据/切分/种子，只换联想规则；预注册见 [`retrieval_delta_prereg.md`](retrieval_delta_prereg.md) |
 | `retrieval_ridge/` | 第三轮（**岭回归上界探针**，非局部规则、不作验收）：同样的数据/切分/种子；预注册见 [`retrieval_ridge_prereg.md`](retrieval_ridge_prereg.md) |
 | `retrieval_representation/` | 第四轮：表示网格（4 种表示 × 2 种联想 × 5 种子），配置按训练集 CV 选；预注册见 [`retrieval_representation_prereg.md`](retrieval_representation_prereg.md) |
+| `retrieval_knn/` | 第五轮：kNN 非线性上界探针（**非学习规则**），bus@256 与 plugin 两档；[`retrieval_knn_prereg.md`](retrieval_knn_prereg.md) |
+| `retrieval_randomfeatures/` | 第六轮：固定随机特征 + delta（bus@256）；[`retrieval_randomfeatures_prereg.md`](retrieval_randomfeatures_prereg.md) |
+| `retrieval_competitive/` | 第七轮：竞争联想记忆（赢者通吃）；[`retrieval_competitive_prereg.md`](retrieval_competitive_prereg.md) |
 
 每个 `seedN.json` 的键：
 
@@ -120,7 +123,9 @@
 ⚠️ **`hyperparameters` 里的 η 与 λ 是并列里的第一个，不是"选出来的最优"**：两个都只是
 全局缩放，余弦不变 → 网格上所有点同分。这条写进了 `research/retrieval/README.md`。
 
-汇总（5 种子均值）：外积 Hebb **R@1 = 0.141 / R@5 = 0.528**；delta 规则 **R@1 = 0.359 / R@5 = 0.845**；线性上界（岭回归，**非局部，不作验收**）**R@1 = 0.466**；第四轮表示网格里，线性上界在 bus@128/256/512 与 plugin 上分别是 0.466/0.476/0.469/0.479，delta 最高 0.407（bus@512）。随机 0.034。**四轮都没到 50%；加维度与绕过总线都无效，瓶颈在编码。**
+汇总（5 种子均值）：外积 Hebb **0.141**；delta **0.359–0.407**；线性上界（ridge，非局部）**0.466–0.479**；**kNN 非线性上界 0.555/0.562（无学习）**；固定随机特征 + delta **0.383**；竞争记忆（M≤64）**0.114**；随机 0.034。
+
+⚠️ **结论不是「达标」**：唯一越过 50% 的是 kNN，而它不学习；让竞争记忆逼近它需要 M ≈ 训练样本数，那就是**记忆化**。在程序生成配对集上，这条 50% 的线可以被平凡地满足，因此它不构成「局部学习成立」的证据。详见 `research/retrieval/README.md`。
 
 ### 批次日志（一个 `.log` 覆盖多个目录）
 

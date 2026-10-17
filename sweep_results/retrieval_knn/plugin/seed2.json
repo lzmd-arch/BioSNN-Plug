@@ -1,0 +1,45 @@
+{
+  "seed": 2,
+  "n_train": 115,
+  "n_test": 29,
+  "chance_r1": 0.034482758620689655,
+  "control_within": {
+    "text": 1.0,
+    "image": 0.7586206896551724
+  },
+  "bus_direct": {
+    "text2image": null,
+    "image2text": null,
+    "note": "维度不同，直接比较无定义"
+  },
+  "associator": "knn",
+  "representation": "plugin",
+  "hyperparameters": {
+    "text2image": {
+      "k": 1,
+      "oracle": true,
+      "local": false
+    },
+    "image2text": {
+      "k": 1,
+      "oracle": true,
+      "local": false
+    }
+  },
+  "selection_best_r1": {
+    "text2image": 0.7043478260869566,
+    "image2text": 0.6956521739130435
+  },
+  "bus_associated": {
+    "text2image": {
+      "r1": 0.7241379310344828,
+      "r5": 0.8620689655172413
+    },
+    "image2text": {
+      "r1": 0.7241379310344828,
+      "r5": 0.9655172413793104
+    },
+    "mean_r1": 0.7241379310344828,
+    "mean_r5": 0.9137931034482758
+  }
+}

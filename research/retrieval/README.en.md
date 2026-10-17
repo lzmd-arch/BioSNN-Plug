@@ -94,6 +94,31 @@ encoding loses is not something a linear map can put back.
 within-modal R@1 is 0.759–0.931, so a cross-modal 0.48 is already close to the ceiling set by
 images that barely separate from each other.
 
+## Rounds five to seven: a nonlinear ceiling and two "more local" rules (2026-10-17)
+
+| Readout | R@1 (mean of five seeds) | Is it a learning rule? |
+| :--- | ---: | :--- |
+| delta (linear, local) | 0.393 | yes |
+| fixed random features + delta | 0.383 | yes (features are fixed) |
+| competitive associative memory (M ≤ 64) | 0.114 (five seeds) | yes |
+| **k nearest neighbours (nonlinear ceiling)** | **0.555 / 0.562** | **no — nothing is learned** |
+
+Three conclusions, in order of importance:
+
+1. **Only kNN crosses 50%, and kNN does not learn.** It performs no mapping; it finds the most
+   similar training examples and averages their image codes. That is not meeting the bar, it is
+   carrying the training set around.
+2. **Fixed random features did not help** (0.383 < 0.393). So kNN's advantage is not
+   nonlinearity — it is instance-level voting.
+3. **Competitive memory underfits when M ≪ n** (0.103). With too few units each unit averages
+   several unrelated image codes and emits a blurred one. Approaching kNN would require
+   M ≈ the number of training items — **which is memorisation, not learning.**
+
+⚠️ **The question behind this criterion therefore has to be restated**: on the procedural paired
+set, "R@1 ≥ 50%" is satisfiable by **memorisation**, and satisfying it says nothing about whether
+local learning works. This is the trap this repository keeps recording — **a number can pass a bar
+trivially**.
+
 ## One finding that has to be recorded: this rule has no tunable hyperparameter
 
 The pre-registration named two hyperparameters, `η` (learning rate) and `λ` (forgetting).

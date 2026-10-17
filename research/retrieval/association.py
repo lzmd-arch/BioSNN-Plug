@@ -316,3 +316,299 @@ def select_ridge_lambda(
 
     best = max(scores, key=lambda key: (scores[key], -key))
     return best, scores
+
+
+# --------------------------------------------------------------------------
+# 第五轮：k 近邻非线性上界探针（**不是**局部学习规则，不作验收）
+# --------------------------------------------------------------------------
+
+#: 第五轮的 k 网格（预注册写死）。
+KNN_K_GRID = (1, 3, 5, 10, 20)
+
+
+@dataclass
+class KNNAssociator:
+    """k 近邻：记住训练对，查询时按余弦相似度投票。
+
+    ⚠️ **这不是局部学习规则**：没有突触、没有更新。它只作**非线性上界探针**，
+    用来区分"信息在、只是非线性地摆着"与"编码里根本没有"。
+    """
+
+    k: int = 5
+    source: np.ndarray | None = None
+    target: np.ndarray | None = None
+
+    def fit(self, source: np.ndarray, target: np.ndarray) -> KNNAssociator:
+        source = np.asarray(source, dtype=np.float64)
+        target = np.asarray(target, dtype=np.float64)
+        if source.ndim != 2 or target.ndim != 2:
+            raise ValueError("source 与 target 都必须是二维 (n, d)。")
+        if source.shape[0] != target.shape[0]:
+            raise ValueError(f"样本数必须相同，收到 {source.shape[0]} 与 {target.shape[0]}。")
+        if not 1 <= self.k <= source.shape[0]:
+            raise ValueError(f"k 必须落在 [1, {source.shape[0]}]，收到 {self.k}。")
+        self.source = source
+        self.target = target
+        return self
+
+    def transform(self, queries: np.ndarray) -> np.ndarray:
+        if self.source is None or self.target is None:
+            raise RuntimeError("先 fit() 再 transform()。")
+        queries = np.asarray(queries, dtype=np.float64)
+        qn = queries / (np.linalg.norm(queries, axis=1, keepdims=True) + 1e-12)
+        sn = self.source / (np.linalg.norm(self.source, axis=1, keepdims=True) + 1e-12)
+        similarity = qn @ sn.T
+        index = np.argsort(-similarity, axis=1, kind="stable")[:, : self.k]
+        weights = np.take_along_axis(similarity, index, axis=1).clip(min=0.0)
+        totals = weights.sum(axis=1, keepdims=True)
+        # 全负相似度时退化为等权，避免除以 0
+        weights = np.where(totals > 0, weights / (totals + 1e-12), 1.0 / self.k)
+        return (weights[:, :, None] * self.target[index]).sum(axis=1)
+
+
+def select_knn_k(
+    source: np.ndarray,
+    target: np.ndarray,
+    *,
+    k_grid: tuple[int, ...] = KNN_K_GRID,
+    folds: int = 5,
+    seed: int = 0,
+) -> tuple[int, dict[int, float]]:
+    """训练集 k 折交叉验证选 k。"""
+    source = np.asarray(source, dtype=np.float64)
+    target = np.asarray(target, dtype=np.float64)
+    n = source.shape[0]
+    rng = np.random.default_rng(seed)
+    chunks = [chunk for chunk in np.array_split(rng.permutation(n), folds) if len(chunk) > 0]
+
+    scores: dict[int, float] = {}
+    for k in k_grid:
+        hits = 0.0
+        total = 0
+        for fold in chunks:
+            held = {int(i) for i in fold}
+            train_idx = [i for i in range(n) if i not in held]
+            model = KNNAssociator(k=min(k, len(train_idx))).fit(
+                source[train_idx], target[train_idx]
+            )
+            predicted = model.transform(source[list(held)])
+            hits += recall_at_k(predicted, target[list(held)], k=1, direction="cv").recall * len(
+                held
+            )
+            total += len(held)
+        scores[k] = hits / total
+
+    best = max(scores, key=lambda key: (scores[key], -key))
+    return best, scores
+
+
+# --------------------------------------------------------------------------
+# 第六轮：固定随机特征 + delta 读出
+# --------------------------------------------------------------------------
+
+#: 第六轮的网格（预注册写死）。
+RF_FEATURE_GRID = (256, 512)
+RF_ETA_GRID = (0.001, 0.01, 0.1)
+RF_EPOCH_GRID = (5, 20)
+
+
+@dataclass
+class RandomFeaturesAssociator:
+    """``φ(x) = ReLU(P·x)``，``P`` 固定随机；再在 φ 上跑 delta 规则。
+
+    **被学习的只有读出的 W**。``P`` 不训练、没有梯度穿过 φ——这是"固定随机投影"
+    与"局部读出"的组合，不是反向传播。
+    """
+
+    n_features: int = 256
+    eta: float = 0.01
+    epochs: int = 5
+    seed: int = 0
+    projection: np.ndarray | None = None
+    weight: np.ndarray | None = None
+    diverged: bool = False
+
+    def _phi(self, x: np.ndarray) -> np.ndarray:
+        return np.maximum(x @ self.projection.T, 0.0)
+
+    def fit(self, source: np.ndarray, target: np.ndarray) -> RandomFeaturesAssociator:
+        source = np.asarray(source, dtype=np.float64)
+        target = np.asarray(target, dtype=np.float64)
+        if source.ndim != 2 or target.ndim != 2:
+            raise ValueError("source 与 target 都必须是二维 (n, d)。")
+        if source.shape[0] != target.shape[0]:
+            raise ValueError(f"样本数必须相同，收到 {source.shape[0]} 与 {target.shape[0]}。")
+
+        rng = np.random.default_rng(self.seed)
+        self.projection = rng.normal(size=(self.n_features, source.shape[1])) / np.sqrt(
+            source.shape[1]
+        )
+        inner = DeltaAssociator(eta=self.eta, epochs=self.epochs, seed=self.seed).fit(
+            self._phi(source), target
+        )
+        self.weight = inner.weight
+        self.diverged = inner.diverged
+        return self
+
+    def transform(self, source: np.ndarray) -> np.ndarray:
+        if self.projection is None or self.weight is None:
+            raise RuntimeError("先 fit() 再 transform()。")
+        return self._phi(np.asarray(source, dtype=np.float64)) @ self.weight.T
+
+
+def select_random_features(
+    source: np.ndarray,
+    target: np.ndarray,
+    *,
+    feature_grid: tuple[int, ...] = RF_FEATURE_GRID,
+    eta_grid: tuple[float, ...] = RF_ETA_GRID,
+    epoch_grid: tuple[int, ...] = RF_EPOCH_GRID,
+    folds: int = 5,
+    seed: int = 0,
+) -> tuple[tuple[int, float, int], dict[tuple[int, float, int], float]]:
+    """训练集 k 折交叉验证选 ``(n_features, eta, epochs)``。"""
+    source = np.asarray(source, dtype=np.float64)
+    target = np.asarray(target, dtype=np.float64)
+    n = source.shape[0]
+    rng = np.random.default_rng(seed)
+    chunks = [chunk for chunk in np.array_split(rng.permutation(n), folds) if len(chunk) > 0]
+
+    scores: dict[tuple[int, float, int], float] = {}
+    for n_features in feature_grid:
+        for eta in eta_grid:
+            for epochs in epoch_grid:
+                hits = 0.0
+                total = 0
+                for fold in chunks:
+                    held = {int(i) for i in fold}
+                    train_idx = [i for i in range(n) if i not in held]
+                    model = RandomFeaturesAssociator(
+                        n_features=n_features, eta=eta, epochs=epochs, seed=seed
+                    ).fit(source[train_idx], target[train_idx])
+                    if model.diverged:
+                        total += len(held)
+                        continue
+                    predicted = model.transform(source[list(held)])
+                    hits += recall_at_k(
+                        predicted, target[list(held)], k=1, direction="cv"
+                    ).recall * len(held)
+                    total += len(held)
+                scores[(n_features, eta, epochs)] = hits / total
+
+    best = max(scores, key=lambda key: (scores[key], -key[0], -key[1], -key[2]))
+    return best, scores
+
+
+# --------------------------------------------------------------------------
+# 第七轮：竞争联想记忆（赢者通吃，纯局部）
+# --------------------------------------------------------------------------
+
+#: 第七轮的网格（预注册写死）。
+COMPETITIVE_UNITS_GRID = (16, 32, 64)
+COMPETITIVE_EPOCH_GRID = (20, 100)
+COMPETITIVE_ETA_GRID = (0.05, 0.2)
+COMPETITIVE_K_GRID = (1, 3)
+
+
+@dataclass
+class CompetitiveAssociator:
+    """竞争联想记忆：M 个单元，每个持有 (文本原型, 图像码)，赢者通吃更新。
+
+    **纯局部**：一个单元的更新只用到它自己的原型与它收到的输入，没有梯度、
+    没有反向传播、没有全局误差反传。
+
+    ⚠️ 单元数 M 若接近训练样本数，它就退化成"把训练集存起来"。报告时必须同时给出
+    M 与训练样本数之比，否则读者无法判断这是学习还是记忆。
+    """
+
+    n_units: int = 32
+    epochs: int = 20
+    eta: float = 0.05
+    k: int = 1
+    seed: int = 0
+    prototypes: np.ndarray | None = None
+    codes: np.ndarray | None = None
+
+    def fit(self, source: np.ndarray, target: np.ndarray) -> CompetitiveAssociator:
+        source = np.asarray(source, dtype=np.float64)
+        target = np.asarray(target, dtype=np.float64)
+        if source.ndim != 2 or target.ndim != 2:
+            raise ValueError("source 与 target 都必须是二维 (n, d)。")
+        if source.shape[0] != target.shape[0]:
+            raise ValueError(f"样本数必须相同，收到 {source.shape[0]} 与 {target.shape[0]}。")
+
+        rng = np.random.default_rng(self.seed)
+        prototypes = rng.normal(size=(self.n_units, source.shape[1])) * 0.01
+        codes = rng.normal(size=(self.n_units, target.shape[1])) * 0.01
+
+        p_norm = np.linalg.norm(prototypes, axis=1) + 1e-12
+        for _ in range(self.epochs):
+            for index in rng.permutation(source.shape[0]):
+                t = source[index]
+                similarity = (prototypes @ t) / (p_norm * (np.linalg.norm(t) + 1e-12))
+                winner = int(np.argmax(similarity))
+                prototypes[winner] += self.eta * (t - prototypes[winner])
+                codes[winner] += self.eta * (target[index] - codes[winner])
+                p_norm[winner] = np.linalg.norm(prototypes[winner]) + 1e-12
+
+        self.prototypes = prototypes
+        self.codes = codes
+        return self
+
+    def transform(self, source: np.ndarray) -> np.ndarray:
+        if self.prototypes is None or self.codes is None:
+            raise RuntimeError("先 fit() 再 transform()。")
+        source = np.asarray(source, dtype=np.float64)
+        pn = self.prototypes / (np.linalg.norm(self.prototypes, axis=1, keepdims=True) + 1e-12)
+        qn = (source / (np.linalg.norm(source, axis=1, keepdims=True) + 1e-12)) @ pn.T
+        index = np.argsort(-qn, axis=1, kind="stable")[:, : self.k]
+        weights = np.take_along_axis(qn, index, axis=1).clip(min=0.0)
+        totals = weights.sum(axis=1, keepdims=True)
+        weights = np.where(totals > 0, weights / (totals + 1e-12), 1.0 / self.k)
+        return (weights[:, :, None] * self.codes[index]).sum(axis=1)
+
+
+def select_competitive(
+    source: np.ndarray,
+    target: np.ndarray,
+    *,
+    unit_grid: tuple[int, ...] = COMPETITIVE_UNITS_GRID,
+    epoch_grid: tuple[int, ...] = COMPETITIVE_EPOCH_GRID,
+    eta_grid: tuple[float, ...] = COMPETITIVE_ETA_GRID,
+    k_grid: tuple[int, ...] = COMPETITIVE_K_GRID,
+    folds: int = 5,
+    seed: int = 0,
+) -> tuple[tuple[int, int, float, int], dict[tuple[int, int, float, int], float]]:
+    """训练集 k 折交叉验证选 ``(M, epochs, eta, k)``。"""
+    source = np.asarray(source, dtype=np.float64)
+    target = np.asarray(target, dtype=np.float64)
+    n = source.shape[0]
+    rng = np.random.default_rng(seed)
+    chunks = [chunk for chunk in np.array_split(rng.permutation(n), folds) if len(chunk) > 0]
+
+    scores: dict[tuple[int, int, float, int], float] = {}
+    for units in unit_grid:
+        for epochs in epoch_grid:
+            for eta in eta_grid:
+                for k in k_grid:
+                    hits = 0.0
+                    total = 0
+                    for fold in chunks:
+                        held = {int(i) for i in fold}
+                        train_idx = [i for i in range(n) if i not in held]
+                        model = CompetitiveAssociator(
+                            n_units=min(units, len(train_idx)),
+                            epochs=epochs,
+                            eta=eta,
+                            k=min(k, units),
+                            seed=seed,
+                        ).fit(source[train_idx], target[train_idx])
+                        predicted = model.transform(source[list(held)])
+                        hits += recall_at_k(
+                            predicted, target[list(held)], k=1, direction="cv"
+                        ).recall * len(held)
+                        total += len(held)
+                    scores[(units, epochs, eta, k)] = hits / total
+
+    best = max(scores, key=lambda key: (scores[key], -key[0], -key[1], -key[2], -key[3]))
+    return best, scores

@@ -1,0 +1,241 @@
+{
+  "experiment": "cross-modal retrieval, procedural paired set (rf, bus@256)",
+  "associator": "rf",
+  "dataset": "procedural (4 shapes x 3 shades x 6 positions x 2 sizes = 144)",
+  "bus_dim": 256,
+  "test_fraction": 0.2,
+  "embedding_model": "nomic-embed-text",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "mean_r1": 0.38275862068965516,
+  "mean_r5": 0.8931034482758621,
+  "mean_chance": 0.034482758620689655,
+  "per_seed": [
+    {
+      "seed": 0,
+      "n_train": 115,
+      "n_test": 29,
+      "chance_r1": 0.034482758620689655,
+      "control_within": {
+        "text": 1.0,
+        "image": 0.7931034482758621
+      },
+      "bus_direct": {
+        "text2image": 0.034482758620689655,
+        "image2text": 0.0
+      },
+      "associator": "rf",
+      "representation": "bus",
+      "hyperparameters": {
+        "text2image": {
+          "n_features": 512,
+          "eta": 0.001,
+          "epochs": 20
+        },
+        "image2text": {
+          "n_features": 512,
+          "eta": 0.001,
+          "epochs": 20
+        }
+      },
+      "selection_best_r1": {
+        "text2image": 0.25217391304347825,
+        "image2text": 0.46956521739130436
+      },
+      "bus_associated": {
+        "text2image": {
+          "r1": 0.27586206896551724,
+          "r5": 0.8620689655172413
+        },
+        "image2text": {
+          "r1": 0.4482758620689655,
+          "r5": 0.9655172413793104
+        },
+        "mean_r1": 0.3620689655172414,
+        "mean_r5": 0.9137931034482758
+      }
+    },
+    {
+      "seed": 1,
+      "n_train": 115,
+      "n_test": 29,
+      "chance_r1": 0.034482758620689655,
+      "control_within": {
+        "text": 1.0,
+        "image": 0.7586206896551724
+      },
+      "bus_direct": {
+        "text2image": 0.034482758620689655,
+        "image2text": 0.06896551724137931
+      },
+      "associator": "rf",
+      "representation": "bus",
+      "hyperparameters": {
+        "text2image": {
+          "n_features": 512,
+          "eta": 0.001,
+          "epochs": 20
+        },
+        "image2text": {
+          "n_features": 256,
+          "eta": 0.01,
+          "epochs": 20
+        }
+      },
+      "selection_best_r1": {
+        "text2image": 0.25217391304347825,
+        "image2text": 0.5304347826086957
+      },
+      "bus_associated": {
+        "text2image": {
+          "r1": 0.20689655172413793,
+          "r5": 0.6206896551724138
+        },
+        "image2text": {
+          "r1": 0.5172413793103449,
+          "r5": 0.9310344827586207
+        },
+        "mean_r1": 0.3620689655172414,
+        "mean_r5": 0.7758620689655172
+      }
+    },
+    {
+      "seed": 2,
+      "n_train": 115,
+      "n_test": 29,
+      "chance_r1": 0.034482758620689655,
+      "control_within": {
+        "text": 1.0,
+        "image": 0.7586206896551724
+      },
+      "bus_direct": {
+        "text2image": 0.034482758620689655,
+        "image2text": 0.0
+      },
+      "associator": "rf",
+      "representation": "bus",
+      "hyperparameters": {
+        "text2image": {
+          "n_features": 256,
+          "eta": 0.01,
+          "epochs": 20
+        },
+        "image2text": {
+          "n_features": 256,
+          "eta": 0.01,
+          "epochs": 20
+        }
+      },
+      "selection_best_r1": {
+        "text2image": 0.3739130434782609,
+        "image2text": 0.6347826086956522
+      },
+      "bus_associated": {
+        "text2image": {
+          "r1": 0.20689655172413793,
+          "r5": 0.7241379310344828
+        },
+        "image2text": {
+          "r1": 0.5862068965517241,
+          "r5": 1.0
+        },
+        "mean_r1": 0.396551724137931,
+        "mean_r5": 0.8620689655172413
+      }
+    },
+    {
+      "seed": 3,
+      "n_train": 115,
+      "n_test": 29,
+      "chance_r1": 0.034482758620689655,
+      "control_within": {
+        "text": 1.0,
+        "image": 0.9310344827586207
+      },
+      "bus_direct": {
+        "text2image": 0.034482758620689655,
+        "image2text": 0.034482758620689655
+      },
+      "associator": "rf",
+      "representation": "bus",
+      "hyperparameters": {
+        "text2image": {
+          "n_features": 512,
+          "eta": 0.001,
+          "epochs": 20
+        },
+        "image2text": {
+          "n_features": 256,
+          "eta": 0.001,
+          "epochs": 20
+        }
+      },
+      "selection_best_r1": {
+        "text2image": 0.30434782608695654,
+        "image2text": 0.6
+      },
+      "bus_associated": {
+        "text2image": {
+          "r1": 0.27586206896551724,
+          "r5": 0.9655172413793104
+        },
+        "image2text": {
+          "r1": 0.5172413793103449,
+          "r5": 1.0
+        },
+        "mean_r1": 0.39655172413793105,
+        "mean_r5": 0.9827586206896552
+      }
+    },
+    {
+      "seed": 4,
+      "n_train": 115,
+      "n_test": 29,
+      "chance_r1": 0.034482758620689655,
+      "control_within": {
+        "text": 1.0,
+        "image": 0.8275862068965517
+      },
+      "bus_direct": {
+        "text2image": 0.034482758620689655,
+        "image2text": 0.10344827586206896
+      },
+      "associator": "rf",
+      "representation": "bus",
+      "hyperparameters": {
+        "text2image": {
+          "n_features": 512,
+          "eta": 0.001,
+          "epochs": 20
+        },
+        "image2text": {
+          "n_features": 512,
+          "eta": 0.001,
+          "epochs": 20
+        }
+      },
+      "selection_best_r1": {
+        "text2image": 0.3652173913043478,
+        "image2text": 0.5739130434782609
+      },
+      "bus_associated": {
+        "text2image": {
+          "r1": 0.3103448275862069,
+          "r5": 0.8620689655172413
+        },
+        "image2text": {
+          "r1": 0.4827586206896552,
+          "r5": 1.0
+        },
+        "mean_r1": 0.39655172413793105,
+        "mean_r5": 0.9310344827586207
+      }
+    }
+  ],
+  "repro": "```text\n实验名称：检索线 W4：跨模态 R@K（程序生成配对集）\n日期：2026-10-17 12:07:05 中国标准时间\nGit commit：2d4e9f430f22170999b76f634248e8b4a72ef0ea\nGit 状态：有 5 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57\n运行命令：run_retrieval.py --associator rf --representation bus --bus-dim 256 --seeds 0,1,2,3,4 --out sweep_results/retrieval_randomfeatures/bus256\n耗时：363.4 s\n备注：bus_dim=256\n备注：embedding=nomic-embed-text（冻结前端）\n备注：零联想对照与联想结果分开报；见预注册\n```"
+}

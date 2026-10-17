@@ -1,0 +1,48 @@
+{
+  "seed": 2,
+  "n_train": 115,
+  "n_test": 29,
+  "chance_r1": 0.034482758620689655,
+  "control_within": {
+    "text": 1.0,
+    "image": 0.7586206896551724
+  },
+  "bus_direct": {
+    "text2image": 0.034482758620689655,
+    "image2text": 0.0
+  },
+  "associator": "competitive",
+  "representation": "bus",
+  "hyperparameters": {
+    "text2image": {
+      "n_units": 16,
+      "epochs": 20,
+      "eta": 0.2,
+      "readout_k": 1,
+      "units_per_train_item": 0.139
+    },
+    "image2text": {
+      "n_units": 64,
+      "epochs": 20,
+      "eta": 0.2,
+      "readout_k": 3,
+      "units_per_train_item": 0.557
+    }
+  },
+  "selection_best_r1": {
+    "text2image": 0.05217391304347826,
+    "image2text": 0.2608695652173913
+  },
+  "bus_associated": {
+    "text2image": {
+      "r1": 0.034482758620689655,
+      "r5": 0.1724137931034483
+    },
+    "image2text": {
+      "r1": 0.20689655172413793,
+      "r5": 0.7586206896551724
+    },
+    "mean_r1": 0.12068965517241378,
+    "mean_r5": 0.46551724137931033
+  }
+}

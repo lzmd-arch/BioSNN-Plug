@@ -1,0 +1,246 @@
+{
+  "experiment": "cross-modal retrieval, procedural paired set (knn, plugin@raw)",
+  "associator": "knn",
+  "dataset": "procedural (4 shapes x 3 shades x 6 positions x 2 sizes = 144)",
+  "bus_dim": 128,
+  "test_fraction": 0.2,
+  "embedding_model": "nomic-embed-text",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "mean_r1": 0.5620689655172415,
+  "mean_r5": 0.9586206896551724,
+  "mean_chance": 0.034482758620689655,
+  "per_seed": [
+    {
+      "seed": 0,
+      "n_train": 115,
+      "n_test": 29,
+      "chance_r1": 0.034482758620689655,
+      "control_within": {
+        "text": 1.0,
+        "image": 0.7931034482758621
+      },
+      "bus_direct": {
+        "text2image": null,
+        "image2text": null,
+        "note": "维度不同，直接比较无定义"
+      },
+      "associator": "knn",
+      "representation": "plugin",
+      "hyperparameters": {
+        "text2image": {
+          "k": 10,
+          "oracle": true,
+          "local": false
+        },
+        "image2text": {
+          "k": 3,
+          "oracle": true,
+          "local": false
+        }
+      },
+      "selection_best_r1": {
+        "text2image": 0.45217391304347826,
+        "image2text": 0.4782608695652174
+      },
+      "bus_associated": {
+        "text2image": {
+          "r1": 0.5172413793103449,
+          "r5": 0.9310344827586207
+        },
+        "image2text": {
+          "r1": 0.41379310344827586,
+          "r5": 1.0
+        },
+        "mean_r1": 0.4655172413793104,
+        "mean_r5": 0.9655172413793103
+      }
+    },
+    {
+      "seed": 1,
+      "n_train": 115,
+      "n_test": 29,
+      "chance_r1": 0.034482758620689655,
+      "control_within": {
+        "text": 1.0,
+        "image": 0.7586206896551724
+      },
+      "bus_direct": {
+        "text2image": null,
+        "image2text": null,
+        "note": "维度不同，直接比较无定义"
+      },
+      "associator": "knn",
+      "representation": "plugin",
+      "hyperparameters": {
+        "text2image": {
+          "k": 5,
+          "oracle": true,
+          "local": false
+        },
+        "image2text": {
+          "k": 5,
+          "oracle": true,
+          "local": false
+        }
+      },
+      "selection_best_r1": {
+        "text2image": 0.5478260869565217,
+        "image2text": 0.5043478260869565
+      },
+      "bus_associated": {
+        "text2image": {
+          "r1": 0.5172413793103449,
+          "r5": 0.896551724137931
+        },
+        "image2text": {
+          "r1": 0.41379310344827586,
+          "r5": 0.9310344827586207
+        },
+        "mean_r1": 0.4655172413793104,
+        "mean_r5": 0.9137931034482758
+      }
+    },
+    {
+      "seed": 2,
+      "n_train": 115,
+      "n_test": 29,
+      "chance_r1": 0.034482758620689655,
+      "control_within": {
+        "text": 1.0,
+        "image": 0.7586206896551724
+      },
+      "bus_direct": {
+        "text2image": null,
+        "image2text": null,
+        "note": "维度不同，直接比较无定义"
+      },
+      "associator": "knn",
+      "representation": "plugin",
+      "hyperparameters": {
+        "text2image": {
+          "k": 1,
+          "oracle": true,
+          "local": false
+        },
+        "image2text": {
+          "k": 1,
+          "oracle": true,
+          "local": false
+        }
+      },
+      "selection_best_r1": {
+        "text2image": 0.7043478260869566,
+        "image2text": 0.6956521739130435
+      },
+      "bus_associated": {
+        "text2image": {
+          "r1": 0.7241379310344828,
+          "r5": 0.8620689655172413
+        },
+        "image2text": {
+          "r1": 0.7241379310344828,
+          "r5": 0.9655172413793104
+        },
+        "mean_r1": 0.7241379310344828,
+        "mean_r5": 0.9137931034482758
+      }
+    },
+    {
+      "seed": 3,
+      "n_train": 115,
+      "n_test": 29,
+      "chance_r1": 0.034482758620689655,
+      "control_within": {
+        "text": 1.0,
+        "image": 0.9310344827586207
+      },
+      "bus_direct": {
+        "text2image": null,
+        "image2text": null,
+        "note": "维度不同，直接比较无定义"
+      },
+      "associator": "knn",
+      "representation": "plugin",
+      "hyperparameters": {
+        "text2image": {
+          "k": 5,
+          "oracle": true,
+          "local": false
+        },
+        "image2text": {
+          "k": 5,
+          "oracle": true,
+          "local": false
+        }
+      },
+      "selection_best_r1": {
+        "text2image": 0.5739130434782609,
+        "image2text": 0.5652173913043478
+      },
+      "bus_associated": {
+        "text2image": {
+          "r1": 0.5172413793103449,
+          "r5": 1.0
+        },
+        "image2text": {
+          "r1": 0.6206896551724138,
+          "r5": 1.0
+        },
+        "mean_r1": 0.5689655172413793,
+        "mean_r5": 1.0
+      }
+    },
+    {
+      "seed": 4,
+      "n_train": 115,
+      "n_test": 29,
+      "chance_r1": 0.034482758620689655,
+      "control_within": {
+        "text": 1.0,
+        "image": 0.8275862068965517
+      },
+      "bus_direct": {
+        "text2image": null,
+        "image2text": null,
+        "note": "维度不同，直接比较无定义"
+      },
+      "associator": "knn",
+      "representation": "plugin",
+      "hyperparameters": {
+        "text2image": {
+          "k": 5,
+          "oracle": true,
+          "local": false
+        },
+        "image2text": {
+          "k": 1,
+          "oracle": true,
+          "local": false
+        }
+      },
+      "selection_best_r1": {
+        "text2image": 0.5826086956521739,
+        "image2text": 0.6086956521739131
+      },
+      "bus_associated": {
+        "text2image": {
+          "r1": 0.5862068965517241,
+          "r5": 1.0
+        },
+        "image2text": {
+          "r1": 0.5862068965517241,
+          "r5": 1.0
+        },
+        "mean_r1": 0.5862068965517241,
+        "mean_r5": 1.0
+      }
+    }
+  ],
+  "repro": "```text\n实验名称：检索线 W4：跨模态 R@K（程序生成配对集）\n日期：2026-10-17 12:00:29 中国标准时间\nGit commit：2d4e9f430f22170999b76f634248e8b4a72ef0ea\nGit 状态：有 4 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57\n运行命令：run_retrieval.py --associator knn --representation plugin --seeds 0,1,2,3,4 --out sweep_results/retrieval_knn/plugin\n耗时：5.8 s\n备注：bus_dim=128\n备注：embedding=nomic-embed-text（冻结前端）\n备注：零联想对照与联想结果分开报；见预注册\n```"
+}

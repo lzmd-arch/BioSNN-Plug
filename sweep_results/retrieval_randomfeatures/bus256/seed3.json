@@ -1,0 +1,44 @@
+{
+  "seed": 3,
+  "n_train": 115,
+  "n_test": 29,
+  "chance_r1": 0.034482758620689655,
+  "control_within": {
+    "text": 1.0,
+    "image": 0.9310344827586207
+  },
+  "bus_direct": {
+    "text2image": 0.034482758620689655,
+    "image2text": 0.034482758620689655
+  },
+  "associator": "rf",
+  "representation": "bus",
+  "hyperparameters": {
+    "text2image": {
+      "n_features": 512,
+      "eta": 0.001,
+      "epochs": 20
+    },
+    "image2text": {
+      "n_features": 256,
+      "eta": 0.001,
+      "epochs": 20
+    }
+  },
+  "selection_best_r1": {
+    "text2image": 0.30434782608695654,
+    "image2text": 0.6
+  },
+  "bus_associated": {
+    "text2image": {
+      "r1": 0.27586206896551724,
+      "r5": 0.9655172413793104
+    },
+    "image2text": {
+      "r1": 0.5172413793103449,
+      "r5": 1.0
+    },
+    "mean_r1": 0.39655172413793105,
+    "mean_r5": 0.9827586206896552
+  }
+}

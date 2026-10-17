@@ -37,12 +37,18 @@ from research.common.provenance import collect
 from .association import (
     DECAY_GRID,
     ETA_GRID,
+    CompetitiveAssociator,
     DeltaAssociator,
     HebbianAssociator,
+    KNNAssociator,
+    RandomFeaturesAssociator,
     RidgeAssociator,
     evaluate_direction,
+    select_competitive,
     select_delta_hyperparameters,
     select_hyperparameters,
+    select_knn_k,
+    select_random_features,
     select_ridge_lambda,
 )
 from .encode import CachedEmbedding, build_bus, encode_items
@@ -53,9 +59,17 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO_ROOT / "sweep_results" / "retrieval_procedural"
 DEFAULT_DELTA_OUT = REPO_ROOT / "sweep_results" / "retrieval_delta"
 DEFAULT_RIDGE_OUT = REPO_ROOT / "sweep_results" / "retrieval_ridge"
+DEFAULT_KNN_OUT = REPO_ROOT / "sweep_results" / "retrieval_knn"
+DEFAULT_RF_OUT = REPO_ROOT / "sweep_results" / "retrieval_randomfeatures"
+DEFAULT_COMPETITIVE_OUT = REPO_ROOT / "sweep_results" / "retrieval_competitive"
 DEFAULT_CACHE = REPO_ROOT / "data" / "embeddings" / "nomic-embed-text.json"
 
 __all__ = ["main", "run_seed"]
+
+
+def _fmt(value: float | None) -> str:
+    """打印用：None（维度不同、直接比较无定义）时写 ``n/a``，不写 ``0.000``。"""
+    return "n/a" if value is None else f"{value:.3f}"
 
 
 def run_seed(
@@ -156,6 +170,64 @@ def run_seed(
             "image2text": {"lam": lam_i2t, "oracle": True, "local": False},
         }
         loo_best = {"text2image": max(grid_t2i.values()), "image2text": max(grid_i2t.values())}
+    elif associator_kind == "knn":
+        k_t2i, grid_t2i = select_knn_k(train_text, train_image, seed=seed)
+        k_i2t, grid_i2t = select_knn_k(train_image, train_text, seed=seed)
+        assoc_t2i = KNNAssociator(k=k_t2i).fit(train_text, train_image)
+        assoc_i2t = KNNAssociator(k=k_i2t).fit(train_image, train_text)
+        hyper = {
+            "text2image": {"k": k_t2i, "oracle": True, "local": False},
+            "image2text": {"k": k_i2t, "oracle": True, "local": False},
+        }
+        loo_best = {"text2image": max(grid_t2i.values()), "image2text": max(grid_i2t.values())}
+    elif associator_kind == "rf":
+        (nf_t2i, eta_t2i, ep_t2i), grid_t2i = select_random_features(
+            train_text, train_image, seed=seed
+        )
+        (nf_i2t, eta_i2t, ep_i2t), grid_i2t = select_random_features(
+            train_image, train_text, seed=seed
+        )
+        assoc_t2i = RandomFeaturesAssociator(
+            n_features=nf_t2i, eta=eta_t2i, epochs=ep_t2i, seed=seed
+        ).fit(train_text, train_image)
+        assoc_i2t = RandomFeaturesAssociator(
+            n_features=nf_i2t, eta=eta_i2t, epochs=ep_i2t, seed=seed
+        ).fit(train_image, train_text)
+        hyper = {
+            "text2image": {"n_features": nf_t2i, "eta": eta_t2i, "epochs": ep_t2i},
+            "image2text": {"n_features": nf_i2t, "eta": eta_i2t, "epochs": ep_i2t},
+        }
+        loo_best = {"text2image": max(grid_t2i.values()), "image2text": max(grid_i2t.values())}
+    elif associator_kind == "competitive":
+        (u_t2i, ep_t2i, eta_t2i, k_t2i), grid_t2i = select_competitive(
+            train_text, train_image, seed=seed
+        )
+        (u_i2t, ep_i2t, eta_i2t, k_i2t), grid_i2t = select_competitive(
+            train_image, train_text, seed=seed
+        )
+        assoc_t2i = CompetitiveAssociator(
+            n_units=u_t2i, epochs=ep_t2i, eta=eta_t2i, k=k_t2i, seed=seed
+        ).fit(train_text, train_image)
+        assoc_i2t = CompetitiveAssociator(
+            n_units=u_i2t, epochs=ep_i2t, eta=eta_i2t, k=k_i2t, seed=seed
+        ).fit(train_image, train_text)
+        hyper = {
+            "text2image": {
+                "n_units": u_t2i,
+                "epochs": ep_t2i,
+                "eta": eta_t2i,
+                "readout_k": k_t2i,
+                "units_per_train_item": round(u_t2i / len(train), 3),
+            },
+            "image2text": {
+                "n_units": u_i2t,
+                "epochs": ep_i2t,
+                "eta": eta_i2t,
+                "readout_k": k_i2t,
+                "units_per_train_item": round(u_i2t / len(train), 3),
+            },
+        }
+        loo_best = {"text2image": max(grid_t2i.values()), "image2text": max(grid_i2t.values())}
     else:  # pragma: no cover - argparse 已限制取值
         raise ValueError(f"未知的联想规则：{associator_kind!r}")
 
@@ -184,7 +256,8 @@ def run_seed(
         print(
             f"seed {seed}: within(text)={control_within['text']:.3f} "
             f"within(image)={control_within['image']:.3f} | "
-            f"direct(t2i/i2t)={direct['text2image']:.3f}/{direct['image2text']:.3f} | "
+            f"direct(t2i/i2t)="
+            f"{_fmt(direct['text2image'])}/{_fmt(direct['image2text'])} | "
             f"assoc R@1 = {result['bus_associated']['mean_r1']:.3f} "
             f"(chance {result['chance_r1']:.3f})"
         )
@@ -198,9 +271,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--test-fraction", type=float, default=0.2, help="测试集比例，默认 0.2")
     parser.add_argument(
         "--associator",
-        choices=("hebb", "delta", "ridge"),
+        choices=("hebb", "delta", "ridge", "knn", "rf", "competitive"),
         default="hebb",
         help="联想规则，默认 hebb",
+    )
+    parser.add_argument(
+        "--representation",
+        choices=("bus", "plugin"),
+        default="bus",
+        help="喂给联想层的表示：总线输出（默认）或插件原始输出",
     )
     parser.add_argument("--out", type=Path, default=None, help="记录输出目录")
     parser.add_argument("--cache", type=Path, default=DEFAULT_CACHE, help="token embedding 缓存")
@@ -209,9 +288,14 @@ def main(argv: list[str] | None = None) -> int:
 
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
     if args.out is None:
-        args.out = {"hebb": DEFAULT_OUT, "delta": DEFAULT_DELTA_OUT, "ridge": DEFAULT_RIDGE_OUT}[
-            args.associator
-        ]
+        args.out = {
+            "hebb": DEFAULT_OUT,
+            "delta": DEFAULT_DELTA_OUT,
+            "ridge": DEFAULT_RIDGE_OUT,
+            "knn": DEFAULT_KNN_OUT,
+            "rf": DEFAULT_RF_OUT,
+            "competitive": DEFAULT_COMPETITIVE_OUT,
+        }[args.associator]
     started = time.perf_counter()
     cache = CachedEmbedding(OllamaEmbedding(model=args.model), args.cache, model=args.model)
 
