@@ -39,9 +39,11 @@ from .association import (
     ETA_GRID,
     DeltaAssociator,
     HebbianAssociator,
+    RidgeAssociator,
     evaluate_direction,
     select_delta_hyperparameters,
     select_hyperparameters,
+    select_ridge_lambda,
 )
 from .encode import CachedEmbedding, build_bus, encode_items
 from .metrics import recall_at_k
@@ -50,6 +52,7 @@ from .procedural import generate, split
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO_ROOT / "sweep_results" / "retrieval_procedural"
 DEFAULT_DELTA_OUT = REPO_ROOT / "sweep_results" / "retrieval_delta"
+DEFAULT_RIDGE_OUT = REPO_ROOT / "sweep_results" / "retrieval_ridge"
 DEFAULT_CACHE = REPO_ROOT / "data" / "embeddings" / "nomic-embed-text.json"
 
 __all__ = ["main", "run_seed"]
@@ -137,6 +140,20 @@ def run_seed(
             },
         }
         loo_best = {"text2image": max(grid_t2i.values()), "image2text": max(grid_i2t.values())}
+    elif associator_kind == "ridge":
+        lam_t2i, grid_t2i = select_ridge_lambda(
+            train_repr.text_bus, train_repr.image_bus, seed=seed
+        )
+        lam_i2t, grid_i2t = select_ridge_lambda(
+            train_repr.image_bus, train_repr.text_bus, seed=seed
+        )
+        assoc_t2i = RidgeAssociator(lam=lam_t2i).fit(train_repr.text_bus, train_repr.image_bus)
+        assoc_i2t = RidgeAssociator(lam=lam_i2t).fit(train_repr.image_bus, train_repr.text_bus)
+        hyper = {
+            "text2image": {"lam": lam_t2i, "oracle": True, "local": False},
+            "image2text": {"lam": lam_i2t, "oracle": True, "local": False},
+        }
+        loo_best = {"text2image": max(grid_t2i.values()), "image2text": max(grid_i2t.values())}
     else:  # pragma: no cover - argparse 已限制取值
         raise ValueError(f"未知的联想规则：{associator_kind!r}")
 
@@ -181,7 +198,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--bus-dim", type=int, default=128, help="总线维度，默认 128")
     parser.add_argument("--test-fraction", type=float, default=0.2, help="测试集比例，默认 0.2")
     parser.add_argument(
-        "--associator", choices=("hebb", "delta"), default="hebb", help="联想规则，默认 hebb"
+        "--associator",
+        choices=("hebb", "delta", "ridge"),
+        default="hebb",
+        help="联想规则，默认 hebb",
     )
     parser.add_argument("--out", type=Path, default=None, help="记录输出目录")
     parser.add_argument("--cache", type=Path, default=DEFAULT_CACHE, help="token embedding 缓存")
@@ -190,7 +210,9 @@ def main(argv: list[str] | None = None) -> int:
 
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
     if args.out is None:
-        args.out = DEFAULT_OUT if args.associator == "hebb" else DEFAULT_DELTA_OUT
+        args.out = {"hebb": DEFAULT_OUT, "delta": DEFAULT_DELTA_OUT, "ridge": DEFAULT_RIDGE_OUT}[
+            args.associator
+        ]
     started = time.perf_counter()
     cache = CachedEmbedding(OllamaEmbedding(model=args.model), args.cache, model=args.model)
 

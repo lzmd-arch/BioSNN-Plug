@@ -51,6 +51,27 @@ The first version lacked that step and the log carried
 `RuntimeWarning: invalid value encountered` — **that warning is not noise; it is a selection
 being contaminated by NaN**.
 
+## Round three: a linear upper bound — the bottleneck is the representation, not the rule (2026-10-17)
+
+Pre-registration: [`retrieval_ridge_prereg.md`](../../sweep_results/retrieval_ridge_prereg.md).
+A closed-form ridge regression (`W = (TᵀT + λI)⁻¹ Tᵀ V`) measures the **capacity ceiling of a
+linear map** between the two bus representations.
+
+| Association rule | R@1 (mean of five seeds) | Local? |
+| :--- | ---: | :--- |
+| Outer-product Hebbian | 0.141 | yes |
+| delta (Widrow–Hoff) | 0.359 | yes (supervised) |
+| **ridge (linear upper bound)** | **0.466** | **no — sees the whole training set, inverts a matrix** |
+
+**The linear upper bound is also short of 50%.** That locates the problem: **the bottleneck is the
+representation, not the association rule.** delta already captures most of the linear ceiling
+(0.359 of 0.466), so further work on the rule has little room; crossing 50% means changing the
+representation — the pooling, the bus dimension, or sharing one projection across both channels.
+
+⚠️ **This is a *linear* upper bound only**: a nonlinear readout could do better, so it must not be
+read as "50% is impossible" — only as "linearly, this representation is not enough". Ridge
+regression is not a local rule and **enters no acceptance column**.
+
 ## One finding that has to be recorded: this rule has no tunable hyperparameter
 
 The pre-registration named two hyperparameters, `η` (learning rate) and `λ` (forgetting).

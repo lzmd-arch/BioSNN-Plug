@@ -235,3 +235,84 @@ def select_delta_hyperparameters(
 
     best = max(scores, key=lambda key: (scores[key], -key[0], -key[1]))
     return best[0], best[1], scores
+
+
+# --------------------------------------------------------------------------
+# 第三轮：岭回归上界探针（**不是**局部规则，不作验收）
+# --------------------------------------------------------------------------
+
+#: 第三轮的 λ 网格（预注册写死）。
+RIDGE_LAMBDA_GRID = (0.001, 0.1, 1.0, 10.0)
+
+
+@dataclass
+class RidgeAssociator:
+    """闭式岭回归：``W = (TᵀT + λI)⁻¹ Tᵀ V``。
+
+    ⚠️ **这不是局部规则，不能用于验收。** 它一次性看整个训练集、要矩阵求逆。
+    存在的唯一理由是当**上界探针**：它衡量两条总线表示之间**线性映射**的能力上限，
+    用来判断"瓶颈在规则还是在表示"。
+    """
+
+    lam: float = 1.0
+    weight: np.ndarray | None = None
+
+    def fit(self, source: np.ndarray, target: np.ndarray) -> RidgeAssociator:
+        source = np.asarray(source, dtype=np.float64)
+        target = np.asarray(target, dtype=np.float64)
+        if source.ndim != 2 or target.ndim != 2:
+            raise ValueError("source 与 target 都必须是二维 (n, d)。")
+        if source.shape[0] != target.shape[0]:
+            raise ValueError(f"样本数必须相同，收到 {source.shape[0]} 与 {target.shape[0]}。")
+        if self.lam < 0:
+            raise ValueError(f"lam 必须非负，收到 {self.lam}。")
+
+        gram = source.T @ source + self.lam * np.eye(source.shape[1])
+        self.weight = np.linalg.solve(gram, source.T @ target).T
+        return self
+
+    def transform(self, source: np.ndarray) -> np.ndarray:
+        if self.weight is None:
+            raise RuntimeError("先 fit() 再 transform()。")
+        return np.asarray(source, dtype=np.float64) @ self.weight.T
+
+    def __repr__(self) -> str:
+        shape = None if self.weight is None else self.weight.shape
+        return f"RidgeAssociator(lam={self.lam}, weight={shape})"
+
+
+def select_ridge_lambda(
+    source: np.ndarray,
+    target: np.ndarray,
+    *,
+    lambda_grid: tuple[float, ...] = RIDGE_LAMBDA_GRID,
+    folds: int = 5,
+    seed: int = 0,
+) -> tuple[float, dict[float, float]]:
+    """训练集 k 折交叉验证选 λ。"""
+    source = np.asarray(source, dtype=np.float64)
+    target = np.asarray(target, dtype=np.float64)
+    n = source.shape[0]
+    if folds < 2 or folds > n:
+        raise ValueError(f"folds 必须落在 [2, {n}]，收到 {folds}。")
+
+    rng = np.random.default_rng(seed)
+    chunks = [chunk for chunk in np.array_split(rng.permutation(n), folds) if len(chunk) > 0]
+
+    scores: dict[float, float] = {}
+    for lam in lambda_grid:
+        hits = 0.0
+        total = 0
+        for fold in chunks:
+            held = {int(i) for i in fold}
+            train_idx = [i for i in range(n) if i not in held]
+            model = RidgeAssociator(lam=lam).fit(source[train_idx], target[train_idx])
+            predicted = model.transform(source[list(held)])
+            hits += recall_at_k(predicted, target[list(held)], k=1, direction="cv").recall * len(
+                held
+            )
+            total += len(held)
+        scores[lam] = hits / total
+
+    best = max(scores, key=lambda key: (scores[key], -key))
+    return best, scores
