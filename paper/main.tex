@@ -861,6 +861,45 @@ attachments are frozen at the date of deposit, and its own metadata records
 which numbers were superseded afterwards. Cite that record for the protocol, and
 this paper for the result.
 
+\section*{Use of AI assistance}
+This paper was written with an AI agent in the loop, and the boundary is stated
+precisely rather than gestured at.
+
+\textbf{What the agent did.} It ran the literature search of
+Appendix~\ref{app:search} and the metadata verification behind the evidence
+ledger; it drafted the Related Work section against a paragraph template the
+author set; it wrote sweep drivers, the recording and indexing tooling, and the
+figure generator under the author's direction; and it drafted the remaining
+prose. The agent also \emph{executed} the experiments: every sweep reported here
+was launched by the agent, and in three cases the decision rule was committed to
+the repository \emph{before} the data existed --- the learning-rate probe, the
+control arm's recipe selection, and the resource-sweep design. Those
+pre-registrations are part of the public record, so a reader can check that the
+rule preceded the result rather than the other way round.
+
+\textbf{Who is responsible.} The author --- sole author --- takes responsibility
+for every claim and every number, and for the verification of each reported
+number against its reproduction record. The agent is not a co-author and cannot
+be one: it cannot consent to authorship or bear responsibility for content.
+
+\textbf{The verification is not a formality; it caught things.} Three examples,
+each recorded publicly: a misattributed citation inherited from earlier project
+text (the rule this paper's critic uses is named in the 2013 paper, not the 2010
+one); an arithmetic error in this paper that made a negative result look stronger
+than it was (a trace-storage figure that omitted the batch dimension --- the same
+omission the project plan had already corrected once); and a summary figure that
+could not be used because it predated the runs it would have described. In each
+case the correction and its cause are recorded rather than quietly applied.
+
+\textbf{Where the evidence is.} The drafting log is public and sits beside the
+source as \texttt{paper/\allowbreak README.md}: per batch, it records what was written, what
+was measured, what turned out to be false, and which claims were narrowed rather
+than defended. The evidence ledger and the per-run records are public
+(Section~\ref{sec:results}), and the archived snapshot is the deposit named
+above. We disclose at this length because a statement that says only ``AI was
+used'' cannot be checked; this one points at the artifacts that make it
+checkable --- including the record of the agent's own errors.
+
 % ------------------------------------------------------------
 \bibliographystyle{plainnat}
 \bibliography{refs}   % refs.bib: 26 条，本文引用 23（未引的 3 条属后续阶段议题）

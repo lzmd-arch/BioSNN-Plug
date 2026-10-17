@@ -86,8 +86,9 @@ now and the cuts are chosen by what a compressed reader needs:
 - **Second — §4 (Experimental Setup) compresses into §3.2**, since the protocol is the substance
   and the hardware list is not.
 - **Never cut, in either version**: §5.5's self-refutation paragraph, §1.4 and §6.3's stated
-  boundaries, §2.2's framing of Miconi as a contrast rather than support, and W3's disclosure of
-  the tuning-to-acceptance selection effect. Those are the paper's character, not its padding.
+  boundaries, §2.2's framing of Miconi as a contrast rather than support, W3's disclosure of
+  the tuning-to-acceptance selection effect, and the two disclosure sections ("Data and code
+  availability", "Use of AI assistance"). Those are the paper's character, not its padding.
   ⚠️ A compression pass must not silently turn any of them into a more flattering reading.
 
 ⚠️ **The two versions must not diverge in numbers.** The conference version is a subset of the
@@ -734,3 +735,30 @@ author name was checked against ledger [20] and **is correct** — no change.
 Caught by printing the bytes. That is the fourth instance of the same shell-quoting family in one
 session, and it happened *after* I had written the rule and the memory entry about it. The rule
 works; using `sed` instead of the editor is what failed.
+
+## Draft log — the AI-use disclosure (2026-10-17)
+
+**Added: "Use of AI assistance", a disclosure section beside "Data and code availability".** It
+states four things, and the reason it is this long is that the alternative — "AI was used" — cannot
+be checked by anyone.
+
+- **What the agent did**, split by kind: the literature search and the ledger's metadata
+  verification; drafting §2 against a template the author set; the sweep drivers, tooling and figure
+  generator, under the author's direction; the remaining prose. Plus the part that matters most for a
+  benchmark: **the agent executed the experiments.**
+- **That the decision rules preceded the data**, in three cases, and that the pre-registrations are
+  in the public record — so a reader can check the ordering rather than take it on trust.
+- **Who is responsible**: the author, sole author, for every claim, every number, and the
+  verification of each against its record. The agent is not a co-author and cannot be one — it
+  cannot consent to authorship or bear responsibility for content.
+- **That the verification caught things**, with three named examples: the inherited misattribution,
+  the arithmetic error that flattered a negative result, and the stale figure. A disclosure that only
+  asserts diligence is worth less than one that shows where diligence bit.
+
+⚠️ **The section is in the never-cut list** for the compressed conference version, alongside the
+other four. A venue that asks for an AI statement and receives a trimmed one is worse served than
+one that receives none.
+
+⚠️ **One more overfull box came with it** — `\texttt{paper/README.md}`, unbreakable at the slash —
+fixed with `\allowbreak`. Worth noting because it is now the *second* time a new section has
+introduced a margin violation that the compiler flagged and text extraction did not.
