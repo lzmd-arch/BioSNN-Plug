@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -162,6 +163,9 @@ def train(
     pop_homeostasis: bool = False,
     pop_homeostatic_rate: float = 0.01,
     pop_activity_target: float = 0.1,
+    pop_trace_demean: bool = False,
+    pop_trace_demean_rate: float = 0.01,
+    pop_mask_density: float | None = None,
     warmup: int,
     device: torch.device,
 ) -> TrainResult:
@@ -197,6 +201,9 @@ def train(
             homeostasis=pop_homeostasis,
             homeostatic_rate=pop_homeostatic_rate,
             activity_target=pop_activity_target,
+            trace_demean=pop_trace_demean,
+            trace_demean_rate=pop_trace_demean_rate,
+            mask_density=pop_mask_density,
             generator=generator,
             device=device,
         )
@@ -219,6 +226,10 @@ def train(
             learn=True,
             greedy=False,
             critic=critic,
+            # ⚠️ 训练回合也必须给环境种子。不给的话 env.reset(seed=None) 会用 gymnasium
+            # 在 make() 时由系统熵初始化的内部 RNG，**同一种子两次运行轨迹完全不同**
+            # （实测：两次数值全不一样）。这曾让本模块所有数字都不是逐位可复现的。
+            env_seed=seed * 100_000 + episode,
         )
         returns.append(steps_alive)
 
@@ -289,6 +300,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--pop-homeostatic-rate", type=float, default=0.01, help="稳态步长 β")
     parser.add_argument("--pop-activity-target", type=float, default=0.1, help="目标活动率 y*")
     parser.add_argument(
+        "--pop-trace-demean",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="每单元痕迹去直流（完全局部）",
+    )
+    parser.add_argument("--pop-trace-demean-rate", type=float, default=0.01)
+    parser.add_argument(
+        "--pop-mask-density", type=float, default=None, help="固定输入子空间密度（None=不限制）"
+    )
+    parser.add_argument(
         "--pop-readout",
         choices=("uniform", "random"),
         default="uniform",
@@ -307,6 +328,12 @@ def main(argv: list[str] | None = None) -> int:
         args.eval_every = 3
         args.eval_episodes = 2
         args.warmup = 1
+        # ⚠️ 冒烟**不许**落进默认结果目录。曾经发生过：一次 `--smoke --critic pop` 把
+        # 6 回合的冒烟结果写进了 `sweep_results/rstdp_spiking/`，覆盖了 5 种子 × 1200 回合的
+        # 正式记录，而那份残留还被当成结果提交了。默认目录只收正式运行。
+        if args.out == OUT:
+            args.out = Path(tempfile.mkdtemp(prefix="rstdp_spiking_smoke_"))
+            print(f"冒烟结果写到临时目录：{args.out}（不进仓库）")
 
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
     device = torch.device(args.device)
@@ -336,6 +363,9 @@ def main(argv: list[str] | None = None) -> int:
             pop_homeostasis=args.pop_homeostasis,
             pop_homeostatic_rate=args.pop_homeostatic_rate,
             pop_activity_target=args.pop_activity_target,
+            pop_trace_demean=args.pop_trace_demean,
+            pop_trace_demean_rate=args.pop_trace_demean_rate,
+            pop_mask_density=args.pop_mask_density,
             device=device,
         )
         results.append(outcome)
@@ -367,6 +397,9 @@ def main(argv: list[str] | None = None) -> int:
             "pop_homeostasis": args.pop_homeostasis,
             "pop_homeostatic_rate": args.pop_homeostatic_rate,
             "pop_activity_target": args.pop_activity_target,
+            "pop_trace_demean": args.pop_trace_demean,
+            "pop_trace_demean_rate": args.pop_trace_demean_rate,
+            "pop_mask_density": args.pop_mask_density,
             "gamma": args.gamma,
             "warmup": args.warmup,
         },

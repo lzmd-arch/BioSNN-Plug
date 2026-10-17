@@ -13,7 +13,20 @@ in section 3.2 and "pre-before-post only" becomes **testable for the first time*
 The rate version stays as the **control baseline** (same task, same rule, spiking vs rate). It
 answers "how much performance does spiking cost".
 
-## Current result (2026-10-17, five seeds, 1200 episodes each)
+## ⚠️ Every number on this page dated before 2026-10-18 is void
+
+Training episodes did not receive an environment seed (`env.reset(seed=None)`, whose RNG is seeded
+from system entropy), so **the same seed produced a different training trajectory on two runs** —
+the evaluation itself was seeded, but the weights being evaluated came from unreproducible
+training. Discovery, fix and the full impact list:
+[`sweep_results/rstdp_spiking_seeding_fix.md`](../../sweep_results/rstdp_spiking_seeding_fix.md).
+
+Re-running with five seeds after the fix **reversed the ranking wholesale** (linear TD 109.8 → 51.0;
+the original default configuration came out on top). The sections below are kept as history; their
+numbers and the conclusions drawn from them **no longer hold**. New conclusions rest on the
+10-seed comparison at the end of this page.
+
+## Historical result (2026-10-17, five seeds, 1200 episodes each, **unseeded, void**)
 
 **It learns, but unstably: only 1 of 5 seeds crosses the 200-step bar.**
 

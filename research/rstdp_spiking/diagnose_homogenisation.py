@@ -82,6 +82,9 @@ def train_and_measure(
     homeostasis: bool = False,
     homeostatic_rate: float = 0.01,
     activity_target: float = 0.1,
+    trace_demean: bool = False,
+    trace_demean_rate: float = 0.01,
+    mask_density: float | None = None,
 ) -> dict:
     """训练一个群体 Critic，返回训练前后的同质化度量。"""
     import gymnasium
@@ -102,6 +105,9 @@ def train_and_measure(
         homeostasis=homeostasis,
         homeostatic_rate=homeostatic_rate,
         activity_target=activity_target,
+        trace_demean=trace_demean,
+        trace_demean_rate=trace_demean_rate,
+        mask_density=mask_density,
         generator=generator,
     )
 
@@ -166,6 +172,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--bias", type=float, default=0.0)
     parser.add_argument("--gain", type=float, default=16.0)
     parser.add_argument("--episodes", type=int, default=800)
+    parser.add_argument("--trace-demean", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--trace-demean-rate", type=float, default=0.01)
+    parser.add_argument("--mask-density", type=float, default=None)
     args = parser.parse_args(argv)
 
     row = train_and_measure(
@@ -175,6 +184,9 @@ def main(argv: list[str] | None = None) -> int:
         homeostasis=args.homeostasis,
         homeostatic_rate=args.homeostatic_rate,
         activity_target=args.activity_target,
+        trace_demean=args.trace_demean,
+        trace_demean_rate=args.trace_demean_rate,
+        mask_density=args.mask_density,
     )
     print(
         f"单元间余弦 {row['before']['cosine']:+.4f} → {row['after']['cosine']:+.4f}   "

@@ -90,6 +90,9 @@ class PopulationCritic:
         homeostasis: bool = False,
         homeostatic_rate: float = 0.01,
         activity_target: float = 0.1,
+        trace_demean: bool = False,
+        trace_demean_rate: float = 0.01,
+        mask_density: float | None = None,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
     ) -> None:
@@ -130,12 +133,30 @@ class PopulationCritic:
             raise ValueError(f"activity_target 应在 (0, 1) 内，收到 {activity_target}。")
         # 稳态需要**每个单元自己的**阈值，所以 bias 扩成向量（只在开启时用）
         self.bias_per_unit = torch.full((n_units,), float(bias), device=device)
-        if homeostasis:
-            self.bias_per_unit = torch.full((n_units,), float(bias), device=device)
+        self.trace_demean = bool(trace_demean)
+        self.trace_demean_rate = float(trace_demean_rate)
+        if trace_demean and not 0.0 < trace_demean_rate <= 1.0:
+            raise ValueError(f"trace_demean_rate 应在 (0, 1] 内，收到 {trace_demean_rate}。")
+        if mask_density is not None and not 0.0 < mask_density <= 1.0:
+            raise ValueError(f"mask_density 应在 (0, 1] 内，收到 {mask_density}。")
 
         gen = generator or torch.Generator(device=device)
         weights = torch.randn(n_units, n_features, generator=gen, device=device)
         self.weights = weights / (weights.norm(dim=1, keepdim=True) + 1e-12)
+
+        # 每个单元一个固定的输入子空间（结构约束，不训练）。像固定连接概率：
+        # 它不涉及任何学习信号，因此不影响局部性主张（与 ADR-0012 的"固定随机投影"同一取舍）。
+        self.mask: torch.Tensor | None = None
+        if mask_density is not None:
+            draws = torch.rand(n_units, n_features, generator=gen, device=device)
+            self.mask = (draws < float(mask_density)).to(self.weights.dtype)
+            # 保证每行至少一个连接，否则该单元永远是死的
+            empty = self.mask.sum(dim=1) == 0
+            if bool(empty.any()):
+                self.mask[empty, 0] = 1.0
+            self.weights = self.weights * self.mask
+        # 每单元自己的痕迹历史均值（局部量：只用该单元自己的痕迹）
+        self.trace_mean = torch.zeros_like(self.weights)
         self.trace = torch.zeros_like(self.weights)
         if readout == "uniform":
             self.readout = torch.full((n_units,), value_scale / n_units, device=device)
@@ -184,7 +205,18 @@ class PopulationCritic:
             gamma=self.gamma,
         )
         self.trace.mul_(self.trace_decay).add_(torch.outer(self._post_factor(y), x))
-        self.weights.add_(self.learning_rate * delta * self.trace)
+        if self.trace_demean:
+            # 每单元自己的直流分量：μ_j ← (1−κ)μ_j + κ·e_j，更新用 e_j − μ_j。
+            # **完全局部**——只读该单元自己的痕迹历史，不涉及任何群体统计量。
+            self.trace_mean.mul_(1.0 - self.trace_demean_rate).add_(
+                self.trace_demean_rate * self.trace
+            )
+            effective_trace = self.trace - self.trace_mean
+        else:
+            effective_trace = self.trace
+        self.weights.add_(self.learning_rate * delta * effective_trace)
+        if self.mask is not None:
+            self.weights.mul_(self.mask)
         if self.normalize:
             norms = self.weights.norm(dim=1, keepdim=True) + 1e-12
             self.weights.div_(norms)
