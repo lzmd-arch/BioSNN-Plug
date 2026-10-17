@@ -134,6 +134,42 @@ to 33.2** — markedly more stable.
 The direct criterion, `corr(V,G)`: **−0.496 → +0.697** (linear TD is +0.965). The critic now
 **tracks the return**.
 
+### Homogenisation: the hypothesis holds, and worse than expected (same day)
+
+Pre-registration:
+[`rstdp_spiking_homogenisation_prereg.md`](../../sweep_results/rstdp_spiking_homogenisation_prereg.md).
+Measurement script: `diagnose_homogenisation.py` (800 episodes, `b=0, g=16`, `gradient`, no norm).
+
+| Quantity | Before | After | Criterion |
+| :--- | ---: | ---: | :--- |
+| mean unit-to-unit cosine | −0.002 | **+0.823** | chance sd is 0.125 ⇒ about 6.6σ, past the pre-registered 5σ threshold |
+| effective rank `exp(H)/n` | 0.613 | **0.025** | homogenisation ⇒ falls |
+| pairwise activity correlation | — | **+0.928** | homogenisation ⇒ rises |
+| mean activity | — | **0.003** | the units are almost silent |
+
+**After training the 64 weight vectors point in nearly the same direction** and the activities
+collapse to zero together. Hence `V = Σ u_j y_j + out_bias ≈ 200 × 0.003 + out_bias`: the value is
+carried almost entirely by one scalar bias (inferred ≈ 15–16, consistent with the measured
+`V ∈ [14.4, 17.6]`). That is the mechanism behind "`V` only 3.2 wide, bootstrapping dead".
+
+The inference holds: with a `gradient` post-factor the trace is always non-negative (`x ≥ 0`,
+`σ' > 0`) and the readout is all positive, so their product pushes every unit's weights toward the
+**same non-negative direction**, and the units converge.
+
+### Signed readout: retested at the fixed operating point, still harmful
+
+The earlier 14.3 came from the **saturated** operating point, where the units barely moved and the
+sign had no room to act. The pre-registration required a retest. Result:
+
+| Readout | Mean | Per seed |
+| :--- | ---: | :--- |
+| uniform (`b=0, g=16`) | **64.8** | 44.4 / 89.4 / 33.2 / 72.4 / 84.6 |
+| signed (same operating point) | **29.2** | 43.9 / 9.2 / 74.2 / 9.3 / 9.3 |
+
+**Still worse, and less stable** (three seeds fall back to chance). So "flip the readout sign to fix
+homogenisation" is refuted — consistent with the reading that the sign changes how the readout
+combines units, not the fact that **the weights themselves converge**.
+
 ### Still unresolved: training collapses the value's dynamic range
 
 The same diagnostic reports `V ∈ [14.4, 17.6]`, **only 3.2 wide**, while returns span 1–10.5. A

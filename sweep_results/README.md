@@ -143,12 +143,13 @@
 | `rstdp_spiking/` | 脉冲 R-STDP + 线性 TD(0) Critic 在 CartPole 上的 5 个种子（各 1200 回合） |
 | `rstdp_spiking/pop/`、`pop_gradient/`、`pop_signed/`、`pop_nonorm/`、`pop_signed_nonorm/` | TD-LTP 群体 Critic 的五组消融（各 5 种子 × 800 回合）：读出、后因子、行归一化逐项开关 |
 | `rstdp_spiking/pop_opg16/` | 群体 Critic 的**工作点**（`bias=0, gain=16`）：5 种子 × 800 回合，均值 64.8；预注册见 [`rstdp_spiking_operating_point_prereg.md`](rstdp_spiking_operating_point_prereg.md) |
+| `rstdp_spiking/pop_opg16_signed/` | 同工作点上的**有符号读出**重测：均值 29.2（对照 64.8）；预注册见 [`rstdp_spiking_homogenisation_prereg.md`](rstdp_spiking_homogenisation_prereg.md) |
 
 每个 `seedN.json` 含 `best_steps`（冻结随机流下 10 回合的平均）、`selected_episode`、
 评测曲线 `eval_scores` 与逐回合回报 `returns`。口径与边界见
 [`research/rstdp_spiking/README.md`](../research/rstdp_spiking/README.md)。
 
-⚠️ **这不是验收结果**：线性 TD 均值 109.8 步（1/5 过线）；群体 Critic 最好的一组 64.8（0/5，工作点修正后）。速率版（`step14_confirm`）仍是唯一通过验收的实现。
+⚠️ **这不是验收结果**：线性 TD 均值 109.8 步（1/5 过线）；群体 Critic 最好的一组 64.8（0/5，工作点修正后）；诊断显示其单元训练后**同质化**（余弦 +0.82、有效秩 0.025），值几乎全由偏置承担。速率版（`step14_confirm`）仍是唯一通过验收的实现。
 
 ### 批次日志（一个 `.log` 覆盖多个目录）
 
