@@ -65,6 +65,7 @@ def run_seed(
     test_fraction: float,
     backend_factory,
     associator_kind: str = "hebb",
+    representation: str = "bus",
     verbose: bool = True,
 ) -> dict:
     """跑一个种子，返回该种子的全部指标。"""
@@ -74,6 +75,15 @@ def run_seed(
     bus = build_bus(bus_dim=bus_dim, seed=seed, backend=backend_factory())
     train_repr = encode_items(bus, train)
     test_repr = encode_items(bus, test)
+
+    if representation == "bus":
+        train_text, train_image = train_repr.text_bus, train_repr.image_bus
+        test_text, test_image = test_repr.text_bus, test_repr.image_bus
+    elif representation == "plugin":
+        train_text, train_image = train_repr.text_plugin, train_repr.image_plugin
+        test_text, test_image = test_repr.text_plugin, test_repr.image_plugin
+    else:  # pragma: no cover - argparse 已限制取值
+        raise ValueError(f"未知的表示：{representation!r}")
 
     # 读法 (a)：同模态检索。编码保住身份的话这里应该很高。
     control_within = {
@@ -85,30 +95,26 @@ def run_seed(
         ).recall,
     }
 
-    # 读法 (b) 的零联想对照：直接拿两路总线输出比。预期 ≈ 随机。
-    direct = {
-        "text2image": recall_at_k(
-            test_repr.text_bus, test_repr.image_bus, k=1, direction="text2image"
-        ).recall,
-        "image2text": recall_at_k(
-            test_repr.image_bus, test_repr.text_bus, k=1, direction="image2text"
-        ).recall,
-    }
+    # 读法 (b) 的零联想对照：直接拿两路表示比。预期 ≈ 随机。
+    if test_text.shape[1] == test_image.shape[1]:
+        direct = {
+            "text2image": recall_at_k(test_text, test_image, k=1, direction="text2image").recall,
+            "image2text": recall_at_k(test_image, test_text, k=1, direction="image2text").recall,
+        }
+    else:
+        # 插件原始表示维度不同（文本 256 / 图像 1152），"直接比余弦"没有定义。
+        direct = {"text2image": None, "image2text": None, "note": "维度不同，直接比较无定义"}
 
     # 验收线：在**训练集**上选参并拟合，再到**测试集**上评。
     if associator_kind == "hebb":
         eta_t2i, decay_t2i, grid_t2i = select_hyperparameters(
-            train_repr.text_bus, train_repr.image_bus, eta_grid=ETA_GRID, decay_grid=DECAY_GRID
+            train_text, train_image, eta_grid=ETA_GRID, decay_grid=DECAY_GRID
         )
         eta_i2t, decay_i2t, grid_i2t = select_hyperparameters(
-            train_repr.image_bus, train_repr.text_bus, eta_grid=ETA_GRID, decay_grid=DECAY_GRID
+            train_image, train_text, eta_grid=ETA_GRID, decay_grid=DECAY_GRID
         )
-        assoc_t2i = HebbianAssociator(eta=eta_t2i, decay=decay_t2i).fit(
-            train_repr.text_bus, train_repr.image_bus
-        )
-        assoc_i2t = HebbianAssociator(eta=eta_i2t, decay=decay_i2t).fit(
-            train_repr.image_bus, train_repr.text_bus
-        )
+        assoc_t2i = HebbianAssociator(eta=eta_t2i, decay=decay_t2i).fit(train_text, train_image)
+        assoc_i2t = HebbianAssociator(eta=eta_i2t, decay=decay_i2t).fit(train_image, train_text)
         hyper = {
             "text2image": {"eta": eta_t2i, "decay": decay_t2i},
             "image2text": {"eta": eta_i2t, "decay": decay_i2t},
@@ -116,16 +122,16 @@ def run_seed(
         loo_best = {"text2image": max(grid_t2i.values()), "image2text": max(grid_i2t.values())}
     elif associator_kind == "delta":
         eta_t2i, epochs_t2i, grid_t2i = select_delta_hyperparameters(
-            train_repr.text_bus, train_repr.image_bus, seed=seed
+            train_text, train_image, seed=seed
         )
         eta_i2t, epochs_i2t, grid_i2t = select_delta_hyperparameters(
-            train_repr.image_bus, train_repr.text_bus, seed=seed
+            train_image, train_text, seed=seed
         )
         assoc_t2i = DeltaAssociator(eta=eta_t2i, epochs=epochs_t2i, seed=seed).fit(
-            train_repr.text_bus, train_repr.image_bus
+            train_text, train_image
         )
         assoc_i2t = DeltaAssociator(eta=eta_i2t, epochs=epochs_i2t, seed=seed).fit(
-            train_repr.image_bus, train_repr.text_bus
+            train_image, train_text
         )
         hyper = {
             "text2image": {
@@ -141,14 +147,10 @@ def run_seed(
         }
         loo_best = {"text2image": max(grid_t2i.values()), "image2text": max(grid_i2t.values())}
     elif associator_kind == "ridge":
-        lam_t2i, grid_t2i = select_ridge_lambda(
-            train_repr.text_bus, train_repr.image_bus, seed=seed
-        )
-        lam_i2t, grid_i2t = select_ridge_lambda(
-            train_repr.image_bus, train_repr.text_bus, seed=seed
-        )
-        assoc_t2i = RidgeAssociator(lam=lam_t2i).fit(train_repr.text_bus, train_repr.image_bus)
-        assoc_i2t = RidgeAssociator(lam=lam_i2t).fit(train_repr.image_bus, train_repr.text_bus)
+        lam_t2i, grid_t2i = select_ridge_lambda(train_text, train_image, seed=seed)
+        lam_i2t, grid_i2t = select_ridge_lambda(train_image, train_text, seed=seed)
+        assoc_t2i = RidgeAssociator(lam=lam_t2i).fit(train_text, train_image)
+        assoc_i2t = RidgeAssociator(lam=lam_i2t).fit(train_image, train_text)
         hyper = {
             "text2image": {"lam": lam_t2i, "oracle": True, "local": False},
             "image2text": {"lam": lam_i2t, "oracle": True, "local": False},
@@ -157,12 +159,8 @@ def run_seed(
     else:  # pragma: no cover - argparse 已限制取值
         raise ValueError(f"未知的联想规则：{associator_kind!r}")
 
-    forward = evaluate_direction(
-        assoc_t2i, test_repr.text_bus, test_repr.image_bus, direction="text2image"
-    )
-    backward = evaluate_direction(
-        assoc_i2t, test_repr.image_bus, test_repr.text_bus, direction="image2text"
-    )
+    forward = evaluate_direction(assoc_t2i, test_text, test_image, direction="text2image")
+    backward = evaluate_direction(assoc_i2t, test_image, test_text, direction="image2text")
 
     result = {
         "seed": seed,
@@ -172,6 +170,7 @@ def run_seed(
         "control_within": control_within,
         "bus_direct": direct,
         "associator": associator_kind,
+        "representation": representation,
         "hyperparameters": hyper,
         "selection_best_r1": loo_best,
         "bus_associated": {
@@ -228,12 +227,17 @@ def main(argv: list[str] | None = None) -> int:
                 test_fraction=args.test_fraction,
                 backend_factory=backend_factory,
                 associator_kind=args.associator,
+                representation=args.representation,
             )
         )
         cache.save()
 
     summary = {
-        "experiment": f"cross-modal retrieval, procedural paired set ({args.associator})",
+        "experiment": (
+            f"cross-modal retrieval, procedural paired set "
+            f"({args.associator}, {args.representation}@"
+            f"{args.bus_dim if args.representation == 'bus' else 'raw'})"
+        ),
         "associator": args.associator,
         "dataset": "procedural (4 shapes x 3 shades x 6 positions x 2 sizes = 144)",
         "bus_dim": args.bus_dim,

@@ -1,0 +1,88 @@
+{
+  "experiment": "cross-modal retrieval: representation grid",
+  "configs": [
+    {
+      "associator": "ridge",
+      "representation": "bus@128",
+      "bus_dim": 128,
+      "train_cv": 0.49217391304347824,
+      "test_r1": 0.46551724137931033,
+      "test_r5": 0.9310344827586207
+    },
+    {
+      "associator": "ridge",
+      "representation": "bus@256",
+      "bus_dim": 256,
+      "train_cv": 0.5043478260869565,
+      "test_r1": 0.47586206896551725,
+      "test_r5": 0.9413793103448276
+    },
+    {
+      "associator": "ridge",
+      "representation": "bus@512",
+      "bus_dim": 512,
+      "train_cv": 0.4913043478260869,
+      "test_r1": 0.46896551724137925,
+      "test_r5": 0.9413793103448276
+    },
+    {
+      "associator": "ridge",
+      "representation": "plugin",
+      "bus_dim": null,
+      "train_cv": 0.5121739130434783,
+      "test_r1": 0.4793103448275862,
+      "test_r5": 0.9551724137931034
+    },
+    {
+      "associator": "delta",
+      "representation": "bus@128",
+      "bus_dim": 128,
+      "train_cv": 0.41130434782608694,
+      "test_r1": 0.3586206896551724,
+      "test_r5": 0.8448275862068965
+    },
+    {
+      "associator": "delta",
+      "representation": "bus@256",
+      "bus_dim": 256,
+      "train_cv": 0.44869565217391305,
+      "test_r1": 0.3931034482758621,
+      "test_r5": 0.9172413793103449
+    },
+    {
+      "associator": "delta",
+      "representation": "bus@512",
+      "bus_dim": 512,
+      "train_cv": 0.43304347826086953,
+      "test_r1": 0.4068965517241379,
+      "test_r5": 0.9
+    },
+    {
+      "associator": "delta",
+      "representation": "plugin",
+      "bus_dim": null,
+      "train_cv": 0.4443478260869565,
+      "test_r1": 0.40344827586206894,
+      "test_r5": 0.8862068965517242
+    }
+  ],
+  "selected_by_train_cv": {
+    "ridge": {
+      "associator": "ridge",
+      "representation": "plugin",
+      "bus_dim": null,
+      "train_cv": 0.5121739130434783,
+      "test_r1": 0.4793103448275862,
+      "test_r5": 0.9551724137931034
+    },
+    "delta": {
+      "associator": "delta",
+      "representation": "bus@256",
+      "bus_dim": 256,
+      "train_cv": 0.44869565217391305,
+      "test_r1": 0.3931034482758621,
+      "test_r5": 0.9172413793103449
+    }
+  },
+  "repro": "```text\n实验名称：检索线 W4：表示网格（第四轮）\n日期：2026-10-17 11:58:29 中国标准时间\nGit commit：ef225675387a422e3ed6022a7fe05c0d5809d539\nGit 状态：有 3 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=2ced01f24803ea952da13fd8d0c1b125e97847ec2030dc57afd46dd814dbde57\n运行命令：sweep_representation.py\n耗时：0.0 s\n备注：配置按训练集 CV 选，测试集只报告\n备注：ridge 是线性上界，非局部规则\n```"
+}

@@ -72,6 +72,28 @@ representation — the pooling, the bus dimension, or sharing one projection acr
 read as "50% is impossible" — only as "linearly, this representation is not enough". Ridge
 regression is not a local rule and **enters no acceptance column**.
 
+## Round four: a representation grid — more dimensions do not help (2026-10-17)
+
+Pre-registration: [`retrieval_representation_prereg.md`](../../sweep_results/retrieval_representation_prereg.md).
+
+| Association | bus@128 | bus@256 | bus@512 | plugin (no bus projection) |
+| :--- | ---: | ---: | ---: | ---: |
+| ridge (linear upper bound) | 0.466 | 0.476 | 0.469 | **0.479** |
+| delta (local) | 0.359 | **0.393** | 0.407 | 0.403 |
+
+**Bus dimension is not the bottleneck.** Raising `bus_dim` from 128 to 512, and even bypassing the
+bus projection entirely (raw plugin outputs, 1152 image / 256 text), leaves the linear upper bound
+at 0.47–0.48.
+
+Under the pre-registered decision rule this triggers the **change the encoding** branch: the image
+side's event encoding has only three frames (blank → image → image) and keeps a single onset edge;
+the text side embeds each token as a standalone sentence and then applies z-score top-k. What each
+encoding loses is not something a linear map can put back.
+
+⚠️ An a-priori constraint: **cross-modal cannot exceed within-modal**. The image side's
+within-modal R@1 is 0.759–0.931, so a cross-modal 0.48 is already close to the ceiling set by
+images that barely separate from each other.
+
 ## One finding that has to be recorded: this rule has no tunable hyperparameter
 
 The pre-registration named two hyperparameters, `η` (learning rate) and `λ` (forgetting).
