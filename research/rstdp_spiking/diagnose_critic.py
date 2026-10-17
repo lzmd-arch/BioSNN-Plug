@@ -38,11 +38,24 @@ from research.rstdp_spiking.pop_critic import PopulationCritic
 __all__ = ["diagnose", "train_and_correlate"]
 
 
-def _build_critic(kind: str, n_features: int, *, critic_rate: float, normalize: bool, generator):
+def _build_critic(
+    kind: str,
+    n_features: int,
+    *,
+    critic_rate: float,
+    normalize: bool,
+    units: int = 64,
+    bias: float = 0.4,
+    gain: float = 8.0,
+    generator=None,
+):
     if kind == "td":
         return LinearCritic(n_features, gamma=0.99, learning_rate=critic_rate)
     return PopulationCritic(
         n_features,
+        n_units=units,
+        gain=gain,
+        bias=bias,
         gamma=0.99,
         learning_rate=critic_rate,
         trace_post_factor="gradient",
@@ -60,6 +73,9 @@ def train_and_correlate(
     normalize: bool = True,
     eval_episodes: int = 20,
     features: int = 64,
+    pop_units: int = 64,
+    pop_bias: float = 0.4,
+    pop_gain: float = 8.0,
 ) -> dict:
     """训练后报 ``corr(V, G)`` 与两者的取值范围。"""
     import gymnasium
@@ -69,7 +85,14 @@ def train_and_correlate(
     centers = population_centers(features, generator=generator)
     actor = SpikingActor(features, 2, steps=25, learning_rate=1e-3, generator=generator)
     critic = _build_critic(
-        kind, features, critic_rate=critic_rate, normalize=normalize, generator=generator
+        kind,
+        features,
+        critic_rate=critic_rate,
+        normalize=normalize,
+        units=pop_units,
+        bias=pop_bias,
+        gain=pop_gain,
+        generator=generator,
     )
 
     for episode in range(episodes):
@@ -115,6 +138,9 @@ def train_and_correlate(
     return {
         "critic": kind,
         "normalize": normalize,
+        "units": pop_units,
+        "bias": pop_bias,
+        "gain": pop_gain,
         "corr": corr,
         "v_min": float(v.min()),
         "v_max": float(v.max()),
@@ -133,16 +159,40 @@ def diagnose(**kwargs) -> list[dict]:
     ]
 
 
+def operating_point(**kwargs) -> dict:
+    """只跑一个群体 Critic 配置，供筛选/确认使用。"""
+    return train_and_correlate("pop", normalize=False, **kwargs)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Critic 是否学会预测回报")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--episodes", type=int, default=800)
     parser.add_argument("--critic-rate", type=float, default=0.1)
+    parser.add_argument("--pop-units", type=int, default=64)
+    parser.add_argument("--pop-bias", type=float, default=0.4)
+    parser.add_argument("--pop-gain", type=float, default=8.0)
+    parser.add_argument("--single", action="store_true", help="只跑一个群体配置（当前工作点）")
     args = parser.parse_args(argv)
 
-    for row in diagnose(seed=args.seed, episodes=args.episodes, critic_rate=args.critic_rate):
+    rows = (
+        [
+            operating_point(
+                seed=args.seed,
+                episodes=args.episodes,
+                critic_rate=args.critic_rate,
+                pop_units=args.pop_units,
+                pop_bias=args.pop_bias,
+                pop_gain=args.pop_gain,
+            )
+        ]
+        if args.single
+        else diagnose(seed=args.seed, episodes=args.episodes, critic_rate=args.critic_rate)
+    )
+    for row in rows:
         print(
-            f"{row['critic']:3s} normalize={row['normalize']!s:5s} "
+            f"{row['critic']:3s} units={row['units']:3d} bias={row['bias']:+.1f} gain={row['gain']:4.1f} "
+            f"normalize={row['normalize']!s:5s} "
             f"corr(V,G)={row['corr']:+.3f}  "
             f"V∈[{row['v_min']:.1f}, {row['v_max']:.1f}]  "
             f"G∈[{row['g_min']:.1f}, {row['g_max']:.1f}]"

@@ -51,6 +51,11 @@ def td_error(
 class PopulationCritic:
     """群体 + 固定读出的 Critic。
 
+    ⚠️ **默认工作点不是最好的那个。** 实测（见 README「工作点」一节）：`bias=0.4, gain=8`
+    会让 76% 的单元活动 < 0.05——偏置比前激活尺度（0.16）大一个数量级，单元贴在饱和尾巴上。
+    `bias=0, gain=16` 把 `corr(V,G)` 从 −0.50 提到 +0.70。默认值保留原样是为了不悄悄改变
+    任何既有结果；要用好的那组请显式传参。
+
     Attributes:
         weights: ``(n_units, n_features)``，每行是一个单元的 ``w_j``。
         trace: 同形状的资格痕迹。

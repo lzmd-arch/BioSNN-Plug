@@ -156,6 +156,9 @@ def train(
     pop_post: str = "rate",
     pop_readout: str = "uniform",
     pop_normalize: bool = True,
+    pop_units: int = 64,
+    pop_bias: float = 0.4,
+    pop_gain: float = 8.0,
     warmup: int,
     device: torch.device,
 ) -> TrainResult:
@@ -180,6 +183,9 @@ def train(
     elif critic_kind == "pop":
         critic = PopulationCritic(
             n_features,
+            n_units=pop_units,
+            gain=pop_gain,
+            bias=pop_bias,
             gamma=gamma,
             learning_rate=critic_rate,
             trace_post_factor=pop_post,
@@ -265,6 +271,9 @@ def main(argv: list[str] | None = None) -> int:
         default=True,
         help="群体 Critic 权重是否行归一化",
     )
+    parser.add_argument("--pop-units", type=int, default=64, help="群体 Critic 的单元数")
+    parser.add_argument("--pop-bias", type=float, default=0.4, help="群体 Critic 的单元阈值 b")
+    parser.add_argument("--pop-gain", type=float, default=8.0, help="群体 Critic 的增益 g")
     parser.add_argument(
         "--pop-readout",
         choices=("uniform", "random"),
@@ -307,6 +316,9 @@ def main(argv: list[str] | None = None) -> int:
             pop_post=args.pop_post,
             pop_readout=args.pop_readout,
             pop_normalize=args.pop_normalize,
+            pop_units=args.pop_units,
+            pop_bias=args.pop_bias,
+            pop_gain=args.pop_gain,
             device=device,
         )
         results.append(outcome)
@@ -332,6 +344,9 @@ def main(argv: list[str] | None = None) -> int:
             "pop_post": args.pop_post,
             "pop_readout": args.pop_readout,
             "pop_normalize": args.pop_normalize,
+            "pop_units": args.pop_units,
+            "pop_bias": args.pop_bias,
+            "pop_gain": args.pop_gain,
             "gamma": args.gamma,
             "warmup": args.warmup,
         },

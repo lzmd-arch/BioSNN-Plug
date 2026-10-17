@@ -108,6 +108,44 @@ Readings:
 3. **Porting everything still misses 200, and does not even reach the linear TD critic's 109.8**
    (0/5 against 1/5).
 
+### Operating point: from "almost all dead" to "tracks the return" (same day)
+
+The previous section measured 76% of units below 0.05 activity — the bias `b = 0.4` is an order of
+magnitude larger than the scale of the pre-activation it receives (0.16). Pre-registration:
+[`rstdp_spiking_operating_point_prereg.md`](../../sweep_results/rstdp_spiking_operating_point_prereg.md).
+
+Screening (one seed, 300 episodes, `gradient` and no normalisation fixed):
+
+| bias | gain | units | best evaluation |
+| ---: | ---: | ---: | ---: |
+| 0.4 (current) | 8 | 64 | 73.5 |
+| 0.0 | 8 | 64 | 42.2 |
+| −0.2 | 8 | 64 | 33.0 |
+| **0.0** | **16** | **64** | **123.4** |
+| 0.0 | 8 | **256** | 9.2 |
+
+**What works is the gain (stretching `z` to span ±2), not the unit count** — H1 (operating point)
+holds, H2 (capacity) does not.
+
+Confirmation (five seeds × 800 episodes, `b = 0, g = 16`): **mean 64.8** (previous best 56.8),
+per seed 44.4 / 89.4 / 33.2 / 72.4 / 84.6. ⚠️ **Still 0/5**, but **the worst seed rises from 9.3
+to 33.2** — markedly more stable.
+
+The direct criterion, `corr(V,G)`: **−0.496 → +0.697** (linear TD is +0.965). The critic now
+**tracks the return**.
+
+### Still unresolved: training collapses the value's dynamic range
+
+The same diagnostic reports `V ∈ [14.4, 17.6]`, **only 3.2 wide**, while returns span 1–10.5. A
+short run (2 episodes) still shows a 3.9–36.8 spread; 800 episodes collapse it into a narrow band.
+
+Consequence: in `δ = r + γV(s′) − V(s)` the differences in `V` are about a third of the reward
+scale, so `δ` is dominated by the reward term and bootstrapping barely contributes. This is
+consistent with "with a `gradient` post-factor the trace is always non-negative and the readout is
+all positive, so weights get pushed the same way and units homogenise" — **the most explanatory
+next hypothesis**, but it needs its own pre-registration and is not part of this round's
+conclusion.
+
 ### Diagnosis: the population critic never learns the value function
 
 `diagnose_critic.py` freezes the policy after training and compares `V(s_t)` with the Monte-Carlo
