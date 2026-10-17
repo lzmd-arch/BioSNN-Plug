@@ -851,11 +851,13 @@ handle, which also resolves the arXiv pseudonym question from the release plan i
 the real-name policy — and introduces a new requirement: **the double-blind submission must strip
 it**, along with the repository URL and both DOIs.
 
-⚠️ **The Chinese form 沈锦垚 is not in the PDF, and could not be.** The experiment: adding
+⚠️ **The first attempt to typeset the Chinese form 沈锦垚 failed locally.** The experiment: adding
 `\usepackage{CJKutf8}` and the characters around the name fails here — **TinyTeX-1 does not ship
 `cjkutf8.sty`** — so the local build stopped at a missing package. The romanised form is what an
-English-language venue expects anyway. Rendering the characters needs the `cjk` package installed
-into this TeX distribution first; that is a deliberate environment change and was not made.
+English-language venue expects beside it anyway. Rendering the characters *locally* needs the
+`cjk` package installed into this TeX distribution first; that is a deliberate environment change
+and was not made. **(Superseded — see the resolution below: CI's `tectonic` fetches the package
+on demand, and the typeset byline does carry the characters.)**
 
 ⚠️ **A third name lives in this repository**: `CITATION.cff` lists `name: "离中梦蝶"` with
 `alias: lzmd-arch`. The paper and the citation metadata now disagree. Aligning them is a decision
@@ -884,3 +886,48 @@ ToUnicode mapping, so text extraction returns nothing for them, and this machine
 (`pdftoppm`, `pdffonts`, `mutool`, `qpdf` all absent). **Page 1 of the built PDF has to be looked at
 once by a human** — the byline should read `Jinyao Shen 沈锦垚` with the characters legible. That is
 the same distinction as the overfull-box episode: compiling is not rendering.
+
+## Draft log — reading a stale copy, and the one defect that was real (2026-10-17)
+
+A report came back with four "must-fix" items (Table 3 crammed together with an `offcial` header;
+the abstract's last sentence cut off; an empty correspondence footnote) and three more (garbled
+characters near Figure 2; a family of sentences truncated at page breaks; a truncated last sentence
+in Data Availability). Every one was checked against the source before anything was edited.
+
+**None of the seven reproduces in the committed source, and none reproduces in the PDF built from
+it.** Concretely, in `main.tex`:
+
+| report | what the source says |
+| --- | --- |
+| `offcial` in the Table 3 header | the string occurs **zero** times; all four occurrences are `official` |
+| abstract's last sentence cut off | ends `...solutions a benchmark of this kind invites.` |
+| empty correspondence footnote | reads `Correspondence: github.com/lzmd-arch/BioSNN-Plug.` |
+| "V3(R-S1DP+ID-LIP" near Figure 2 | no such string; it is `W3 (R-STDP + TD-LTP)` degraded character by character |
+| `...and this paper is about the second` stopping there | the sentence continues; see below |
+| `...and for nothing measured` stopping there | the sentence ends there by design; nothing follows it |
+| Data Availability's last sentence | ends `...Cite that record for the protocol, and this paper for the result.` |
+
+The degradation pattern is the tell: `W3`→`V3`, `ST`→`S1`, `L`→`I` is what a bad rasteriser or a
+cached OCR layer does, not what a LaTeX build does. Combined with a PDF that was locked by another
+program earlier in the day, the reading is that the report was made against an older copy still open
+in a viewer.
+
+**Two changes make that harder to repeat.** First, `\date` now prints `draft revision 7
+(2026-10-17)` on page 1, so a screenshot or a quote identifies its own build. Second, the only real
+defect found by the check — and it came from the CI log, not from the report — was fixed: tectonic
+reported `Overfull \hbox (1.54933pt too wide)` in the Data Availability paragraph, invisible to the
+local pdflatex run because the two engines use different font metrics. The paragraph is now inside
+`sloppypar`. **The current build reports zero overfull boxes**; the local build being clean was
+never evidence about the CI build, and that distinction is now written down.
+
+**One sentence did need changing, and it was not truncated.** §1.1 closes with `What the promise
+does not come with is a measurement convention, and this paper is about the second thing.` The
+nearest preceding `the second` enumerates the second cost of BPTT — the surrogate gradient — so the
+sentence read as "this paper is about the surrogate gradient", the opposite of its subject. There
+was no two-item list for "the second thing" to point at. It now reads `...is a measurement
+convention. This paper is about that gap.` — and `gap` hands directly to the next subsection,
+*The measurement gap*.
+
+The general lesson, recorded because it has now cost two rounds: **text extracted from a PDF
+truncates at page breaks and degrades at glyph level, so a reported truncation is a hypothesis about
+the source, not evidence about it.** `grep` the source first; fix only what the source shows.
