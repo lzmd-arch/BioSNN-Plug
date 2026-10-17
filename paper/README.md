@@ -520,8 +520,14 @@ paper, and it forced one licence onto files that have two different native ones.
     "local link check green" says **nothing** about a newly added external URL, private ones
     especially. Fixed by replacing the draft URL with the DOI text in `3af9771`; the lesson is the
     one the repo keeps re-learning: **watch the run, not the local check**.
-- **Record B — 2026-10-22: the full paper**, Zenodo + arXiv, `publication_type = preprint`,
-  licence CC-BY-4.0.
+- **Record B — the full paper. Zenodo: PUBLISHED 2026-10-17 as v1.0.** DOI
+  **`10.5281/zenodo.23429028`**, concept DOI `10.5281/zenodo.23429027`, `publication_type = preprint`,
+  licence CC-BY-4.0, one attachment `BioSNN-Plug_P2_paper_v1.0.pdf` (20 pages, 658,248 bytes,
+  `md5:7a36024d…`), built from commit `508c6b3`. The 2026-10-22 date in the earlier framing was a
+  plan, not a constraint; the deposit was moved up on the author's instruction. Verified from
+  Zenodo's **public** API after publishing, not from the upload response.
+  ⚠️ **arXiv is still pending**: the endorsement question (standing item 3 below) is unresolved and
+  is a human action, not a script.
 
 **Standing items for B:**
 
@@ -930,3 +936,40 @@ the source, not evidence about it.** `grep` the source first; fix only what the 
 **Build of record:** commit `508c6b3` (the last commit to touch `main.tex`), 20 pages, tectonic
 reports **zero** overfull boxes, sha256 `0b152e8987…`. The hash identifies *this* build; it is not
 a reproducibility claim --- the PDF embeds a creation date, so a rebuild will differ byte for byte.
+
+## Draft log — record B published, and where the "broken PDF" reports come from (2026-10-17)
+
+**The paper is deposited.** Record B is live at `10.5281/zenodo.23429028` (concept
+`10.5281/zenodo.23429027`): `publication / preprint`, CC-BY-4.0, version `v1.0`, one attachment,
+20 pages, 658,248 bytes, `md5:7a36024d…`, built from `508c6b3`. The record was created as a private
+draft, the file was uploaded and read back **from Zenodo's side** (size and checksum matched the
+local PDF before the publish button was pressed), and the published record was then re-read from
+the **public** API — title, type, licence, version, creator, related identifiers and file checksum
+all as intended. The deposit package lives outside the repository, at
+`Desktop/zenodo_v1.0/` (`zenodo_metadata.json`, `zenodo_deposit.ps1`, `README-上传.md`), following
+the same draft-first pattern as record A.
+
+**The three "must-fix" items were not defects, and this time the cause is identified.** A third
+report said Table 3 was still crammed with an `offcial` header, the abstract still ended at
+"…a benchmark of this kind", and a garbled line `V3(R-S1DP+ID-LIP` still sat before Figure 2. Every
+PDF copy on the machine was scanned — the Desktop file and the four older copies in the WeChat file
+folder — and **`offcial` occurs zero times in all five, as does `V3(`**; the abstract's closing
+phrase `kind invites` occurs once in each. What produces exactly those three symptoms is a viewer
+that **rasterises the page and re-recognises the text**: `official` loses its `i`, `W3 (R-STDP +
+TD-LTP)` comes back as `V3(R-S1DP+ID-LIP`, two table rows collapse into one cell, and a sentence at
+the page foot is cut where the raster ends. That is the WeChat PDF preview, and the files reached
+it because they sit in WeChat's received-file folder. **Read the paper in a real PDF reader**; the
+`draft revision N` stamp on page 1 now identifies the build in any screenshot that is quoted back.
+
+**One thing is unfinished, and it is blocked by this environment.** Record A's description still
+says the preprint "is planned for 2026-10-22", which stopped being true today, and A has no
+related-identifier pointing at B. The fix — a metadata-only edit (unlock → PUT → re-publish, with
+recovery on every failure path so the record cannot be left invisible) — is written and staged at
+`Desktop/zenodo_v0.1/zenodo_link_to_B.ps1`, but **the edit was refused by this environment's
+permission classifier** as an external-system write. It needs one manual run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\zenodo_v0.1\zenodo_link_to_B.ps1"
+```
+
+Until that runs, the two records do not yet read as siblings: B points at A, A does not point at B.
