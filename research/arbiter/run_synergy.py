@@ -128,6 +128,12 @@ def run_arm(
         arbiter=arbiter or ESArbiter(alpha=0.0 if arm.kind == "hebbian" else 1.0, seed=seed),
         seed=seed,
     )
+    # harness 在 CPU 上构造；要用 GPU 就把两个模型与共享权重一起搬过去。
+    if device.type != "cpu":
+        harness.eprop.to(device)
+        harness.hebbian.to(device)
+        harness._shared = harness._shared.to(device)
+        harness.sync_from_shared()
     weight = harness.shared_weight
 
     readout = DeltaReadout(n_shared, 10, learning_rate=0.01)
@@ -197,6 +203,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--shared", type=int, default=256)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--data-dir", type=Path, default=REPO_ROOT / "data")
+    parser.add_argument("--arms", default="H,E,MIX", help="逗号分隔，可选 H / E / MIX")
     parser.add_argument("--smoke", action="store_true", help="1 种子、1% 标签、小批量")
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
@@ -205,11 +212,16 @@ def main(argv: list[str] | None = None) -> int:
         args.epochs = 1
         args.batch = 64
 
-    arms = [
-        Arm("H", "hebbian"),
-        Arm("E", "eprop"),
-        Arm("MIX", "mix"),
-    ]
+    catalogue = {
+        "H": Arm("H", "hebbian"),
+        "E": Arm("E", "eprop"),
+        "MIX": Arm("MIX", "mix"),
+    }
+    wanted = [name.strip() for name in args.arms.split(",") if name.strip()]
+    unknown = [name for name in wanted if name not in catalogue]
+    if unknown:
+        raise SystemExit(f"未知的臂：{unknown}；可选 {sorted(catalogue)}")
+    arms = [catalogue[name] for name in wanted]
     results = []
     started = time.perf_counter()
     for fraction in (float(f) for f in args.fractions.split(",")):
