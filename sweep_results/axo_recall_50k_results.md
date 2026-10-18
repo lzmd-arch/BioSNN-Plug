@@ -102,4 +102,3 @@ uv run python scripts/axo_recall_50k_profile.py --n 50000 --queries 5
 - `357e757`：MMR 候选 Jaccard 矩阵。
 - `bc59387`：纯词法倒排候选 + `get_many`。
 - `7074f6e`：多通道并集 + 归一化嵌入矩阵缓存。
-
