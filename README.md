@@ -42,7 +42,7 @@
 | **EMBER** | ◐ STDP + 资格痕迹 × 多巴胺门控 | ✗（仅文本） | ◐ 观察级，**N=1** | ✗ | ✗ 无公开仓库 |
 | **MEMBRAIN** | ◐ Voja + PES | ✗ | ✗ | ◐ 自报与实现不符 | ✅ Nengo（MIT） |
 | **eprop-PyTorch / ESPP** | ✅ e-prop；ESPP 是另一条并列规则 | ✗ | ✗ | ✗ | ◐ 代码片段，非框架 |
-| **BioSNN-Plug**（本项目） | ✅ 三条线全部验收 | ◐ 三路插件（图像/MNIST/文本），**音频缺** | ○ 第五阶段 | ○ 第三阶段 | ✅ `biosnn-bus` 已上 PyPI |
+| **BioSNN-Plug**（本项目） | ✅ 三条线全部验收 | ✅ 四路插件（图像/MNIST/文本/音频） | ○ 第五阶段 | ○ 第三阶段 | ✅ `biosnn-bus` 已上 PyPI |
 
 图例：**✅ 已实现并有验收数据** · **◐ 部分**（机制或证据不全） · **○ 只在路线图里（计划书有任务，未开始）** · **✗ 无**
 
@@ -53,8 +53,8 @@
 
 | 部分 | 状态 |
 | :--- | :--- |
-| `biosnn-bus` 骨架库 | **0.2.0 可用**——插件接口、注册与发现、脉冲总线、**TAAF 时间注意力融合**（rate-based gating，权重由各路发放率现算，**无反向传播**） |
-| 模态插件 | **三路**：`image_diff`（DVS 事件编码）、`mnist_pulse`（发放率）、**`text_zscore`**（冻结本地 embedding + z-score top-k 群体编码） |
+| `biosnn-bus` 骨架库 | **0.3.0（仓库内，含音频插件；PyPI 上仍是 0.2.0）**——插件接口、注册与发现、脉冲总线、**TAAF 时间注意力融合**（rate-based gating，权重由各路发放率现算，**无反向传播**） |
+| 模态插件 | **四路**：`image_diff`（DVS 事件编码）、`mnist_pulse`（发放率）、**`text_zscore`**（冻结本地 embedding + z-score top-k 群体编码）、**`audio_cochlea`**（对数频带分解 + 发放率；未发布到 PyPI） |
 | 研究代码：三条验证线 | **第一阶段实现完成**——W1 Hebbian 感知 MNIST **97.79%**（默认闭式解读出；SGD 读出 98.01%）✓；W2 e-prop 序列 sMNIST **0.7764**（30 epoch × 5 种子）→ **0.8889**（**官方收官**：**LIF** @ lr=1e-2 @ 250 epoch，已收敛；同档 ALIF 0.8831 为对照）；lr 交互扫描完成，**LIF 在四档 lr 上全网格领先** ✓；W3 R-STDP CartPole 中位数 **237.8 步**（阈值 ≥ 200）✓。数字与复现记录见[复现记录](docs/reproducibility.md) |
 | **网络规模** | **256 个脉冲神经元**（W2）；W1 另有 3,072 个**速率型**单元（不算脉冲神经元）。计划书 §2.2 的认知核心目标是约 5 万——**差约 195 倍**，详见 [research/README](research/README.md) |
 | 仲裁器 | **零件就位**（`research/arbiter/`）：冲突判定（余弦 > 90°）+ ES 元学习仲裁器，**已接进两条研究线**（共享输入突触）。⚠️ 但只共享输入→隐藏一处，且「减少冲突事件 50%」在合成数据上是**平凡成立**的——见该目录 README |
@@ -66,7 +66,7 @@
 
 | 标准 | 状态 |
 | :--- | :--- |
-| 插件可独立替换 | ✅ 三路插件 + entry points，骨架库已上 PyPI |
+| 插件可独立替换 | ✅ 四路插件 + entry points，骨架库已上 PyPI |
 | TAAF 微调样本量 < 从头训练 1/10 | ⚠️ **标准随 [ADR-0012](docs/adr/ADR-0012-taaf-locality-and-bus-output-contract.md) 消解，非达成**——融合权重按红线根本不训练，这条标准**失去了所指**（没有微调，就没有「微调样本量」）。见计划书修订说明 ㉗ |
 | 跨模态检索 R@1 50%+ | ⚠️ **原标准（绝对 50%）未达成且被判无区分力**（合成集可被记忆化满足；Flickr8k 冻结前端上界 0.076）。**已重述为「恢复率」并通过**：局部规则拿回线性上界的 **75.2%（合成集）/ 78.7%（Flickr8k，完整网格）**——见 [research/retrieval](research/retrieval/README.md) |
 | 仲裁器使双规则冲突事件减少 50%+ | ✅ 在**真实共享突触**上达标（10 → 0，`retention` 0.3） |
@@ -76,7 +76,7 @@
 - **TAAF 已实现，但默认策略仍是拼接**：`TemporalAttentionFusion` 是**显式选用**的融合策略（`SpikeBus(strategy=...)`），默认仍是平凡拼接。⚠️ 它的注意力权重**由各路发放率现算、不训练**（rate-based gating）——这条红线用 **AST 结构断言**钉死，见 [ADR-0012](docs/adr/ADR-0012-taaf-locality-and-bus-output-contract.md)。
 - **感知层允许冻结预训练前端**（边界声明，见[计划书 §2.3](BioSNN-Plug_项目计划书_v6.3.md)）：「纯局部学习」的主张范围是**突触学习规则**，不是**输入编码器**。判据是「参数进不进梯度」，不是「模型大不大」——冻结的 2GB 预训练 embedding 与固定随机投影等价；反过来，100 行的本地编码器若用反向传播训自己参数，就**违反**这条边界。文本插件用的 `nomic-embed-text`（Ollama，768 维）就是冻结的。
 - （骨架库为何独立成包、为何刻意不包含这些东西，见 [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.md)。）
-- 骨架库**已发布到 PyPI**：`pip install biosnn-bus`（当前 `0.2.0`）。发布走 PyPI trusted publishing（OIDC，不存 token），流程见 [release.yml](.github/workflows/release.yml)。
+- 骨架库**已发布到 PyPI**：`pip install biosnn-bus`（PyPI 上是 `0.2.0`；仓库里已经是 `0.3.0`，多出 `audio_cochlea` 插件，**尚未发布**）。发布走 PyPI trusted publishing（OIDC，不存 token），流程见 [release.yml](.github/workflows/release.yml)。
 
 ## 架构
 
@@ -111,7 +111,7 @@ flowchart TB
         IMG["图像 image_diff<br/>DVS 事件编码<br/>✅ 已实现"]
         MN["MNIST mnist_pulse<br/>发放率编码<br/>✅ 已实现"]
         TXT["文本 text_zscore<br/>冻结 embedding + z-score top-k<br/>✅ 已实现"]
-        AUD["音频插件<br/>耳蜗模型频率分解<br/>⬜ 第三阶段"]
+        AUD["音频 audio_cochlea<br/>对数频带分解 + 发放率<br/>✅ 已实现（未发布到 PyPI）"]
         THIRD["第三方插件<br/>entry points 接入<br/>✅ 机制已就绪"]
         HEB["学习规则：核化 IB-Hebbian + 除法归一化<br/>◐ 第一阶段已验证（W1，MNIST 97.79%）"]
     end

@@ -48,7 +48,7 @@ project may enter a dependency, which may not be copied at all), are in
 | **EMBER** | ◐ STDP + eligibility traces x dopamine gating | ✗ (text only) | ◐ observational, **N=1** | ✗ | ✗ no public repo |
 | **MEMBRAIN** | ◐ Voja + PES | ✗ | ✗ | ◐ claims disagree with implementation | ✅ Nengo (MIT) |
 | **eprop-PyTorch / ESPP** | ✅ e-prop; ESPP is a separate parallel rule | ✗ | ✗ | ✗ | ◐ code fragments, not a framework |
-| **BioSNN-Plug** (this project) | ✅ all three lines accepted | ◐ three plugins (image / MNIST / text), **audio missing** | ○ phase 5 | ○ phase 3 | ✅ `biosnn-bus` is on PyPI |
+| **BioSNN-Plug** (this project) | ✅ all three lines accepted | ✅ four plugins (image / MNIST / text / audio) | ○ phase 5 | ○ phase 3 | ✅ `biosnn-bus` is on PyPI |
 
 Legend: **✅ implemented, with acceptance data** · **◐ partial** (mechanism or evidence incomplete) ·
 **○ roadmap only (task exists in the plan, not started)** · **✗ none**
@@ -61,8 +61,8 @@ precisely so this table cannot be read as "we have already done it".
 
 | Part | Status |
 | :--- | :--- |
-| `biosnn-bus` skeleton library | **0.2.0, usable** — plugin interface, registration and discovery, spike bus, **TAAF temporal-attention fusion** (rate-based gating: weights come from each path's firing rate, **no backpropagation**) |
-| Modality plugins | **Three**: `image_diff` (DVS event coding), `mnist_pulse` (firing rates), **`text_zscore`** (frozen local embedding + z-score top-k population coding) |
+| `biosnn-bus` skeleton library | **0.3.0 in the repo (adds the audio plugin); PyPI still serves 0.2.0** — plugin interface, registration and discovery, spike bus, **TAAF temporal-attention fusion** (rate-based gating: weights come from each path's firing rate, **no backpropagation**) |
+| Modality plugins | **Four**: `image_diff` (DVS event coding), `mnist_pulse` (firing rates), **`text_zscore`** (frozen local embedding + z-score top-k population coding), **`audio_cochlea`** (log-spaced band decomposition + firing rates; not yet on PyPI) |
 | Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **97.79%** (default closed-form readout; SGD readout 98.01%) ✓; W2 e-prop sequential sMNIST **0.7764** (30 epochs x 5 seeds) -> **0.8889** (**official**: **LIF** @ lr=1e-2 @ 250 epochs, converged; ALIF 0.8831 same budget as control); learning-rate interaction swept, **LIF leads across the whole grid** ✓; W3 R-STDP CartPole median **237.8 steps** (criterion ≥ 200) ✓. Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) |
 | **Network scale** | **256 spiking neurons** (W2); W1 adds 3,072 **rate-based** units (not spiking neurons). The plan's §2.2 cognitive-core target is about 50k -- a gap of roughly **195x**, see [research/README](research/README.en.md) |
 | Arbiter | **Parts in place** (`research/arbiter/`): conflict detection (cosine > 90 degrees) + ES meta-learned arbiter, **wired into both research lines** (a shared input synapse). Warning: only the input->hidden mapping is shared, and "50% fewer conflict events" is **trivially satisfied** on synthetic data -- see that directory's README |
@@ -94,7 +94,7 @@ Three boundaries worth stating plainly:
   (Ollama, 768-d) is frozen.
 - (Why the skeleton library is a separate package, and why it deliberately includes none of
   these things, see [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.en.md).)
-- The skeleton library **is on PyPI**: `pip install biosnn-bus` (currently `0.2.0`). Releases go through PyPI trusted publishing (OIDC, no stored tokens); the pipeline is in [release.yml](.github/workflows/release.yml).
+- The skeleton library **is on PyPI**: `pip install biosnn-bus` (PyPI serves `0.2.0`; the repository is at `0.3.0`, which adds the `audio_cochlea` plugin and is **not yet published**). Releases go through PyPI trusted publishing (OIDC, no stored tokens); the pipeline is in [release.yml](.github/workflows/release.yml).
 
 ## Architecture
 
@@ -129,7 +129,7 @@ flowchart TB
         IMG["Image image_diff<br/>DVS event coding<br/>✅ implemented"]
         MN["MNIST mnist_pulse<br/>firing-rate coding<br/>✅ implemented"]
         TXT["Text text_zscore<br/>frozen embedding + z-score top-k<br/>✅ implemented"]
-        AUD["Audio plugin<br/>cochlear-model frequency decomposition<br/>⬜ phase 3"]
+        AUD["Audio audio_cochlea<br/>log-spaced bands + firing rates<br/>✅ implemented (not on PyPI yet)"]
         THIRD["Third-party plugins<br/>attached via entry points<br/>✅ mechanism in place"]
         HEB["Learning rule: kernelised IB-Hebbian + divisive normalization<br/>◐ phase 1 verified (W1, MNIST 97.79%)"]
     end

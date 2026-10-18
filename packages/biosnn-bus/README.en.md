@@ -87,6 +87,15 @@ paper figure F1.
 | `register_plugin` | In-process registration decorator |
 | `discover_plugins` | Scans the entry points declared by third-party distribution packages |
 
+## Built-in plugins
+
+| Plugin | Modality | Encoding | Fusion channel |
+| :--- | :--- | :--- | :--- |
+| `image_diff` | image | DVS-style ON/OFF events (frame differences) | semantic |
+| `mnist_pulse` | MNIST | pixel value as firing probability (Bernoulli) | semantic |
+| `text_zscore` | text | frozen embedding + z-score top-k population coding | temporal |
+| `audio_cochlea` | audio | log-spaced band decomposition + firing rates | temporal |
+
 ## How third-party plugins are integrated
 
 Declare an entry point in your package, and **no line of BioSNN-Plug code needs to change**:

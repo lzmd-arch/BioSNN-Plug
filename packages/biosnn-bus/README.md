@@ -80,6 +80,15 @@ print(out)
 | `register_plugin` | 进程内注册装饰器 |
 | `discover_plugins` | 扫描第三方分发包声明的 entry points |
 
+## 内置插件
+
+| 插件 | 模态 | 编码 | 融合通道 |
+| :--- | :--- | :--- | :--- |
+| `image_diff` | 图像 | DVS 式 ON/OFF 事件（帧差） | semantic |
+| `mnist_pulse` | MNIST | 像素值即发放概率（伯努利） | semantic |
+| `text_zscore` | 文本 | 冻结 embedding + z-score top-k 群体编码 | temporal |
+| `audio_cochlea` | 音频 | 对数频带分解 + 发放率 | temporal |
+
 ## 第三方插件怎么接入
 
 在你的包里声明 entry point，**不需要修改 BioSNN-Plug 任何一行代码**：

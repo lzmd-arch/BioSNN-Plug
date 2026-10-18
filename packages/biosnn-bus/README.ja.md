@@ -84,6 +84,15 @@ print(out)
 | `register_plugin` | プロセス内登録デコレータです |
 | `discover_plugins` | サードパーティの配布パッケージが宣言したエントリポイントをスキャンします |
 
+## 内蔵プラグイン
+
+| プラグイン | モダリティ | 符号化 | 融合チャネル |
+| :--- | :--- | :--- | :--- |
+| `image_diff` | 画像 | DVS 形式の ON/OFF イベント（フレーム差分） | semantic |
+| `mnist_pulse` | MNIST | 画素値＝発火確率（ベルヌーイ） | semantic |
+| `text_zscore` | テキスト | 凍結 embedding ＋ z-score top-k 群体符号化 | temporal |
+| `audio_cochlea` | 音声 | 対数帯域分解 ＋ 発火率 | temporal |
+
 ## サードパーティプラグインの組み込み方
 
 自分のパッケージでエントリポイントを宣言します。**BioSNN-Plug のコードを一行も変更する必要はありません**：
