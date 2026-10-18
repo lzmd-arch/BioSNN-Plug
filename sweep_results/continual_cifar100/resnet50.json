@@ -1,0 +1,158 @@
+{
+  "experiment": "CIFAR-100 class-incremental (W1 features + delta readout)",
+  "mode": "incremental",
+  "config": {
+    "n_tasks": 10,
+    "limit_per_class": null,
+    "hidden_epochs": 1,
+    "readout_epochs": 20,
+    "batch": 128
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "mode": "incremental-resnet18",
+      "n_tasks": 10,
+      "limit_per_class": null,
+      "accuracy_matrix": [
+        [
+          0.905,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN
+        ],
+        [
+          0.822,
+          0.816,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN
+        ],
+        [
+          0.728,
+          0.7555,
+          0.7573333333333333,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN
+        ],
+        [
+          0.693,
+          0.713,
+          0.724,
+          0.72425,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN
+        ],
+        [
+          0.675,
+          0.6875,
+          0.6963333333333334,
+          0.69725,
+          0.6938,
+          NaN,
+          NaN,
+          NaN,
+          NaN,
+          NaN
+        ],
+        [
+          0.647,
+          0.6625,
+          0.6763333333333333,
+          0.678,
+          0.6684,
+          0.66,
+          NaN,
+          NaN,
+          NaN,
+          NaN
+        ],
+        [
+          0.631,
+          0.643,
+          0.6596666666666666,
+          0.661,
+          0.6532,
+          0.643,
+          0.6432857142857142,
+          NaN,
+          NaN,
+          NaN
+        ],
+        [
+          0.616,
+          0.6315,
+          0.6476666666666666,
+          0.64325,
+          0.6374,
+          0.6276666666666667,
+          0.622,
+          0.61775,
+          NaN,
+          NaN
+        ],
+        [
+          0.602,
+          0.605,
+          0.6256666666666667,
+          0.62275,
+          0.6172,
+          0.6085,
+          0.6027142857142858,
+          0.599625,
+          0.6055555555555555,
+          NaN
+        ],
+        [
+          0.593,
+          0.5975,
+          0.6186666666666667,
+          0.6075,
+          0.6024,
+          0.5945,
+          0.5881428571428572,
+          0.584375,
+          0.5913333333333334,
+          0.5851
+        ]
+      ],
+      "acc": 0.7024138007684554,
+      "af": 0.11617297178130508,
+      "per_task_final": [
+        0.593,
+        0.5975,
+        0.6186666666666667,
+        0.6075,
+        0.6024,
+        0.5945,
+        0.5881428571428572,
+        0.584375,
+        0.5913333333333334,
+        0.5851
+      ]
+    }
+  ],
+  "mean_acc": 0.7024138007684554,
+  "mean_af": 0.11617297178130508,
+  "repro": "```text\n实验名称：W5 持续学习：CIFAR-100 类增量\n日期：2026-10-18 21:37:05 中国标准时间\nGit commit：38f3512e1831faba82eb3425b860cede94aa72d9\nGit 状态：有 2 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：CPU（Intel64 Family 6 Model 183 Stepping 1, GenuineIntel，无 GPU 参与）\n随机种子：0\n依赖快照：uv.lock sha256=cf50514001e37d3287284538b013a887f895d00496ba66e947de577b00dbdc01\n运行命令：run_continual.py --features resnet18 --backbone resnet50 --tasks 10 --readout ncm --whiten --out data/_probe_resnet50\n耗时：5903.1 s\n备注：隐藏层每任务继续局部更新；读出为 delta 规则，无回放无正则\n```"
+}

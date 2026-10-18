@@ -33,7 +33,7 @@ import torch
 
 from research.common.provenance import collect
 from research.continual.data import CifarSplit, load_cifar100, task_classes
-from research.continual.frontends import resnet18_features
+from research.continual.frontends import image_features
 from research.continual.metrics import summarise
 from research.continual.ncm import ClassPrototypes
 from research.continual.readout import DeltaReadout, evaluate
@@ -177,6 +177,7 @@ def run_with_frozen_frontend(
     whiten: bool,
     data_root: Path,
     device: torch.device,
+    backbone: str = "resnet18",
 ) -> dict:
     """冻结 ResNet18 前端 + 类原型：**没有特征漂移，也没有逐任务覆盖**。
 
@@ -186,13 +187,13 @@ def run_with_frozen_frontend(
     np.random.seed(seed)
     train, test = load_cifar100(data_root)
     cache_dir = Path(data_root) / "_features"
-    print("提取 ResNet18 特征（训练集）…")
-    train_features = resnet18_features(
-        train.x, cache=cache_dir / "resnet_train.npz", device=str(device)
+    print(f"提取 {backbone} 特征（训练集）…")
+    train_features = image_features(
+        train.x, backbone=backbone, cache=cache_dir / f"{backbone}_train.npz", device=str(device)
     )
-    print("提取 ResNet18 特征（测试集）…")
-    test_features = resnet18_features(
-        test.x, cache=cache_dir / "resnet_test.npz", device=str(device)
+    print(f"提取 {backbone} 特征（测试集）…")
+    test_features = image_features(
+        test.x, backbone=backbone, cache=cache_dir / f"{backbone}_test.npz", device=str(device)
     )
 
     tasks = task_classes(n_tasks, 100)
@@ -277,6 +278,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--data-root", type=Path, default=REPO_ROOT / "data" / "cifar100")
     parser.add_argument("--features", choices=("w1", "resnet18"), default="w1")
+    parser.add_argument(
+        "--backbone",
+        default="resnet18",
+        help="--features resnet18 时用哪个冻结骨干（resnet18 / resnet50 / vit_b_16）",
+    )
     parser.add_argument("--readout", choices=("delta", "ncm"), default="delta")
     parser.add_argument("--whiten", action="store_true", help="NCM 读出用共享协方差白化")
     parser.add_argument(
@@ -309,6 +315,7 @@ def main(argv: list[str] | None = None) -> int:
                     whiten=args.whiten,
                     data_root=args.data_root,
                     device=device,
+                    backbone=args.backbone,
                 )
             )
             continue

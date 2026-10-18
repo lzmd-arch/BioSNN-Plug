@@ -22,11 +22,37 @@ from pathlib import Path
 
 import numpy as np
 
-__all__ = ["IMAGE_NET_MEAN", "IMAGE_NET_STD", "resnet18_features"]
+__all__ = ["BACKBONES", "IMAGE_NET_MEAN", "IMAGE_NET_STD", "image_features", "resnet18_features"]
+
+#: 支持的冻结骨干。键是命令行取值，值是 (torchvision 构造器名, 特征维)。
+BACKBONES = {
+    "resnet18": ("resnet18", 512),
+    "resnet50": ("resnet50", 2048),
+    "vit_b_16": ("vit_b_16", 768),
+}
 
 #: ImageNet 预训练权重的标准化常量。
 IMAGE_NET_MEAN = (0.485, 0.456, 0.406)
 IMAGE_NET_STD = (0.229, 0.224, 0.225)
+
+
+def image_features(
+    images: np.ndarray,
+    *,
+    backbone: str = "resnet18",
+    cache: Path | None = None,
+    batch_size: int = 128,
+    device: str | None = None,
+) -> np.ndarray:
+    """任意受支持骨干的冻结特征（``BACKBONES`` 里的名字）。
+
+    ⚠️ **换骨干会改变基准的含义**，与"换前端"是同一条边界：报数时必须写明用的是哪个。
+    """
+    if backbone not in BACKBONES:
+        raise ValueError(f"未知骨干 {backbone!r}；可选 {sorted(BACKBONES)}")
+    return resnet18_features(
+        images, cache=cache, batch_size=batch_size, device=device, _backbone=backbone
+    )
 
 
 def resnet18_features(
@@ -35,8 +61,9 @@ def resnet18_features(
     cache: Path | None = None,
     batch_size: int = 128,
     device: str | None = None,
+    _backbone: str = "resnet18",
 ) -> np.ndarray:
-    """``(n, 32, 32, 3)`` uint8 图像 → ``(n, 512)`` 的 ResNet18（冻结）特征，**已 L2 归一化**。
+    """``(n, 32, 32, 3)`` uint8 图像 → ``(n, d)`` 的冻结特征，**已 L2 归一化**。
 
     Args:
         images: CIFAR 形态的 uint8 图像。
@@ -47,22 +74,27 @@ def resnet18_features(
     if images.ndim != 4 or images.shape[-1] != 3:
         raise ValueError(f"images 必须是 (n, H, W, 3)，收到 {images.shape}。")
 
+    tag = f"{_backbone}-imagenet1k-v1/224-cifar/avgpool"
     if cache is not None and cache.is_file():
         payload = np.load(cache, allow_pickle=False)
-        if (
-            payload["tag"].item() == "resnet18-imagenet1k-v1/224-cifar/avgpool"
-            and payload["n"].item() == images.shape[0]
-        ):
+        if payload["tag"].item() == tag and payload["n"].item() == images.shape[0]:
             print(f"  特征缓存命中 {cache.name}")
             return payload["features"]
 
     import torch
-    from torchvision import transforms
-    from torchvision.models import ResNet18_Weights, resnet18
+    from torchvision import models, transforms
 
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-    weights = ResNet18_Weights.IMAGENET1K_V1
-    model = resnet18(weights=weights).to(device).eval()
+    builder = getattr(models, BACKBONES[_backbone][0])
+    weights = models.get_model_weights(BACKBONES[_backbone][0]).DEFAULT
+    model = builder(weights=weights).to(device).eval()
+    # 把分类头换成恒等，拿池化后的特征
+    if hasattr(model, "fc"):
+        model.fc = torch.nn.Identity()
+    elif hasattr(model, "heads"):
+        model.heads = torch.nn.Identity()
+    else:  # pragma: no cover - 受支持的骨干都有其中之一
+        raise TypeError(f"{_backbone} 的分类头无法替换。")
     for parameter in model.parameters():
         parameter.requires_grad_(False)
 
