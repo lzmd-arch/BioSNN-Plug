@@ -53,6 +53,18 @@ uv run pytest research/arbiter -q                  # 32 条测试
 | `conflict.py` | 冲突判定本体：`cosine_similarity` / `is_conflict` / `measure_conflict`。**不知道 Hebbian 或 e-prop 是什么**，只收两个更新张量回答一个问题 |
 | `es_arbiter.py` | ES 元学习仲裁器：`blend`（按 `alpha` 混合两规则的更新）+ `fit`（用 ES 调 `alpha`）。**不依赖任何一条研究线**，所以能独立测 |
 
+## 裁决（2026-10-18）：协同性基准是 P0，共享接口只作反事实臂
+
+* **共享接口方案否。** 把三条规则接到同一处接口、或把 R-STDP 的更新投影到 `(784, 256)`，
+  是**语义变形**——那些更新描述的不是同一个学习问题。此类做法**只允许作为标注清晰的
+  counterfactual arm**，不得进入主结论。
+* **优先级反转。** P0 是**协同性基准**：在两条线本来就共享的那一处权重上
+  （`784 → 256` 输入映射），要求 **H 单独失败、E 单独失败、混合成功**。
+  规格见 [`sweep_results/arbiter_synergy_task_spec.md`](../../sweep_results/arbiter_synergy_task_spec.md)。
+* **e-prop ↔ R-STDP 反事实臂排在协同性基准之后**，且要等基准有结果再设计。
+* **三方混合与调度维度维持阶段五**，本轮不动。
+* 基础设施保留：43 条测试、per-row cosine、`retention` 与冲突联合报告，**照旧**。
+
 ## 已知边界
 
 1. **只做了第 1 类（Hebbian ↔ e-prop）。** 第 2–3 类（e-prop ↔ R-STDP、Hebbian ↔ R-STDP）

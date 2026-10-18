@@ -65,6 +65,22 @@ Two modules:
 | `conflict.py` | The conflict criterion itself: `cosine_similarity` / `is_conflict` / `measure_conflict`. **Knows nothing about Hebbian or e-prop** -- it takes two update tensors and answers one question |
 | `es_arbiter.py` | The ES meta-learned arbiter: `blend` (mix the two rules' updates by `alpha`) + `fit` (tune `alpha` with ES). **Depends on no research line**, so it is testable in isolation |
 
+## Ruling (2026-10-18): the synergy benchmark is P0; the shared interface is a counterfactual arm only
+
+* **The shared-interface approach is rejected.** Wiring three rules into one interface, or
+  projecting R-STDP's update onto `(784, 256)`, is a **semantic distortion** -- those updates
+  describe different learning problems. Such constructions are allowed **only as a clearly
+  labelled counterfactual arm**, never in a main conclusion.
+* **Priority inverted.** P0 is a **synergy benchmark**: at the weight the two lines already share
+  (the `784 -> 256` input mapping), **H alone must fail, E alone must fail, and the mix must
+  succeed**. Specification:
+  [`sweep_results/arbiter_synergy_task_spec.md`](../../sweep_results/arbiter_synergy_task_spec.md).
+* **The e-prop <-> R-STDP counterfactual arm comes after** the synergy benchmark, and is designed
+  once the benchmark has results.
+* **Three-way blending and the scheduling dimension stay in phase five**; untouched here.
+* Infrastructure kept: the 43 tests, per-row cosine, and joint reporting of `retention` and
+  conflict **remain as they are**.
+
 ## Known boundaries
 
 1. **Only class 1 (Hebbian <-> e-prop) is done.** Classes 2-3 (e-prop <-> R-STDP,
