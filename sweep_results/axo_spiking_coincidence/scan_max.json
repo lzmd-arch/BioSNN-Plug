@@ -1,0 +1,49 @@
+{
+  "n_pairs": 89,
+  "folds": [
+    {
+      "fold": 0,
+      "linear": {
+        "model": "linear-a095",
+        "theta": 0.5,
+        "readout": "membrane",
+        "train_acc": 0.5454545454545454,
+        "test_acc": 0.5555555555555556,
+        "test_auc": 1.0
+      },
+      "spiking": {
+        "model": "alif-b1",
+        "theta": 0.3,
+        "readout": "membrane",
+        "train_acc": 0.6136363636363636,
+        "test_acc": 0.5666666666666667,
+        "test_auc": 0.8111111111111111
+      },
+      "delta_acc": 0.011111111111111072,
+      "delta_auc": -0.18888888888888888
+    },
+    {
+      "fold": 1,
+      "linear": {
+        "model": "linear-a095",
+        "theta": 0.5,
+        "readout": "membrane",
+        "train_acc": 0.5555555555555556,
+        "test_acc": 0.5227272727272727,
+        "test_auc": 1.0
+      },
+      "spiking": {
+        "model": "lif-a098",
+        "theta": 0.5,
+        "readout": "membrane",
+        "train_acc": 0.6333333333333333,
+        "test_acc": 0.5454545454545454,
+        "test_auc": 0.9318181818181818
+      },
+      "delta_acc": 0.022727272727272707,
+      "delta_auc": -0.06818181818181823
+    }
+  ],
+  "mean_delta_acc": 0.01691919191919189,
+  "mean_delta_auc": -0.12853535353535356
+}

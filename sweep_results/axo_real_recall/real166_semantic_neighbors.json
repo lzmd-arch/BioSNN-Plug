@@ -1,0 +1,111 @@
+{
+  "task": "semantic_neighbors",
+  "n_memories": 166,
+  "n_queries": 120,
+  "records": [
+    {
+      "task": "semantic_neighbors",
+      "channel": "lexical",
+      "graph_weight": 0.0,
+      "min_score": 0.1,
+      "decay": 0.25,
+      "metrics": {
+        "n": 120,
+        "hit@1": 0.35,
+        "hit@3": 0.575,
+        "hit@5": 0.6583333333333333,
+        "hit@8": 0.75,
+        "mrr": 0.4912898863572883,
+        "rank_histogram": {
+          "0": 8,
+          "1": 42,
+          "2": 13,
+          "3": 14,
+          "4": 7,
+          "5": 3,
+          "6": 4,
+          "7": 3,
+          "8": 4
+        }
+      }
+    },
+    {
+      "task": "semantic_neighbors",
+      "channel": "lexical+temp",
+      "graph_weight": 0.0,
+      "min_score": 0.1,
+      "decay": 0.25,
+      "metrics": {
+        "n": 120,
+        "hit@1": 0.35,
+        "hit@3": 0.575,
+        "hit@5": 0.6583333333333333,
+        "hit@8": 0.75,
+        "mrr": 0.4912898863572883,
+        "rank_histogram": {
+          "0": 8,
+          "1": 42,
+          "2": 13,
+          "3": 14,
+          "4": 7,
+          "5": 3,
+          "6": 4,
+          "7": 3,
+          "8": 4
+        }
+      }
+    },
+    {
+      "task": "semantic_neighbors",
+      "channel": "lexical+temp",
+      "graph_weight": 0.25,
+      "min_score": 0.1,
+      "decay": 0.25,
+      "metrics": {
+        "n": 120,
+        "hit@1": 0.375,
+        "hit@3": 0.575,
+        "hit@5": 0.6833333333333333,
+        "hit@8": 0.7416666666666667,
+        "mrr": 0.5029378641510994,
+        "rank_histogram": {
+          "0": 8,
+          "1": 45,
+          "2": 9,
+          "3": 15,
+          "4": 7,
+          "5": 6,
+          "6": 3,
+          "7": 2,
+          "8": 2
+        }
+      }
+    },
+    {
+      "task": "semantic_neighbors",
+      "channel": "lexical+temp",
+      "graph_weight": 0.5,
+      "min_score": 0.1,
+      "decay": 0.25,
+      "metrics": {
+        "n": 120,
+        "hit@1": 0.35833333333333334,
+        "hit@3": 0.5666666666666667,
+        "hit@5": 0.65,
+        "hit@8": 0.7083333333333334,
+        "mrr": 0.48897229365392136,
+        "rank_histogram": {
+          "0": 6,
+          "1": 43,
+          "2": 11,
+          "3": 14,
+          "4": 5,
+          "5": 5,
+          "6": 3,
+          "7": 4,
+          "8": 0
+        }
+      }
+    }
+  ]
+}

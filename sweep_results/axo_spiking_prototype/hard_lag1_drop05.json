@@ -1,0 +1,752 @@
+{
+  "n_memories": 164,
+  "n_pairs": 107,
+  "rate_static": {
+    "top1": 0.9085365853658537,
+    "top5": 1.0,
+    "n": 164
+  },
+  "rate_sequence": {
+    "top1": 0.9719626168224299,
+    "top5": 1.0,
+    "n": 107
+  },
+  "records": [
+    {
+      "arm": "rate-static",
+      "top1": 0.9085365853658537,
+      "top5": 1.0,
+      "n": 164,
+      "spikes_per_step": null,
+      "active": null
+    },
+    {
+      "arm": "rate-sequence",
+      "top1": 0.9719626168224299,
+      "top5": 1.0,
+      "n": 107,
+      "spikes_per_step": null,
+      "active": null
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "none",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.2804878048780488,
+        "top5": 0.7073170731707317,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 225.46826568265686,
+      "active": 0.3063874754958487,
+      "elapsed_s": 0.5838447000132874
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "none",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.676829268292683,
+        "top5": 0.9329268292682927,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 146.38044280442807,
+      "active": 0.3112063249538745,
+      "elapsed_s": 0.6191127999918535
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "none",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.2804878048780488,
+        "top5": 0.7073170731707317,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 224.6509225092251,
+      "active": 0.30562262165590404,
+      "elapsed_s": 0.5988291000248864
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "none",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.676829268292683,
+        "top5": 0.9329268292682927,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 146.24059040590407,
+      "active": 0.3110802006457565,
+      "elapsed_s": 0.5915408000000753
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "global",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.6829268292682927,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 32.163099630996314,
+      "active": 0.0281194144949262,
+      "elapsed_s": 0.6099838999798521
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "global",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.7378048780487805,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 24.364944649446493,
+      "active": 0.03270583487084871,
+      "elapsed_s": 0.5854276000172831
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "global",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.6707317073170732,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 32.14760147601476,
+      "active": 0.028130225149907748,
+      "elapsed_s": 0.5793889999622479
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "global",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.7317073170731707,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 24.447232472324725,
+      "active": 0.03282385118773063,
+      "elapsed_s": 0.6032548000221141
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "kwta",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.4024390243902439,
+        "top5": 0.9573170731707317,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 60.874538745387454,
+      "active": 0.06679813624308117,
+      "elapsed_s": 0.6157405999838375
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "kwta",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.6646341463414634,
+        "top5": 0.9390243902439024,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 95.60221402214022,
+      "active": 0.18409374279289667,
+      "elapsed_s": 0.611346899997443
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "kwta",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.40853658536585363,
+        "top5": 0.9573170731707317,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 60.908856088560896,
+      "active": 0.06688732414667897,
+      "elapsed_s": 0.7569652000092901
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "kwta",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.6646341463414634,
+        "top5": 0.9390243902439024,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 95.57047970479705,
+      "active": 0.18426941593634685,
+      "elapsed_s": 0.7909416999900714
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "none",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.8658536585365854,
+        "top5": 0.9878048780487805,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 225.46826568265686,
+      "active": 0.3063874754958487,
+      "elapsed_s": 0.6950852000154555
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "none",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.8353658536585366,
+        "top5": 0.9878048780487805,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9439252336448598,
+        "top5": 0.9719626168224299,
+        "n": 107
+      },
+      "spikes_per_step": 146.38044280442807,
+      "active": 0.3112063249538745,
+      "elapsed_s": 0.7328680999926291
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "none",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.8597560975609756,
+        "top5": 0.9878048780487805,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9813084112149533,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 224.6509225092251,
+      "active": 0.30562262165590404,
+      "elapsed_s": 0.673023600014858
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "none",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.8292682926829268,
+        "top5": 0.9878048780487805,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9439252336448598,
+        "top5": 0.9719626168224299,
+        "n": 107
+      },
+      "spikes_per_step": 146.24059040590407,
+      "active": 0.3110802006457565,
+      "elapsed_s": 0.7007670000311919
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "global",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.7987804878048781,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 32.163099630996314,
+      "active": 0.0281194144949262,
+      "elapsed_s": 0.6433555000112392
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "global",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.7926829268292683,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 24.364944649446493,
+      "active": 0.03270583487084871,
+      "elapsed_s": 0.6960481000132859
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "global",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.8048780487804879,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 32.14760147601476,
+      "active": 0.028130225149907748,
+      "elapsed_s": 0.7254932999494486
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "global",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.7804878048780488,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9626168224299065,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 24.447232472324725,
+      "active": 0.03282385118773063,
+      "elapsed_s": 0.7221486000344157
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "kwta",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.725609756097561,
+        "top5": 0.9695121951219512,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 60.874538745387454,
+      "active": 0.06679813624308117,
+      "elapsed_s": 0.6930784999858588
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "kwta",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.823170731707317,
+        "top5": 0.975609756097561,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9439252336448598,
+        "top5": 0.9719626168224299,
+        "n": 107
+      },
+      "spikes_per_step": 95.60221402214022,
+      "active": 0.18409374279289667,
+      "elapsed_s": 0.6455729999579489
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "kwta",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.7195121951219512,
+        "top5": 0.9695121951219512,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9813084112149533,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 60.908856088560896,
+      "active": 0.06688732414667897,
+      "elapsed_s": 0.6549834000179544
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "kwta",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.823170731707317,
+        "top5": 0.975609756097561,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9439252336448598,
+        "top5": 0.9719626168224299,
+        "n": 107
+      },
+      "spikes_per_step": 95.57047970479705,
+      "active": 0.18426941593634685,
+      "elapsed_s": 0.6417035000049509
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "none",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.3231707317073171,
+        "top5": 0.7317073170731707,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 225.46826568265686,
+      "active": 0.3063874754958487,
+      "elapsed_s": 0.6166345999808982
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "none",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.6951219512195121,
+        "top5": 0.9329268292682927,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 146.38044280442807,
+      "active": 0.3112063249538745,
+      "elapsed_s": 0.6203474000212736
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "none",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.3170731707317073,
+        "top5": 0.7378048780487805,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 224.6509225092251,
+      "active": 0.30562262165590404,
+      "elapsed_s": 0.6518199000274763
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "none",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.6951219512195121,
+        "top5": 0.9390243902439024,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 146.24059040590407,
+      "active": 0.3110802006457565,
+      "elapsed_s": 0.6414637999841943
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "global",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.6951219512195121,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 32.163099630996314,
+      "active": 0.0281194144949262,
+      "elapsed_s": 0.6867512000026181
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "global",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.7378048780487805,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 24.364944649446493,
+      "active": 0.03270583487084871,
+      "elapsed_s": 0.7181665999814868
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "global",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.6890243902439024,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9813084112149533,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 32.14760147601476,
+      "active": 0.028130225149907748,
+      "elapsed_s": 0.7641423000022769
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "global",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.7378048780487805,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 24.447232472324725,
+      "active": 0.03282385118773063,
+      "elapsed_s": 0.9910557999974117
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "kwta",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.4451219512195122,
+        "top5": 0.9573170731707317,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 60.874538745387454,
+      "active": 0.06679813624308117,
+      "elapsed_s": 0.779679200029932
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "kwta",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.676829268292683,
+        "top5": 0.9390243902439024,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 95.60221402214022,
+      "active": 0.18409374279289667,
+      "elapsed_s": 0.8027794000227004
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "kwta",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.4329268292682927,
+        "top5": 0.9573170731707317,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 60.908856088560896,
+      "active": 0.06688732414667897,
+      "elapsed_s": 0.7805824999813922
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "kwta",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.6707317073170732,
+        "top5": 0.9390243902439024,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 95.57047970479705,
+      "active": 0.18426941593634685,
+      "elapsed_s": 0.7602022999781184
+    }
+  ]
+}

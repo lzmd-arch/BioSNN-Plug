@@ -1,0 +1,37 @@
+{
+  "records": [
+    {
+      "n": 50000,
+      "limit": 12000,
+      "probes": 50,
+      "top1_agreement": 0.98,
+      "top5_agreement": 0.98,
+      "query_ms": 51.37354199192487,
+      "candidates_mean": 12000.0,
+      "build_s": 0.9018007999984547,
+      "full_ms": 170.255174000049
+    },
+    {
+      "n": 50000,
+      "limit": 15000,
+      "probes": 50,
+      "top1_agreement": 1.0,
+      "top5_agreement": 1.0,
+      "query_ms": 69.05257799313404,
+      "candidates_mean": 15000.0,
+      "build_s": 0.9018007999984547,
+      "full_ms": 170.255174000049
+    },
+    {
+      "n": 50000,
+      "limit": 18000,
+      "probes": 50,
+      "top1_agreement": 1.0,
+      "top5_agreement": 1.0,
+      "query_ms": 79.80479599675164,
+      "candidates_mean": 18000.0,
+      "build_s": 0.9018007999984547,
+      "full_ms": 170.255174000049
+    }
+  ]
+}

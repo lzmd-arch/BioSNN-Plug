@@ -1,0 +1,512 @@
+{
+  "n_memories": 164,
+  "n_pairs": 99,
+  "rate_static": {
+    "top1": 0.9085365853658537,
+    "top5": 1.0,
+    "n": 164
+  },
+  "rate_sequence": {
+    "top1": 0.9797979797979798,
+    "top5": 1.0,
+    "n": 99
+  },
+  "records": [
+    {
+      "arm": "rate-static",
+      "top1": 0.9085365853658537,
+      "top5": 1.0,
+      "n": 164,
+      "spikes_per_step": null,
+      "active": null
+    },
+    {
+      "arm": "rate-sequence",
+      "top1": 0.9797979797979798,
+      "top5": 1.0,
+      "n": 99,
+      "spikes_per_step": null,
+      "active": null
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "none",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.8658536585365854,
+        "top5": 0.9878048780487805,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 231.6216730038023,
+      "active": 0.3152319614424905,
+      "elapsed_s": 0.5999485999927856
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "none",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.8353658536585366,
+        "top5": 0.9878048780487805,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9494949494949495,
+        "top5": 0.9797979797979798,
+        "n": 99
+      },
+      "spikes_per_step": 150.40760456273762,
+      "active": 0.3201973918726236,
+      "elapsed_s": 0.5861110999830998
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "none",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.8597560975609756,
+        "top5": 0.9878048780487805,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 230.77946768060838,
+      "active": 0.3144438420865019,
+      "elapsed_s": 0.5924382999655791
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "none",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.8292682926829268,
+        "top5": 0.9878048780487805,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9595959595959596,
+        "top5": 0.9797979797979798,
+        "n": 99
+      },
+      "spikes_per_step": 150.30038022813687,
+      "active": 0.3200674310836502,
+      "elapsed_s": 0.6003640999551862
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "global",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.7987804878048781,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 32.44068441064639,
+      "active": 0.02849483127376426,
+      "elapsed_s": 0.5826165000326
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "global",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.7926829268292683,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 24.66958174904943,
+      "active": 0.03322540399239544,
+      "elapsed_s": 0.6609816999989562
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "global",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.8048780487804879,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 32.423574144486686,
+      "active": 0.028505970769961978,
+      "elapsed_s": 0.6472677999990992
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "global",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.7804878048780488,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.98989898989899,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 24.754752851711025,
+      "active": 0.03334701015922053,
+      "elapsed_s": 0.5418559000245295
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "kwta",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.725609756097561,
+        "top5": 0.9695121951219512,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 62.021292775665394,
+      "active": 0.06835473354325095,
+      "elapsed_s": 0.7393164999666624
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "kwta",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.823170731707317,
+        "top5": 0.975609756097561,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9494949494949495,
+        "top5": 0.9797979797979798,
+        "n": 99
+      },
+      "spikes_per_step": 98.0847908745247,
+      "active": 0.1892182672884981,
+      "elapsed_s": 0.6584624000242911
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "kwta",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.7195121951219512,
+        "top5": 0.9695121951219512,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 62.05665399239544,
+      "active": 0.06844663438688213,
+      "elapsed_s": 0.7065303000272252
+    },
+    {
+      "arm": "spiking",
+      "readout": "membrane",
+      "inhibition": "kwta",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.823170731707317,
+        "top5": 0.975609756097561,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9595959595959596,
+        "top5": 0.9797979797979798,
+        "n": 99
+      },
+      "spikes_per_step": 98.08897338403042,
+      "active": 0.18939928410171103,
+      "elapsed_s": 0.7544285000185482
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "none",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.3231707317073171,
+        "top5": 0.7317073170731707,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 231.6216730038023,
+      "active": 0.3152319614424905,
+      "elapsed_s": 0.625897099962458
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "none",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.6951219512195121,
+        "top5": 0.9329268292682927,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 150.40760456273762,
+      "active": 0.3201973918726236,
+      "elapsed_s": 0.6302499999874271
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "none",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.3170731707317073,
+        "top5": 0.7378048780487805,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 230.77946768060838,
+      "active": 0.3144438420865019,
+      "elapsed_s": 0.6661059999605641
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "none",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.6951219512195121,
+        "top5": 0.9390243902439024,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 150.30038022813687,
+      "active": 0.3200674310836502,
+      "elapsed_s": 0.6137614999897778
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "global",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.6951219512195121,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 32.44068441064639,
+      "active": 0.02849483127376426,
+      "elapsed_s": 0.6005768000031821
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "global",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.7378048780487805,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 24.66958174904943,
+      "active": 0.03322540399239544,
+      "elapsed_s": 0.5838730999967083
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "global",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.6890243902439024,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 32.423574144486686,
+      "active": 0.028505970769961978,
+      "elapsed_s": 0.6358997999923304
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "global",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.7378048780487805,
+        "top5": 1.0,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 24.754752851711025,
+      "active": 0.03334701015922053,
+      "elapsed_s": 0.6337985999998637
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "kwta",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.4451219512195122,
+        "top5": 0.9573170731707317,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 62.021292775665394,
+      "active": 0.06835473354325095,
+      "elapsed_s": 0.6357509999652393
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "kwta",
+      "hetero": 0.0,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.676829268292683,
+        "top5": 0.9390243902439024,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 98.0847908745247,
+      "active": 0.1892182672884981,
+      "elapsed_s": 0.6293191000004299
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "kwta",
+      "hetero": 0.5,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.4329268292682927,
+        "top5": 0.9573170731707317,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 62.05665399239544,
+      "active": 0.06844663438688213,
+      "elapsed_s": 0.710411700012628
+    },
+    {
+      "arm": "spiking",
+      "readout": "hybrid",
+      "inhibition": "kwta",
+      "hetero": 0.5,
+      "beta": 1.0,
+      "static": {
+        "top1": 0.6707317073170732,
+        "top5": 0.9390243902439024,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9797979797979798,
+        "top5": 1.0,
+        "n": 99
+      },
+      "spikes_per_step": 98.08897338403042,
+      "active": 0.18939928410171103,
+      "elapsed_s": 0.7224444000166841
+    }
+  ]
+}

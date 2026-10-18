@@ -1,0 +1,124 @@
+warning: `VIRTUAL_ENV=d:\Projects\BioSNN-Plug\.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+W2 多随机种子：3 个种子（0–2），数据集 smnist，设备 cuda
+
+==============================================================================
+种子 0
+==============================================================================
+epoch   1  train_ce 2.1502  val_acc 0.3460
+epoch   2  train_ce 1.9269  val_acc 0.4133
+epoch   3  train_ce 1.7808  val_acc 0.4587
+epoch   4  train_ce 1.6814  val_acc 0.4853
+epoch   5  train_ce 1.6000  val_acc 0.5108
+epoch   6  train_ce 1.5298  val_acc 0.5265
+epoch   7  train_ce 1.4680  val_acc 0.5498
+epoch   8  train_ce 1.4226  val_acc 0.5622
+epoch   9  train_ce 1.3886  val_acc 0.5710
+epoch  10  train_ce 1.3566  val_acc 0.5837
+
+测试准确率：0.5875（10 类随机基线 0.10）
+活跃神经元比例：1.0000（§七 阈值 > 0.6）
+脉冲稀疏度：0.8316
+
+```text
+实验名称：eprop/smnist
+日期：2026-10-18 16:09:29 中国标准时间
+Git commit：c479c9f72a6bdda5438153a92910c3c34405aaff
+Git 状态：有 3 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=0；全局种子=1741413617；划分验证集=1435468909；权重初始化=3486733650；每批打乱=3990329895；脉冲编码=1681094898
+依赖快照：uv.lock sha256=cf50514001e37d3287284538b013a887f895d00496ba66e947de577b00dbdc01
+运行命令：sweep_seeds.py --seeds 0-2 --epochs 10 --n-rec 64 --beta 0 --learning-rate-in 1e-2 --learning-rate-rec 1e-2 --device cuda --data-dir data --out-dir sweep_results/neuron_models_pilot/lif
+耗时：487.2 s
+显存峰值：465.6 MiB（§6.2 硬约束 8GB）
+§6.2 降级路径：未触发
+备注：n_rec=64, beta=0.0, thr=0.62, eta_in=0.01, eta_rec=0.01, eta_out=0.05, decay_out=0.95
+备注：输入编码：像素值作发放概率的伯努利采样（本项目自己的选择）
+```
+[落盘] sweep_results\neuron_models_pilot\lif\seed0.json
+
+==============================================================================
+种子 1
+==============================================================================
+epoch   1  train_ce 2.1610  val_acc 0.3502
+epoch   2  train_ce 1.9525  val_acc 0.4012
+epoch   3  train_ce 1.8149  val_acc 0.4493
+epoch   4  train_ce 1.7096  val_acc 0.4688
+epoch   5  train_ce 1.6252  val_acc 0.4952
+epoch   6  train_ce 1.5557  val_acc 0.5200
+epoch   7  train_ce 1.4921  val_acc 0.5410
+epoch   8  train_ce 1.4381  val_acc 0.5495
+epoch   9  train_ce 1.3855  val_acc 0.5715
+epoch  10  train_ce 1.3440  val_acc 0.5960
+
+测试准确率：0.5947（10 类随机基线 0.10）
+活跃神经元比例：1.0000（§七 阈值 > 0.6）
+脉冲稀疏度：0.8122
+
+```text
+实验名称：eprop/smnist
+日期：2026-10-18 16:18:07 中国标准时间
+Git commit：c479c9f72a6bdda5438153a92910c3c34405aaff
+Git 状态：有 6 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=1；全局种子=1741413616；划分验证集=1435468908；权重初始化=3486733651；每批打乱=3990329894；脉冲编码=1681094899
+依赖快照：uv.lock sha256=cf50514001e37d3287284538b013a887f895d00496ba66e947de577b00dbdc01
+运行命令：sweep_seeds.py --seeds 0-2 --epochs 10 --n-rec 64 --beta 0 --learning-rate-in 1e-2 --learning-rate-rec 1e-2 --device cuda --data-dir data --out-dir sweep_results/neuron_models_pilot/lif
+耗时：515.8 s
+显存峰值：465.6 MiB（§6.2 硬约束 8GB）
+§6.2 降级路径：未触发
+备注：n_rec=64, beta=0.0, thr=0.62, eta_in=0.01, eta_rec=0.01, eta_out=0.05, decay_out=0.95
+备注：输入编码：像素值作发放概率的伯努利采样（本项目自己的选择）
+```
+[落盘] sweep_results\neuron_models_pilot\lif\seed1.json
+
+==============================================================================
+种子 2
+==============================================================================
+epoch   1  train_ce 2.1734  val_acc 0.3125
+epoch   2  train_ce 1.9456  val_acc 0.3755
+epoch   3  train_ce 1.8054  val_acc 0.4235
+epoch   4  train_ce 1.7086  val_acc 0.4680
+epoch   5  train_ce 1.6226  val_acc 0.4887
+epoch   6  train_ce 1.5544  val_acc 0.5080
+epoch   7  train_ce 1.5019  val_acc 0.5323
+epoch   8  train_ce 1.4595  val_acc 0.5412
+epoch   9  train_ce 1.4227  val_acc 0.5647
+epoch  10  train_ce 1.3843  val_acc 0.5695
+
+测试准确率：0.5777（10 类随机基线 0.10）
+活跃神经元比例：0.9844（§七 阈值 > 0.6）
+脉冲稀疏度：0.8344
+
+```text
+实验名称：eprop/smnist
+日期：2026-10-18 16:27:03 中国标准时间
+Git commit：c479c9f72a6bdda5438153a92910c3c34405aaff
+Git 状态：有 13 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑
+Python：3.12.14
+操作系统 / 架构：Windows 11 / AMD64
+硬件：NVIDIA GeForce RTX 5060，8,123 MB，sm_120
+随机种子：base=2；全局种子=1741413619；划分验证集=1435468911；权重初始化=3486733648；每批打乱=3990329893；脉冲编码=1681094896
+依赖快照：uv.lock sha256=cf50514001e37d3287284538b013a887f895d00496ba66e947de577b00dbdc01
+运行命令：sweep_seeds.py --seeds 0-2 --epochs 10 --n-rec 64 --beta 0 --learning-rate-in 1e-2 --learning-rate-rec 1e-2 --device cuda --data-dir data --out-dir sweep_results/neuron_models_pilot/lif
+耗时：534.6 s
+显存峰值：465.6 MiB（§6.2 硬约束 8GB）
+§6.2 降级路径：未触发
+备注：n_rec=64, beta=0.0, thr=0.62, eta_in=0.01, eta_rec=0.01, eta_out=0.05, decay_out=0.95
+备注：输入编码：像素值作发放概率的伯努利采样（本项目自己的选择）
+```
+[落盘] sweep_results\neuron_models_pilot\lif\seed2.json
+
+==============================================================================
+W2 多随机种子汇总（3 个种子：0–2，smnist）
+==============================================================================
+  种子   0  准确率 0.5875  活跃比例 1.0000  耗时 489 s
+  种子   1  准确率 0.5947  活跃比例 1.0000  耗时 518 s
+  种子   2  准确率 0.5777  活跃比例 0.9844  耗时 536 s
+
+  测试准确率        均值 0.5866  最小 0.5777  最大 0.5947  极差 1.70 个百分点   （判据：显著高于随机（10 类））
+  活跃神经元比例      均值 0.9948  最小 0.9844  最大 1.0000  极差 1.56 个百分点   （判据：§七：「> 60%」）
+  JSON 落在 sweep_results\neuron_models_pilot\lif/，逐种子可查

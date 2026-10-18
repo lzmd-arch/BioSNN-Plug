@@ -1,0 +1,48 @@
+{
+  "records": [
+    {
+      "n": 50000,
+      "limit": 2000,
+      "probes": 50,
+      "top1_agreement": 0.86,
+      "top5_agreement": 0.86,
+      "query_ms": 16.424935995601118,
+      "candidates_mean": 2000.0,
+      "build_s": 0.771928999980446,
+      "full_ms": 195.84260600036941
+    },
+    {
+      "n": 50000,
+      "limit": 5000,
+      "probes": 50,
+      "top1_agreement": 0.96,
+      "top5_agreement": 0.96,
+      "query_ms": 34.0432359976694,
+      "candidates_mean": 5000.0,
+      "build_s": 0.771928999980446,
+      "full_ms": 195.84260600036941
+    },
+    {
+      "n": 50000,
+      "limit": 10000,
+      "probes": 50,
+      "top1_agreement": 0.98,
+      "top5_agreement": 0.98,
+      "query_ms": 64.80316599830985,
+      "candidates_mean": 10000.0,
+      "build_s": 0.771928999980446,
+      "full_ms": 195.84260600036941
+    },
+    {
+      "n": 50000,
+      "limit": 20000,
+      "probes": 50,
+      "top1_agreement": 1.0,
+      "top5_agreement": 1.0,
+      "query_ms": 90.92543600010686,
+      "candidates_mean": 20000.0,
+      "build_s": 0.771928999980446,
+      "full_ms": 195.84260600036941
+    }
+  ]
+}

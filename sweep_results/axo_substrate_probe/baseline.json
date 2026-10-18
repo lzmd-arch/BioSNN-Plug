@@ -1,0 +1,85 @@
+{
+  "corpus": {
+    "schema_version": 1,
+    "memories": {
+      "count": 200,
+      "sha256": "53cb8192fbf2ebcd99a704501c06331decba2da6b87bae8132b33a2c6ae7acdf"
+    },
+    "queries": {
+      "count": 40,
+      "sha256": "730eafe60f1f8cefbbd68ca8e5b49e71c121e08f903a11ea6eb83292c066cea9"
+    },
+    "clusters": {
+      "commute": 20,
+      "course": 20,
+      "invoice": 20,
+      "kitchen": 20,
+      "medication": 20,
+      "network": 20,
+      "photo": 20,
+      "plant": 20,
+      "project": 20,
+      "water": 20
+    }
+  },
+  "records": [
+    {
+      "arm": "hash",
+      "k": 64,
+      "n": 200,
+      "elapsed_encode_s": 0.14592420001281425,
+      "edge_same": 485.0,
+      "edge_diff": 260.0,
+      "orphan_nodes": 18.0,
+      "neighbor_auc": 0.7083346550356859,
+      "neighbor_precision@m": 0.6510067114093959,
+      "n_probes": 200.0,
+      "completion_top1": 0.025,
+      "completion_top5": 0.19,
+      "confusion_rate": 0.975,
+      "n_queries": 40.0,
+      "lexical_hit@1": 0.85,
+      "lexical_hit@8": 1.0,
+      "lexical_mrr": 0.9020833333333333,
+      "graph_hit@1": 0.825,
+      "graph_hit@8": 1.0,
+      "graph_mrr": 0.8883333333333333,
+      "union_bits": 552.0,
+      "mean_jaccard": 0.09885006784054913,
+      "mean_jaccard_same": 0.13797144959439536,
+      "mean_jaccard_diff": 0.09472058865542089,
+      "corpus_sha256": "53cb8192fbf2ebcd99a704501c06331decba2da6b87bae8132b33a2c6ae7acdf",
+      "scale": 200,
+      "qualified": false
+    },
+    {
+      "arm": "weight",
+      "k": 64,
+      "n": 200,
+      "elapsed_encode_s": 0.006263699964620173,
+      "edge_same": 172.0,
+      "edge_diff": 71.0,
+      "orphan_nodes": 105.0,
+      "neighbor_auc": 0.5286603340976089,
+      "neighbor_precision@m": 0.7078189300411523,
+      "n_probes": 200.0,
+      "completion_top1": 0.87,
+      "completion_top5": 0.97,
+      "confusion_rate": 0.13,
+      "n_queries": 40.0,
+      "lexical_hit@1": 0.85,
+      "lexical_hit@8": 1.0,
+      "lexical_mrr": 0.9020833333333333,
+      "graph_hit@1": 0.825,
+      "graph_hit@8": 1.0,
+      "graph_mrr": 0.8895833333333334,
+      "union_bits": 3224.0,
+      "mean_jaccard": 0.020117046232063545,
+      "mean_jaccard_same": 0.048143439182951796,
+      "mean_jaccard_diff": 0.017158704753914227,
+      "corpus_sha256": "53cb8192fbf2ebcd99a704501c06331decba2da6b87bae8132b33a2c6ae7acdf",
+      "scale": 200,
+      "qualified": false
+    }
+  ]
+}

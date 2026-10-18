@@ -1,0 +1,65 @@
+{
+  "n": 164,
+  "records": [
+    {
+      "arm": "rate-first",
+      "top1": 0.926829268292683
+    },
+    {
+      "arm": "rate-last",
+      "top1": 0.0
+    },
+    {
+      "arm": "rate-integ",
+      "top1": 0.4024390243902439
+    },
+    {
+      "arm": "spiking",
+      "config": "lif-membrane",
+      "forward": 0.31097560975609756,
+      "backward": 0.3475609756097561,
+      "top1": 0.3292682926829268,
+      "spikes_per_step": 62.91219512195122
+    },
+    {
+      "arm": "spiking",
+      "config": "alif-b1-r05",
+      "forward": 0.054878048780487805,
+      "backward": 0.03048780487804878,
+      "top1": 0.04268292682926829,
+      "spikes_per_step": 53.72804878048781
+    },
+    {
+      "arm": "spiking",
+      "config": "alif-b1-r09",
+      "forward": 0.07317073170731707,
+      "backward": 0.06097560975609756,
+      "top1": 0.06707317073170732,
+      "spikes_per_step": 52.13719512195122
+    },
+    {
+      "arm": "spiking",
+      "config": "alif-b2-r09",
+      "forward": 0.018292682926829267,
+      "backward": 0.024390243902439025,
+      "top1": 0.021341463414634144,
+      "spikes_per_step": 52.24939024390244
+    },
+    {
+      "arm": "spiking",
+      "config": "alif-b1-r09-global",
+      "forward": 0.11585365853658537,
+      "backward": 0.1402439024390244,
+      "top1": 0.12804878048780488,
+      "spikes_per_step": 18.37439024390244
+    },
+    {
+      "arm": "spiking",
+      "config": "alif-b1-r09-global-h05",
+      "forward": 0.13414634146341464,
+      "backward": 0.1402439024390244,
+      "top1": 0.13719512195121952,
+      "spikes_per_step": 18.37012195121951
+    }
+  ]
+}

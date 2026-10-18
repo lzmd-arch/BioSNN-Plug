@@ -1,0 +1,55 @@
+{
+  "n_pairs": 107,
+  "records": [
+    {
+      "arm": "lif-a095",
+      "alpha": 0.95,
+      "depression": 0.0,
+      "recovery": 0.0,
+      "forward": 0.4485981308411215,
+      "backward": 0.42990654205607476,
+      "top1": 0.4392523364485981,
+      "spikes_per_step": 61.84766355140186
+    },
+    {
+      "arm": "lif-a098",
+      "alpha": 0.98,
+      "depression": 0.0,
+      "recovery": 0.0,
+      "forward": 0.4392523364485981,
+      "backward": 0.42990654205607476,
+      "top1": 0.43457943925233644,
+      "spikes_per_step": 68.62990654205608
+    },
+    {
+      "arm": "stp-d02",
+      "alpha": 0.98,
+      "depression": 0.2,
+      "recovery": 0.05,
+      "forward": 0.4485981308411215,
+      "backward": 0.4205607476635514,
+      "top1": 0.43457943925233644,
+      "spikes_per_step": 68.43457943925233
+    },
+    {
+      "arm": "stp-d05",
+      "alpha": 0.98,
+      "depression": 0.5,
+      "recovery": 0.05,
+      "forward": 0.42990654205607476,
+      "backward": 0.40186915887850466,
+      "top1": 0.4158878504672897,
+      "spikes_per_step": 68.12429906542056
+    },
+    {
+      "arm": "stp-d08",
+      "alpha": 0.98,
+      "depression": 0.8,
+      "recovery": 0.05,
+      "forward": 0.411214953271028,
+      "backward": 0.3925233644859813,
+      "top1": 0.40186915887850466,
+      "spikes_per_step": 67.84485981308411
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "seed": 2,
+  "test_accuracy": 0.5776999592781067,
+  "active_fraction": 0.984375,
+  "n_classes": 10,
+  "elapsed_s": 535.8979511000216,
+  "peak_mb": 603.89404296875,
+  "curve": [
+    {
+      "epoch": 1.0,
+      "val_accuracy": 0.3125
+    },
+    {
+      "epoch": 2.0,
+      "val_accuracy": 0.37549999356269836
+    },
+    {
+      "epoch": 3.0,
+      "val_accuracy": 0.4235000014305115
+    },
+    {
+      "epoch": 4.0,
+      "val_accuracy": 0.46799999475479126
+    },
+    {
+      "epoch": 5.0,
+      "val_accuracy": 0.4886666536331177
+    },
+    {
+      "epoch": 6.0,
+      "val_accuracy": 0.5080000162124634
+    },
+    {
+      "epoch": 7.0,
+      "val_accuracy": 0.5323333144187927
+    },
+    {
+      "epoch": 8.0,
+      "val_accuracy": 0.5411666631698608
+    },
+    {
+      "epoch": 9.0,
+      "val_accuracy": 0.5646666884422302
+    },
+    {
+      "epoch": 10.0,
+      "val_accuracy": 0.5694999694824219
+    }
+  ],
+  "config": {
+    "dataset": "smnist",
+    "epochs": 10,
+    "n_rec": 64,
+    "batch_size": 64,
+    "beta": 0.0,
+    "threshold": 0.62,
+    "learning_rate_in": 0.01,
+    "learning_rate_rec": 0.01,
+    "learning_rate_out": 0.05,
+    "device": "cuda"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "records": [
+    {
+      "scale": 200,
+      "arm": "idf-2.0",
+      "k": 64,
+      "steps": 10,
+      "beta": 0.0,
+      "theta": 0.5,
+      "rec_gain": 1.0,
+      "rho": 0.9,
+      "alpha": 0.95,
+      "input_gain": 1.0,
+      "readout": "spikes",
+      "one_step_top1": 0.94,
+      "one_step_top5": 1.0,
+      "elapsed_s": 1.643223199993372,
+      "top1": 0.475,
+      "top5": 0.81,
+      "spikes_per_step": 467.084,
+      "active_fraction": 0.536783447265625
+    },
+    {
+      "scale": 200,
+      "arm": "idf-2.0",
+      "k": 64,
+      "steps": 10,
+      "beta": 1.0,
+      "theta": 0.5,
+      "rec_gain": 1.0,
+      "rho": 0.9,
+      "alpha": 0.95,
+      "input_gain": 1.0,
+      "readout": "spikes",
+      "one_step_top1": 0.94,
+      "one_step_top5": 1.0,
+      "elapsed_s": 1.3277075999649242,
+      "top1": 0.7,
+      "top5": 0.93,
+      "spikes_per_step": 257.11,
+      "active_fraction": 0.55163330078125
+    }
+  ]
+}

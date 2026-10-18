@@ -1,0 +1,49 @@
+{
+  "n_pairs": 89,
+  "folds": [
+    {
+      "fold": 0,
+      "linear": {
+        "model": "linear-a095",
+        "theta": 0.5,
+        "readout": "membrane",
+        "train_acc": 0.5,
+        "test_acc": 0.5,
+        "test_auc": 0.0
+      },
+      "spiking": {
+        "model": "lif-a095",
+        "theta": 0.7,
+        "readout": "spikes",
+        "train_acc": 0.625,
+        "test_acc": 0.6111111111111112,
+        "test_auc": 0.7
+      },
+      "delta_acc": 0.11111111111111116,
+      "delta_auc": 0.7
+    },
+    {
+      "fold": 1,
+      "linear": {
+        "model": "linear-a095",
+        "theta": 0.5,
+        "readout": "membrane",
+        "train_acc": 0.5,
+        "test_acc": 0.5,
+        "test_auc": 0.0
+      },
+      "spiking": {
+        "model": "lif-a095",
+        "theta": 0.7,
+        "readout": "spikes",
+        "train_acc": 0.6333333333333333,
+        "test_acc": 0.5113636363636364,
+        "test_auc": 0.6136363636363636
+      },
+      "delta_acc": 0.011363636363636354,
+      "delta_auc": 0.6136363636363636
+    }
+  ],
+  "mean_delta_acc": 0.06123737373737376,
+  "mean_delta_auc": 0.6568181818181817
+}

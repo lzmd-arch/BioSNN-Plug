@@ -1,0 +1,42 @@
+{
+  "n_queries": 214,
+  "folds": [
+    {
+      "fold": 0,
+      "linear": {
+        "model": "linear-a095",
+        "theta": 0.3,
+        "readout": "window1",
+        "train": 0.9245283018867925,
+        "test": 0.9444444444444444
+      },
+      "spiking": {
+        "model": "lif-a095",
+        "theta": 0.3,
+        "readout": "window1",
+        "train": 0.9245283018867925,
+        "test": 0.9444444444444444
+      },
+      "delta": 0.0
+    },
+    {
+      "fold": 1,
+      "linear": {
+        "model": "linear-a095",
+        "theta": 0.3,
+        "readout": "window1",
+        "train": 0.9444444444444444,
+        "test": 0.9245283018867925
+      },
+      "spiking": {
+        "model": "lif-a095",
+        "theta": 0.3,
+        "readout": "window1",
+        "train": 0.9444444444444444,
+        "test": 0.9245283018867925
+      },
+      "delta": 0.0
+    }
+  ],
+  "average_delta": 0.0
+}

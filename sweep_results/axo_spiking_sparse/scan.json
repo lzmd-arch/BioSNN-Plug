@@ -1,0 +1,157 @@
+{
+  "n_memories": 164,
+  "sparse_rate": {
+    "top1": 0.9085365853658537,
+    "top5": 1.0,
+    "n": 164
+  },
+  "dense_rate": {
+    "top1": 0.9085365853658537,
+    "top5": 1.0,
+    "n": 164
+  },
+  "sparse_dense_top1_agreement": 1.0,
+  "static": [
+    {
+      "arm": "static-spiking",
+      "config": "membrane-none-h0-b0",
+      "top1": 0.8658536585365854,
+      "top5": 0.9878048780487805,
+      "n": 164,
+      "spikes_per_step": 357.4487804878049,
+      "active": 0.49609226133765244,
+      "elapsed_s": 0.4529222000273876
+    }
+  ],
+  "traversal": [
+    {
+      "lag": 2,
+      "arm": "spiking",
+      "config": "membrane-none-h0-b0",
+      "top1": 0.18181818181818182,
+      "top5": 0.8585858585858586,
+      "n": 99,
+      "spikes_per_step": 78.15151515151516,
+      "active": 0.03815991950757576,
+      "elapsed_s": 0.07695050002075732
+    },
+    {
+      "lag": 2,
+      "arm": "spiking",
+      "config": "membrane-none-h05-b0",
+      "top1": 0.18181818181818182,
+      "top5": 0.8585858585858586,
+      "n": 99,
+      "spikes_per_step": 77.96464646464646,
+      "active": 0.038068675031565656,
+      "elapsed_s": 0.09813059994485229
+    },
+    {
+      "lag": 2,
+      "arm": "spiking",
+      "config": "membrane-global-h05-b1",
+      "top1": 0.7474747474747475,
+      "top5": 0.8484848484848485,
+      "n": 99,
+      "spikes_per_step": 49.75252525252525,
+      "active": 0.024293225220959596,
+      "elapsed_s": 0.0829410000005737
+    },
+    {
+      "lag": 3,
+      "arm": "spiking",
+      "config": "membrane-none-h0-b0",
+      "top1": 0.04950495049504951,
+      "top5": 0.6336633663366337,
+      "n": 101,
+      "spikes_per_step": 117.38613861386139,
+      "active": 0.08597617574257425,
+      "elapsed_s": 0.09344450000207871
+    },
+    {
+      "lag": 3,
+      "arm": "spiking",
+      "config": "membrane-none-h05-b0",
+      "top1": 0.04950495049504951,
+      "top5": 0.6237623762376238,
+      "n": 101,
+      "spikes_per_step": 117.1848184818482,
+      "active": 0.0858287244740099,
+      "elapsed_s": 0.085279899998568
+    },
+    {
+      "lag": 3,
+      "arm": "spiking",
+      "config": "membrane-global-h05-b1",
+      "top1": 0.39603960396039606,
+      "top5": 0.6237623762376238,
+      "n": 101,
+      "spikes_per_step": 42.20132013201321,
+      "active": 0.030909170018564358,
+      "elapsed_s": 0.10451799997827038
+    },
+    {
+      "lag": 5,
+      "arm": "spiking",
+      "config": "membrane-none-h0-b0",
+      "top1": 0.0,
+      "top5": 0.2553191489361702,
+      "n": 94,
+      "spikes_per_step": 211.38723404255316,
+      "active": 0.21764357546542554,
+      "elapsed_s": 0.09797049994813278
+    },
+    {
+      "lag": 5,
+      "arm": "spiking",
+      "config": "membrane-none-h05-b0",
+      "top1": 0.0,
+      "top5": 0.2553191489361702,
+      "n": 94,
+      "spikes_per_step": 210.78936170212762,
+      "active": 0.21698907081117022,
+      "elapsed_s": 0.07927319995360449
+    },
+    {
+      "lag": 5,
+      "arm": "spiking",
+      "config": "membrane-global-h05-b1",
+      "top1": 0.010638297872340425,
+      "top5": 0.20212765957446807,
+      "n": 94,
+      "spikes_per_step": 38.944680851063836,
+      "active": 0.04295836103723404,
+      "elapsed_s": 0.11191659996984527
+    }
+  ],
+  "scale": [
+    {
+      "n": 200,
+      "sparse_bytes": 102400,
+      "dense_bytes": 3276800,
+      "sparse_ms": 0.1471666619181633,
+      "dense_ms": 0.730266678147018
+    },
+    {
+      "n": 2000,
+      "sparse_bytes": 1024000,
+      "dense_bytes": 32768000,
+      "sparse_ms": 6.681733337851862,
+      "dense_ms": 12.181033341524502
+    },
+    {
+      "n": 10000,
+      "sparse_bytes": 5120000,
+      "dense_bytes": 163840000,
+      "sparse_ms": 25.655100005678833,
+      "dense_ms": 59.59479999728501
+    },
+    {
+      "n": 50000,
+      "sparse_bytes": 25600000,
+      "dense_bytes": 819200000,
+      "sparse_ms": 160.72956666660806,
+      "dense_ms": null
+    }
+  ]
+}

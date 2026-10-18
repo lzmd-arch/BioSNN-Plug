@@ -1,0 +1,52 @@
+{
+  "n_memories": 164,
+  "n_pairs": 107,
+  "rate_static": {
+    "top1": 0.9085365853658537,
+    "top5": 1.0,
+    "n": 164
+  },
+  "rate_sequence": {
+    "top1": 0.9719626168224299,
+    "top5": 1.0,
+    "n": 107
+  },
+  "records": [
+    {
+      "arm": "rate-static",
+      "top1": 0.9085365853658537,
+      "top5": 1.0,
+      "n": 164,
+      "spikes_per_step": null,
+      "active": null
+    },
+    {
+      "arm": "rate-sequence",
+      "top1": 0.9719626168224299,
+      "top5": 1.0,
+      "n": 107,
+      "spikes_per_step": null,
+      "active": null
+    },
+    {
+      "arm": "spiking",
+      "readout": "spikes",
+      "inhibition": "none",
+      "hetero": 0.0,
+      "beta": 0.0,
+      "static": {
+        "top1": 0.2804878048780488,
+        "top5": 0.7073170731707317,
+        "n": 164
+      },
+      "sequence": {
+        "top1": 0.9719626168224299,
+        "top5": 1.0,
+        "n": 107
+      },
+      "spikes_per_step": 225.46826568265686,
+      "active": 0.3063874754958487,
+      "elapsed_s": 0.8019366000080481
+    }
+  ]
+}

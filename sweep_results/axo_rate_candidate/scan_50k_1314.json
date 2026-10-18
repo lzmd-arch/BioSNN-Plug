@@ -1,0 +1,26 @@
+{
+  "records": [
+    {
+      "n": 50000,
+      "limit": 13000,
+      "probes": 50,
+      "top1_agreement": 0.98,
+      "top5_agreement": 0.98,
+      "query_ms": 85.33968000207096,
+      "candidates_mean": 13000.0,
+      "build_s": 1.2570186000084504,
+      "full_ms": 226.57908200053498
+    },
+    {
+      "n": 50000,
+      "limit": 14000,
+      "probes": 50,
+      "top1_agreement": 1.0,
+      "top5_agreement": 1.0,
+      "query_ms": 92.10336199612357,
+      "candidates_mean": 14000.0,
+      "build_s": 1.2570186000084504,
+      "full_ms": 226.57908200053498
+    }
+  ]
+}

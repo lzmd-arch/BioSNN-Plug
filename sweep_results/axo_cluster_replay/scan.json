@@ -1,0 +1,124 @@
+{
+  "records": [
+    {
+      "scale": 200,
+      "arm": "weight",
+      "clusters": 7,
+      "covered": 200,
+      "hits": 180,
+      "total": 200,
+      "recognition_rate": 0.9,
+      "elapsed_s": 0.09579149994533509
+    },
+    {
+      "scale": 200,
+      "arm": "idf-global",
+      "clusters": 7,
+      "covered": 200,
+      "hits": 188,
+      "total": 200,
+      "recognition_rate": 0.94,
+      "elapsed_s": 0.03113750001648441
+    },
+    {
+      "scale": 200,
+      "arm": "idf-cluster",
+      "clusters": 7,
+      "covered": 200,
+      "hits": 199,
+      "total": 200,
+      "recognition_rate": 0.995,
+      "elapsed_s": 0.03194800001801923
+    },
+    {
+      "scale": 500,
+      "arm": "weight",
+      "clusters": 93,
+      "covered": 500,
+      "hits": 220,
+      "total": 500,
+      "recognition_rate": 0.44,
+      "elapsed_s": 0.058317499991972
+    },
+    {
+      "scale": 500,
+      "arm": "idf-global",
+      "clusters": 93,
+      "covered": 500,
+      "hits": 220,
+      "total": 500,
+      "recognition_rate": 0.44,
+      "elapsed_s": 0.08220239996444434
+    },
+    {
+      "scale": 500,
+      "arm": "idf-cluster",
+      "clusters": 93,
+      "covered": 500,
+      "hits": 292,
+      "total": 500,
+      "recognition_rate": 0.584,
+      "elapsed_s": 0.05770269996719435
+    },
+    {
+      "scale": 1000,
+      "arm": "weight",
+      "clusters": 100,
+      "covered": 1000,
+      "hits": 137,
+      "total": 1000,
+      "recognition_rate": 0.137,
+      "elapsed_s": 0.09557880001375452
+    },
+    {
+      "scale": 1000,
+      "arm": "idf-global",
+      "clusters": 100,
+      "covered": 1000,
+      "hits": 146,
+      "total": 1000,
+      "recognition_rate": 0.146,
+      "elapsed_s": 0.09505489998264238
+    },
+    {
+      "scale": 1000,
+      "arm": "idf-cluster",
+      "clusters": 100,
+      "covered": 1000,
+      "hits": 313,
+      "total": 1000,
+      "recognition_rate": 0.313,
+      "elapsed_s": 0.09451590001117438
+    },
+    {
+      "scale": 2000,
+      "arm": "weight",
+      "clusters": 190,
+      "covered": 2000,
+      "hits": 204,
+      "total": 2000,
+      "recognition_rate": 0.102,
+      "elapsed_s": 0.19778709998354316
+    },
+    {
+      "scale": 2000,
+      "arm": "idf-global",
+      "clusters": 190,
+      "covered": 2000,
+      "hits": 211,
+      "total": 2000,
+      "recognition_rate": 0.1055,
+      "elapsed_s": 0.19414630002574995
+    },
+    {
+      "scale": 2000,
+      "arm": "idf-cluster",
+      "clusters": 190,
+      "covered": 2000,
+      "hits": 392,
+      "total": 2000,
+      "recognition_rate": 0.196,
+      "elapsed_s": 0.1880084999720566
+    }
+  ]
+}
