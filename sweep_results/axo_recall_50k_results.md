@@ -64,3 +64,17 @@ cProfile（旧版）显示 9.28 s 里 `_best_mmr` / `_max_jaccard` 占 7.7 s，�
 uv run python scripts/axo_recall_50k_profile.py --n 5000 --queries 5
 uv run python scripts/axo_recall_50k_profile.py --n 50000 --queries 5
 ```
+
+## 词法倒排候选落地（Axo `bc59387`）
+
+- `MemoryStore.lexical_index()`：按 `lex_*` 列建 CSR 倒排，按 `revision` 失效；
+  `get_many()` 批量取候选条目。
+- 纯词法路径（无语义 query_vector、`graph_weight<=0`、无时间窗、全部条目有词法码）
+  使用候选；其他情况全量扫描。
+- 50k 实测：索引首次构建 **22.3 s**；之后一次召回 **均值 1.96 s、中位 1.83 s**
+  （之前 9.09 s）。5k 上候选路径 1.66 s，比矩阵版 1.22 s 略慢——候选数等于全库，
+  没有收益。
+- 金标准词法四项逐位不变；`tests/test_lexindex.py` 覆盖倒排、缓存失效与 `get_many`。
+- 50k 的 1.96 s 仍不是终态：剩余是 5,000 条候选的 get_many + 扫描 + MMR；语义/
+  时间/图通道仍走全量。下一步是并集候选，并把索引构建移出召回热路径。
+

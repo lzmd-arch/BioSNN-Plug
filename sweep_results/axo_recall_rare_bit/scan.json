@@ -1,0 +1,98 @@
+{
+  "n": 50000,
+  "encode_s": 77.07928229996469,
+  "add_s": 2.777177300013136,
+  "index_s": 12.522054600005504,
+  "records": [
+    {
+      "query": 0,
+      "rare_bits": 8,
+      "candidates": 1051,
+      "top1_matches_full": true,
+      "candidate_ms": 23.20960001088679,
+      "get_2000_ms": 87.92319998610765,
+      "full_ms": 793.8338999520056,
+      "full_top": 0
+    },
+    {
+      "query": 0,
+      "rare_bits": 16,
+      "candidates": 5092,
+      "top1_matches_full": true,
+      "candidate_ms": 113.78280003555119,
+      "get_2000_ms": 146.0090999607928,
+      "full_ms": 793.8338999520056,
+      "full_top": 0
+    },
+    {
+      "query": 0,
+      "rare_bits": 32,
+      "candidates": 14095,
+      "top1_matches_full": true,
+      "candidate_ms": 334.6725999726914,
+      "get_2000_ms": 92.68050000537187,
+      "full_ms": 793.8338999520056,
+      "full_top": 0
+    },
+    {
+      "query": 25000,
+      "rare_bits": 8,
+      "candidates": 1825,
+      "top1_matches_full": true,
+      "candidate_ms": 26.02749998914078,
+      "get_2000_ms": 83.9886000030674,
+      "full_ms": 1074.218399997335,
+      "full_top": 200
+    },
+    {
+      "query": 25000,
+      "rare_bits": 16,
+      "candidates": 5326,
+      "top1_matches_full": true,
+      "candidate_ms": 76.66590000735596,
+      "get_2000_ms": 151.73959999810904,
+      "full_ms": 1074.218399997335,
+      "full_top": 200
+    },
+    {
+      "query": 25000,
+      "rare_bits": 32,
+      "candidates": 11613,
+      "top1_matches_full": true,
+      "candidate_ms": 273.2069999910891,
+      "get_2000_ms": 193.08749999618158,
+      "full_ms": 1074.218399997335,
+      "full_top": 200
+    },
+    {
+      "query": 49999,
+      "rare_bits": 8,
+      "candidates": 8523,
+      "top1_matches_full": true,
+      "candidate_ms": 207.70789997186512,
+      "get_2000_ms": 247.32379999477416,
+      "full_ms": 1299.7508000116795,
+      "full_top": 399
+    },
+    {
+      "query": 49999,
+      "rare_bits": 16,
+      "candidates": 18076,
+      "top1_matches_full": true,
+      "candidate_ms": 487.3308999813162,
+      "get_2000_ms": 103.95899997092783,
+      "full_ms": 1299.7508000116795,
+      "full_top": 399
+    },
+    {
+      "query": 49999,
+      "rare_bits": 32,
+      "candidates": 36544,
+      "top1_matches_full": true,
+      "candidate_ms": 985.0813000230119,
+      "get_2000_ms": 80.14989999355748,
+      "full_ms": 1299.7508000116795,
+      "full_top": 399
+    }
+  ]
+}

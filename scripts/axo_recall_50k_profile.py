@@ -80,6 +80,10 @@ def main(argv: list[str] | None = None) -> int:
     items = list(store.iter_items())
     iter_s = time.perf_counter() - started
 
+    started = time.perf_counter()
+    store.lexical_index()
+    lexical_index_s = time.perf_counter() - started
+
     indices = np.unique(
         np.linspace(0, len(items) - 1, min(args.queries, len(items))).round().astype(int)
     )
@@ -122,6 +126,12 @@ def main(argv: list[str] | None = None) -> int:
         "add_s": add_s,
         "iter_s": iter_s,
         "recall_ms": float(np.mean(recall_times) * 1000),
+        "recall_first_ms": float(recall_times[0] * 1000) if recall_times else None,
+        "recall_warm_ms": float(np.mean(recall_times[1:]) * 1000)
+        if len(recall_times) > 1
+        else None,
+        "recall_median_ms": float(np.median(recall_times) * 1000) if recall_times else None,
+        "lexical_index_s": lexical_index_s,
         "scanned": int(np.mean(scanned)),
         "index_build_s": index_s,
         "candidate_ms": float(np.mean(candidate_times) * 1000),
