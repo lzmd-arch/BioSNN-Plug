@@ -157,6 +157,8 @@ def run_arm(
     n_shared: int,
     data_dir: Path,
     arbiter: ESArbiter | None = None,
+    fit_steps: int = 200,
+    shuffle_labels: bool = False,
 ) -> dict:
     from research.arbiter.shared_synapse import SharedSynapseConfig, SharedSynapseHarness
 
@@ -169,17 +171,27 @@ def run_arm(
     train_inputs = permute_inputs(train.inputs, perm)
     test_inputs = permute_inputs(test.inputs, perm)
     labels = train.labels
+    if shuffle_labels:
+        # 打乱标签对照：训练信号与样本无关，但评测仍用真实标签（见规格的对照表）。
+        labels = labels[
+            torch.randperm(labels.shape[0], generator=torch.Generator().manual_seed(seed))
+        ]
     mask = label_mask(labels, fraction, seed=seed)
 
     config = SharedSynapseConfig(n_in=28, n_shared=n_shared, n_classes=10)
     harness = SharedSynapseHarness(
         config,
-        arbiter=arbiter or ESArbiter(alpha=0.0 if arm.kind == "hebbian" else 1.0, seed=seed),
+        # ⚠️ blend(a, b) = (1-α)·a + α·b，而 a=e-prop、b=Hebbian：
+        # **α=1 是纯 Hebbian、α=0 是纯 e-prop**。MIX 从 0.5 起步。
+        arbiter=arbiter
+        or ESArbiter(alpha={"hebbian": 1.0, "eprop": 0.0}.get(arm.kind, 0.5), seed=seed),
         seed=seed,
     )
     initial = harness.shared_weight.detach().clone()
     weight = harness.shared_weight
 
+    fit_trace: list[tuple[torch.Tensor, torch.Tensor]] = []
+    fitted = False
     n = train_inputs.shape[1]
     for _ in range(epochs):
         order = torch.randperm(n)
@@ -199,6 +211,18 @@ def run_arm(
                 delta_e = torch.zeros_like(weight)
 
             if arm.kind == "mix":
+                # 先攒一批更新对，再用 ES 学 α（真实仲裁器路径）；之后用学到的 α 继续。
+                if not fitted:
+                    fit_trace.append((delta_e.detach().clone(), delta_h.detach().clone()))
+                    if len(fit_trace) >= fit_steps:
+                        harness.fit_arbiter(
+                            [pair[0] for pair in fit_trace],
+                            [pair[1] for pair in fit_trace],
+                            steps=32,
+                            min_retention=0.2,
+                        )
+                        fit_trace.clear()
+                        fitted = True
                 # blend 的 a=eprop、b=hebbian（与 harness.step 的约定一致）；
                 # delta_h 是 (n_shared, n_in)，先转置到 (n_in, n_shared) 再混合。
                 blended = harness.arbiter.blend(
@@ -249,6 +273,8 @@ def run_arm(
         "alpha": float(harness.arbiter.alpha),
         "weight_delta_ratio": delta_ratio,
         "gate_passed": bool(delta_ratio >= GATE_RATIO),
+        "shuffle_labels": shuffle_labels,
+        "alpha_fitted": fitted,
     }
 
 
@@ -261,6 +287,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--shared", type=int, default=256)
     parser.add_argument("--data-dir", type=Path, default=REPO_ROOT / "data")
     parser.add_argument("--arms", default="H,E,MIX", help="逗号分隔，可选 H / E / MIX")
+    parser.add_argument("--fit-steps", type=int, default=200, help="MIX 臂用来学 α 的步数")
+    parser.add_argument("--shuffle-labels", action="store_true", help="打乱训练标签（对照）")
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
 
@@ -284,6 +312,8 @@ def main(argv: list[str] | None = None) -> int:
                     batch=args.batch,
                     n_shared=args.shared,
                     data_dir=args.data_dir,
+                    fit_steps=args.fit_steps,
+                    shuffle_labels=args.shuffle_labels,
                 )
                 results.append(row)
                 gate = "PASS" if row["gate_passed"] else "FAIL"
