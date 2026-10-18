@@ -33,7 +33,9 @@ import torch
 
 from research.common.provenance import collect
 from research.continual.data import CifarSplit, load_cifar100, task_classes
+from research.continual.frontends import resnet18_features
 from research.continual.metrics import summarise
+from research.continual.ncm import ClassPrototypes
 from research.continual.readout import DeltaReadout, evaluate
 from research.ib_hebbian.model import IBHebbianPerceptron
 
@@ -77,6 +79,17 @@ def evaluate_seen(
     return evaluate(readout, feats, test_y.cpu().numpy()[mask], seen)
 
 
+def _prototype_accuracy(model, prototypes, test_x, test_y, classes: np.ndarray) -> float:
+    """原型读出在给定类别子集上的准确率。**只在已见类里**取最近原型。"""
+    labels = test_y.cpu().numpy()
+    mask = np.isin(labels, classes)
+    if not mask.any():
+        return float("nan")
+    features = features_of(model, test_x[mask])
+    predicted = prototypes.predict(features)
+    return float(np.mean(predicted == labels[mask]))
+
+
 def run_incremental(
     *,
     seed: int,
@@ -87,6 +100,9 @@ def run_incremental(
     batch: int,
     device: torch.device,
     data_root: Path,
+    readout_kind: str = "delta",
+    whiten: bool = False,
+    freeze_features: bool = False,
 ) -> dict:
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -95,6 +111,7 @@ def run_incremental(
     tasks = task_classes(n_tasks, 100)
     model = IBHebbianPerceptron(n_in=32 * 32 * 3, width=1024, n_layers=3, n_classes=100).to(device)
     readout = DeltaReadout(1024, 100, learning_rate=0.01)
+    prototypes = ClassPrototypes(100, whiten=whiten) if readout_kind == "ncm" else None
 
     test_x, test_y = _to_tensor(test, device)
     matrix = np.full((n_tasks, n_tasks), np.nan)
@@ -103,25 +120,111 @@ def run_incremental(
         seen.extend(int(c) for c in classes)
         subset = train.subset(classes, limit=limit_per_class)
         x, y = _to_tensor(subset, device)
-        train_hidden(model, x, y, epochs=hidden_epochs, batch=batch)
+        # 冻结特征：只在第一个任务上训练隐藏层，之后不再改动——去掉"特征漂移"这一遗忘来源。
+        if not (freeze_features and t > 0):
+            train_hidden(model, x, y, epochs=hidden_epochs, batch=batch)
 
         feats = features_of(model, x)
         labels = y.cpu().numpy()
-        for _ in range(readout_epochs):
-            readout.step(feats, labels)
+        if prototypes is not None:
+            prototypes.add(feats, labels)
+        else:
+            for _ in range(readout_epochs):
+                readout.step(feats, labels)
 
-        matrix[t, : t + 1] = [
-            evaluate_seen(
-                model, readout, test_x, test_y, np.asarray(sorted(seen[: (i + 1) * len(classes)]))
-            )
-            for i in range(t + 1)
-        ]
+        if prototypes is not None:
+            matrix[t, : t + 1] = [
+                _prototype_accuracy(
+                    model,
+                    prototypes,
+                    test_x,
+                    test_y,
+                    np.asarray(sorted(seen[: (i + 1) * len(classes)])),
+                )
+                for i in range(t + 1)
+            ]
+        else:
+            matrix[t, : t + 1] = [
+                evaluate_seen(
+                    model,
+                    readout,
+                    test_x,
+                    test_y,
+                    np.asarray(sorted(seen[: (i + 1) * len(classes)])),
+                )
+                for i in range(t + 1)
+            ]
         print(f"  task {t + 1}/{n_tasks}: 本任务 {matrix[t, t]:.3f}")
 
     scores = summarise(matrix)
     return {
         "seed": seed,
         "mode": "incremental",
+        "n_tasks": n_tasks,
+        "limit_per_class": limit_per_class,
+        "accuracy_matrix": matrix.tolist(),
+        "acc": scores.acc,
+        "af": scores.af,
+        "per_task_final": list(scores.per_task_final),
+    }
+
+
+def run_with_frozen_frontend(
+    *,
+    seed: int,
+    n_tasks: int,
+    limit_per_class: int | None,
+    whiten: bool,
+    data_root: Path,
+    device: torch.device,
+) -> dict:
+    """冻结 ResNet18 前端 + 类原型：**没有特征漂移，也没有逐任务覆盖**。
+
+    与 W1 那条路线的差别只有特征来源；读出一条是同一份 `ClassPrototypes`。
+    规格里说明过：这条测的是「任何强表示 + 局部原型记忆」，不是本仓的 Hebbian 表示。
+    """
+    np.random.seed(seed)
+    train, test = load_cifar100(data_root)
+    cache_dir = Path(data_root) / "_features"
+    print("提取 ResNet18 特征（训练集）…")
+    train_features = resnet18_features(
+        train.x, cache=cache_dir / "resnet_train.npz", device=str(device)
+    )
+    print("提取 ResNet18 特征（测试集）…")
+    test_features = resnet18_features(
+        test.x, cache=cache_dir / "resnet_test.npz", device=str(device)
+    )
+
+    tasks = task_classes(n_tasks, 100)
+    prototypes = ClassPrototypes(100, whiten=whiten)
+    matrix = np.full((n_tasks, n_tasks), np.nan)
+    seen: list[int] = []
+    for t, classes in enumerate(tasks):
+        seen.extend(int(c) for c in classes)
+        mask = np.isin(train.y, classes)
+        features = train_features[mask]
+        if limit_per_class is not None:
+            keep = []
+            for label in classes:
+                keep.append(np.flatnonzero(train.y[mask] == label)[:limit_per_class])
+            subset = np.concatenate(keep) if keep else np.array([], dtype=int)
+            features = features[subset]
+            labels = train.y[mask][subset]
+        else:
+            labels = train.y[mask]
+        prototypes.add(features, labels)
+
+        for i in range(t + 1):
+            subset_classes = np.asarray(sorted(seen[: (i + 1) * len(classes)]))
+            pick = np.isin(test.y, subset_classes)
+            predicted = prototypes.predict(test_features[pick])
+            matrix[t, i] = float(np.mean(predicted == test.y[pick]))
+        print(f"  task {t + 1}/{n_tasks}: 本任务 {matrix[t, t]:.3f}")
+
+    scores = summarise(matrix)
+    return {
+        "seed": seed,
+        "mode": "incremental-resnet18",
         "n_tasks": n_tasks,
         "limit_per_class": limit_per_class,
         "accuracy_matrix": matrix.tolist(),
@@ -173,6 +276,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--batch", type=int, default=128)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--data-root", type=Path, default=REPO_ROOT / "data" / "cifar100")
+    parser.add_argument("--features", choices=("w1", "resnet18"), default="w1")
+    parser.add_argument("--readout", choices=("delta", "ncm"), default="delta")
+    parser.add_argument("--whiten", action="store_true", help="NCM 读出用共享协方差白化")
+    parser.add_argument(
+        "--freeze-features",
+        action="store_true",
+        help="隐藏层只在第一个任务上训练，之后冻结（去掉特征漂移）",
+    )
     parser.add_argument("--joint", action="store_true", help="跑联合训练上界")
     parser.add_argument("--smoke", action="store_true", help="2 任务、每类 20 张")
     parser.add_argument("--out", type=Path, default=OUT)
@@ -189,6 +300,18 @@ def main(argv: list[str] | None = None) -> int:
     started = time.perf_counter()
     results = []
     for seed in seeds:
+        if args.features == "resnet18":
+            results.append(
+                run_with_frozen_frontend(
+                    seed=seed,
+                    n_tasks=args.tasks,
+                    limit_per_class=args.limit_per_class,
+                    whiten=args.whiten,
+                    data_root=args.data_root,
+                    device=device,
+                )
+            )
+            continue
         if args.joint:
             results.append(
                 run_joint(
@@ -212,6 +335,9 @@ def main(argv: list[str] | None = None) -> int:
                     batch=args.batch,
                     device=device,
                     data_root=args.data_root,
+                    readout_kind=args.readout,
+                    whiten=args.whiten,
+                    freeze_features=args.freeze_features,
                 )
             )
 
