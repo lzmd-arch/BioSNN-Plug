@@ -90,4 +90,3 @@ uv run python scripts/axo_rate_candidate_validation.py --out sweep_results/axo_r
 - 自适应候选（按 top-1/top-2 边际扩展）失败：所有探针都触发扩展，比固定 M1 更慢。
 - **结论**：速率路径的最终配置是固定候选 M=15,000（最小实测 14,000），100% 一致、
   均值约 70–90 ms；p95 约 106 ms。没有接进 Axo——还没有确定的消费者与延迟预算。
-
