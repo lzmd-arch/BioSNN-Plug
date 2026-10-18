@@ -1,0 +1,6 @@
+warning: `VIRTUAL_ENV=d:\Projects\BioSNN-Plug\.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+M0=2000 M1=5000: agree 0.0000 cand 2031 mean 58.58ms p95 79.38ms
+M0=2000 M1=10000: agree 0.0000 cand 2031 mean 53.62ms p95 66.23ms
+M0=5000 M1=10000: agree 0.0000 cand 5087 mean 92.19ms p95 108.94ms
+M0=5000 M1=15000: agree 0.0000 cand 5087 mean 93.25ms p95 110.33ms
+graph build 738.8s full 115.61ms; [落盘] sweep_results\axo_rate_graph_expand\scan.json
