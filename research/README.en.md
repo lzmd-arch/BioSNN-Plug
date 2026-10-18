@@ -30,8 +30,11 @@ acceptance configuration):
 | W2 cognition | single recurrent layer | **256** neurons | **ALIF spiking neurons** (beta=0.07) |
 | W3 execution | population critic + actor | **64** units (+2 actions) | rate-based units |
 | Skeleton-library demo | spike bus | 128-d (plugins 32 + 128 channels) | plugin encoding units, **not** neurons |
+| W3 spiking (phase three) | LIF output layer + population critic | 64 units | **spiking** (LIF); 0/10 over 200 at ten seeds |
+| W4 cross-modal retrieval | frozen front ends + association layer | 512 / 768-d features | no spiking neurons; the association layer is an outer-product or delta rule |
 
-**The only genuine spiking neurons are W2's 256.**
+**Genuine spiking neurons**: W2's **256**, plus the **64** in the phase-three spiking execution line
+(no acceptance yet: 0/10 at ten seeds). W4 has none -- it is frozen front ends plus a local association.
 
 ⚠️ **That is about two orders of magnitude short of the plan's targets**, stated here so no reader
 mistakes "phase 1 complete" for "the scale is nearly there":
@@ -59,6 +62,8 @@ from **phase 1**:
 | Phase 2 (months 4-8) | Dual-rule coordination, TAAF fast fine-tuning, ES meta-learning arbiter | §7 phase 2 |
 | Phase 3 (months 9-15) | Three-rule closed loop, continual-learning benchmark | §7 phase 3 |
 | Phase 4 onward | Neurogenesis, scaling up, metacognitive gating | §7 phase 4 |
+| Phase 3 (partial) | **Spiking execution layer** (`rstdp_spiking/`: LIF + STDP with a real dt window + linear-TD / TD-LTP population critics) and **cross-modal retrieval** (`retrieval/`: datasets, encoders, five association rules, the recovery-rate criterion) | §7 phase 3 |
+| Phase 3 (not started) | Audio plugin, continual-learning benchmark, arbiter extended to three rules | §7 phase 3 |
 
 The docstring header of every module must state the grace period and its expiry date.
 

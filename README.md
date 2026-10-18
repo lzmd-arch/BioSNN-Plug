@@ -89,7 +89,7 @@ flowchart TB
     end
 
     subgraph L4["执行层"]
-        ACT["动作生成 + 模态解码器<br/>R-STDP + 奖励预测 Critic<br/>◐ 第一阶段：学习规则已验证（W3）<br/>⬜ 模态解码器"]
+        ACT["动作生成 + 模态解码器<br/>R-STDP + 奖励预测 Critic<br/>◐ 第一阶段：速率版学习规则已验证（W3，中位数 237.8）<br/>◐ 第三阶段：脉冲版入口 + 两种 Critic 已实现<br/>&nbsp;&nbsp;&nbsp;⚠️ 10 种子下 0/10 过 200，且三主臂区间重叠<br/>⬜ 模态解码器"]
     end
 
     subgraph L3["认知层（认知核心）"]
@@ -132,6 +132,16 @@ flowchart TB
     MCP -.->|结果编码回注| EM
     ARB -.->|调停层间冲突| WM
     ARB -.->|调停层间冲突| ACT
+
+    subgraph W4["跨模态检索 research/retrieval"]
+        FAC["联想层：外积 Hebb / delta / 岭回归上界 / kNN<br/>✅ 已实现（前两者是局部规则，后两者是上界探针）"]
+        CRIT["两套口径<br/>✅ 绝对 R@1：未达成且被判无区分力<br/>✅ 恢复率：合成集 75.2%、Flickr8k 78.7%"]
+        FE["前端验收：caption 内容词线性探针<br/>✅ 图像侧 AUC 0.790（文本侧自查 1.000）"]
+    end
+
+    BUS -.->|两路表示| FAC
+    FAC --> CRIT
+    FE -.->|说明上界为何低| CRIT
 ```
 
 层间冲突由 **ES 元学习仲裁器**调节：冲突判定与仲裁器都已实现，并**已接进两条研究线**（`research/arbiter/shared_synapse.py`，两条规则共享输入→隐藏那一组突触）。⚠️ 但「冲突事件减少 50%」在合成数据上是**平凡成立**的——最优解是把一条规则关掉，所以降幅要与 `retention` 一起读；详见 [`research/arbiter/README`](research/arbiter/README.md)。
