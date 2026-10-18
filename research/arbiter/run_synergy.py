@@ -158,6 +158,7 @@ def run_arm(
     data_dir: Path,
     arbiter: ESArbiter | None = None,
     fit_steps: int = 200,
+    fit_alpha: bool = True,
     shuffle_labels: bool = False,
 ) -> dict:
     from research.arbiter.shared_synapse import SharedSynapseConfig, SharedSynapseHarness
@@ -212,7 +213,7 @@ def run_arm(
 
             if arm.kind == "mix":
                 # 先攒一批更新对，再用 ES 学 α（真实仲裁器路径）；之后用学到的 α 继续。
-                if not fitted:
+                if fit_alpha and not fitted:
                     fit_trace.append((delta_e.detach().clone(), delta_h.detach().clone()))
                     if len(fit_trace) >= fit_steps:
                         harness.fit_arbiter(
@@ -288,6 +289,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--data-dir", type=Path, default=REPO_ROOT / "data")
     parser.add_argument("--arms", default="H,E,MIX", help="逗号分隔，可选 H / E / MIX")
     parser.add_argument("--fit-steps", type=int, default=200, help="MIX 臂用来学 α 的步数")
+    parser.add_argument(
+        "--no-fit-alpha",
+        action="store_true",
+        help="MIX 臂冻结在 alpha=0.5，不跑 ES 拟合（对照）",
+    )
     parser.add_argument("--shuffle-labels", action="store_true", help="打乱训练标签（对照）")
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
@@ -313,6 +319,7 @@ def main(argv: list[str] | None = None) -> int:
                     n_shared=args.shared,
                     data_dir=args.data_dir,
                     fit_steps=args.fit_steps,
+                    fit_alpha=not args.no_fit_alpha,
                     shuffle_labels=args.shuffle_labels,
                 )
                 results.append(row)
