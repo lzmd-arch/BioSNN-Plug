@@ -1,33 +1,26 @@
-"""协同性基准的 runner：H / E / MIX 三臂在**同一个共享输入权重**上。
+"""协同性基准的 runner（v2）：H / E / MIX 三臂在**同一个共享输入权重**上。
 
 **⚠️ 破坏性变更免责期：至 2027-09**（计划书 §12.5、ADR-0005）。
 
-规格：[`sweep_results/arbiter_synergy_task_spec.md`](../../sweep_results/arbiter_synergy_task_spec.md)。
+规格与设计缺陷记录：[`sweep_results/arbiter_synergy_task_spec.md`](../../sweep_results/arbiter_synergy_task_spec.md)。
 
-## 公平比较的做法
+## v1 的两个缺陷与 v2 的修法
 
-三条臂的差别**只在共享权重 W（28 → 256）怎么被更新**。为了不让"换了个读出"混淆结果，
-全部臂都用同一套东西：
+| v1 的做法 | 后果 | v2 |
+| :--- | :--- | :--- |
+| 特征 = ``relu(mean_t x @ W)`` | 先把时间维平均掉，对 W 的扰动不敏感；两个不同的 W 给出**逐位相同**的准确率 | 改成 ``mean_t relu(x_t @ W)``：整流在时间步上做 |
+| 三臂各自训练在线 delta 读出 | 测到的是"读出 + 权重"的混合；随机权重也能让读出学到 20–35%，H 从不失败 | **共用闭式岭回归读出**，三臂完全相同 |
+| 没有检查权重到底动了没有 | 无法区分"规则无效"与"更新没生效" | 加门禁：``‖ΔW‖/‖W₀‖`` 低于 ``GATE_RATIO`` 即整轮作废 |
 
-* 特征：``relu(x @ W)``（对每步的 28 维输入）；
-* 读出：同一个 delta 线性读出，只用**有标签子集**训练；
-* 评测：同一份测试集。
+## 门禁为什么必须有
 
-## 三条臂
+v1 实测：Hebbian 每批移动约 ``2.8e-5``，而 ``‖W‖ = 16``。若不检查这一点，一条"两臂给出同一个数"
+的结果可以被误读成"两臂能力相同"——实际是**更新根本没进到权重里**。
 
-| 臂 | W 的更新 |
-| :--- | :--- |
-| H | 只用 Hebbian 的 ΔW（`alpha=0`） |
-| E | 只用 e-prop 的 ΔW（`alpha=1`） |
-| MIX | 仲裁器按 `alpha` 混合两者 |
+## GPU
 
-⚠️ **ΔW 的取法**：两条规则都在自己的 `update()` 里直接改权重，所以这里用「快照 → 跑一步 →
-差值 → 还原」，再交给仲裁器写回。这比改两条线的内部实现安全——**不改已验证的代码路径**。
-
-⚠️ **训练量必须够**。实测（种子 0、批量 64、初始化附近）：Hebbian 每批移动约 `2.8e-5`、
-e-prop 约 `2e-4`，而共享权重的范数是 16。**1 个 epoch 累计变化约 1e-2，三臂因此给出
-完全相同的准确率**（实测都是 0.254）。这不是接线错误：两条规则在各自的线里都要跑几十个
-epoch 才成形。跑基准前先按 1 个 epoch 量耗时，再把 epoch 数定到让 W 真正被塑造的量级。
+本 runner **只在 CPU 上跑**：Hebbian 的 `label_kernel` 在 CPU 上建张量，把模型搬到 GPU 会在
+`label_kernel` 里报设备不一致。改它要动已验证的库代码，不值得。CPU 实测约 17 s/臂·epoch。
 """
 
 from __future__ import annotations
@@ -44,7 +37,6 @@ import torch
 from research.arbiter.es_arbiter import ESArbiter
 from research.arbiter.synergy_task import label_mask, make_permutation, permute_inputs
 from research.common.provenance import collect
-from research.continual.readout import DeltaReadout, evaluate  # 复用同一读出
 from research.eprop.tasks import load_smnist
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -52,32 +44,89 @@ OUT = REPO_ROOT / "sweep_results" / "arbiter_synergy"
 
 __all__ = ["Arm", "features", "run_arm"]
 
-
-#: 计划书 §七 第二阶段的判据在这里换算成比例：随机基线 = 1/10。
+#: 随机基线：MNIST 是 10 类。
 CHANCE = 0.1
+
+#: 门禁：训练前后 ``‖ΔW‖/‖W₀‖`` 低于这个值 ⇒ 臂的差异没进到权重里，整轮作废。
+GATE_RATIO = 0.05
+
+#: 共用闭式读出的 λ。**读出不是本实验的自变量**，固定不调。
+RIDGE_LAMBDA = 1.0
 
 
 @dataclass(frozen=True)
 class Arm:
-    """一条实验臂。``kind`` 决定 W 怎么更新。"""
+    """一条实验臂。``kind`` 决定共享权重怎么被更新。"""
 
     name: str
     kind: str  # "hebbian" | "eprop" | "mix"
-    alpha: float | None = None  # mix 时由 ESArbiter 学；否则固定
 
 
 def features(inputs: torch.Tensor, weight: torch.Tensor) -> np.ndarray:
-    """``(T, n, 28)`` 序列 → ``(n, 256)`` 的 ``relu(x @ W)`` 时间平均。"""
-    # 每条样本在 T 个时间步上的平均输入，再乘共享权重
-    averaged = inputs.mean(dim=0)  # (n, 28)
-    return torch.relu(averaged @ weight).detach().cpu().numpy().astype(np.float64)
+    """``(T, n, n_in)`` 序列 → ``(n, n_shared)``：**逐时间步整流后再平均**。
 
-
-def _hebbian_update(hebbian, inputs, labels) -> torch.Tensor:
-    """跑一步 Hebbian 的局部规则，返回它对共享权重的 ΔW（形状与 W 同）。
-
-    ``Inputs`` 是 ``(T, n, 28)``；Hebbian 用时间平均作为静态输入。
+    第一版是 ``relu(mean_t(x) @ W)``——先把时间维平均掉再乘 W，结果对 W 的扰动不敏感
+    （实测两个不同的 W 给出逐位相同的准确率）。整流放在每个时间步上、平均放在最后，
+    W 的扰动因此能改变哪些单元被激活。
     """
+    per_step = torch.relu(inputs @ weight)
+    return per_step.mean(dim=0).detach().cpu().numpy().astype(np.float64)
+
+
+def _ridge_accuracy(
+    train_features: np.ndarray,
+    train_labels: np.ndarray,
+    test_features: np.ndarray,
+    test_labels: np.ndarray,
+) -> tuple[float, int]:
+    """闭式岭回归读出，返回 ``(准确率, 有标签样本数)``。
+
+    三臂用**完全相同**的读出——差异只能来自共享权重。
+    """
+    n_labeled = int(train_features.shape[0])
+    if n_labeled == 0:
+        return float("nan"), 0
+    x = np.asarray(train_features, dtype=np.float64)
+    y = np.asarray(train_labels, dtype=int)
+    design = np.hstack([x, np.ones((x.shape[0], 1))])
+    target = np.zeros((x.shape[0], 10), dtype=np.float64)
+    target[np.arange(x.shape[0]), y] = 1.0
+    gram = design.T @ design + RIDGE_LAMBDA * np.eye(design.shape[1])
+    weights = np.linalg.solve(gram, design.T @ target)
+
+    test_design = np.hstack(
+        [np.asarray(test_features, dtype=np.float64), np.ones((test_features.shape[0], 1))]
+    )
+    predicted = np.argmax(test_design @ weights, axis=1)
+    return float(np.mean(predicted == np.asarray(test_labels, dtype=int))), n_labeled
+
+
+def _ncm_accuracy(
+    train_features: np.ndarray,
+    train_labels: np.ndarray,
+    test_features: np.ndarray,
+    test_labels: np.ndarray,
+) -> tuple[float, int]:
+    """最近类均值（NCM）读出：**没有可拟合的容量**，只看特征的几何。
+
+    为什么要它：闭式岭回归在 256 维、几百个标签上总能到 50% 左右——**W 动不动都是这个数**
+    （实测 H 臂从 0 动到 71% 权重变化，岭回归读出始终 0.51）。NCM 只有一个均值向量可估，
+    特征若没把类分开就上不去，因此对"表示是否被规则塑造"更敏感。
+    """
+    n_labeled = int(train_features.shape[0])
+    if n_labeled == 0:
+        return float("nan"), 0
+    x = np.asarray(train_features, dtype=np.float64)
+    y = np.asarray(train_labels, dtype=int)
+    centroids = np.stack([x[y == c].mean(axis=0) for c in range(10)])
+    test = np.asarray(test_features, dtype=np.float64)
+    distance = ((test[:, None, :] - centroids[None, :, :]) ** 2).sum(axis=2)
+    predicted = np.argmin(distance, axis=1)
+    return float(np.mean(predicted == np.asarray(test_labels, dtype=int))), n_labeled
+
+
+def _hebbian_update(hebbian, inputs: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+    """跑一步 Hebbian 的局部规则，返回它对共享权重的 ΔW（``(n_shared, n_in)``）。"""
     layer = hebbian.layers[0]
     before = layer.linear.weight.detach().clone()
     averaged = inputs.mean(dim=0)
@@ -85,10 +134,10 @@ def _hebbian_update(hebbian, inputs, labels) -> torch.Tensor:
     layer(averaged, kernel, update=True)
     delta = layer.linear.weight.detach() - before
     layer.linear.weight.data.copy_(before)  # 还原：混合由调用方负责
-    return delta  # (n_shared, n_in)，与 ib_hebbian 的存储约定一致
+    return delta
 
 
-def _eprop_update(eprop, inputs, labels) -> torch.Tensor:
+def _eprop_update(eprop, inputs: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
     """跑一步 e-prop，返回它对共享输入权重的 ΔW（``(n_in, n_shared)``）。"""
     before = eprop.cell.w_in.detach().clone()
     eprop.update(inputs, labels)
@@ -106,7 +155,6 @@ def run_arm(
     batch: int,
     n_shared: int,
     data_dir: Path,
-    device: torch.device,
     arbiter: ESArbiter | None = None,
 ) -> dict:
     from research.arbiter.shared_synapse import SharedSynapseConfig, SharedSynapseHarness
@@ -117,8 +165,8 @@ def run_arm(
     train = load_smnist(data_dir, split="train", seed=seed)
     test = load_smnist(data_dir, split="test", seed=seed)
     perm = make_permutation(28, seed=seed)
-    train_inputs = permute_inputs(train.inputs, perm).to(device)
-    test_inputs = permute_inputs(test.inputs, perm).to(device)
+    train_inputs = permute_inputs(train.inputs, perm)
+    test_inputs = permute_inputs(test.inputs, perm)
     labels = train.labels
     mask = label_mask(labels, fraction, seed=seed)
 
@@ -128,15 +176,9 @@ def run_arm(
         arbiter=arbiter or ESArbiter(alpha=0.0 if arm.kind == "hebbian" else 1.0, seed=seed),
         seed=seed,
     )
-    # harness 在 CPU 上构造；要用 GPU 就把两个模型与共享权重一起搬过去。
-    if device.type != "cpu":
-        harness.eprop.to(device)
-        harness.hebbian.to(device)
-        harness._shared = harness._shared.to(device)
-        harness.sync_from_shared()
+    initial = harness.shared_weight.detach().clone()
     weight = harness.shared_weight
 
-    readout = DeltaReadout(n_shared, 10, learning_rate=0.01)
     n = train_inputs.shape[1]
     for _ in range(epochs):
         order = torch.randperm(n)
@@ -144,19 +186,14 @@ def run_arm(
             idx = order[start : start + batch]
             x = train_inputs[:, idx]
             y = labels[idx]
+            labeled = mask[idx.numpy()]
 
             if arm.kind in ("hebbian", "mix"):
                 delta_h = _hebbian_update(harness.hebbian, x, y)
             else:
-                delta_h = torch.zeros(weight.shape[1], weight.shape[0], device=device)
-            if arm.kind in ("eprop", "mix"):
-                labeled = mask[idx.cpu().numpy()]
-                if labeled.any():
-                    delta_e = _eprop_update(
-                        harness.eprop, x[:, torch.as_tensor(labeled, device=device)], y[labeled]
-                    )
-                else:
-                    delta_e = torch.zeros_like(weight)
+                delta_h = torch.zeros(weight.shape[1], weight.shape[0])
+            if arm.kind in ("eprop", "mix") and labeled.any():
+                delta_e = _eprop_update(harness.eprop, x[:, torch.as_tensor(labeled)], y[labeled])
             else:
                 delta_e = torch.zeros_like(weight)
 
@@ -173,24 +210,30 @@ def run_arm(
                 new_weight = weight.detach().cpu() + delta_h.detach().cpu().T
             harness._shared = new_weight.to(weight.device)
             harness.sync_from_shared()
+            # ⚠️ 必须重新取一次：`weight` 原来指向旧张量，不更新的话每一步都从**同一个**初始
+            # 权重算起，更新永远累积不起来（门禁实测 |dW|/|W| = 0.0000 才发现的）。
+            weight = harness.shared_weight
 
-            # 读出只在有标签的样本上更新
-            labeled_all = mask[idx.cpu().numpy()]
-            if labeled_all.any():
-                feats = features(
-                    x[:, torch.as_tensor(labeled_all, device=device)], harness.shared_weight
-                )
-                readout.step(feats, y[labeled_all].cpu().numpy())
-
+    train_features = features(train_inputs, harness.shared_weight)
     test_features = features(test_inputs, harness.shared_weight)
-    accuracy = evaluate(readout, test_features, test.labels.cpu().numpy(), np.arange(10))
+    accuracy, n_labeled = _ncm_accuracy(
+        train_features[mask], labels.numpy()[mask], test_features, test.labels.numpy()
+    )
+    ridge_accuracy, _ = _ridge_accuracy(
+        train_features[mask], labels.numpy()[mask], test_features, test.labels.numpy()
+    )
+    delta_ratio = float((harness.shared_weight - initial).norm() / (initial.norm() + 1e-12))
     return {
         "arm": arm.name,
         "kind": arm.kind,
         "fraction": fraction,
         "seed": seed,
         "accuracy": accuracy,
+        "ridge_accuracy": ridge_accuracy,
+        "n_labeled": n_labeled,
         "alpha": float(harness.arbiter.alpha),
+        "weight_delta_ratio": delta_ratio,
+        "gate_passed": bool(delta_ratio >= GATE_RATIO),
     }
 
 
@@ -198,30 +241,21 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="协同性基准：H / E / MIX")
     parser.add_argument("--seeds", default="0")
     parser.add_argument("--fractions", default="0.01")
-    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch", type=int, default=64)
     parser.add_argument("--shared", type=int, default=256)
-    parser.add_argument("--device", default="cpu")
     parser.add_argument("--data-dir", type=Path, default=REPO_ROOT / "data")
     parser.add_argument("--arms", default="H,E,MIX", help="逗号分隔，可选 H / E / MIX")
-    parser.add_argument("--smoke", action="store_true", help="1 种子、1% 标签、小批量")
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
 
-    if args.smoke:
-        args.epochs = 1
-        args.batch = 64
-
-    catalogue = {
-        "H": Arm("H", "hebbian"),
-        "E": Arm("E", "eprop"),
-        "MIX": Arm("MIX", "mix"),
-    }
+    catalogue = {"H": Arm("H", "hebbian"), "E": Arm("E", "eprop"), "MIX": Arm("MIX", "mix")}
     wanted = [name.strip() for name in args.arms.split(",") if name.strip()]
     unknown = [name for name in wanted if name not in catalogue]
     if unknown:
         raise SystemExit(f"未知的臂：{unknown}；可选 {sorted(catalogue)}")
     arms = [catalogue[name] for name in wanted]
+
     results = []
     started = time.perf_counter()
     for fraction in (float(f) for f in args.fractions.split(",")):
@@ -235,29 +269,29 @@ def main(argv: list[str] | None = None) -> int:
                     batch=args.batch,
                     n_shared=args.shared,
                     data_dir=args.data_dir,
-                    device=torch.device(args.device),
                 )
                 results.append(row)
+                gate = "PASS" if row["gate_passed"] else "FAIL"
                 print(
-                    f"  fraction={fraction:.2f} arm={arm.name:3s} seed={seed} "
-                    f"acc={row['accuracy']:.3f} alpha={row['alpha']:.2f}"
+                    f"  fraction={fraction:.4f} arm={arm.name:3s} seed={seed} "
+                    f"acc={row['accuracy']:.3f} n_lab={row['n_labeled']:5d} "
+                    f"|dW|/|W|={row['weight_delta_ratio']:.4f} gate={gate}"
                 )
 
     summary = {
-        "experiment": "arbiter synergy benchmark (sMNIST, fixed permutation, few labels)",
+        "experiment": "arbiter synergy benchmark v2 (sMNIST, fixed permutation, few labels)",
         "chance": CHANCE,
-        "config": {
-            "epochs": args.epochs,
-            "batch": args.batch,
-            "n_shared": args.shared,
-        },
+        "gate_ratio": GATE_RATIO,
+        "config": {"epochs": args.epochs, "batch": args.batch, "n_shared": args.shared},
         "rows": results,
         "repro": collect(
-            "仲裁器协同性基准（P0）",
+            "仲裁器协同性基准 v2",
             seeds=args.seeds,
             elapsed_s=time.perf_counter() - started,
-            notes=["固定随机置换；分层少量标签；三臂共用 relu(x@W) 特征与同一 delta 读出"],
-            device=torch.device(args.device),
+            notes=[
+                "固定随机置换；分层少量标签",
+                "共用闭式岭回归读出；逐时间步整流特征；门禁 |dW|/|W| >= 0.05",
+            ],
         ).render_block(),
     }
     args.out.mkdir(parents=True, exist_ok=True)
