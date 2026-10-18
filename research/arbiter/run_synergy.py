@@ -35,6 +35,7 @@ import numpy as np
 import torch
 
 from research.arbiter.es_arbiter import ESArbiter
+from research.arbiter.separability import fisher_ratio, linear_probe_accuracy
 from research.arbiter.synergy_task import label_mask, make_permutation, permute_inputs
 from research.common.provenance import collect
 from research.eprop.tasks import load_smnist
@@ -214,13 +215,23 @@ def run_arm(
             # 权重算起，更新永远累积不起来（门禁实测 |dW|/|W| = 0.0000 才发现的）。
             weight = harness.shared_weight
 
+    # 可分性：用**全部训练标签**测表示本身（训练时规则只见到有标签子集，见规格）。
     train_features = features(train_inputs, harness.shared_weight)
+    all_labels = labels.numpy()
+    fisher = fisher_ratio(train_features, all_labels)
+    probe = linear_probe_accuracy(train_features, all_labels)
+
+    # 初始权重的对照：没有它，就分不清"规则改善了表示"与"随机投影本来就这样"。
+    init_features = features(train_inputs, initial)
+    fisher_init = fisher_ratio(init_features, all_labels)
+    probe_init = linear_probe_accuracy(init_features, all_labels)
+
     test_features = features(test_inputs, harness.shared_weight)
     accuracy, n_labeled = _ncm_accuracy(
-        train_features[mask], labels.numpy()[mask], test_features, test.labels.numpy()
+        train_features[mask], all_labels[mask], test_features, test.labels.numpy()
     )
     ridge_accuracy, _ = _ridge_accuracy(
-        train_features[mask], labels.numpy()[mask], test_features, test.labels.numpy()
+        train_features[mask], all_labels[mask], test_features, test.labels.numpy()
     )
     delta_ratio = float((harness.shared_weight - initial).norm() / (initial.norm() + 1e-12))
     return {
@@ -230,6 +241,10 @@ def run_arm(
         "seed": seed,
         "accuracy": accuracy,
         "ridge_accuracy": ridge_accuracy,
+        "fisher": fisher,
+        "probe": probe,
+        "fisher_init": fisher_init,
+        "probe_init": probe_init,
         "n_labeled": n_labeled,
         "alpha": float(harness.arbiter.alpha),
         "weight_delta_ratio": delta_ratio,
@@ -273,8 +288,9 @@ def main(argv: list[str] | None = None) -> int:
                 results.append(row)
                 gate = "PASS" if row["gate_passed"] else "FAIL"
                 print(
-                    f"  fraction={fraction:.4f} arm={arm.name:3s} seed={seed} "
-                    f"acc={row['accuracy']:.3f} n_lab={row['n_labeled']:5d} "
+                    f"  arm={arm.name:3s} seed={seed} "
+                    f"Fisher={row['fisher']:.3f} (init {row['fisher_init']:.3f})  "
+                    f"probe={row['probe']:.3f} (init {row['probe_init']:.3f})  "
                     f"|dW|/|W|={row['weight_delta_ratio']:.4f} gate={gate}"
                 )
 
