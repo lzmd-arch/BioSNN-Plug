@@ -1,0 +1,16 @@
+{
+  "n": 50000,
+  "encode_s": 36.945190999998886,
+  "build_s": 4.601853699998173,
+  "old_seed_s": 2.2964991000008013,
+  "new_seed_s": 0.07902860000103828,
+  "channel_s": 0.07870720000209985,
+  "seed_positive": 50000,
+  "spread_positive": 50000,
+  "prefilter_s": 0.13620670000091195,
+  "union_size": 5251,
+  "graph_recall_ms": 551.6205999992962,
+  "graph_scanned": 5251,
+  "candidate_floor": 1000,
+  "union_limit": 20000
+}
