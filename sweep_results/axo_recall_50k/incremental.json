@@ -1,0 +1,21 @@
+{
+  "n": 50000,
+  "encode_s": 27.081132300000036,
+  "add_s": 1.1834157000000687,
+  "build_s": 3.5225000999998883,
+  "delta_limit": 512,
+  "first_batch": 100,
+  "first_add_s": 0.15018770000006043,
+  "first_add_ms": 1.5018770000006043,
+  "cached_delta": 100,
+  "recall_ms": 91.17110000011053,
+  "scanned": 1000,
+  "second_add_s": 3.8187255000000278,
+  "second_add_ms": 9.268751213592301,
+  "before_merge_delta": 512,
+  "merge_s": 3.531312299999854,
+  "merged_delta": 0,
+  "merged_recall_ms": 147.9597999998532,
+  "merged_scanned": 1000,
+  "total": 50513
+}
