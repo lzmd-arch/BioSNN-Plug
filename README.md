@@ -156,6 +156,8 @@ flowchart TB
 pip install biosnn-bus
 ```
 
+> ⚠️ **依赖安全提醒（2026-10）**：CA 厂商 eMudhra 的中间证书私钥被攻破（签发根为 emSign ECC Root CA - G3），`certifi < 2026.10.19` 仍信任这条链；本仓已锁到 `certifi 2026.10.19`，自己环境里的旧包请执行 `pip install -U "certifi>=2026.10.19"`（用 uv 的重新 `uv sync`）。
+
 （要从 `main` 装**尚未发布**的改动，才走 Git：`pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"`）
 
 一个模态插件就是三个方法加两个属性：
