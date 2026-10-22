@@ -1,0 +1,52 @@
+{
+  "n": 50000,
+  "encode_s": 29.804771600000095,
+  "add_s": 1.0716069000045536,
+  "graph_s": 170.65533080000023,
+  "graph_nodes": 50000,
+  "graph_edges": 400000,
+  "top_m": 8,
+  "min_weight": 0.1,
+  "records": [
+    {
+      "weight": 0.25,
+      "queries": 20,
+      "capped": {
+        "hit1": 0.75,
+        "hit8": 0.95,
+        "mrr": 0.8208333333333332,
+        "mean_ms": 418.895099999645,
+        "scanned": 5640.1
+      },
+      "uncapped": {
+        "hit1": 0.75,
+        "hit8": 0.95,
+        "mrr": 0.8208333333333332,
+        "mean_ms": 2184.4248950015754,
+        "scanned": 50000.0
+      },
+      "top1_same": 1.0,
+      "top8_same": 1.0
+    },
+    {
+      "weight": 1.0,
+      "queries": 20,
+      "capped": {
+        "hit1": 0.35,
+        "hit8": 0.5,
+        "mrr": 0.4,
+        "mean_ms": 581.1320650020207,
+        "scanned": 5640.1
+      },
+      "uncapped": {
+        "hit1": 0.35,
+        "hit8": 0.5,
+        "mrr": 0.4,
+        "mean_ms": 2647.0848749981087,
+        "scanned": 50000.0
+      },
+      "top1_same": 1.0,
+      "top8_same": 1.0
+    }
+  ]
+}
