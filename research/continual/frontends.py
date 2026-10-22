@@ -114,6 +114,9 @@ def resnet18_features(
             rows.append(model(batch).cpu().numpy().astype(np.float64))
     features = np.concatenate(rows, axis=0)
     features /= np.linalg.norm(features, axis=1, keepdims=True) + 1e-12
+    # 存 float32：高维特征（2048 维 × 5 万）用 float64 会把内存吃光（实测 819 MB 加载即 OOM），
+    # 而欧氏/余弦距离在这个精度上无实质差别。
+    features = features.astype(np.float32)
 
     if cache is not None:
         cache.parent.mkdir(parents=True, exist_ok=True)
@@ -121,6 +124,8 @@ def resnet18_features(
             cache,
             features=features,
             n=np.array(images.shape[0]),
-            tag=np.array("resnet18-imagenet1k-v1/224-cifar/avgpool"),
+            tag=np.array(tag),
+            # ⚠️ 必须写实际骨干的 tag：写死成 resnet18 会让 resnet50 的缓存被贴错标签，
+            # 既导致它永远不命中（每次重算），也可能被同条数的 resnet18 运行误读。
         )
     return features

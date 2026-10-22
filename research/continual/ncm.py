@@ -61,17 +61,28 @@ class ClassPrototypes:
         但未学过的类本来就不该出现在候选里）。
     """
 
-    def __init__(self, n_classes: int, *, whiten: bool = False, shrinkage: float = 0.1) -> None:
+    def __init__(
+        self,
+        n_classes: int,
+        *,
+        whiten: bool = False,
+        shrinkage: float = 0.1,
+        whiten_mode: str = "diag",
+    ) -> None:
         if n_classes <= 0:
             raise ValueError(f"n_classes 必须为正，收到 {n_classes}。")
         if not 0.0 <= shrinkage <= 1.0:
             raise ValueError(f"shrinkage 应在 [0, 1]，收到 {shrinkage}。")
         self.n_classes = int(n_classes)
+        if whiten_mode not in ("diag", "shared"):
+            raise ValueError(f"whiten_mode 只能是 'diag' 或 'shared'，收到 {whiten_mode!r}。")
         self.whiten = bool(whiten)
         self.shrinkage = float(shrinkage)
+        self.whiten_mode = whiten_mode
         self.sums = np.zeros((n_classes, 0), dtype=np.float64)
         self.counts = np.zeros(n_classes, dtype=np.int64)
         self._second_moment: np.ndarray | None = None
+        self._diag_second: np.ndarray | None = None
         self._n_seen = 0
 
     # ------------------------------------------------------------------ 累加
@@ -92,11 +103,16 @@ class ClassPrototypes:
         # 共享协方差：累加二阶矩（对已见样本，按行标准化前先减自身类均值会在后面做）
         if self.whiten:
             centred = x - np.stack([self._mean_of(y[i]) for i in range(x.shape[0])])
-            self._second_moment = (
-                centred.T @ centred
-                if self._second_moment is None
-                else self._second_moment + centred.T @ centred
-            )
+            if self.whiten_mode == "shared":
+                self._second_moment = (
+                    centred.T @ centred
+                    if self._second_moment is None
+                    else self._second_moment + centred.T @ centred
+                )
+            else:
+                # 对角模式：只累加每维平方和，O(d) 内存。2048 维上完整协方差的 SVD 会 OOM（实测）。
+                diag = (centred**2).sum(axis=0)
+                self._diag_second = diag if self._diag_second is None else self._diag_second + diag
             self._n_seen += x.shape[0]
 
     def _mean_of(self, label: int) -> np.ndarray:
@@ -121,13 +137,19 @@ class ClassPrototypes:
         x = np.asarray(features, dtype=np.float64)
         mu = self.prototypes()
 
-        if self.whiten and self._second_moment is not None and self._n_seen > 1:
+        if self.whiten and self.whiten_mode == "shared" and self._second_moment is not None:
             cov = self._second_moment / self._n_seen + 1e-6 * np.eye(self.sums.shape[1])
             cov = self.shrinkage * np.eye(cov.shape[0]) + (1 - self.shrinkage) * cov
             inverse = np.linalg.pinv(cov)
             # 白化等价于先把双方变换到 Σ^{-1/2} 空间，再用欧氏距离
             root = _symmetric_sqrt(inverse)
             x, mu = x @ root, mu @ root
+        elif self.whiten and self.whiten_mode == "diag" and self._diag_second is not None:
+            # 对角白化：每个维度除以自己的标准差（收缩到 1），O(d) 内存。
+            variance = self._diag_second / max(self._n_seen, 1)
+            variance = self.shrinkage + (1.0 - self.shrinkage) * variance
+            scale = 1.0 / np.sqrt(np.maximum(variance, 1e-8))
+            x, mu = x * scale, mu * scale
 
         # ⚠️ 用 (x−μ)² = ‖x‖² − 2x·μ + ‖μ‖² 展开，**不实例化 (n, C, d) 的三维数组**。
         # 之前直接相减，在 8000×90×1000 上要 5.36 GiB，实测 OOM。

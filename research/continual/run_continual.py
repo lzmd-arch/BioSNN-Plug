@@ -102,6 +102,7 @@ def run_incremental(
     data_root: Path,
     readout_kind: str = "delta",
     whiten: bool = False,
+    whiten_mode: str = "diag",
     freeze_features: bool = False,
 ) -> dict:
     torch.manual_seed(seed)
@@ -111,7 +112,11 @@ def run_incremental(
     tasks = task_classes(n_tasks, 100)
     model = IBHebbianPerceptron(n_in=32 * 32 * 3, width=1024, n_layers=3, n_classes=100).to(device)
     readout = DeltaReadout(1024, 100, learning_rate=0.01)
-    prototypes = ClassPrototypes(100, whiten=whiten) if readout_kind == "ncm" else None
+    prototypes = (
+        ClassPrototypes(100, whiten=whiten, whiten_mode=whiten_mode)
+        if readout_kind == "ncm"
+        else None
+    )
 
     test_x, test_y = _to_tensor(test, device)
     matrix = np.full((n_tasks, n_tasks), np.nan)
@@ -178,6 +183,7 @@ def run_with_frozen_frontend(
     data_root: Path,
     device: torch.device,
     backbone: str = "resnet18",
+    whiten_mode: str = "diag",
 ) -> dict:
     """冻结 ResNet18 前端 + 类原型：**没有特征漂移，也没有逐任务覆盖**。
 
@@ -197,7 +203,7 @@ def run_with_frozen_frontend(
     )
 
     tasks = task_classes(n_tasks, 100)
-    prototypes = ClassPrototypes(100, whiten=whiten)
+    prototypes = ClassPrototypes(100, whiten=whiten, whiten_mode=whiten_mode)
     matrix = np.full((n_tasks, n_tasks), np.nan)
     seen: list[int] = []
     for t, classes in enumerate(tasks):
@@ -284,7 +290,13 @@ def main(argv: list[str] | None = None) -> int:
         help="--features resnet18 时用哪个冻结骨干（resnet18 / resnet50 / vit_b_16）",
     )
     parser.add_argument("--readout", choices=("delta", "ncm"), default="delta")
-    parser.add_argument("--whiten", action="store_true", help="NCM 读出用共享协方差白化")
+    parser.add_argument("--whiten", action="store_true", help="NCM 读出做白化")
+    parser.add_argument(
+        "--whiten-mode",
+        choices=("diag", "shared"),
+        default="diag",
+        help="diag=每维方差（O(d) 内存）；shared=完整协方差（高维会 OOM）",
+    )
     parser.add_argument(
         "--freeze-features",
         action="store_true",
@@ -313,6 +325,7 @@ def main(argv: list[str] | None = None) -> int:
                     n_tasks=args.tasks,
                     limit_per_class=args.limit_per_class,
                     whiten=args.whiten,
+                    whiten_mode=args.whiten_mode,
                     data_root=args.data_root,
                     device=device,
                     backbone=args.backbone,
@@ -344,6 +357,7 @@ def main(argv: list[str] | None = None) -> int:
                     data_root=args.data_root,
                     readout_kind=args.readout,
                     whiten=args.whiten,
+                    whiten_mode=args.whiten_mode,
                     freeze_features=args.freeze_features,
                 )
             )
