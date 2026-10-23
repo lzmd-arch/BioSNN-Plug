@@ -213,3 +213,10 @@ The following problems belong to the **body of `BioSNN-Plug_项目计划书_v6.2
 | §7 phase 4 task line | **Predictive E-prop** listed alongside "metacognitive gating" | That paper contains **zero** occurrences of metacognition / forgetting / working memory, so the pairing is a misattribution. v6.3 keeps metacognitive gating (grounded in this project's own §2.2/§3.4) and moves Predictive E-prop, per its self-description ("a learning principle"), into the §3.1 list of e-prop variants; the task line now carries **event priority** (ESPP's selective time-step updates) |
 | §3.1, §8 | "Event priority" written as if it were a term from some paper | No such term exists in the 2025-2026 spiking literature (seven papers checked word by word; `priorit*` hits 0/0/0/1/0/0/0). v6.3 writes it as ESPP's mechanism and states that "event priority" is this project's Chinese paraphrase, not a literature term |
 | §3.2 | "R-STDP not only fails to learn, it even leads to **forgetting skills already learned**" (Chinese paraphrase) | The baseline in Figure 2A is the **untrained** uniform-weight network; the phenomenon is "performance after learning falls below the pre-learning level", which the paper itself calls "unlearning of the task" (its own definition: "If the network performs worse than this level after learning, it has effectively unlearned."). Say "performance after learning **falls below the untrained level**"; do **not** write "forgets skills already learned" — that is catastrophic forgetting, which Figure 2A does not support. Already rewritten this way in v6.3 §3.2 |
+
+## Open items from the scans (2026-10-24)
+
+| Item | Description | Status |
+| :--- | :--- | :--- |
+| Loihi 3 | A February 2026 blog mentions it; earlier authoritative sources say it has not been announced — the two contradict each other | `unverified`: verify before any external citation; if it cannot be verified, do not put it in the manuscript |
+| Spiking-LLM energy figures | QuantaSpike / SDLLM / SpikingMamba report energy under different scopes (whole system / chip / per step) | `partial`: check the scope paper by paper; **never merge numbers across papers** |

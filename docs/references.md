@@ -175,3 +175,10 @@ Tihomirov et al. 2025，与 [12] 冲突。对抗性复核推翻了这两个归�
 | §七 第四阶段任务行 | 把 **Predictive E-prop** 与「元认知门控」并列 | 该文全文 **0 次** metacognition / forgetting / working memory，挂在这里是误引。v6.3 已改：元认知门控保留（依据是本项目自己的 §2.2/§3.4），Predictive E-prop 按论文自定位（a learning principle）移入 §3.1 的 e-prop 变体，任务行补入**事件优先级**（ESPP 的选择性时间步更新）|
 | §3.1、§八 | 「事件优先级」若被写成某篇论文的术语 | 2025–2026 脉冲网络文献里没有这个术语（七篇逐字核过，`priorit*` 命中 0/0/0/1/0/0/0）。v6.3 已按 ESPP 的机制写，并注明「事件优先级」是本项目的中文转述而非文献术语 |
 | §3.2 | 「R-STDP 不仅无法学习，还会导致**遗忘已学会的技能**」（中文转述） | 原文 Figure 2A 的基准是**未训练**的均匀权重，现象是「学习后的表现跌到学习前之下」，原文自用词为 "unlearning of the task"（该文对它的定义："If the network performs worse than this level after learning, it has effectively unlearned."）。应改成「学习后的表现**跌到未训练水平之下**」，**不要写成「遗忘已学技能」**——那是灾难性遗忘，Figure 2A 不支撑。v6.3 §3.2 已按此改写 |
+
+## 扫描开放项（2026-10-24）
+
+| 项 | 描述 | 状态 |
+| :--- | :--- | :--- |
+| Loihi 3 | 2026-02 有一篇博客提到它，早前权威来源说尚未发布——两种说法互相矛盾 | `unverified`：对外引用前必须先核，核不到就不要写进正文 |
+| Spiking-LLM 能耗口径 | QuantaSpike / SDLLM / SpikingMamba 等各自报的能耗，口径不同（整系统 / 芯片 / 单步） | `partial`：逐篇核口径，**不得跨论文合并数字** |
