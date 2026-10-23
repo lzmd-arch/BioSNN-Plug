@@ -13,6 +13,19 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.ipynb)
 
+## 发表与存档
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23429379.svg)](https://doi.org/10.5281/zenodo.23429379)
+
+| 产出 | 类型 / 许可 | 标识 | 状态 |
+| :--- | :--- | :--- | :--- |
+| **P2 论文**：W2 e-prop 与同预算 BPTT 的对照 | 预印本 / CC-BY-4.0 | [10.5281/zenodo.23429379](https://doi.org/10.5281/zenodo.23429379) | 已发表（v1.1，2026-10-17） |
+| **记录 A**：W2 发现与协议快照 | 报告 / Apache-2.0 | [10.5281/zenodo.23428426](https://doi.org/10.5281/zenodo.23428426) | 已发布（v0.2，2026-10-17） |
+| **记录 C**：P4 设计笔记（仲裁形式化、协同性基准判据、三条裁决） | 报告 / Apache-2.0 | — | 待存：基准规格预注册定稿、开跑之前 |
+| **记录 D**：架构与设计决策存证（计划书 v6.3、ADR 索引、四轴框架） | Other | — | 待存 |
+
+⚠️ 存档是**不可变快照**，记的是存款当时的状态；当前数字以本 README 与[复现记录](docs/reproducibility.md)为准。
+
 ## 这是什么
 
 研究原型，验证一个问题：**智能能否从纯局部学习规则中生长出来，并学会借助外部推理扩展自身边界？**
@@ -55,7 +68,7 @@
 | :--- | :--- |
 | `biosnn-bus` 骨架库 | **0.3.0（仓库内，含音频插件；PyPI 上仍是 0.2.0）**——插件接口、注册与发现、脉冲总线、**TAAF 时间注意力融合**（rate-based gating，权重由各路发放率现算，**无反向传播**） |
 | 模态插件 | **四路**：`image_diff`（DVS 事件编码）、`mnist_pulse`（发放率）、**`text_zscore`**（冻结本地 embedding + z-score top-k 群体编码）、**`audio_cochlea`**（对数频带分解 + 发放率；未发布到 PyPI） |
-| 研究代码：三条验证线 | **第一阶段实现完成**——W1 Hebbian 感知 MNIST **97.79%**（默认闭式解读出；SGD 读出 98.01%）✓；W2 e-prop 序列 sMNIST **0.7764**（30 epoch × 5 种子）→ **0.8889**（**官方收官**：**LIF** @ lr=1e-2 @ 250 epoch，已收敛；同档 ALIF 0.8831 为对照）；lr 交互扫描完成，**LIF 在四档 lr 上全网格领先** ✓；W3 R-STDP CartPole 中位数 **237.8 步**（阈值 ≥ 200）✓。数字与复现记录见[复现记录](docs/reproducibility.md) |
+| 研究代码：三条验证线 | **第一阶段实现完成**——W1 Hebbian 感知 MNIST **97.79%**（默认闭式解读出；SGD 读出 98.01%）✓；W2 e-prop 序列 sMNIST **0.7764**（30 epoch × 5 种子）→ **0.8889**（**官方收官**：**LIF** @ lr=1e-2 @ 250 epoch，已收敛；同档 ALIF 0.8831 为对照；**同预算 BPTT 对照 0.9630，领先 7.41 个百分点**，这条差距照实写：局部规则仍落后于反向传播）；lr 交互扫描完成，**LIF 在四档 lr 上全网格领先** ✓；W3 R-STDP CartPole 中位数 **237.8 步**（阈值 ≥ 200）✓。数字与复现记录见[复现记录](docs/reproducibility.md) |
 | **网络规模** | **256 个脉冲神经元**（W2）；W1 另有 3,072 个**速率型**单元（不算脉冲神经元）。计划书 §2.2 的认知核心目标是约 5 万——**差约 195 倍**，详见 [research/README](research/README.md) |
 | 仲裁器 | **零件就位**（`research/arbiter/`）：冲突判定（余弦 > 90°）+ ES 元学习仲裁器，**已接进两条研究线**（共享输入突触）。⚠️ 但只共享输入→隐藏一处，且「减少冲突事件 50%」在合成数据上是**平凡成立**的——见该目录 README |
 | 执行层脉冲化（第三阶段） | **入口、线性 TD Critic、TD-LTP 群体 Critic 均已就位，但一个都没过 200。**⚠️ **2026-10-18 之前的数字全部作废**：训练回合漏了环境种子，同种子两次轨迹不同；修复后 **10 种子对照**：线性 TD 中位数 50.4、群体默认 55.0、工作点 37.1——**区间全部重叠、均 0/10**，三个主臂分不开。速率版中位数 237.8 仍是唯一通过验收的实现。见 [research/rstdp_spiking](research/rstdp_spiking/README.md) |
@@ -93,7 +106,7 @@ flowchart TB
     end
 
     subgraph L3["认知层（认知核心）"]
-        WM["工作记忆<br/>RSNN + ALIF + e-prop<br/>◐ 第一阶段：学习规则已验证（W2）<br/>⬜ 多层 RSNN 与工作记忆回路"]
+        WM["工作记忆<br/>RSNN + LIF（默认；ALIF 待重评估）+ e-prop<br/>◐ 第一阶段：学习规则已验证（W2）<br/>⬜ 多层 RSNN 与工作记忆回路"]
         EM["情景记忆<br/>模式分离 + 神经发生<br/>⬜ 第四阶段"]
         MG["元认知门控<br/>不确定性监控<br/>⬜ 第四阶段"]
     end

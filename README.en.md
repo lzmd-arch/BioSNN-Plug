@@ -17,6 +17,19 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lzmd-arch/BioSNN-Plug/blob/main/examples/quickstart_register_plugin.en.ipynb)
 
+## Publications and deposits
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23429379.svg)](https://doi.org/10.5281/zenodo.23429379)
+
+| Output | Type / licence | Identifier | Status |
+| :--- | :--- | :--- | :--- |
+| **P2 paper**: W2 e-prop against a matched-budget BPTT control | Preprint / CC-BY-4.0 | [10.5281/zenodo.23429379](https://doi.org/10.5281/zenodo.23429379) | Published (v1.1, 2026-10-17) |
+| **Record A**: W2 findings and protocol snapshot | Report / Apache-2.0 | [10.5281/zenodo.23428426](https://doi.org/10.5281/zenodo.23428426) | Published (v0.2, 2026-10-17) |
+| **Record C**: P4 design notes (arbiter formalisation, synergy criteria, three rulings) | Report / Apache-2.0 | — | Pending: before the benchmark spec is frozen and run |
+| **Record D**: architecture and design-decision record (plan v6.3, ADR index, four-axis frame) | Other | — | Pending |
+
+⚠️ A deposit is an **immutable snapshot** of the moment it was made; current numbers live in this README and the [reproducibility record](docs/reproducibility.en.md).
+
 ## What this is
 
 A research prototype testing one question: **can intelligence grow out of purely local
@@ -63,7 +76,7 @@ precisely so this table cannot be read as "we have already done it".
 | :--- | :--- |
 | `biosnn-bus` skeleton library | **0.3.0 in the repo (adds the audio plugin); PyPI still serves 0.2.0** — plugin interface, registration and discovery, spike bus, **TAAF temporal-attention fusion** (rate-based gating: weights come from each path's firing rate, **no backpropagation**) |
 | Modality plugins | **Four**: `image_diff` (DVS event coding), `mnist_pulse` (firing rates), **`text_zscore`** (frozen local embedding + z-score top-k population coding), **`audio_cochlea`** (log-spaced band decomposition + firing rates; not yet on PyPI) |
-| Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **97.79%** (default closed-form readout; SGD readout 98.01%) ✓; W2 e-prop sequential sMNIST **0.7764** (30 epochs x 5 seeds) -> **0.8889** (**official**: **LIF** @ lr=1e-2 @ 250 epochs, converged; ALIF 0.8831 same budget as control); learning-rate interaction swept, **LIF leads across the whole grid** ✓; W3 R-STDP CartPole median **237.8 steps** (criterion ≥ 200) ✓. Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) |
+| Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **97.79%** (default closed-form readout; SGD readout 98.01%) ✓; W2 e-prop sequential sMNIST **0.7764** (30 epochs x 5 seeds) -> **0.8889** (**official**: **LIF** @ lr=1e-2 @ 250 epochs, converged; ALIF 0.8831 same budget as control; **matched-budget BPTT control 0.9630, 7.41 points ahead** — stated as measured: the local rule still trails backpropagation); learning-rate interaction swept, **LIF leads across the whole grid** ✓; W3 R-STDP CartPole median **237.8 steps** (criterion ≥ 200) ✓. Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) |
 | **Network scale** | **256 spiking neurons** (W2); W1 adds 3,072 **rate-based** units (not spiking neurons). The plan's §2.2 cognitive-core target is about 50k -- a gap of roughly **195x**, see [research/README](research/README.en.md) |
 | Arbiter | **Parts in place** (`research/arbiter/`): conflict detection (cosine > 90 degrees) + ES meta-learned arbiter, **wired into both research lines** (a shared input synapse). Warning: only the input->hidden mapping is shared, and "50% fewer conflict events" is **trivially satisfied** on synthetic data -- see that directory's README |
 | Cross-modal retrieval | **R@K protocol in place** (`research/retrieval/metrics.py`); **no dataset wired up yet** |
@@ -111,7 +124,7 @@ flowchart TB
     end
 
     subgraph L3["Cognitive layer (cognitive core)"]
-        WM["Working memory<br/>RSNN + ALIF + e-prop<br/>◐ phase 1: learning rule verified (W2)<br/>⬜ multi-layer RSNN and working-memory circuit"]
+        WM["Working memory<br/>RSNN + LIF (default; ALIF under re-evaluation) + e-prop<br/>◐ phase 1: learning rule verified (W2)<br/>⬜ multi-layer RSNN and working-memory circuit"]
         EM["Episodic memory<br/>pattern separation + neurogenesis<br/>⬜ phase 4"]
         MG["Metacognitive gating<br/>uncertainty monitoring<br/>⬜ phase 4"]
     end
