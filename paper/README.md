@@ -536,6 +536,19 @@ paper, and it forced one licence onto files that have two different native ones.
   record's own description opens with a “What changed in v1.1” paragraph, so a reader landing on
   either version can see which one they have.
 
+- **Record C — the P4 design notes. Zenodo: PUBLISHED 2026-10-24.** Version DOI
+  **`10.5281/zenodo.23603639`**, concept DOI `10.5281/zenodo.23603638`, `publication_type = report`, licence
+  Apache-2.0, three attachments (`arbiter_DESIGN.md` 4,080 B; `synergy_task_spec.md` 14,130 B;
+  `ADR-0013.md` 3,087 B), md5-verified from Zenodo's **public** API after publishing. This is a
+  design record, not a results record: it fixes the arbiter formalisation, the native point, the
+  alpha sign convention, the run gate, the synergy criterion and why the criterion changed &mdash;
+  all written before the multi-seed run. The three 2026-10-18 scope rulings live in `ADR-0013.md`.
+- **Record D — architecture and design decisions. Zenodo: PUBLISHED 2026-10-24.** Version DOI
+  **`10.5281/zenodo.23603642`**, concept DOI `10.5281/zenodo.23603641`, `upload_type = other`, licence Apache-2.0,
+  16 attachments: the plan v6.3 snapshot (123,852 B), the ADR index, ADR-0001 to ADR-0013 in their
+  Chinese originals, and the README snapshot carrying the four-axis framing. The point is prior
+  art: git timestamps are rewritable and are not an independent third party.
+
 **Standing items for B:**
 
 1. **Contact method = the GitHub repository URL, not an email.** It replaces the author block's
