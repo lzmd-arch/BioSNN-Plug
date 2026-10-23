@@ -44,3 +44,4 @@ Michael Nygard の古典的な 4 段構成を採用します：
 | [ADR-0010](ADR-0010-eprop-quadratic-storage-and-trace-propagation.ja.md) | e-prop の二次記憶量は成立するが、§3.1 の是正措置（Trace Propagation の採用）は採用しない | 承認済み |
 | [ADR-0011](ADR-0011-gas-modality-as-out-of-repo-plugin.ja.md) | ガス（化学センシング）モダリティはリポジトリ外のサードパーティパッケージとして提供し、packages/ には置かない | 承認済み |
 | [ADR-0012](ADR-0012-taaf-locality-and-bus-output-contract.ja.md) | TAAF の局所性のレッドライン、未決の射影層の学習規則、`SpikeBus` 出力形状の契約 | 部分採用 |
+| [ADR-0013](ADR-0013-synergy-benchmark-priority-and-arbiter-scope.ja.md) | 協同性ベンチマークを P0 へ；共有インターフェース案は却下（反対事実アームのみ）；三者混合は第 5 フェーズ据え置き | 採択済み |

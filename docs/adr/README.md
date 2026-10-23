@@ -41,3 +41,4 @@
 | [ADR-0010](ADR-0010-eprop-quadratic-storage-and-trace-propagation.md) | e-prop 的二次存储成立，但 §3.1 的补救措施（上 Trace Propagation）不采纳 | 已采纳 |
 | [ADR-0011](ADR-0011-gas-modality-as-out-of-repo-plugin.md) | 气体（化学传感）模态以仓库外第三方包提供，不进 packages/ | 已采纳 |
 | [ADR-0012](ADR-0012-taaf-locality-and-bus-output-contract.md) | TAAF 的局部性红线、投影层训练规则（待决）、`SpikeBus` 输出形状契约 | 部分采纳 |
+| [ADR-0013](ADR-0013-synergy-benchmark-priority-and-arbiter-scope.md) | 协同性基准升为 P0；共享接口方案否（仅作反事实臂）；三方混合维持阶段五 | 已采纳 |
