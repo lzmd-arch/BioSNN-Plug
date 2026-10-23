@@ -1,0 +1,61 @@
+# 协同性基准 v3 结果（2026-10-24）
+
+**判据与协议见 [`../arbiter_synergy_task_spec.md`](../arbiter_synergy_task_spec.md)。**
+本文件只记这次跑出来的数，不重新解释判据。
+
+## 跑法
+
+```bash
+# 五条并行，各 40 epoch、5 种子、1% 标签
+uv run python -m research.arbiter.run_synergy --arms H --epochs 40 --seeds 0,1,2,3,4 --out sweep_results/arbiter_synergy/H
+uv run python -m research.arbiter.run_synergy --arms E --epochs 40 --seeds 0,1,2,3,4 --out sweep_results/arbiter_synergy/E
+uv run python -m research.arbiter.run_synergy --arms MIX --epochs 40 --seeds 0,1,2,3,4 --out sweep_results/arbiter_synergy/MIX
+uv run python -m research.arbiter.run_synergy --arms MIX --no-fit-alpha --epochs 40 --seeds 0,1,2,3,4 --out sweep_results/arbiter_synergy/MIX_frozen
+uv run python -m research.arbiter.run_synergy --arms MIX --shuffle-labels --epochs 40 --seeds 0,1,2,3,4 --out sweep_results/arbiter_synergy/MIX_shuffle
+uv run python -m research.arbiter.summarise_synergy
+```
+
+## 数字
+
+| 组 | 种子（作废的另计） | Fisher 中位数 [q1, q3] |
+| :--- | :--- | :--- |
+| H | 0,1,2,3,4 | **0.472** [0.471, 0.472] |
+| E | 0,1,2,4（**seed 3 作废**，‖ΔW‖/‖W‖ = 0.0474 < 0.05） | 0.331 [0.327, 0.337] |
+| MIX | 0,1,2,3,4 | **0.651** [0.636, 0.652] |
+| MIX_frozen | 0,1,2,3,4 | **0.651** [0.636, 0.652] |
+| MIX_shuffle | 无（**5 个种子全部作废**，‖ΔW‖/‖W‖ = 0.023–0.034） | — |
+
+**协同量**（按种子成对，`Fisher(MIX) − max(Fisher(H), Fisher(E))`）：中位数 **+0.179**
+[+0.175, +0.182]，四个种子 +0.163…+0.190。
+
+**判据**：δ = 0.05 ✅（+0.179）；分离 ✅（MIX 下四分位 0.636 > H 上四分位 0.472）。**两条都过。**
+
+## 但这份结果只能支撑一半的结论
+
+### 一、仲裁器在这套配置下**没有任何作用**
+
+MIX（ES 学 α）与 MIX_frozen（α 冻结 0.5）**逐位相同**：`Fisher` 到小数点后四位一致，
+`‖ΔW‖/‖W‖` 一致，α 精确等于 `0.5`，五个种子无一例外。
+
+原因是 ES 的目标函数是**整数冲突事件数**：σ=0.1 的扰动常常不改变这个整数，
+于是"候选不比当前更好"，α 一次都没动过。**这不是"学出来 0.5 恰好最优"，是"根本没动"。**
+
+所以能说的是：**把两条规则按 50/50 混起来，表示的可分性明显优于任一单独使用**；
+不能说的是：**仲裁器学会了怎么混**。
+
+### 二、打乱标签对照**整组作废**
+
+五个种子的 ‖ΔW‖/‖W‖ 都低于门禁（0.023–0.034），按预注册不进统计。
+观察到的方向（不作结论）：Fisher ≈ 0.0001–0.0003，权重几乎不动——
+**标签一旦被打乱，这两条规则就没有可学的东西了**，与"混合在用标签"一致。
+
+### 三、E 臂有一个种子作废
+
+seed 3 的 ‖ΔW‖/‖W‖ = 0.0474，压在 0.05 的门槛下。协同量因此只在四个种子上成对计算——
+报告里必须写出这一点，否则"5 个种子"会变成没发生过的事。
+
+## 这份结果**不**声称什么
+
+* 不声称仲裁器有价值（对照否掉了，见上）；
+* 不声称"单方失败"——H 单独就把 Fisher 从 0.309 抬到 0.472，这条原判据在 2026-10-18 就已被实测否掉；
+* 不声称能推广到别的任务、别的形状或别的标签比例——本轮只跑 1% 标签、固定随机置换。

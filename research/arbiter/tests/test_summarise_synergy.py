@@ -109,3 +109,22 @@ def test_controls_are_reported_relative_to_mix() -> None:
 
     assert result["controls"]["MIX_frozen"]["vs_mix"] == pytest.approx(-0.15)
     assert result["controls"]["MIX_shuffle"]["vs_mix"] == pytest.approx(-0.50)
+
+
+def test_separation_compares_mix_quartile_not_synergy_quartile() -> None:
+    """分离判据比的是 MIX 的 Fisher 下四分位，不是协同量的下四分位。
+
+    第一版实现拿了协同量的 q1（≈0.10）去比臂的 q3（0.50），于是判据恒假——
+    两个量的量纲根本不是一回事。这里钉住正确的那个。
+    """
+    groups = _groups(
+        mix={0: 0.70, 1: 0.72, 2: 0.68, 3: 0.69, 4: 0.71},
+        h=dict.fromkeys(range(5), 0.50),
+        e=dict.fromkeys(range(5), 0.60),
+    )
+
+    result = summarise(groups)
+
+    assert result["synergy"]["q1"] < 0.50  # 协同量确实远低于臂的 q3
+    assert result["criterion"]["separation_ok"] is True
+    assert result["criterion"]["passed"] is True

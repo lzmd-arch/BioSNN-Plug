@@ -65,6 +65,9 @@ uv run pytest research/arbiter -q                  # 32 条测试
 * **三方混合与调度维度维持阶段五**，本轮不动。
 * 基础设施保留：43 条测试、per-row cosine、`retention` 与冲突联合报告，**照旧**。
 
+4. **协同性基准（v3，2026-10-24，五种子）**：**MIX 的 Fisher 0.651 明显高于 H 的 0.472 与 E 的 0.331**（协同量中位数 **+0.179**，δ=0.05 与分离两条判据都过）。⚠️ **但 ES 学出来的 α 与冻结 0.5 逐位相同**——目标是整数冲突事件数，σ=0.1 的扰动改变不了它，α 一步没动。所以这一轮证明的是「**固定 50/50 混合**优于任一单臂」，**不是**「仲裁器学会了怎么混」。
+   数字与对照见 [`sweep_results/arbiter_synergy/`](../../sweep_results/arbiter_synergy/README.md)。
+
 ## 已知边界
 
 1. **只做了第 1 类（Hebbian ↔ e-prop）。** 第 2–3 类（e-prop ↔ R-STDP、Hebbian ↔ R-STDP）

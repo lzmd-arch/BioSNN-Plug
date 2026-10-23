@@ -107,9 +107,13 @@ def summarise(groups: dict[str, list[dict]], *, delta: float = SYNERGY_DELTA) ->
     synergy = {seed: mix[seed] - max(hebbian[seed], eprop[seed]) for seed in seeds}
     q1, median, q3 = quartiles(list(synergy.values()))
 
+    # ⚠️ 分离判据比较的是 **MIX 的 Fisher 下四分位** 与 H/E 的上四分位，
+    # 不是协同量的四分位。第一版写成了后者：协同量 q1 ≈ 0.175 被拿去和臂的 q3 ≈ 0.472 比，
+    # 判据必然为假——两个量纲都不是一回事。
+    mix_q1 = per_group["MIX"]["q1"]
     best_arm_q3 = max(per_group["H"]["q3"], per_group["E"]["q3"])
     delta_ok = bool(np.isfinite(median) and median >= delta)
-    separation_ok = bool(np.isfinite(q1) and np.isfinite(best_arm_q3) and q1 > best_arm_q3)
+    separation_ok = bool(np.isfinite(mix_q1) and np.isfinite(best_arm_q3) and mix_q1 > best_arm_q3)
 
     result["synergy"] = {
         "per_seed": {seed: float(value) for seed, value in synergy.items()},
@@ -122,6 +126,7 @@ def summarise(groups: dict[str, list[dict]], *, delta: float = SYNERGY_DELTA) ->
         "delta_ok": delta_ok,
         "separation_ok": separation_ok,
         "passed": bool(delta_ok and separation_ok),
+        "mix_q1": mix_q1,
         "best_arm_q3": best_arm_q3,
     }
 
