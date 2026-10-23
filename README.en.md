@@ -70,17 +70,31 @@ Legend: **✅ implemented, with acceptance data** · **◐ partial** (mechanism 
 "continual learning" in phase 3, and **neither is implemented yet**. The marks are kept separate
 precisely so this table cannot be read as "we have already done it".
 
+## Research positioning
+
+"Why does intelligence emerge?" is split into four axes: **substrate** (scale, dimensionality,
+synapse count), **dynamics** (global state variables that bias learning — hormones, affect,
+consolidation, instinct), **organisation** (genetic pre-wiring, regionalisation, turnover,
+self-proliferation) and **grounding** (physical rules, real perception, modality fidelity). If
+they relate at all, the relation is **multiplicative**: any axis at zero caps the whole.
+
+**Our bet**: leave the substrate race — it lacks neither entrants nor compute — and spend the
+resources on **whether dynamics x organisation can substitute for substrate**, by building an
+instrument that can measure that question. If the answer is yes, scale is not the cause of
+emergence but the size a particular organisation permits.
+
 ## Status
 
-| Part | Status |
-| :--- | :--- |
-| `biosnn-bus` skeleton library | **0.3.0 in the repo (adds the audio plugin); PyPI still serves 0.2.0** — plugin interface, registration and discovery, spike bus, **TAAF temporal-attention fusion** (rate-based gating: weights come from each path's firing rate, **no backpropagation**) |
-| Modality plugins | **Four**: `image_diff` (DVS event coding), `mnist_pulse` (firing rates), **`text_zscore`** (frozen local embedding + z-score top-k population coding), **`audio_cochlea`** (log-spaced band decomposition + firing rates; not yet on PyPI) |
-| Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **97.79%** (default closed-form readout; SGD readout 98.01%) ✓; W2 e-prop sequential sMNIST **0.7764** (30 epochs x 5 seeds) -> **0.8889** (**official**: **LIF** @ lr=1e-2 @ 250 epochs, converged; ALIF 0.8831 same budget as control; **matched-budget BPTT control 0.9630, 7.41 points ahead** — stated as measured: the local rule still trails backpropagation); learning-rate interaction swept, **LIF leads across the whole grid** ✓; W3 R-STDP CartPole median **237.8 steps** (criterion ≥ 200) ✓. Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) |
-| **Network scale** | **256 spiking neurons** (W2); W1 adds 3,072 **rate-based** units (not spiking neurons). The plan's §2.2 cognitive-core target is about 50k -- a gap of roughly **195x**, see [research/README](research/README.en.md) |
-| Arbiter | **Parts in place** (`research/arbiter/`): conflict detection (cosine > 90 degrees) + ES meta-learned arbiter, **wired into both research lines** (a shared input synapse). Warning: only the input->hidden mapping is shared, and "50% fewer conflict events" is **trivially satisfied** on synthetic data -- see that directory's README |
-| Cross-modal retrieval | **R@K protocol in place** (`research/retrieval/metrics.py`); **no dataset wired up yet** |
-| Cognitive core / LLM orchestration | **Not started** — see the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §7 |
+| Part | Status | Last update |
+| :--- | :--- | :--- |
+| `biosnn-bus` skeleton library | **0.3.0 in the repo (adds the audio plugin); PyPI still serves 0.2.0** — plugin interface, registration and discovery, the spike bus, **TAAF temporal-attention fusion** (rate-based gating; weights computed from each stream's firing rate, **no backpropagation**) | 2026-10-18 |
+| Modality plugins | **Four**: `image_diff` (DVS event coding), `mnist_pulse` (firing rates), **`text_zscore`** (frozen local embedding + z-score top-k population coding), **`audio_cochlea`** (log-band decomposition + firing rates; not yet on PyPI) | 2026-10-18 |
+| Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **97.79%** (default closed-form readout; SGD readout 98.01%) ✓; W2 e-prop sequential sMNIST **0.7764** (30 epochs x 5 seeds) -> **0.8889** (**official**: **LIF** @ lr=1e-2 @ 250 epochs, converged; ALIF 0.8831 same budget as control; **matched-budget BPTT control 0.9630, 7.41 points ahead** — stated as measured: the local rule still trails backpropagation); learning-rate interaction swept, **LIF leads across the whole grid** ✓; W3 R-STDP CartPole median **237.8 steps** (criterion >= 200) ✓. Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) | 2026-10-18 |
+| **Network scale** | **256 spiking neurons** (W2); W1 adds 3,072 **rate-based** units (not spiking neurons). The plan's §2.2 cognitive core targets roughly 50,000 — **about 195x away**; see [research/README](research/README.en.md) | 2026-10-18 |
+| Arbiter | **Parts in place** (`research/arbiter/`): conflict detection (cosine > 90 degrees) + ES meta-learned arbiter, **wired into two research lines** (shared input synapses). ⚠️ Only the input->hidden weight is shared, and "50% fewer conflict events" holds **trivially** on synthetic data — see that directory's README | 2026-10-24 |
+| Spiking execution layer (phase three) | **Entry point, linear TD critic and the TD-LTP population critic are all in place, but none of them clears 200.** ⚠️ **Every number before 2026-10-18 is void**: training episodes were missing an environment seed, so one seed produced different trajectories. After the fix, a **10-seed comparison**: linear TD median 50.4, population default 55.0, operating point 37.1 — **all intervals overlap, all 0/10**; the three main arms are indistinguishable. The rate-based version's median of 237.8 remains the only implementation that passes. See [research/rstdp_spiking](research/rstdp_spiking/README.en.md) | 2026-10-18 |
+| Cross-modal retrieval | **Ten rounds of retrieval experiments**: the original criterion (absolute R@1 50%) cannot separate "local learning works" on either dataset, and was restated as **recovery rate** (synthetic 75.2%, Flickr8k **78.7%**, full grid); Flickr8k's **front end** has its own criterion — caption content-word linear probe median AUC **0.790** (text-side self-check 1.000) | 2026-10-17 |
+| Cognitive core / LLM orchestration | **Not started** — see the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §七 | — |
 
 **Phase-two success criteria, as things actually stand**:
 
@@ -108,6 +122,18 @@ Three boundaries worth stating plainly:
 - (Why the skeleton library is a separate package, and why it deliberately includes none of
   these things, see [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.en.md).)
 - The skeleton library **is on PyPI**: `pip install biosnn-bus` (PyPI serves `0.2.0`; the repository is at `0.3.0`, which adds the `audio_cochlea` plugin and is **not yet published**). Releases go through PyPI trusted publishing (OIDC, no stored tokens); the pipeline is in [release.yml](.github/workflows/release.yml).
+
+## Exploration items (not in the current schedule)
+
+Three items have been opened but **consume none of the current phase's schedule**. Each states
+its activation condition; until that condition holds, it does not start. They are listed so that
+"not done" and "not planned" stay distinguishable on the front page.
+
+| Item | Home | Activation condition |
+| :--- | :--- | :--- |
+| **World-model component** | Phase-four component (inherits Predictive E-prop) | Phase-three acceptance passes and the component ADR exists |
+| **Arousal channel** | Componentising the dynamics axis | Its ADR is accepted |
+| **PINN physical prior** | Roadmap v7.0 candidate (exploration note) | Phase-three acceptance + the CL probe lands; review in summer 2027 |
 
 ## Architecture
 

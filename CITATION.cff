@@ -28,3 +28,21 @@ keywords:
 # 未填 date-released：截至本文件提交时没有任何 tag 或 PyPI 发布，
 # 填一个发布日期就是在声称一次并未发生的发布。
 version: "0.1.0"
+
+# 论文（Zenodo 记录 B）。与上方软件记录分开：doi 字段描述的是本仓库，
+# 论文走 preferred-citation，GitHub 的 "Cite this repository" 会优先给这一条。
+preferred-citation:
+  type: article
+  title: >-
+    Local Learning Rules Under Honest Measurement: A Reproducibility-First
+    Benchmark of e-prop, Hebbian, and R-STDP on Consumer Hardware
+  authors:
+    - name: "离中梦蝶"
+      alias: lzmd-arch
+      website: "https://github.com/lzmd-arch"
+  year: 2026
+  publisher:
+    name: Zenodo
+  doi: "10.5281/zenodo.23429379"
+  url: "https://doi.org/10.5281/zenodo.23429379"
+  license: CC-BY-4.0
