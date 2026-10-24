@@ -79,6 +79,28 @@ def evaluate_seen(
     return evaluate(readout, feats, test_y.cpu().numpy()[mask], seen)
 
 
+def evaluate_task(
+    model,
+    readout: DeltaReadout,
+    test_x,
+    test_y,
+    task_classes: np.ndarray,
+    seen_classes: np.ndarray,
+) -> float:
+    """预注册的 CIL 口径：样本只取本任务，**argmax 在全部已见类里**。
+
+    与 :func:`evaluate_seen` 的区别在样本：``evaluate_seen`` 把样本也过滤到给定类集，
+    那是"在这个类集上评测"；本函数固定只看任务 i 的样本，但分类器面对的是任务 t 时
+    的全部已见类——**不提供任务 id**，这才是类增量矩阵 ``a[t][i]`` 的定义。
+    """
+    labels = test_y.cpu().numpy()
+    mask = np.isin(labels, np.asarray(task_classes, dtype=int))
+    if not mask.any():
+        return float("nan")
+    features = features_of(model, test_x[mask])
+    return evaluate(readout, features, labels[mask], np.asarray(seen_classes, dtype=int))
+
+
 def _prototype_accuracy(model, prototypes, test_x, test_y, classes: np.ndarray) -> float:
     """原型读出在给定类别子集上的准确率。**只在已见类里**取最近原型。"""
     labels = test_y.cpu().numpy()
@@ -137,19 +159,22 @@ def run_incremental(
             for _ in range(readout_epochs):
                 readout.step(feats, labels)
 
-        # **每个格子是"单个任务"的准确率，不是"累计类集"。** 累计口径会把 20 类
-        # 的联合准确率填进 a[t][1]，而 summarise 按"任务 1 单独"解释它——数字会
-        # 系统性偏低（诊断里累计 0.114、单独 0.228），ACC/AF 也就不是预注册的定义。
-        # 详见 sweep_results/continual_readout_diagnosis_plan.md。
+        # **a[t][i] = 任务 i 的样本、在"任务 t 时的全部已见类"上 argmax。**
+        # 两种错误写法都出现过：填累计类集的联合准确率（原 formal/），或把 argmax
+        # 限制到任务 i 自己（oracle，formal_corrected/）。预注册的口径是不提供
+        # 任务 id，所以样本按任务切、分类器面对全部已见类。
+        seen_now = np.asarray(sorted(seen), dtype=int)
         task_sets = [np.asarray(sorted(int(c) for c in task)) for task in tasks[: t + 1]]
         if prototypes is not None:
+            # 原型读出本来就在"全部已见原型"里取最近，样本按任务切即可。
             matrix[t, : t + 1] = [
                 _prototype_accuracy(model, prototypes, test_x, test_y, task_set)
                 for task_set in task_sets
             ]
         else:
             matrix[t, : t + 1] = [
-                evaluate_seen(model, readout, test_x, test_y, task_set) for task_set in task_sets
+                evaluate_task(model, readout, test_x, test_y, task_set, seen_now)
+                for task_set in task_sets
             ]
         print(f"  task {t + 1}/{n_tasks}: 本任务 {matrix[t, t]:.3f}")
 
