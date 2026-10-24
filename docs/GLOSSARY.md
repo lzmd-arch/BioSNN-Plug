@@ -264,7 +264,7 @@
 | 类别 | 例子 | 理由 |
 | :--- | :--- | :--- |
 | 代码标识符 | `ModalityPlugin`、`SpikeBus`、`SpikeTrain`、`discover_plugins` | 翻译后代码跑不通、读者搜不到 |
-| 文件名与路径 | `packages/biosnn-bus/`、`docs/plugin-guide.md` | 实际路径 |
+| 文件名与路径 | `packages/biosnn-bus/`、`docs/plugin_guide.md` | 实际路径 |
 | 命令与配置 | `uv sync --locked`、`pip install`、`[project.entry-points."biosnn_bus.plugins"]` | 照抄才能执行 |
 | 书目条目 | 作者名、论文标题、期刊名、DOI | 学术引用的规范：保持原文 |
 | 规格与许可证名 | Apache-2.0、CC-BY 4.0、Contributor Covenant、semver、PEP 621 | 专有名词 |

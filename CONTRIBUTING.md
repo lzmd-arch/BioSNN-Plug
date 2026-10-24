@@ -9,7 +9,7 @@
 
 ## 开发环境
 
-需要 [uv](https://docs.astral.sh/uv/)（Python 包与项目管理器）与 Python 3.10+。
+需要 [uv](https://docs.astral.sh/uv/)（Python 包与项目管理器）与 Python **3.11+**——根工程的下限由 SpikingJelly 决定（[ADR-0008](docs/adr/ADR-0008-spikingjelly-license-and-python-floor.md)）；骨架库自己声明 3.10+，由 CI 的 3.10 腿覆盖。
 
 ```bash
 git clone https://github.com/lzmd-arch/BioSNN-Plug.git
@@ -30,17 +30,20 @@ uv run python examples/quickstart_register_plugin.py   # 示例能跑
 计划书 §12.5 要求 PR 前做"**引用点验 + 代码块检查**"。逐项确认：
 
 ```bash
-uv run pre-commit run --all-files    # 下面这些检查全都跑一遍
+uv run pre-commit run --all-files    # 钩子里的检查一次跑完
+uv run pytest -q                     # 单元测试不在钩子里，单独跑
 ```
 
 | 检查 | 脚本 | 拦什么 |
 | :--- | :--- | :--- |
-| 单元测试 | `pytest` | 实现错误 |
 | 风格 | `ruff check` / `ruff format` | 格式与常见 bug |
 | 文档代码块 | `scripts/check_doc_code_blocks.py` | 文档里的代码跑不通 |
 | 版本号一致性 | `scripts/check_version_consistency.py` | 文件名与内容版本号错位 |
 | 引用清单 | `scripts/check_references.py` | 编号跳号、死链格式、重复条目 |
 | notebook 同步 | `scripts/build_notebook.py` | Colab notebook 与示例脚本漂移 |
+| 文档表格结构 | `scripts/check_md_tables.py` | 表格坏行、竖线吞内容 |
+| 三语一致性 | `scripts/check_translations.py` | 译文漂移、结构错位 |
+| 差距报告核对 | `scripts/gap_report.py --check` | 文档里的差距数字与记录脱钩 |
 
 CI 会再跑一遍，另外加 **lychee 链接存活检查**与**依赖许可审计**。
 

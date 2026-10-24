@@ -15,7 +15,7 @@ effort is not wasted:
 
 ## Development environment
 
-You need [uv](https://docs.astral.sh/uv/) (Python package and project manager) and Python 3.10+.
+You need [uv](https://docs.astral.sh/uv/) (Python package and project manager) and Python **3.11+** — the root project's floor comes from SpikingJelly ([ADR-0008](docs/adr/ADR-0008-spikingjelly-license-and-python-floor.en.md)); the skeleton package itself still declares 3.10+, covered by CI's 3.10 leg.
 
 ```bash
 git clone https://github.com/lzmd-arch/BioSNN-Plug.git
@@ -37,17 +37,20 @@ The project plan §12.5 requires a "**citation spot-check + code-block check**" 
 Confirm each item:
 
 ```bash
-uv run pre-commit run --all-files    # runs every check listed below
+uv run pre-commit run --all-files    # every hook, in one pass
+uv run pytest -q                     # unit tests are not a hook -- run them separately
 ```
 
 | Check | Script | Blocks what |
 | :--- | :--- | :--- |
-| Unit tests | `pytest` | Implementation errors |
 | Style | `ruff check` / `ruff format` | Formatting and common bugs |
 | Documentation code blocks | `scripts/check_doc_code_blocks.py` | Code in the documentation that does not run |
 | Version number consistency | `scripts/check_version_consistency.py` | Version numbers in filenames and content out of step |
 | Reference list | `scripts/check_references.py` | Numbering gaps, dead-link format, duplicate entries |
 | Notebook sync | `scripts/build_notebook.py` | Drift between the Colab notebook and the example script |
+| Markdown table structure | `scripts/check_md_tables.py` | broken rows, pipes swallowing content |
+| Tri-language consistency | `scripts/check_translations.py` | translation drift, structure mismatch |
+| Gap-report reconciliation | `scripts/gap_report.py --check` | gap numbers in docs drifting from the record |
 
 CI runs all of it again, and adds a **lychee link liveness check** and a **dependency license
 audit**.

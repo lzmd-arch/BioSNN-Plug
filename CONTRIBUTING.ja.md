@@ -12,7 +12,7 @@
 
 ## 開発環境
 
-[uv](https://docs.astral.sh/uv/)（Python のパッケージ・プロジェクト管理ツール）と Python 3.10+ が必要です。
+[uv](https://docs.astral.sh/uv/)（Python のパッケージ・プロジェクト管理ツール）と Python **3.11+** が必要です——ルートプロジェクトの下限は SpikingJelly によるものです（[ADR-0008](docs/adr/ADR-0008-spikingjelly-license-and-python-floor.ja.md)）。スケルトンライブラリ自体は 3.10+ を宣言しており、CI の 3.10 レッグがそれを担保します。
 
 ```bash
 git clone https://github.com/lzmd-arch/BioSNN-Plug.git
@@ -33,17 +33,20 @@ uv run python examples/quickstart_register_plugin.py   # サンプルが動く
 プロジェクト計画書 §12.5 は、PR の前に「**引用スポット検証 + コードブロックのチェック**」を行うことを求めています。項目ごとに確認してください：
 
 ```bash
-uv run pre-commit run --all-files    # 以下に挙げたチェックをまとめて実行します
+uv run pre-commit run --all-files    # フック内のチェックをまとめて実行
+uv run pytest -q                     # ユニットテストはフックに含まれないため別途実行
 ```
 
 | チェック | スクリプト | 何を止めるか |
 | :--- | :--- | :--- |
-| ユニットテスト | `pytest` | 実装の誤り |
 | スタイル | `ruff check` / `ruff format` | 書式とよくあるバグ |
 | ドキュメントのコードブロック | `scripts/check_doc_code_blocks.py` | ドキュメント内のコードが動かない |
 | バージョン番号の一致 | `scripts/check_version_consistency.py` | ファイル名と内容のバージョン番号のずれ |
 | 引用リスト | `scripts/check_references.py` | 番号の飛び、デッドリンクの書式、重複項目 |
 | notebook の同期 | `scripts/build_notebook.py` | Colab notebook とサンプルスクリプトのずれ |
+| Markdown テーブル構造 | `scripts/check_md_tables.py` | 壊れた行、パイプによる内容欠落 |
+| 三言語一致性 | `scripts/check_translations.py` | 翻訳のドリフト、構造のずれ |
+| ギャップ報告の照合 | `scripts/gap_report.py --check` | 文書中のギャップ数値が記録から乖離 |
 
 CI でも同じものを走らせ、さらに **lychee によるリンク生存確認**と**依存ライセンス監査**を加えます。
 
