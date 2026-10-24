@@ -195,3 +195,9 @@ By contributing you agree that your contribution is released under [Apache-2.0](
 > (first-pass BibTeX, or genuinely broken). **Never dismiss the batch as "just the first pass".**
 > On 2026-10-24 a `\ref` was eaten by an escape sequence and split across two lines; the warning
 > was in the log and was waved through as first-pass noise.
+
+> **Workspace hygiene**: one-off scripts, drafts and commit-message drafts go in `data/`
+> (gitignored), **never in the repository root**. Evidence (run logs, fetched sources, old caches)
+> also stays under `data/` and is not committed. `sweep_results/` holds only **artifacts that are
+> cited** (pre-registrations, summary.json, result documents). A cleanup on 2026-10-24 removed 58
+> one-off patch scripts and logs that had accumulated in `data/`.
