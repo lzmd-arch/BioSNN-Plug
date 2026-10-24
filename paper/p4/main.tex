@@ -31,8 +31,8 @@ scheme we could build beats the fixed mixture (paired margin $+0.003$ against th
 $\delta = 0.05$), the static optimum turns out to be the default value, and the only affordable
 objective was shown to lack discriminating power before it was used. Four triviality analyses --- degenerate measurements that could otherwise have been
 published as results --- are reported together with the guards that now catch them. The claim is
-narrow and, we think, useful: arbitration is not a free improvement on mixing, and whether it can
-be measured at all is a question about objectives, not about ideas.
+narrow: arbitration is not a free improvement on mixing, and whether it can be measured at all is a
+question about objectives, not ideas.
 \end{abstract}
 
 % ------------------------------------------------------------
@@ -154,8 +154,8 @@ for the same weight tensor. The arbiter mixes them with a single scalar,
 \begin{equation}
 u(\alpha) = (1 - \alpha)\, u_A + \alpha\, u_B, \qquad \alpha \in [0, 1],
 \end{equation}
-so $\alpha = 0$ is rule $A$ alone and $\alpha = 1$ rule $B$ alone. This is the object the paper
-calls arbitration: not a switch, not a schedule, but a weight on a convex combination.
+so $\alpha = 0$ is rule $A$ alone and $\alpha = 1$ rule $B$ alone. Call this arbitration: a
+weight on a convex combination, chosen during learning --- not a switch and not a schedule.
 
 \textbf{Retention is a two-sided constraint.} Both endpoints are degenerate --- one rule is
 deleted --- so the protocol constrains $\alpha \in [0.2, 0.8]$: each rule keeps at least 20\% of
@@ -248,8 +248,8 @@ check, applied to proxies.
 Every run reported in this paper was executed on the CPU of a 16-core desktop machine; the
 project's GPU was not used. Reproducibility derives from fixed seeds and versioned records rather
 than from the absence of a GPU, but it does mean these numbers can be re-derived on hardware this
-modest. A single arm-seed takes about thirteen minutes at the settings below, which is what makes a five-seed grid and a five-point
-static sweep affordable in the first place.
+modest. A single arm-seed takes about thirteen minutes at the settings below. That budget is why the grid
+below is five seeds rather than one.
 
 The shared backbone is a 256-unit representation fed by a $28 \to 256$ input weight, trained for
 40 epochs with batch size 64 on sequential MNIST under a fixed random permutation, with 1\% of the
@@ -374,8 +374,8 @@ formulations differ, and why we chose ours.
 and $m$ synapses the joint assignment has $n^{m}$ possible values, and the arbitration object is a
 selector. Continuous mixing
 gives each synapse the \emph{same} scalar $\alpha$, so the arbitration object is one number for the
-entire network. The second is a much smaller hypothesis class --- a feature for a paper whose
-subject is measurement, a limitation for a paper whose subject is capacity.
+entire network. Smaller is right for this paper; a paper about capacity would count it a
+limitation.
 
 \textbf{Attenuation.} Switching applies one rule's update in full; mixing applies a convex
 combination, so each rule's contribution is scaled by its weight. In our benchmark this shows up
@@ -444,8 +444,7 @@ counter-example. Compartmentalisation buys separation at the cost of structural 
 be physically partitioned, and a synapse cannot benefit from a rule its compartment does not
 express. Mixing on shared synapses is the complementary choice --- no new structure, but the rules
 must now settle their disagreements numerically. This benchmark measures the second choice; the
-first is future work, and the comparison between them is the interesting experiment neither this
-paper nor that one runs.
+first is future work, and the comparison is the obvious next experiment --- neither paper runs it.
 
 Finally, nothing here was run on neuromorphic hardware; the locality claim concerns the learning
 rule, not the substrate.
