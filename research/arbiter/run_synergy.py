@@ -160,6 +160,7 @@ def run_arm(
     fit_steps: int = 200,
     fit_alpha: bool = True,
     shuffle_labels: bool = False,
+    alpha: float = 0.5,
 ) -> dict:
     from research.arbiter.shared_synapse import SharedSynapseConfig, SharedSynapseHarness
 
@@ -185,7 +186,7 @@ def run_arm(
         # ⚠️ blend(a, b) = (1-α)·a + α·b，而 a=e-prop、b=Hebbian：
         # **α=1 是纯 Hebbian、α=0 是纯 e-prop**。MIX 从 0.5 起步。
         arbiter=arbiter
-        or ESArbiter(alpha={"hebbian": 1.0, "eprop": 0.0}.get(arm.kind, 0.5), seed=seed),
+        or ESArbiter(alpha={"hebbian": 1.0, "eprop": 0.0}.get(arm.kind, alpha), seed=seed),
         seed=seed,
     )
     initial = harness.shared_weight.detach().clone()
@@ -295,6 +296,12 @@ def main(argv: list[str] | None = None) -> int:
         help="MIX 臂冻结在 alpha=0.5，不跑 ES 拟合（对照）",
     )
     parser.add_argument("--shuffle-labels", action="store_true", help="打乱训练标签（对照）")
+    parser.add_argument(
+        "--alpha",
+        type=float,
+        default=0.5,
+        help="MIX 臂的初始/冻结 α（配 --no-fit-alpha 时就是固定配比；默认 0.5）",
+    )
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
 
@@ -320,6 +327,7 @@ def main(argv: list[str] | None = None) -> int:
                     data_dir=args.data_dir,
                     fit_steps=args.fit_steps,
                     fit_alpha=not args.no_fit_alpha,
+                    alpha=args.alpha,
                     shuffle_labels=args.shuffle_labels,
                 )
                 results.append(row)
