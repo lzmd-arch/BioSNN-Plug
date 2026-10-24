@@ -190,30 +190,101 @@ best static mixture is itself 50/50. What remains open is narrower and better po
 objective exists that is affordable \emph{and} discriminating, which we have shown is the binding
 constraint rather than the arbitration idea itself.
 \subsection{Continuous mixing vs.\ discrete switching}
-% 与 Turcu 式切换在协同基准上的同条件对比 (或: 分析性对比 + 我们的实现选择);
-% \todo{若不同条件, 明确声明不可直接比, 按 P2 预算纪律处理}.
-% [2026-10-24 裁决] 原 §5.4「Does arbitration recover part of the price of locality?」
-% 涉及**三规则系统**, 与 ADR-0013（三方混合属阶段五）冲突, 已从结果结构移出,
-% 降级为 §6.3 Limits 的一段话（内容不重写, 位移而已）。
+
+The closest neighbour switches plasticity rules \emph{discretely}, synapse by synapse
+\citep{turcu2025switching}; we mix them \emph{continuously} with one scalar. We did not run a
+matched empirical comparison, and we do not claim one: the conditions differ (their strongest
+rule includes backpropagation, ours is local end to end including the outer loop), so a side-by-side
+number would compare two different claims at once. What we can state analytically is where the two
+formulations differ, and why we chose ours.
+
+\textbf{State space.} Discrete switching gives each synapse a categorical state; for $n$ rules the
+per-synapse state space is $n^{|W|}$, and the arbitration object is a selector. Continuous mixing
+gives each synapse the \emph{same} scalar $\alpha$, so the arbitration object is one number for the
+entire network. The second is a much smaller hypothesis class --- a feature for a paper whose
+subject is measurement, a limitation for a paper whose subject is capacity.
+
+\textbf{Attenuation.} Switching applies one rule's update in full; mixing applies a convex
+combination, so each rule's contribution is scaled by its weight. In our benchmark this shows up
+directly: the mixture's weight displacement per run ($\|\Delta W\|/\|W_0\| \approx 0.41$) sits
+between pure Hebbian's ($\approx 0.71$) and pure e-prop's ($\approx 0.05$), i.e.\ mixing costs
+magnitude relative to the dominant rule. Whether switching's fuller updates are worth the larger
+state space is an empirical question this paper does not answer.
+
+\textbf{Searchability.} A continuous parameter has an interior optimum that a one-dimensional
+search can locate --- which is exactly what Section~\ref{sec:pending} did, and exactly how it
+found that the optimum is the default. A discrete selector has no such notion of
+``how much'', and its search space does not admit the same statement.
+
+A matched comparison is left as future work, with the caveat stated above: it would require
+budget-matching the two arms and a pre-registered criterion, not a demonstration.
 
 % ------------------------------------------------------------
 \section{Discussion}
-\subsection{When does arbitration pay?}   % 判据: 规则间互补性存在时才非平凡;
-% 给出可操作的判定 (与 P2 "何时局部规则够用" 同一语法).
-\subsection{The 1-scalar finding}          % 最小参数化的成败都是对 Confavreux
-% 警告的直接检验; 失败亦是结果.
-\subsection{Limits}                        % 两规则对 -> 三规则未验; 合成->真实任务
-% 一步之遥; 规模; 外层 ES 的样本成本.
-% [2026-10-24 裁决] 三规则混合未验, 此处补一段 (<=4 句):
-%  ① 三方同时混合未做验证 —— 本论文全部结论限于两规则对;
-%  ② 三方以上时冲突的定义本身待设计（两两 per-row cosine 不再唯一）;
-%  ③ 组合爆炸: n 条规则有 n(n-1)/2 对，调度维度随之出现;
-%  ④ 按 ADR-0013, 三方混合与调度维度排在阶段五, 不在本论文的主张范围内.
+
+\subsection{When does arbitration pay?}
+
+The benchmark answers a narrower question than the one it was built to ask, and the narrowing is
+the result. \emph{Mixing} pays whenever the rules are complementary: pure Hebbian reaches a Fisher
+ratio of 0.472 and pure e-prop 0.331, while their fixed blend reaches 0.651 --- a margin of 0.179
+that no single-rule arm approaches. \emph{Arbitration} --- choosing the weight rather than fixing
+it --- did not pay here, for a reason that is now specific rather than mysterious: the optimum of
+the static mixture is the default value, so the quantity an arbiter would estimate has no room to
+move.
+
+This suggests a criterion that can be applied before building an arbiter, in the same syntax as
+P2's criterion for when local rules suffice: \textbf{arbitration is worth measuring only if the
+static optimum is unknown \emph{and} away from the value one would pick without measuring.} Where
+the optimum sits at the default, adaptivity buys nothing and the benchmark cannot distinguish a
+good arbiter from a lucky constant.
+
+\subsection{The 1-scalar finding}
+
+Confavreux et al.\ report meta-learning failing as rule parameterisations grow complex, and our
+arbiter was deliberately pinned to one scalar to stay on the safe side of that finding
+\citep{confavreux2025}. The failure we hit was of a different kind, and worth separating: it was
+not that one scalar was too coarse to express the right arbitration --- the static sweep shows the
+optimum really is a single number, and that number is 0.5. It was that \emph{no affordable
+objective could identify that number}. An integer conflict count saturates; a short-horizon Fisher
+probe cannot see the effect it is meant to search; a smooth agreement proxy ranks the endpoints
+identically. The bottleneck was not parameterisation size but objective identifiability, which is a
+constraint on the outer loop rather than on the arbitration idea.
+
+\subsection{Limits}
+
+All conclusions are limited to a two-rule pair. Three-way mixing was not tested and is out of
+scope by design: with more than two rules the definition of conflict itself needs re-design (pairwise
+per-row cosines are no longer unique), the number of pairs grows quadratically, and a scheduling
+dimension appears. The project roadmap places three-way mixing and scheduling in a later phase.
+
+The benchmark is one task: sequential MNIST under a fixed permutation, 1\% labels, 256 neurons,
+five seeds. We did not test other label fractions, other permutations, or larger networks, and the
+numbers should not be extrapolated to them. The slow-adaptive arm additionally reserves 10\% of the
+training split for validation; its control arm uses the same split, so the comparison is internal,
+but it is not directly comparable to the full-data static runs.
+
+Finally, nothing here was run on neuromorphic hardware; the locality claim concerns the learning
+rule, not the substrate.
+                        % 两规则对 -> 三规则未验; 合成->真实任务
 
 % ------------------------------------------------------------
 \section{Conclusion}
-% 三句话: 规则间冲突是可测对象; 仲裁在连续混合+retention 约束下 \todo{成立/部分成立};
-% 下一步: 认知核心集成 (路线图阶段三).
+
+Rules conflict on shared synapses, and the conflict is measurable: a fixed mixture of two
+heterogeneous local rules separates representations far better than either rule alone
+(0.651 against 0.472 and 0.331), in a network with no backpropagation anywhere, under a
+protocol that pre-registers its criteria and voids runs whose weights did not move.
+
+Arbitration itself, under the two-sided retention constraint and a one-scalar parameterisation,
+came back negative on this benchmark --- measurably negative, not merely untested: the static
+optimum is the default value, and the one adaptive scheme that could run without an unaffordable
+objective drifted away from that optimum and parked on the constraint boundary. We report the
+negative result with the same care as the positive one, because the reusable part is the protocol
+that produced it: four degeneracies caught by their own guards, and a criterion that can be
+checked before an arbiter is built.
+
+The next step is the cognitive-core integration on the project roadmap, and --- for this line
+specifically --- an objective that is both affordable and discriminating.
 
 % ------------------------------------------------------------
 \section*{Use of AI assistance}
