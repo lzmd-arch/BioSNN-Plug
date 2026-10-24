@@ -123,7 +123,9 @@ different remedies.
 
 Miconi et al.\ meta-learn plasticity through backpropagation \citep{miconi2018differentiable},
 which is the mechanism we deliberately avoid: an outer loop that differentiates through the inner
-learning rule would puncture the locality claim this project exists to test.
+learning rule would puncture the locality claim this project exists to test. Work that generalises
+e-prop itself to deep networks \citep{millidge2025deep} keeps the rule local and is the natural
+comparison point for a multi-layer extension.
 
 \subsection{Neuromodulation and gating}
 
@@ -191,8 +193,8 @@ training labels are visible to the supervised rule; the unsupervised rule sees a
 Both rules act on the same $28 \to 256$ input weight --- the synapse the two lines already share ---
 and nothing else is mixed.
 
-The two rules are an information-bottleneck Hebbian rule (unsupervised, structure-seeking) and
-e-prop (supervised, error-driven). Three arms are compared: $H$ (Hebbian only), $E$ (e-prop only)
+The two rules are an information-bottleneck Hebbian rule \citep{pogodin2020kernelized}
+(unsupervised, structure-seeking) and e-prop \citep{bellec2020eprop} (supervised, error-driven). Three arms are compared: $H$ (Hebbian only), $E$ (e-prop only)
 and $MIX$ (the blend). The primary metric is the \emph{Fisher ratio} of the representation the
 learned weight produces, computed on a held-out probe set: it measures how separable the classes
 have become, not how well a particular readout happens to fit, and it does not saturate the way a
@@ -210,8 +212,8 @@ point), a frozen $\alpha = 0.5$ arm, and a shuffled-label arm.
 
 \subsection{Protocol inheritance}
 
-The measurement protocol is inherited wholesale from the companion paper and is not re-derived
-here: fixed compute budgets per arm, full configuration dumps with every result, bitwise
+The measurement protocol is inherited wholesale from the companion paper
+\citep{biosnnplug2026} and is not re-derived here: fixed compute budgets per arm, full configuration dumps with every result, bitwise
 reproducibility of a re-run from a stored seed, a frozen random stream for evaluation, selection
 on a validation split rather than on the evaluation set, and joint reporting of any metric that can
 be improved by a degenerate solution. Each of these exists because its absence produced a wrong
@@ -406,7 +408,7 @@ the static mixture is the default value, so the quantity an arbiter would estima
 move.
 
 This suggests a criterion that can be applied before building an arbiter, in the same syntax as
-P2's criterion for when local rules suffice: \textbf{arbitration is worth measuring only if the
+the companion paper's criterion for when local rules suffice \citep{biosnnplug2026}: \textbf{arbitration is worth measuring only if the
 static optimum is unknown \emph{and} away from the value one would pick without measuring.} Where
 the optimum sits at the default, adaptivity buys nothing and the benchmark cannot distinguish a
 good arbiter from a lucky constant.
