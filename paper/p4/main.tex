@@ -134,6 +134,17 @@ threshold. One e-prop seed is excluded: its weight moved less than the run gate 
 ($\|\Delta W\|/\|W_0\| = 0.0474 < 0.05$), so it is void rather than slow, and the paired margin
 is computed on four seeds, which is stated wherever the number appears.
 
+A static sweep of the mixing weight locates the optimum this benchmark allows. Over
+$\alpha \in \{0.3, 0.4, 0.5, 0.6, 0.7\}$ with five seeds each, the Fisher ratio is 0.364
+[0.361, 0.450] at 0.3, 0.577 [0.563, 0.627] at 0.4, 0.651 [0.636, 0.652] at 0.5, 0.643
+[0.639, 0.643] at 0.6 and 0.621 [0.604, 0.622] at 0.7. The optimum is interior and sits at
+equal weights; the adjacent $\alpha = 0.6$ is statistically indistinguishable (paired median
+$-0.008$), while 0.4 and 0.7 are clearly worse. Two consequences follow. First, the 50/50
+default the benchmark shipped with happens to be at the optimum. Second, an adaptive scheme
+has essentially no headroom left to beat it on this task, and that is the question
+Section~
+ef{sec:pending} asks.
+
 What this result does \emph{not} establish is that \emph{arbitration} is what produced it. The
 mixture here is a fixed 50/50 blend; the arm that would adapt the mixing weight is treated
 separately in Section~\ref{sec:pending}. Table~\ref{tab:synergy} is therefore a two-level
