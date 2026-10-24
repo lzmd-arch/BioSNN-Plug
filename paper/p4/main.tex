@@ -67,39 +67,119 @@ not assumed; where it fails is reported.}
 
 % ------------------------------------------------------------
 \section{Methods}
+
 \subsection{Arbitration formalism}
-% 两/三规则对同一突触的更新 u_A, u_B; 混合更新 u = (1-a) u_A + a u_B;
-% 冲突度量 = per-row cosine (继承 P2: per-synapse 退化已证).
-% 约束是**双侧**的: alpha in [0.2, 0.8] —— 两规则各保留至少 20% 权重("都不许被关掉");
-% retention 的定义 = 被压制一方在仲裁结果中实际保留的权重, 与冲突降幅**联合报告**
-% (继承 P2 triviality analysis: alpha->0 退化解的识别与封堵; alpha->1 是同一枚硬币的另一面).
+
+Two rules $A$ and $B$ propose updates $u_A, u_B \in \mathbb{R}^{n_{\text{pre}} \times n_{\text{post}}}$
+for the same weight tensor. The arbiter mixes them with a single scalar,
+\begin{equation}
+u(\alpha) = (1 - \alpha)\, u_A + \alpha\, u_B, \qquad \alpha \in [0, 1],
+\end{equation}
+so $\alpha = 0$ is rule $A$ alone and $\alpha = 1$ rule $B$ alone. This is the object the paper
+calls arbitration: not a switch, not a schedule, but a weight on a convex combination.
+
+\textbf{Retention is a two-sided constraint.} Both endpoints are degenerate --- one rule is
+deleted --- so the protocol constrains $\alpha \in [0.2, 0.8]$: each rule keeps at least 20\% of
+the mixture. We report \emph{retention} (the weight actually retained by the suppressed side)
+jointly with every conflict-reduction number, because a reduction achieved by deleting a rule is
+not arbitration.
+
+\textbf{Conflict is measured per row, not per synapse.} For one synapse the ``direction'' of an
+update is a scalar, so the cosine is $\pm 1$ and an angle threshold of $90^\circ$ degenerates to
+a sign test (Section~\ref{sec:triviality}, case two). We therefore compute the cosine between the
+blended update and each rule's update over the outgoing weights of a presynaptic neuron --- the
+smallest group that carries a direction --- and count a conflict event when the cosine is
+negative.
+
 \subsection{Meta-learning the arbitration signal}
-% 外层 ES, 参数化刻意最小 (1 scalar -> per-row vector 的扩展实验);
-% Confavreux 失败模式的直接检验; 预注册: 参数化扩展的停止规则.
-% [2026-10-24 条件预注册] 标量仲裁若在本基准显示无增益 (R1/R2 结局), per-row 扩展
-% **不予开展** —— 组合空间 xN, 但前提已被否定. 这条写死, 防止未来"再试一维"的无限救援.
+
+The arbiter is tuned by a one-parameter evolution strategy, never by backpropagation: the outer
+loop perturbs $\alpha$, scores the perturbation, and moves. This keeps the whole system inside the
+locality claim (the plan's boundary declaration for the perceptual layer is the same rule), and it
+is deliberately minimal --- Confavreux et al.\ report meta-learning failing as rule
+parameterisations grow complex \citep{confavreux2025}, so one scalar is the conservative choice.
+
+\textbf{Conditional pre-registration.} If the scalar arbiter shows no gain on this benchmark, a
+per-row ($n_{\text{pre}}$-dimensional) extension is not pursued: the parameter space grows by a
+factor of $n_{\text{pre}}$ while the premise has already been refuted. The condition is recorded
+before the arms ran.
+
 \subsection{The Rules-Collide benchmark}
-% [2026-10-24 裁决] 协同性基准正式命名 **the Rules-Collide benchmark** ——
-% evocative 的名字给工件, 精确的名字("When Can Arbitration Be Measured?")给论文.
-% 核心节. 设计判据: 单方 < 混合才可解 (complementarity 任务);
-% \todo{任务规格: Hebbian 供特征结构 + e-prop 供时序标签的复合任务};
-% 负向验证: 单方基线必须如预期失败 (预注册期望值).
-\subsection{Triviality analyses: four cases}\label{sec:triviality}
-% [2026-10-24 裁决] 正文放**陈述与教训**(每案四五行: 现象 -> 机制 -> 纪律),
-% 推导细节与参数放附录 C. 完整草稿见 paper/p4/section-3.3-triviality-draft.md.
-% 四案: ① alpha->0 退化; ② 逐突触余弦退化; ③ 整数目标 ES 惰性; ④ 代理-构念错位.
-% NOTE 编号: 裁决里称本节为 "§3.3", 那是按当时的草稿结构; 本骨架 Methods 已有四个小节,
-% 插在 §3.4 之后即本节编号为 3.5, protocol inheritance 顺延为 3.6 —— 待作者确认编号.
+
+Rows of sequential MNIST are presented one at a time under a fixed random permutation, so class
+information lives in the temporal structure rather than in pixel adjacency. Only 1\% of the
+training labels are visible to the supervised rule; the unsupervised rule sees all of the data.
+Both rules act on the same $28 \to 256$ input weight --- the synapse the two lines already share ---
+and nothing else is mixed.
+
+The two rules are an information-bottleneck Hebbian rule (unsupervised, structure-seeking) and
+e-prop (supervised, error-driven). Three arms are compared: $H$ (Hebbian only), $E$ (e-prop only)
+and $MIX$ (the blend). The primary metric is the \emph{Fisher ratio} of the representation the
+learned weight produces, computed on a held-out probe set: it measures how separable the classes
+have become, not how well a particular readout happens to fit, and it does not saturate the way a
+linear probe does on random projections.
+
+\textbf{Run gate.} Every run reports $\|\Delta W\| / \|W_0\|$. A run below $0.05$ is void and
+excluded from every statistic --- a rule that did not move the weights cannot be credited or blamed
+for the outcome, and the exclusion is counted and reported, not silently applied.
+
+\textbf{Criterion.} The synergy margin is $\mathrm{Fisher}(MIX) - \max(\mathrm{Fisher}(H),
+\mathrm{Fisher}(E))$, paired by seed, and the pre-registered threshold is a median of
+$\delta = 0.05$ together with a separation requirement (the mixture's lower quartile above the
+best single arm's upper quartile). Three controls accompany it: the initial weight (the zero
+point), a frozen $\alpha = 0.5$ arm, and a shuffled-label arm.
 
 \subsection{Protocol inheritance}
-% 从 P2 继承的六件套 (预算纪律/config dump/逐位复现/冻结随机流/验证集选择/联合报告)
-% 一句话引用, 不重写.
 
-% ------------------------------------------------------------
+The measurement protocol is inherited wholesale from the companion paper and is not re-derived
+here: fixed compute budgets per arm, full configuration dumps with every result, bitwise
+reproducibility of a re-run from a stored seed, a frozen random stream for evaluation, selection
+on a validation split rather than on the evaluation set, and joint reporting of any metric that can
+be improved by a degenerate solution. Each of these exists because its absence produced a wrong
+number at least once.
+
+\subsection{Triviality analyses: four cases}\label{sec:triviality}
+
+Four times, a first version of a measurement could be satisfied without the phenomenon it was
+meant to detect. They share a shape --- a design, a reason the design is trivial, a guard that
+catches it, and a lesson --- and they are reported together because the guards, not the designs,
+are the reusable part. Statement and lesson appear below; derivations and parameters are in
+Appendix~\ref{app:triviality}.
+
+\textbf{Case one: arbitration that wins by switching a rule off.} If the objective is ``reduce
+conflict between the blend and rule $A$'', then $\alpha = 0$ trivially achieves zero conflict. The
+guard is the two-sided retention constraint plus joint reporting of retention and reduction.
+
+\textbf{Case two: a per-synapse cosine that cannot have an angle.} On a single synapse the update
+is a scalar, the cosine is $\pm 1$, and the $90^\circ$ threshold collapses to a sign test. The
+guard is to measure over a row.
+
+\textbf{Case three: an evolutionary search whose objective has no gradient.} An integer
+conflict-event count saturates --- at $\alpha = 0.5$ it is already zero, so every perturbation
+scores the same and the search never moves. The guard is a discrimination check that every
+candidate objective must pass before it may be used.
+
+\textbf{Case four: a proxy that measures a different construct.} Mean agreement with both rules
+peaks at $\alpha = 0.9$ and assigns the same value to $\alpha = 0$ and $\alpha = 1$, arms that
+differ by $0.14$ in Fisher. Alignment is not separability. The guard is the same discrimination
+check, applied to proxies.
+
 \section{Experimental Setup}
-% RTX 5060 8GB; 与 P2 相同的软件栈表; 与 P2 W2 相同的 256 神经元骨干 (可复用资产).
 
-% ------------------------------------------------------------
+Every run reported in this paper was executed on the CPU of a 16-core desktop machine; the
+project's GPU was not used, so the numbers are reproducible without one. A single arm-seed takes
+about thirteen minutes at the settings below, which is what makes a five-seed grid and a five-point
+static sweep affordable in the first place.
+
+The shared backbone is a 256-unit representation fed by a $28 \to 256$ input weight, trained for
+40 epochs with batch size 64 on sequential MNIST under a fixed random permutation, with 1\% of the
+training labels visible to the supervised rule and five seeds per arm. Inputs are binarised rows;
+the representation is the time-averaged rectified projection described in
+Section~\ref{sec:synergy}. Fisher ratios are computed on a held-out probe set that is never used
+for any selection decision.
+
+Software: Python 3.12 with NumPy and a CPU build of PyTorch; the exact flag sets, seeds and
+provenance blocks for every reported number are reproduced in Appendix~\ref{app:config}.
 \section{Results}
 \subsection{Synergy: does the mixture beat both parents?}\label{sec:synergy}
 
@@ -266,7 +346,6 @@ but it is not directly comparable to the full-data static runs.
 
 Finally, nothing here was run on neuromorphic hardware; the locality claim concerns the learning
 rule, not the substrate.
-                        % 两规则对 -> 三规则未验; 合成->真实任务
 
 % ------------------------------------------------------------
 \section{Conclusion}
@@ -289,11 +368,22 @@ specifically --- an objective that is both affordable and discriminating.
 
 % ------------------------------------------------------------
 \section*{Use of AI assistance}
-% 继承 P2 的四段式披露; 更新具体分工 (本论文中 agent 的角色).
+
+An AI coding assistant was used to write the analysis and experiment code, to run the grids, and
+to draft prose from the recorded results. Every number in this paper is produced by committed code
+from committed configurations; the pre-registrations, the criteria, the scope rulings and the
+decision to seal the line were made by the author and are recorded in the repository with
+timestamps that precede the corresponding runs. Drafted text was checked against the records, and
+discrepancies found in the process were corrected in the records first and in the text second.
 
 % ------------------------------------------------------------
 \section*{Data and code availability}
-% 仓库 + A/B 记录 DOI + 本论文 Zenodo 存款 DOI (存款后补).
+
+Code, configurations and every pre-registration record: \url{https://github.com/lzmd-arch/BioSNN-Plug}.
+Archived snapshots: the findings-and-protocol record (concept DOI \texttt{10.5281/zenodo.23388708}),
+the companion paper (\texttt{10.5281/zenodo.23429027}), the P4 design notes
+(\texttt{10.5281/zenodo.23603639}) and the architecture and decision record
+(\texttt{10.5281/zenodo.23603642}). The deposit of this manuscript is made on publication.
 
 % ------------------------------------------------------------
 \bibliographystyle{plainnat}
@@ -301,9 +391,74 @@ specifically --- an objective that is both affordable and discriminating.
 % 已在台账; 新引用的 Science 2025 多规则突触论文需先核验进台账}
 
 \appendix
-\section{Full configuration dumps}      % 继承 P2 附录 A 的格式
-\section{Pre-registration records}        % 三个预注册 (参数化扩展/协同基准单方基线/
-% 局部性代价接口) 的逐字记录与时间戳
-\section{Triviality analysis details}     % 本论文新发现的退化解 (若有) + 继承的两个
+
+\section{Full configuration dumps}\label{app:config}
+
+\begin{table}[h]
+\centering
+\caption{Flag set shared by every reported run unless a row says otherwise. The runner writes
+this block, the git commit and the environment into each result file.}
+\begin{tabular}{ll}
+\toprule
+Setting & Value \\
+\midrule
+Task & sequential MNIST, fixed random permutation (seed-derived) \\
+Labels & 1\% stratified, seed-derived mask \\
+Input weight & $28 \to 256$, shared by both rules \\
+Epochs / batch & 40 / 64 \\
+Seeds & 0--4 (five per arm) \\
+Gate & $\|\Delta W\|/\|W_0\| \ge 0.05$ \\
+Static sweep & $\alpha \in \{0.3, 0.4, 0.5, 0.6, 0.7\}$, $\alpha = 0.5$ reused from the main run \\
+Slow-adaptive arm & checkpoint every 5 epochs, step 0.05, $\alpha \in [0.2, 0.8]$, 10\% validation split \\
+Device & CPU, 16 cores \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Pre-registration records}\label{app:prereg}
+
+The verbatim records are Chinese-language sections of a repository document and are kept there
+rather than retyped here, because retyping is where a pre-registration silently becomes a
+post-registration. Each is identified by the commit that introduced it, all of which precede the
+runs they govern:
+
+\begin{table}[h]
+\centering
+\caption{Pre-registration commits. The criterion rewrite is included for completeness: it was
+written before any MIX number was seen.}
+\begin{tabular}{lll}
+\toprule
+Record & Commit & Date \\
+\midrule
+Synergy criterion rewritten to a margin ($\delta = 0.05$) & \texttt{241ae0a} & 2026-10-18 \\
+Objective-discrimination rule for any candidate objective & \texttt{c4f19ca} & 2026-10-24 \\
+R1/R2 registered, including the two-arm limit & \texttt{46e2a18} & 2026-10-24 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Triviality analysis details}\label{app:triviality}
+
+\textbf{Case one.} With conflict measured between the blend $(1-\alpha)u_A + \alpha u_B$ and
+$u_A$, the count is zero at $\alpha = 0$ by construction, so the phase-two criterion
+(``$\ge 50\%$ reduction'') is satisfied at the degenerate endpoint. Hence the two-sided constraint
+and joint reporting.
+
+\textbf{Case two.} For a single synapse $u \in \mathbb{R}$,
+$\cos(u_A, u_B) = \mathrm{sign}(u_A)\mathrm{sign}(u_B) \in \{-1, +1\}$ whenever both are non-zero.
+The threshold set $\{\cos < 0\}$ is therefore invariant to magnitude and rotation: there is no
+interior to threshold.
+
+\textbf{Case three.} The integer objective is a step function of $\alpha$ with a plateau that
+contains the starting value; a hill climb that accepts only strict improvements cannot leave a
+plateau. Measured: five seeds, five identical trajectories, final $\alpha$ exactly $0.5$.
+Calibration of the alternative objective, on a trained snapshot, Fisher across
+$\alpha \in \{0.2, 0.35, 0.5, 0.65, 0.8\}$: range 0.026--0.039 at probe lengths 8, 50, 200 and 800
+steps --- flat at every length, hence no usable gradient.
+
+\textbf{Case four.} The mean-cosine proxy over a grid of $\alpha$ (twenty steps of 200 batches,
+seed 0): 0.501 at $\alpha=0$, rising monotonically to 0.625 at $\alpha=0.9$, and 0.501 again at
+$\alpha=1$. Fisher over the same range peaks at $\alpha = 0.5$ with 0.651 against 0.472 and 0.331
+at the endpoints.
 
 \end{document}
