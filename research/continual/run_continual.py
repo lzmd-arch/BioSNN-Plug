@@ -137,27 +137,19 @@ def run_incremental(
             for _ in range(readout_epochs):
                 readout.step(feats, labels)
 
+        # **每个格子是"单个任务"的准确率，不是"累计类集"。** 累计口径会把 20 类
+        # 的联合准确率填进 a[t][1]，而 summarise 按"任务 1 单独"解释它——数字会
+        # 系统性偏低（诊断里累计 0.114、单独 0.228），ACC/AF 也就不是预注册的定义。
+        # 详见 sweep_results/continual_readout_diagnosis_plan.md。
+        task_sets = [np.asarray(sorted(int(c) for c in task)) for task in tasks[: t + 1]]
         if prototypes is not None:
             matrix[t, : t + 1] = [
-                _prototype_accuracy(
-                    model,
-                    prototypes,
-                    test_x,
-                    test_y,
-                    np.asarray(sorted(seen[: (i + 1) * len(classes)])),
-                )
-                for i in range(t + 1)
+                _prototype_accuracy(model, prototypes, test_x, test_y, task_set)
+                for task_set in task_sets
             ]
         else:
             matrix[t, : t + 1] = [
-                evaluate_seen(
-                    model,
-                    readout,
-                    test_x,
-                    test_y,
-                    np.asarray(sorted(seen[: (i + 1) * len(classes)])),
-                )
-                for i in range(t + 1)
+                evaluate_seen(model, readout, test_x, test_y, task_set) for task_set in task_sets
             ]
         print(f"  task {t + 1}/{n_tasks}: 本任务 {matrix[t, t]:.3f}")
 
