@@ -36,11 +36,17 @@ def _blend_apply(
     """按 α 混合两规则的一步更新并写回共享权重。（与 runner 主循环同一套语义）"""
     delta_h = hebbian_update(harness.hebbian, batch_x, batch_y)
     if labeled.any():
-        delta_e = eprop_update(harness.eprop, batch_x[:, torch.as_tensor(labeled)], batch_y[labeled])
+        delta_e = eprop_update(
+            harness.eprop, batch_x[:, torch.as_tensor(labeled)], batch_y[labeled]
+        )
     else:
         delta_e = torch.zeros_like(harness.shared_weight)
-    blended = harness.arbiter.blend(delta_e.detach().cpu().numpy(), delta_h.detach().cpu().numpy().T)
-    new_weight = harness.shared_weight.detach().cpu() + torch.as_tensor(blended, dtype=torch.float32)
+    blended = harness.arbiter.blend(
+        delta_e.detach().cpu().numpy(), delta_h.detach().cpu().numpy().T
+    )
+    new_weight = harness.shared_weight.detach().cpu() + torch.as_tensor(
+        blended, dtype=torch.float32
+    )
     harness._shared = new_weight.to(harness.shared_weight.device)
     harness.sync_from_shared()
 
