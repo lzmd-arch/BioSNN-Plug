@@ -161,6 +161,12 @@ def run_arm(
     fit_alpha: bool = True,
     shuffle_labels: bool = False,
     alpha: float = 0.5,
+    adaptive_alpha: bool = False,
+    val_frac: float = 0.0,
+    alpha_step: float = 0.05,
+    checkpoint_epochs: int = 5,
+    alpha_lo: float = 0.2,
+    alpha_hi: float = 0.8,
 ) -> dict:
     from research.arbiter.shared_synapse import SharedSynapseConfig, SharedSynapseHarness
 
@@ -195,9 +201,26 @@ def run_arm(
     fit_trace: list[tuple[torch.Tensor, torch.Tensor]] = []
     fitted = False
     n = train_inputs.shape[1]
-    for _ in range(epochs):
-        order = torch.randperm(n)
-        for start in range(0, n, batch):
+
+    # R2：验证集从**训练数据**里切（固定索引，不参与训练）。
+    # 绝不能用评测集——那会把 alpha 的选择泄漏进验收。
+    if val_frac > 0:
+        generator = torch.Generator().manual_seed(seed)
+        perm_all = torch.randperm(n, generator=generator)
+        n_val = max(1, int(n * val_frac))
+        val_idx = perm_all[:n_val]
+        train_pool = perm_all[n_val:]
+    else:
+        val_idx = None
+        train_pool = torch.arange(n)
+
+    alpha_trace: list[tuple[int, float, float]] = []
+    direction = 1.0
+    last_val_fisher: float | None = None
+
+    for epoch in range(epochs):
+        order = train_pool[torch.randperm(len(train_pool))]
+        for start in range(0, len(order), batch):
             idx = order[start : start + batch]
             x = train_inputs[:, idx]
             y = labels[idx]
@@ -241,6 +264,19 @@ def run_arm(
             # 权重算起，更新永远累积不起来（门禁实测 |dW|/|W| = 0.0000 才发现的）。
             weight = harness.shared_weight
 
+        # ── R2 的检查点：每 checkpoint_epochs 个 epoch 走一步 ──────────────────
+        # 零额外训练开销：只多算一次验证集特征。
+        if adaptive_alpha and val_idx is not None and (epoch + 1) % checkpoint_epochs == 0:
+            val_features = features(train_inputs[:, val_idx], harness.shared_weight)
+            val_fisher = fisher_ratio(val_features, labels[val_idx].numpy())
+            if last_val_fisher is not None and val_fisher < last_val_fisher:
+                direction = -direction
+            last_val_fisher = val_fisher
+            alpha_trace.append((epoch + 1, float(harness.arbiter.alpha), float(val_fisher)))
+            harness.arbiter.alpha = float(
+                np.clip(harness.arbiter.alpha + alpha_step * direction, alpha_lo, alpha_hi)
+            )
+
     # 可分性：用**全部训练标签**测表示本身（训练时规则只见到有标签子集，见规格）。
     train_features = features(train_inputs, harness.shared_weight)
     all_labels = labels.numpy()
@@ -277,6 +313,8 @@ def run_arm(
         "gate_passed": bool(delta_ratio >= GATE_RATIO),
         "shuffle_labels": shuffle_labels,
         "alpha_fitted": fitted,
+        "alpha_trace": alpha_trace,
+        "val_frac": val_frac,
     }
 
 
@@ -296,6 +334,14 @@ def main(argv: list[str] | None = None) -> int:
         help="MIX 臂冻结在 alpha=0.5，不跑 ES 拟合（对照）",
     )
     parser.add_argument("--shuffle-labels", action="store_true", help="打乱训练标签（对照）")
+    parser.add_argument(
+        "--adaptive-alpha",
+        action="store_true",
+        help="R2：每 --checkpoint-epochs 个 epoch 按验证集 Fisher 走一步（需要 --val-frac > 0）",
+    )
+    parser.add_argument("--val-frac", type=float, default=0.0, help="从训练数据切出的验证集比例")
+    parser.add_argument("--alpha-step", type=float, default=0.05)
+    parser.add_argument("--checkpoint-epochs", type=int, default=5)
     parser.add_argument(
         "--alpha",
         type=float,
@@ -328,6 +374,10 @@ def main(argv: list[str] | None = None) -> int:
                     fit_steps=args.fit_steps,
                     fit_alpha=not args.no_fit_alpha,
                     alpha=args.alpha,
+                    adaptive_alpha=args.adaptive_alpha,
+                    val_frac=args.val_frac,
+                    alpha_step=args.alpha_step,
+                    checkpoint_epochs=args.checkpoint_epochs,
                     shuffle_labels=args.shuffle_labels,
                 )
                 results.append(row)
