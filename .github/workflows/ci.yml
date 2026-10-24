@@ -345,6 +345,22 @@ jobs:
           path: paper/p4/main.pdf
           if-no-files-found: error
 
+  # ── 论文数字对账：正文里的数必须与结果文件一致 ──────────────────────────────
+  # 论文表格与静态扫描段的数字是**手抄**进 LaTeX 的。"一个数字只有一个家"这条纪律
+  # 在文档层面一直靠人记；这条腿把它变成可执行：从 sweep_results/ 重算，与 main.tex 比对，
+  # 不一致就红并指出哪一格。改实验忘了改正文，会在这里被抓住。
+  paper-numbers:
+    name: 论文数字对账（正文 vs 结果文件）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --locked --all-groups
+      - name: 对账
+        run: uv run python scripts/check_paper_numbers.py
+
   # ── 计划书 §12.1：第三方依赖许可审计 ──────────────────────────────────────
   # 计划书点名要核查 eprop-PyTorch 与 Lava/Loihi 相关组件的许可证条款。
   # 这里只做基线：列出全部依赖的许可证，并在出现强 copyleft 时失败。

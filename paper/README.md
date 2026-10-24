@@ -1059,3 +1059,39 @@ snapshot.
 **v1.1** with this file (`10.5281/zenodo.23429379`). The alternative — leaving the record at `v1.0`
 while the repository carries a newer source — was rejected because it makes the published artifact
 reproducible from nothing. v1.0 stays fetchable at its own DOI, and its description points forward.
+
+## Draft log — P4: skeleton to deposit (2026-10-24)
+
+**One day, in this order.** The skeleton (`p4_paper_skeleton.tex`, written 2026-10-18) was copied
+into `paper/p4/main.tex` unchanged. A gap audit then matched every skeleton section against the
+material that actually existed, and found four conflicts between the skeleton and the rulings made
+in between: a `retention >= 0.8` that the code implements as a two-sided `[0.2, 0.8]`; a title the
+rulings had changed; a three-rule results section that belongs to phase five; and triviality
+analyses the skeleton had filed in an appendix. All four were ruled on and applied.
+
+**What was written from data, not from intention.** §5.1 (mixture over singles, +0.179), the static
+sweep in the same section (optimum at the default, with 0.6 statistically indistinguishable), §5.2
+(no objective could be priced; the static optimum is the default; slow adaptation drifted to the
+constraint boundary), §5.3 (analytical, explicitly *not* an empirical comparison), §6 (criterion,
+1-scalar reading, limits including the compartmentalisation pre-emption), §7, and the appendices.
+Everything else in the skeleton was placeholder prose and was replaced.
+
+**What the compile job caught.** The P4 LaTeX leg was added before the paper was finished, and in
+its first three runs it caught: a `\` eaten by a non-raw Python string (five table rows), a missing
+`amssymb` (`\mathbb`), and — on a later pass — a `\ref` destroyed by `\r` and rendering as
+`Section~ ef{sec:pending}`. The third one had already shown up in an earlier CI log as
+`Reference 'sec:pending' undefined` and was waved through as first-pass BibTeX noise; that is now a
+written rule in `CONTRIBUTING.md`.
+
+**What the read-through caught.** Three categories were flagged: six passages that did not sound
+like the author, six claims that would not survive a reviewer, three that were unclear. The second
+category was fixed first (a universal claim about neurons, a gating/mixing equivalence, an undefined
+formula symbol, a non-sequitur about GPUs, a noise claim we did not test). The tone pass came last,
+with two options offered per passage and the author choosing.
+
+**Deposit.** Package built under the §8 gate: credentials 0, absolute paths 0, out-of-repo paths 0,
+and the single placeholder hit was the `\todo` macro definition itself (zero typeset uses). Draft
+`23613539` uploaded with md5 verification on all three attachments, then published after the author's
+go-ahead, then re-read from the **public** API. The attached `main.tex` predates the DOI that was
+written into the repository copy afterwards; `paper/README.md` records that one-sentence difference
+so it is not mistaken for drift.
