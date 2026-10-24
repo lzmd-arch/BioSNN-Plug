@@ -49,6 +49,7 @@ MODELS = {
     "mean_delta": MeanDeltaModel,
     "per_action_mean": PerActionMeanModel,
     "ridge_action": RidgeActionModel,
+    "ridge_quadratic": lambda: RidgeActionModel(quadratic=True),
 }
 
 __all__ = ["Transitions", "collect_transitions", "evaluate", "main"]
@@ -132,13 +133,18 @@ def evaluate(model: Any, train: Transitions, test: Transitions) -> dict[str, Any
 
 
 def _run_one_seed(
-    seed: int, *, train_episodes: int, test_episodes: int, env_name: str
+    seed: int,
+    *,
+    train_episodes: int,
+    test_episodes: int,
+    env_name: str,
+    primary_model: str,
 ) -> dict[str, Any]:
     data = collect_transitions(train_episodes + test_episodes, seed=seed, env_name=env_name)
     train = data.subset(data.episode < train_episodes)
     test = data.subset(data.episode >= train_episodes)
     results = {name: evaluate(factory(), train, test) for name, factory in MODELS.items()}
-    ridge = results["ridge_action"]
+    ridge = results[primary_model]
     baseline = results["copy_last"]
     ratio = ridge["nmse"] / baseline["nmse"] if baseline["nmse"] > 0 else float("inf")
     checks = {
@@ -167,6 +173,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--train-episodes", type=int, default=200)
     parser.add_argument("--test-episodes", type=int, default=100)
     parser.add_argument("--env", default="CartPole-v1")
+    parser.add_argument(
+        "--primary-model",
+        choices=tuple(MODELS),
+        default="ridge_action",
+        help="判据看哪个模型；amendment 1 起用 ridge_quadratic。",
+    )
     parser.add_argument("--out", type=Path, default=OUT)
     parser.add_argument("--smoke", action="store_true", help="小规模冒烟：5/3 回合")
     args = parser.parse_args(argv)
@@ -185,13 +197,14 @@ def main(argv: list[str] | None = None) -> int:
             train_episodes=args.train_episodes,
             test_episodes=args.test_episodes,
             env_name=args.env,
+            primary_model=args.primary_model,
         )
         for seed in seeds
     ]
     elapsed = time.perf_counter() - started
 
     def aggregate(key: str) -> dict[str, float]:
-        values = [row["models"]["ridge_action"][key] for row in per_seed]
+        values = [row["models"][args.primary_model][key] for row in per_seed]
         finite = [value for value in values if np.isfinite(value)]
         return {
             "mean": float(np.mean(finite)) if finite else float("nan"),
@@ -207,6 +220,7 @@ def main(argv: list[str] | None = None) -> int:
             "test_episodes": args.test_episodes,
             "behaviour_policy": "uniform random",
             "ridge_lambda": 1.0,
+            "primary_model": args.primary_model,
         },
         "per_seed": per_seed,
         "aggregate": {

@@ -190,14 +190,20 @@ class RidgeActionModel:
     ``z`` 用**训练集**的均值与标准差标准化；``a`` 是 one-hot。显式含 ``a·z(s)``
     交互项，才能测出「动作改变动力学」而不只是「两个动作的平均不同」。
 
+    ``quadratic=True`` 时再加 ``z²`` 与 ``(a·z)²``：终止是双侧阈值，线性分数会
+    把两侧互相抵消（原预注册的 `ridge_action` 在终止 AUROC 上只剩 0.53）。
+    这一档是 `world_model_groundwork_prereg_amend1.md` 加的，不改原判据。
+
+
     **λ 同时惩罚截距**（实现更简单，且标准化后截距接近 0）。这不是局部学习规则，
     只是测量标尺——见模块文档。
     """
 
-    def __init__(self, ridge: float = 1.0) -> None:
+    def __init__(self, ridge: float = 1.0, *, quadratic: bool = False) -> None:
         if ridge <= 0:
             raise ValueError(f"ridge 必须为正，收到 {ridge!r}。")
         self.ridge = float(ridge)
+        self.quadratic = bool(quadratic)
         self.mean_ = np.zeros(1)
         self.scale_ = np.ones(1)
         self.coef_ = np.zeros((1, 1))
@@ -208,7 +214,14 @@ class RidgeActionModel:
         onehot[np.arange(states.shape[0]), actions] = 1.0
         # 每个动作一组 z：交互项是 (n, 8)，不是 onehot (n,2) 与 z (n,4) 的逐元素乘。
         interaction = np.hstack([onehot[:, [0]] * z, onehot[:, [1]] * z])
-        return np.hstack([np.ones((states.shape[0], 1)), z, onehot, interaction])
+        parts = [np.ones((states.shape[0], 1)), z, onehot, interaction]
+        if self.quadratic:
+            # 终止是**双侧阈值**（|θ'| 超过界限），单个线性分数表达不了：两边的贡献
+            # 会互相抵消。二次项让一个分数能同时抬高低侧与高侧——这是 amendment 1
+            # 加的那一项，不是原预注册的线性头。
+            parts.append(z**2)
+            parts.append(interaction**2)
+        return np.hstack(parts)
 
     def fit(
         self,
