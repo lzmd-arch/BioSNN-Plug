@@ -1,6 +1,6 @@
 # CIFAR-100 类增量：正式预注册运行（2026-10-24）
 
-**预注册见 [`../continual_cifar100_prereg.md`](../continual_cifar100_prereg.md)（2026-10-18，先于数据）。**
+**预注册见 [`../../continual_cifar100_prereg.md`](../../continual_cifar100_prereg.md)（2026-10-18，先于数据）。**
 本文件只记数与解释，不改判据。
 
 ## 协议（与预注册一致）

@@ -94,7 +94,7 @@ Measurement discipline is not a slogan: preregistrations, trivial-solution check
 | Modality plugins | **Four**: `image_diff` (DVS event coding), `mnist_pulse` (firing rates), **`text_zscore`** (frozen local embedding + z-score top-k population coding), **`audio_cochlea`** (log-band decomposition + firing rates; shipped in 0.3.0 on PyPI) | 2026-10-18 |
 | Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **97.79%** (default closed-form readout; SGD readout 98.01%) ✓; W2 e-prop sequential sMNIST **0.7764** (30 epochs x 5 seeds) -> **0.8889** (**official**: **LIF** @ lr=1e-2 @ 250 epochs, converged; ALIF 0.8831 same budget as control; **matched-budget BPTT control 0.9630, 7.41 points ahead** — stated as measured: the local rule still trails backpropagation; **recipe parity, quantified**: BPTT's optimizer formulation is worth **+8.53 pp** at small learning rates (1e-3) and only **+0.88 pp** at the rate finally chosen (inside the tie band) — at the operating point the two arms are comparable recipes); learning-rate interaction swept, **LIF leads across the whole grid** ✓; W3 R-STDP CartPole median **237.8 steps** (criterion >= 200) ✓. Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) | 2026-10-18 |
 | **Network scale** | **256 spiking neurons** (W2); W1 adds 3,072 **rate-based** units (not spiking neurons). The plan's §2.2 cognitive core targets roughly 50,000 — **about 195x away**; see [research/README](research/README.en.md) | 2026-10-18 |
-| Arbiter | **Parts in place** (`research/arbiter/`): conflict detection (cosine > 90 degrees) + ES meta-learned arbiter, **wired into two research lines** (shared input synapses). ⚠️ Only the input->hidden weight is shared, and "50% fewer conflict events" holds **trivially** on synthetic data — see that directory's README | 2026-10-24 |
+| Arbiter | **P4 final conclusion** (`research/arbiter/`): a static 50/50 mixture beats either rule alone, synergy margin **+0.179**; **adaptive arbitration is not measurable in this benchmark** — ruled out by the pre-registered protocol, a full probe costs about seven hours per fit. See [Paper II](paper/p4/) (Zenodo `10.5281/zenodo.23613539`); the historical wording stays in that directory's README | 2026-10-24 |
 | Spiking execution layer (phase three) | **Entry point, linear TD critic and the TD-LTP population critic are all in place, but none of them clears 200.** ⚠️ **Every number before 2026-10-18 is void**: training episodes were missing an environment seed, so one seed produced different trajectories. After the fix, a **10-seed comparison**: linear TD median 50.4, population default 55.0, operating point 37.1 — **all intervals overlap, all 0/10**; the three main arms are indistinguishable. The rate-based version's median of 237.8 remains the only implementation that passes. See [research/rstdp_spiking](research/rstdp_spiking/README.en.md) | 2026-10-18 |
 | Cross-modal retrieval | **Ten rounds of retrieval experiments**: the original criterion (absolute R@1 50%) cannot separate "local learning works" on either dataset, and was restated as **recovery rate** (synthetic 75.2%, Flickr8k **78.7%**, full grid); Flickr8k's **front end** has its own criterion — caption content-word linear probe median AUC **0.790** (text-side self-check 1.000) | 2026-10-17 |
 | Cognitive core / LLM orchestration | **Not started** — see the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §七 | — |
@@ -106,7 +106,7 @@ Measurement discipline is not a slogan: preregistrations, trivial-solution check
 | Plugins replace independently | ✅ Four plugins + entry points; skeleton library is on PyPI |
 | TAAF fine-tuning samples < 1/10 of from-scratch | ⚠️ **The criterion dissolves under [ADR-0012](docs/adr/ADR-0012-taaf-locality-and-bus-output-contract.en.md); it is not met** — fusion weights are never trained, per the red line, so the criterion **has no referent** (no fine-tuning means no "fine-tuning sample count"). See plan revision note 27 |
 | Cross-modal retrieval R@1 50%+ | ⚠️ **The original criterion (absolute 50%) was not met and has been judged non-discriminating** (the synthetic set can be satisfied by memorisation; the Flickr8k frozen front end's upper bound is 0.076). **Restated as "recovery rate" and passed**: the local rule recovers **75.2% (synthetic) / 78.7% (Flickr8k, full grid)** of the linear upper bound — see [research/retrieval](research/retrieval/README.en.md) |
-| Arbiter cuts dual-rule conflict events by 50%+ | ✅ Met on a **real shared synapse** (10 -> 0, `retention` 0.3) |
+| Arbiter cuts dual-rule conflict events by 50%+ | ⚠️ The original criterion holds **trivially** on synthetic data and has been superseded by the synergy benchmark; P4 final: static mixture **+0.179**, adaptive arbitration **not measurable** (~7 h per fit) |
 
 Three boundaries worth stating plainly:
 
@@ -160,7 +160,7 @@ flowchart TB
 
     subgraph ARB["Cross-rule arbitration research/arbiter"]
         CF["Conflict detection: cosine > 90 degrees<br/>✅ implemented"]
-        ES["ES meta-learned arbiter<br/>✅ wired into both lines (shared input synapse)<br/>⚠ 50% fewer is trivially satisfied on synthetic data"]
+        ES["P4: static mixture +0.179<br/>adaptive arbitration not measurable<br/>(~7 h per fit)"]
     end
 
     subgraph L2["biosnn-bus skeleton library"]
@@ -193,15 +193,11 @@ flowchart TB
     ARB -.->|arbitrate inter-layer conflicts| ACT
 ```
 
-Conflicts between layers are arbitrated by an **ES meta-learning arbiter** (⬜ phase 2). The complete
-description of each layer's learning rules is in the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §2 and §3.
-
-Conflicts between layers are arbitrated by an **ES meta-learning arbiter**: conflict detection and
-the arbiter are both implemented, and **wired into both research lines**
-(`research/arbiter/shared_synapse.py`, where the two rules share the input->hidden synapses).
-Warning: `50% fewer conflict events` is **trivially satisfied** on synthetic data -- the optimum is
-to switch one rule off, so read the drop together with `retention`; see
-[`research/arbiter/README`](research/arbiter/README.en.md).
+Conflicts between layers are arbitrated by an **ES meta-learning arbiter**. P4's final conclusion:
+a **static 50/50 mixture beats either rule alone, synergy margin +0.179**; **adaptive arbitration is
+not measurable in this benchmark** — ruled out by the pre-registered protocol, a full probe costs
+about seven hours per fit. The older wording ("50% fewer conflict events" holds trivially on
+synthetic data) is kept as history in [`research/arbiter/README`](research/arbiter/README.en.md).
 
 Warning: **the ✅ in the diagram means implemented, not connected where the roadmap puts it**:
 TAAF is implemented, but it is a strategy you **opt into** (the default is still concatenation);
