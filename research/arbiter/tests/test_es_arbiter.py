@@ -1,8 +1,14 @@
-"""Tests for the ES arbiter: does it actually reduce conflict events?
+"""Tests for the ES arbiter: does the search move, and toward the right place?
 
-The arbiter's whole reason to exist is the phase-two success criterion -- "the arbiter
-reduces dual-rule conflict events by 50%+". So the test that matters is the one that
-says ES found an alpha that cut events. Everything else is plumbing.
+The objective changed on 2026-10-24: it used to minimise the **integer** conflict-event
+count, which saturates and left `alpha` stuck at its starting value (the synergy
+benchmark's MIX arm came out bit-identical to a frozen-0.5 control). It now maximises
+the mean `min(cos(blend, A), cos(blend, B))`.
+
+So these tests are: does ES move at all when the geometry says it should, does it stop
+at the balance point a **grid search** finds (not at whatever the implementation
+happens to return), does it stay put when the rules already agree, and does the event
+count still get reported for comparability with the old runs.
 
 The arbiter has **one** parameter on purpose: Confavreux et al. report meta-learning
 failing as rule parameterisations grow complex.
@@ -23,6 +29,41 @@ def trace(n_steps: int = 12, n_pre: int = 4, n_post: int = 6, seed: int = 0):
     # rule B mostly opposes A -- this is what creates conflict events.
     updates_b = [-a + 0.1 * rng.standard_normal(a.shape) for a in updates_a]
     return updates_a, updates_b
+
+
+def trace_partial(
+    angle_deg: float = 120.0,
+    b_scale: float = 3.0,
+    n_steps: int = 12,
+    n_pre: int = 4,
+    n_post: int = 6,
+    seed: int = 0,
+):
+    """B 与 A 有固定夹角、模长可不同——**平衡点因此不在 0.5**。
+
+    ``trace()`` 里 ``b = -a + 噪声``，混合更新在 α ≈ 0.5 处几乎被噪声主导，
+    余弦没有意义。要测「ES 会不会朝平衡点走」，需要一条几何上干净的轨迹。
+    """
+    rng = np.random.default_rng(seed)
+    updates_a = [rng.standard_normal((n_pre, n_post)) for _ in range(n_steps)]
+    theta = np.deg2rad(angle_deg)
+    updates_b = []
+    for a in updates_a:
+        flat = a.ravel()
+        unit = flat / np.linalg.norm(flat)
+        perp = rng.standard_normal(flat.shape)
+        perp -= (perp @ unit) * unit
+        perp /= np.linalg.norm(perp)
+        updates_b.append((b_scale * (np.cos(theta) * unit + np.sin(theta) * perp)).reshape(a.shape))
+    return updates_a, updates_b
+
+
+def best_alpha(updates_a, updates_b, *, lo: float = 0.05, hi: float = 0.95, n: int = 181) -> float:
+    """网格扫出目标函数的最优 α。**测试的基准是它，不是实现自己吐出来的数。**"""
+    arb = ESArbiter()
+    grid = np.linspace(lo, hi, n)
+    scores = [arb._alignment(updates_a, updates_b, float(alpha)) for alpha in grid]
+    return float(grid[int(np.argmax(scores))])
 
 
 class TestBlend:
@@ -78,24 +119,40 @@ class TestMeasure:
 
 
 class TestFit:
-    def test_es_reduces_conflict_events(self):
-        """The criterion the phase-two success bar is measured against."""
-        updates_a, updates_b = trace()
+    def test_es_moves_alpha_toward_the_balance_point(self):
+        """目标换成连续的对齐之后，ES 必须真的动，并且停在平衡点附近。
+
+        b 的模长是 a 的 3 倍、夹角 120°，平衡点因此**偏离起点 0.5**（实测约 0.62）。
+        基准是**网格扫出来的最优**——拿实现自己的输出当基准，等于什么都没测。
+        """
+        updates_a, updates_b = trace_partial()
+        optimum = best_alpha(updates_a, updates_b)
+        assert abs(optimum - 0.5) > 0.05, f"这条轨迹的平衡点本该离开 0.5，实际 {optimum:.3f}"
+
         arb = ESArbiter(alpha=0.5, seed=0)
-        result = arb.fit(updates_a, updates_b, steps=24)
+        arb.fit(updates_a, updates_b, steps=64)
+        assert abs(arb.alpha - optimum) <= 0.1, f"ES 停在 {arb.alpha:.3f}，网格最优是 {optimum:.3f}"
 
-        assert isinstance(result, ArbiterResult)
-        assert result.events_before > 0, "the trace must start in conflict"
-        assert result.events_after <= result.events_before
-        assert result.reduction >= 0.5, (
-            f"仲裁后冲突事件只降了 {result.reduction:.1%}，达不到阶段二的 50%：{result}"
-        )
+    def test_no_movement_when_the_rules_agree(self):
+        """两规则完全一致时目标处处相同——不动才是对的，不能为了"动"而动。"""
+        rng = np.random.default_rng(7)
+        updates_a = [rng.standard_normal((3, 4)) for _ in range(6)]
+        updates_b = [a.copy() for a in updates_a]
+        arb = ESArbiter(alpha=0.5, seed=0)
+        arb.fit(updates_a, updates_b, steps=32)
 
-    def test_alpha_moves_toward_the_less_conflicting_rule(self):
+        # 目标处处等于 1（浮点误差量级），所以只要求"没有系统性漂移"，
+        # 不要求逐位不动——要求逐位不动等于要求浮点求和顺序也被钉死。
+        assert abs(arb.alpha - 0.5) <= 0.15
+        assert arb._alignment(updates_a, updates_b, arb.alpha) == pytest.approx(1.0, abs=1e-6)
+
+    def test_fit_still_reports_event_counts(self):
+        """事件计数照报——旧数字要能继续比较，只是它不再是被优化的量。"""
         updates_a, updates_b = trace()
-        arb = ESArbiter(alpha=0.5, seed=1)
-        arb.fit(updates_a, updates_b, steps=24)
-        assert arb.alpha != 0.5, "ES should have moved alpha"
+        result = ESArbiter(alpha=0.5, seed=0).fit(updates_a, updates_b, steps=24)
+        assert isinstance(result, ArbiterResult)
+        assert result.events_before > 0
+        assert isinstance(result.events_after, int)
 
     def test_same_seed_is_reproducible(self):
         def run():
@@ -134,15 +191,21 @@ class TestTrivialSolution:
     opposes A outright, minimising conflict with A always wins by ignoring B.
     """
 
-    def test_min_retention_blocks_the_degenerate_answer(self):
+    def test_objective_does_not_reward_turning_b_off(self):
+        """旧目标在 B 与 A 对立时奖励 α→0；新目标不该给这个方向任何好处。"""
         updates_a, updates_b = trace()
-        free = ESArbiter(alpha=0.5, seed=0).fit(updates_a, updates_b, steps=24)
-        assert free.alpha < 0.5, "unconstrained ES drifts toward turning B off"
+        arb = ESArbiter()
+        at_zero = arb._alignment(updates_a, updates_b, 0.0)
+        at_half = arb._alignment(updates_a, updates_b, 0.5)
+        assert at_half >= at_zero, "把 B 关掉不该是更优解"
 
+    def test_min_retention_still_floors_alpha(self):
+        """min_retention 从唯一防线退成保险，但保险仍然要生效。"""
+        updates_a, updates_b = trace_partial()
         guarded = ESArbiter(alpha=0.5, seed=0).fit(
-            updates_a, updates_b, steps=24, min_retention=0.3
+            updates_a, updates_b, steps=64, min_retention=0.6
         )
-        assert guarded.alpha >= 0.3, "min_retention must floor alpha"
+        assert guarded.alpha >= 0.6 - 1e-12
 
     def test_retention_is_just_alpha(self):
         """alpha -> 0 is the trivial solution, so it must be reportable by name."""
@@ -153,12 +216,8 @@ class TestTrivialSolution:
         with pytest.raises(ValueError, match="min_retention"):
             ESArbiter().fit(*trace(), min_retention=-0.1)
 
-    def test_reduction_alone_is_not_a_victory(self):
-        """Report both numbers: 100% reduction with 0 retention is just rule A."""
+    def test_reduction_is_reported_not_optimised(self):
+        """降幅仍然是汇报量，但**不再**是被优化的目标——别把旧指标当新结论。"""
         updates_a, updates_b = trace()
-        arb = ESArbiter(alpha=0.5, seed=0)
-        result = arb.fit(updates_a, updates_b, steps=24)
-        assert result.reduction >= 0.5
-        assert arb.retention(updates_a[0], updates_b[0]) < 0.5, (
-            "这条断言本身就是在说：降幅达标的同时，B 的贡献可能已经所剩无几——两个数必须一起报"
-        )
+        result = ESArbiter(alpha=0.5, seed=0).fit(updates_a, updates_b, steps=24)
+        assert 0.0 <= result.reduction <= 1.0

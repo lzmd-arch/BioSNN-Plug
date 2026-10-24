@@ -46,6 +46,21 @@ This module therefore exposes `retention()` and `fit(..., min_retention=...)`: t
 arbiter must keep some of rule B's contribution, or it is just rule A with extra steps.
 **Report both numbers together** -- "conflict events dropped 100%" on its own is
 uninformative, and possibly wrong.
+
+## The objective changed on 2026-10-24 (and why)
+
+`fit()` used to minimise the **integer** conflict-event count against rule A. The
+synergy benchmark showed what that costs: at `alpha = 0.5` the blend already had zero
+conflicts with A, every perturbation scored the same, and `alpha` never moved -- the
+`MIX` arm came out **bit-identical** to a frozen `alpha = 0.5` control, five seeds out
+of five. An integer objective with a plateau is not a weak optimizer; it is an inert
+one, and it made the arbiter's control look like a failure of the *idea* rather than of
+the *implementation*.
+
+The objective is now continuous and non-degenerate: maximise the mean of
+`min(cos(blend, A), cos(blend, B))` -- the alignment of the **worse-served** rule. The
+phase-two event counts are still returned for reporting, so old numbers remain
+comparable; what changed is only what the search climbs.
 """
 
 from __future__ import annotations
@@ -197,21 +212,51 @@ class ESArbiter:
             trial = float(np.clip(trial, min_retention, 1.0))
             if trial == self.alpha:
                 continue
-            current = self._events(updates_a, updates_b, self.alpha)
-            candidate = self._events(updates_a, updates_b, trial)
-            if candidate < current:
-                self.alpha = float(
-                    np.clip(self.alpha + self.step_size * np.sign(trial - self.alpha), 0.0, 1.0)
-                )
-            elif candidate > current:
-                self.alpha = float(
-                    np.clip(self.alpha - self.step_size * np.sign(trial - self.alpha), 0.0, 1.0)
-                )
+            current = self._alignment(updates_a, updates_b, self.alpha)
+            candidate = self._alignment(updates_a, updates_b, trial)
+            if candidate > current:
+                self.alpha = trial
 
         after = self._events(updates_a, updates_b, self.alpha)
         return ArbiterResult(
             alpha=self.alpha, events_before=before, events_after=after, steps=steps
         )
+
+    def _alignment(
+        self,
+        updates_a: list[np.ndarray],
+        updates_b: list[np.ndarray],
+        alpha: float,
+    ) -> float:
+        """ES 的目标函数：**平均「较差一侧的余弦」**，越大越好。
+
+        ## 为什么不是冲突事件数
+
+        事件数是**整数**，而且在大片 α 上取同一个值。协同性基准的实测把这一点钉死了：
+        α = 0.5 时混合更新与规则 A 的冲突已经是 0，任何扰动都还是 0，ES 于是一步都
+        走不动——MIX 臂与「冻结 α = 0.5」的对照**逐位相同**。整数目标没有梯度，
+        这不是「学出来恰好 0.5 最优」，是根本没有在学。
+
+        ## 为什么取 min 而不是平均
+
+        仲裁的伦理是「别让任何一条规则的贡献被抵消」。取
+        ``min(cos(blend, A), cos(blend, B))`` 的均值，等于只照顾更吃亏的那条规则；
+        这样 ``alpha -> 0``（把 B 关掉）不再占便宜，退化答案在目标函数层面就失去了吸引力，
+        ``min_retention`` 退化成一道额外的保险而不是唯一防线。
+        """
+        scores: list[float] = []
+        for a, b in zip(updates_a, updates_b, strict=True):
+            blended = self.blend(a, b, alpha=alpha)
+            norm_blend = float(np.linalg.norm(blended))
+            norm_a = float(np.linalg.norm(a))
+            norm_b = float(np.linalg.norm(b))
+            if norm_blend == 0.0:
+                scores.append(0.0)
+                continue
+            cos_a = float(np.vdot(blended, a)) / (norm_blend * norm_a) if norm_a else 0.0
+            cos_b = float(np.vdot(blended, b)) / (norm_blend * norm_b) if norm_b else 0.0
+            scores.append(min(cos_a, cos_b))
+        return float(np.mean(scores))
 
     def _events(
         self, updates_a: list[np.ndarray], updates_b: list[np.ndarray], alpha: float

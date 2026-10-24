@@ -103,10 +103,16 @@ class TestArbitrationOnRealConnection:
         assert result.reduction >= 0.5, f"降幅 {result.reduction:.0%} 未达阶段二的 50%"
         assert harness.arbiter.alpha >= 0.3, "min_retention must floor alpha -- no trivial fix"
 
-    def test_unconstrained_es_drifts_to_the_trivial_answer(self, harness):
-        """Without min_retention, ES turns rule B off. That is the symptom, not the fix."""
+    def test_balance_objective_does_not_turn_b_off(self, harness):
+        """旧目标（整数冲突事件）在 B 与 A 对立时会把 B 关掉；新目标没有这个退化方向。
+
+        b = -a 时混合在 α = 0.5 处相互抵消，任何偏离都让其中一条的余弦变负——
+        平衡点就是 0.5。所以未加约束时 ES 也不该往 0 跑。
+        """
         torch.manual_seed(4)
         updates_e = [torch.randn(N_IN, N_SHARED) for _ in range(10)]
         updates_h = [(-u).T for u in updates_e]
         harness.fit_arbiter(updates_e, updates_h, steps=16)
-        assert harness.arbiter.alpha < 0.5, "unconstrained ES should drift toward alpha -> 0"
+        assert harness.arbiter.alpha > 0.35, (
+            f"新目标不该把 B 关掉，实际 alpha = {harness.arbiter.alpha:.3f}"
+        )
