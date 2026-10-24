@@ -167,3 +167,5 @@ Bug 报告请务必带上**最小复现脚本**与**环境信息**——模板�
 
 贡献即表示你同意你的贡献以 [Apache-2.0](LICENSE) 授权（代码）
 或 [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)（文档）发布。
+
+> **CI 日志里的 `undefined reference` / `undefined citation` 必须逐条 triage**（首轮 BibTeX 的正常现象，还是真坏），**禁止以「首轮正常」整体忽略**。2026-10-24 的一处 `\ref` 被转义吃成两行，警告就写在日志里，被当成首轮放过了。

@@ -190,3 +190,8 @@ gives you ready-made commands.
 
 By contributing you agree that your contribution is released under [Apache-2.0](LICENSE) (code) or
 [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/) (documentation).
+
+> **Every `undefined reference` / `undefined citation` warning in CI logs must be triaged**
+> (first-pass BibTeX, or genuinely broken). **Never dismiss the batch as "just the first pass".**
+> On 2026-10-24 a `\ref` was eaten by an escape sequence and split across two lines; the warning
+> was in the log and was waved through as first-pass noise.

@@ -43,8 +43,9 @@ be measured at all is a question about objectives, not about ideas.
 Three observations motivate the question, and none of them is new; what is new is that the
 question is made measurable.
 
-\textbf{Biology.} A single neuron does not use one plasticity rule. In vivo imaging during
-learning finds distinct rules operating in different dendritic compartments of the same cell:
+\textbf{Biology.} A single neuron need not follow a single plasticity rule. In vivo imaging of
+cortical pyramidal neurons during motor learning finds distinct rules operating in different
+dendritic compartments of the same cell:
 apical compartments follow local co-activity in a Hebbian-like form, basal compartments follow
 coincidence with postsynaptic spiking in an STDP-like form, and blocking postsynaptic spiking
 attenuates the basal plasticity without touching the apical --- a causal dissociation, not a
@@ -130,9 +131,9 @@ Metaplasticity --- a plasticity rule that itself changes with history --- is one
 carry memory in its rules rather than its weights, and it has been analysed as such in multilevel
 recurrent networks \citep{zanardi2024metaplasticity}. The distinction from this paper is where the
 modulation acts: neuromodulatory accounts gate \emph{one} rule's update, whereas arbitration
-combines the outputs of \emph{different} rules. A gated rule can be expressed as a mixture with a
-state-dependent weight, which is why the contrast is informative: our negative result constrains
-the mixture form, not the gating literature.
+combines the outputs of \emph{different} rules. Gating is related but distinct --- it modulates the
+gain of one rule, whereas mixing combines heterogeneous updates --- so our negative result
+constrains the mixture form, not the gating literature.
 
 \subsection{Multi-objective interference at the synapse}
 
@@ -165,9 +166,9 @@ not arbitration.
 \textbf{Conflict is measured per row, not per synapse.} For one synapse the ``direction'' of an
 update is a scalar, so the cosine is $\pm 1$ and an angle threshold of $90^\circ$ degenerates to
 a sign test (Section~\ref{sec:triviality}, case two). We therefore compute the cosine between the
-blended update and each rule's update over the outgoing weights of a presynaptic neuron --- the
-smallest group that carries a direction --- and count a conflict event when the cosine is
-negative.
+blended update and each rule's update over the outgoing weights of one presynaptic neuron (one
+row of the weight matrix, the smallest group that carries a direction), and count a conflict event
+when the cosine is negative.
 
 \subsection{Meta-learning the arbitration signal}\label{sec:methods-meta}
 
@@ -245,8 +246,9 @@ check, applied to proxies.
 \section{Experimental Setup}
 
 Every run reported in this paper was executed on the CPU of a 16-core desktop machine; the
-project's GPU was not used, so the numbers are reproducible without one. A single arm-seed takes
-about thirteen minutes at the settings below, which is what makes a five-seed grid and a five-point
+project's GPU was not used. Reproducibility derives from fixed seeds and versioned records rather
+than from the absence of a GPU, but it does mean these numbers can be re-derived on hardware this
+modest. A single arm-seed takes about thirteen minutes at the settings below, which is what makes a five-seed grid and a five-point
 static sweep affordable in the first place.
 
 The shared backbone is a 256-unit representation fed by a $28 \to 256$ input weight, trained for
@@ -348,7 +350,7 @@ should not be read as one result. The static sweep answers \emph{how much room a
 none, because the optimum is the value a system would pick without measuring. The slow-adaptive arm
 answers \emph{whether an adaptive scheme can take the room it has}: under the pre-registered
 criterion, adaptive $\approx$ static --- a paired median of $+0.003$ against a matched
-$50/50$ control, an order of magnitude below $\delta = 0.05$ --- and what adaptation did instead
+$50/50$ control, less than a twentieth of $\delta = 0.05$ --- and what adaptation did instead
 was drift away from the optimum and park on the constraint boundary.
 
 \textbf{The line is sealed.} The pre-registration allowed these two arms and no third, and its
@@ -368,8 +370,9 @@ rule includes backpropagation, ours is local end to end including the outer loop
 number would compare two different claims at once. What we can state analytically is where the two
 formulations differ, and why we chose ours.
 
-\textbf{State space.} Discrete switching gives each synapse a categorical state; for $n$ rules the
-per-synapse state space is $n^{|W|}$, and the arbitration object is a selector. Continuous mixing
+\textbf{State space.} Discrete switching gives each synapse a categorical state: with $n$ rules
+and $m$ synapses the joint assignment has $n^{m}$ possible values, and the arbitration object is a
+selector. Continuous mixing
 gives each synapse the \emph{same} scalar $\alpha$, so the arbitration object is one number for the
 entire network. The second is a much smaller hypothesis class --- a feature for a paper whose
 subject is measurement, a limitation for a paper whose subject is capacity.
@@ -456,8 +459,8 @@ heterogeneous local rules separates representations far better than either rule 
 protocol that pre-registers its criteria and voids runs whose weights did not move.
 
 The title asks when arbitration can be measured, and the answer has three layers.
-\textbf{Mixing is measurable and measured}: the mixture beats both parents by a margin that no
-seed-level noise explains. \textbf{Adaptation is measurable in principle but not at a price we
+\textbf{Mixing is measurable and measured}: the mixture beats both parents by a margin the
+seed-level intervals separate. \textbf{Adaptation is measurable in principle but not at a price we
 could pay}: the only objective known to rank candidates the way the acceptance metric does requires
 a probe long enough to be a full training run, priced at about seven hours per fit; the adaptive
 scheme that \emph{was} affordable produced no gain over a fixed mix.
@@ -478,12 +481,35 @@ specifically --- an objective that is both affordable and discriminating.
 % ------------------------------------------------------------
 \section*{Use of AI assistance}
 
-An AI coding assistant was used to write the analysis and experiment code, to run the grids, and
-to draft prose from the recorded results. Every number in this paper is produced by committed code
-from committed configurations; the pre-registrations, the criteria, the scope rulings and the
-decision to seal the line were made by the author and are recorded in the repository with
-timestamps that precede the corresponding runs. Drafted text was checked against the records, and
-discrepancies found in the process were corrected in the records first and in the text second.
+This paper was written with an AI agent in the loop, and the boundary is stated precisely rather
+than gestured at.
+
+\textbf{What the agent did.} It wrote the experiment and analysis code, launched every run
+reported here, and drafted prose against the recorded results. It also produced the
+pre-registration texts --- the criterion rewrite, the objective-discrimination rule and the R1/R2
+records of Appendix~\ref{app:prereg} --- and those were committed to the repository
+\emph{before} the corresponding data existed, so a reader can check the order rather than take it
+on trust.
+
+\textbf{Who is responsible.} The author --- sole author --- takes responsibility for every claim
+and every number, and for the decision to seal the line when both rescue arms came back negative.
+The agent is not a co-author and cannot be one: it cannot consent to authorship or bear
+responsibility for content.
+
+\textbf{The verification is not a formality; it caught things.} Three examples, each in the public
+record: an arbitration objective that never moved the parameter it was optimising --- caught only
+because a frozen-$\alpha$ control existed and produced bit-identical results; a criterion
+implementation that compared quartiles of the wrong quantity, which would have reported a passing
+benchmark as a failure; and two silent text corruptions inside \LaTeX{} commands, caught by the
+compile job that runs on every push. In each case the correction is in the repository history
+rather than quietly applied.
+
+\textbf{Where the evidence is.} The results directory holds a per-run record for every number in
+this paper, each carrying its configuration and commit; the pre-registration index is
+Appendix~\ref{app:prereg}; and the drafting log records what was written, what turned out to be
+false, and which claims were narrowed rather than defended. We disclose at this length because a
+statement saying only ``AI was used'' cannot be checked; this one points at the artifacts that
+make it checkable, including the record of the agent's own errors.
 
 % ------------------------------------------------------------
 \section*{Data and code availability}
@@ -528,7 +554,29 @@ Device & CPU, 16 cores \\
 The verbatim records are Chinese-language sections of a repository document and are kept there
 rather than retyped here, because retyping is where a pre-registration silently becomes a
 post-registration. Each is identified by the commit that introduced it, all of which precede the
-runs they govern:
+runs they govern. Table~\ref{tab:prereg-index} gives the index a reader needs to locate each
+record; full translation is available on request.
+
+\begin{table}[h]
+\centering
+\caption{Index of the pre-registration records. All four live in
+\texttt{sweep\_results/arbiter\_synergy\_task\_spec.md} unless stated otherwise.}
+\label{tab:prereg-index}
+\begin{tabular}{p{0.30\linewidth}p{0.62\linewidth}}
+\toprule
+Section of the record & What it fixes \\
+\midrule
+判据改写 (criterion rewrite) & The synergy margin $\delta = 0.05$ and the separation rule,
+written before any MIX number existed \\
+预注册：目标函数（2026-10-24） & That any candidate objective must first pass a discrimination
+check; the results of that check are recorded in the same section \\
+预注册：R1 / R2 & The static sweep and the slow-adaptive arm, including the two-arm limit and
+the conditional per-row clause \\
+设计笔记 (design notes, \texttt{research/arbiter/DESIGN.md}) & The two-sided retention constraint
+and the definition of retention used in every report \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{table}[h]
 \centering
