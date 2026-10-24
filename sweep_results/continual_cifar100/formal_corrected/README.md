@@ -13,7 +13,8 @@
    结果见 [`../formal_cil/`](../formal_cil/README.md)。
 
 这一目录保留为**上界与诊断**：它回答"如果知道任务 id，W1+delta 能到多少"，
-不回答"类增量能到多少"。
+不回答"类增量能到多少"。真正的预注册 CIL 结果在
+[`../formal_cil/`](../formal_cil/README.md)：**ACC 0.0876 / AF 0.290**。
 
 ## 数字（5 种子）
 
