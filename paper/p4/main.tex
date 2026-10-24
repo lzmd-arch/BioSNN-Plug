@@ -12,7 +12,7 @@
 \usepackage[round]{natbib}  % \citep + plainnat: natbib family
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 \title{When Can Arbitration Be Measured?\\Mixed Local Plasticity Rules Under One Protocol}
-\author{Jinyao Shen\thanks{Independent researcher. Correspondence: \todo{GitHub URL}.}\\ \small{github.com/lzmd-arch/BioSNN-Plug}}
+\author{Jinyao Shen\thanks{Independent researcher. Correspondence: \url{https://github.com/lzmd-arch/BioSNN-Plug}.}\\ \small{github.com/lzmd-arch/BioSNN-Plug}}
 \date{November 2026}
 
 \begin{document}
@@ -20,50 +20,124 @@
 
 % ------------------------------------------------------------
 \begin{abstract}
-\todo{150-200 words. Outline: (1) problem --- multiple local learning rules acting on
-the same synapses produce conflicting updates; single-rule systems never face this;
-(2) what we built --- a continuous-mixing arbitration between heterogeneous local
-rules (Hebbian / e-prop / R-STDP), meta-learned by an evolution-strategy outer loop,
-under a retention constraint that excludes degenerate solutions, in a network with no
-backpropagation anywhere; (3) headline numbers --- \todo{synergy-benchmark result};
-\todo{conflict reduction reported jointly with retention under the two-sided constraint $\alpha \in [0.2, 0.8]$}; (4) stance --- arbitration is measured,
-not assumed; where it fails is reported.}
+Multiple local learning rules acting on the same synapses propose incompatible updates; systems
+built on a single rule never face this. We ask when reconciliation between such rules can be
+\emph{measured}, and answer with a benchmark, a protocol, and one negative result. The
+Rules-Collide benchmark places a Hebbian rule and e-prop on the one weight they already share and
+scores representation separability: a fixed 50/50 mixture reaches a Fisher ratio of 0.651 against
+0.472 and 0.331 for the rules alone (five seeds; paired margin +0.179). Arbitration itself ---
+choosing that weight rather than fixing it --- comes back negative, and measurably so: no adaptive
+scheme we could build beats the fixed mixture, the static optimum turns out to be the default
+value, and the only affordable objective was shown to lack discriminating power before it was
+used. Four triviality analyses --- degenerate measurements that could otherwise have been
+published as results --- are reported together with the guards that now catch them. The claim is
+narrow and, we think, useful: arbitration is not a free improvement on mixing, and whether it can
+be measured at all is a question about objectives, not about ideas.
 \end{abstract}
 
 % ------------------------------------------------------------
 \section{Introduction}
+
 \subsection{The problem this paper measures}
-% 动机三层: (a) 生物学 - Science 2025: 同一神经元不同突触遵循不同可塑性规则
-%  (引用进仓后补); (b) 工程学 - 多层系统中 Hebbian/e-prop/R-STDP 必然共享突触;
-%  (c) 认识论 - 单方规则各有信息局限, 混合是否 > 单方是可测问题.
+
+Three observations motivate the question, and none of them is new; what is new is that the
+question is made measurable.
+
+\textbf{Biology.} A synapse is not obliged to follow the same plasticity rule as its neighbours on
+the same neuron: synaptic state can gate which rule is engaged, and recent work argues that
+different synapses of one cell can express different rules at once \todo{[cite: verify before
+submission; not in the reference ledger yet]}. Treating one rule as universal is therefore a
+modelling assumption, justified only when a system has one learning signal to serve.
+
+\textbf{Engineering.} Any multi-layer system that carries more than one learning signal --- an
+unsupervised structural rule, a supervised error signal, a reward-modulated critic --- eventually
+routes them onto shared weights. The rules then propose updates for the same tensor at the same
+time, and those updates are not on speaking terms: they are computed from different quantities,
+with different signs, on different timescales.
+
+\textbf{Epistemology.} Each rule sees only part of the problem. A Hebbian rule sees input
+statistics but not the labels; e-prop sees the error but only where labels exist. Whether
+combining them beats either is an empirical question, and empirical questions deserve a benchmark
+rather than an intuition.
+
 \subsection{Why arbitration is not hyperparameter tuning}
-% 划界: 静态学习率调度 vs 随任务状态自适应的混合权重; 一句话立场.
+
+A hyperparameter is chosen offline from a grid, on data reserved for the purpose, against the same
+metric that later judges the model. An arbiter is chosen online, from quantities available during
+learning, under constraints that keep it from degenerating. The first is a search; the second is a
+control law.
+
+The distinction matters because the first is cheap and the second is not, and because a negative
+answer to one is not a negative answer to the other. This paper ends up reporting both: a static
+sweep that behaves exactly like hyperparameter search (Section~\ref{sec:pending}), and an online
+scheme that had to earn its place against the value the sweep found.
+
 \subsection{Contributions}
+
 \begin{itemize}
-  \item \textbf{Formalisation}: arbitration as continuous mixing under a retention constraint;
-  degenerate solutions ($\alpha \to 0$) characterised and excluded by protocol
-  (inherited from \todo{P2 citation, same venue family}).
-  \item \textbf{Synergy benchmark}: \todo{one-line task description where each rule alone
-  underperforms the mixture} --- the first benchmark in which arbitration has a
-  non-trivial optimum to find.
-  \item \textbf{Mechanism comparison}: continuous mixing (ours) vs.\ discrete per-synapse
-  rule switching (Turcu et al., 2025) under matched conditions.
-  \item \textbf{Open assets}: rules, benchmark, pre-registration records, arbitration code.
+  \item \textbf{A formalisation} of arbitration as continuous mixing under a two-sided retention
+  constraint, with the degenerate endpoints characterised and excluded by protocol rather than by
+  intent.
+  \item \textbf{The Rules-Collide benchmark}: a task in which two heterogeneous local rules share
+  the one weight they already have in common, and in which their fixed mixture separates
+  representations far better than either rule alone (0.651 against 0.472 and 0.331).
+  \item \textbf{A negative result about arbitration itself}, obtained under pre-registration and
+  reported with its price tag: no adaptive scheme we could build beats the fixed mixture, and the
+  static optimum turns out to be the default value.
+  \item \textbf{Four triviality analyses} --- degeneracies that could have been published as
+  results --- together with the guards that now catch each of them.
+  \item \textbf{Open assets}: rules, benchmark, pre-registration records with timestamps, and the
+  arbitration code.
 \end{itemize}
 
 % ------------------------------------------------------------
 \section{Related Work}
-\subsection{Switching synaptic plasticity rules}   % Turcu 2025 = closest neighbour.
-% 必须 delimit 的两点: 离散 vs 连续; 其强规则含 BP vs 我们全程纯局部 (含外层 ES).
-% [2026-10-24 裁决] 实证对比**未做**, 按分析性对比 + 我们的设计理由写;
-% 实证对比进 future work, 并明确声明不可直接比较（不同条件, 按 P2 预算纪律处理）.
-\subsection{Meta-learned plasticity}               % Confavreux 2025 (ES, single rule family,
-% failure mode beyond simple parameterisations -> our 1-scalar deliberate choice);
-% Miconi 2018 as contrast (global gradient meta-learning).
-\subsection{Neuromodulation and gating}            % Zanardi 2024 meta-plasticity as memory;
-% Frémaux multi-modulator framing; 划界: 单规则内调制 vs 规则间仲裁.
-\subsection{Multi-objective interference at the synapse}  % EWC/任务级冲突 resolution
-% vs 规则级冲突; 一句话划界.
+
+\subsection{Switching synaptic plasticity rules}
+
+Turcu et al.\ let synapses \emph{switch} between plasticity rules according to synaptic state,
+routing learning signals through a recurrent circuit \citep{turcu2025switching}. This is the
+closest neighbour to our question and the clearest contrast in mechanism: their arbitration object
+is a discrete selection per synapse, ours is a single continuous weight for the whole tensor.
+Two differences bound the comparison, and we state them rather than paper over them. First, a
+switching rule can apply one rule's update in full, whereas a convex mixture necessarily attenuates
+each contribution (Section~\ref{sec:pending}). Second, their strongest rule involves
+backpropagation, while our system is local end to end, including the outer loop that sets the
+mixing weight. A matched empirical comparison is future work; it would need budget-matched arms
+and a pre-registered criterion, not a demonstration.
+
+\subsection{Meta-learned plasticity}
+
+Confavreux et al.\ meta-learn plasticity rules for recurrent spiking networks with evolution
+strategies and report a failure mode that shaped our design: the meta-learning degrades as the
+rule parameterisation grows more complex \citep{confavreux2025}. We therefore pinned the arbiter to
+a single scalar. Our reported failure is of a different kind --- the parameterisation was adequate,
+and what could not be built was an affordable objective that identifies the right value
+(Section~\ref{sec:pending}) --- which is worth separating, because the two constraints argue for
+different remedies.
+
+Miconi et al.\ meta-learn plasticity through backpropagation \citep{miconi2018differentiable},
+which is the mechanism we deliberately avoid: an outer loop that differentiates through the inner
+learning rule would puncture the locality claim this project exists to test.
+
+\subsection{Neuromodulation and gating}
+
+Metaplasticity --- a plasticity rule that itself changes with history --- is one way a network can
+carry memory in its rules rather than its weights, and it has been analysed as such in multilevel
+recurrent networks \citep{zanardi2024metaplasticity}. The distinction from this paper is where the
+modulation acts: neuromodulatory accounts gate \emph{one} rule's update, whereas arbitration
+combines the outputs of \emph{different} rules. A gated rule can be expressed as a mixture with a
+state-dependent weight, which is why the contrast is informative: our negative result constrains
+the mixture form, not the gating literature.
+
+\subsection{Multi-objective interference at the synapse}
+
+Continual-learning methods in the regularisation family address interference \emph{between tasks}:
+one objective's gradient is constrained so that another's performance survives. The interference
+here is different in kind --- it is between two rules proposing updates for the same synapse at the
+same instant, before any task boundary exists. Regularisation has no purchase on it, because there
+is no previous objective to protect; what is needed is a decision about which update to apply, and
+that decision is the arbitration object.
 
 % ------------------------------------------------------------
 \section{Methods}
@@ -387,8 +461,7 @@ the companion paper (\texttt{10.5281/zenodo.23429027}), the P4 design notes
 
 % ------------------------------------------------------------
 \bibliographystyle{plainnat}
-\bibliography{refs}   % \todo{从 paper/refs.bib 复制所需条目 + Turcu/Confavreux/Zanardi
-% 已在台账; 新引用的 Science 2025 多规则突触论文需先核验进台账}
+\bibliography{refs}  % refs.bib 是 paper/refs.bib 的子集；新增条目先核验入台账再复制
 
 \appendix
 
