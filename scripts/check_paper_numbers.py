@@ -126,7 +126,9 @@ def main(argv: list[str] | None = None) -> int:
         _, median, _ = quartiles(load_fisher(args.results, dir_name))
         checked += 1
         if abs(median - sweep[alpha]) > TOL:
-            problems.append(f"α = {alpha} 的中位数：论文写 {sweep[alpha]:.3f}，结果算出 {median:.4f}")
+            problems.append(
+                f"α = {alpha} 的中位数：论文写 {sweep[alpha]:.3f}，结果算出 {median:.4f}"
+            )
 
     if problems:
         print("论文数字与结果文件不一致：", file=sys.stderr)
