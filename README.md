@@ -111,9 +111,9 @@
 
 | 项 | 归属 | 激活条件 |
 | :--- | :--- | :--- |
-| **世界模型组件** | 阶段四正式组件（承接 Predictive E-prop） | 阶段三验收通过，且组件化 ADR 立起来 |
-| **唤醒通道** | 动力学轴的组件化 | 组件化 ADR 通过 |
-| **PINN 物理先验** | 路线图 v7.0 候选（探索笔记） | 阶段三验收 + CL 探针落地；复查日期 2027 夏 |
+| **世界模型组件**（[ADR-0015](docs/adr/ADR-0015-world-model-as-phase-four-component.md)） | 阶段四正式组件（承接 Predictive E-prop） | 阶段三验收通过，且组件化 ADR 立起来 |
+| **唤醒通道**（[ADR-0016](docs/adr/ADR-0016-arousal-channel-and-consolidation-experiment.md)） | 动力学轴的组件化 | 组件化 ADR 通过 |
+| **PINN 物理先验**（[v7.0 候选](docs/roadmap_v7_candidates.md)） | 路线图 v7.0 候选（探索笔记） | 阶段三验收 + CL 探针落地；复查日期 2027 夏 |
 
 ## 架构
 

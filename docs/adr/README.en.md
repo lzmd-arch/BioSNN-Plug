@@ -47,3 +47,5 @@ and link the two to each other.
 | [ADR-0012](ADR-0012-taaf-locality-and-bus-output-contract.en.md) | TAAF's locality red line, the open projection-layer training rule, and the `SpikeBus` output-shape contract | Partially accepted |
 | [ADR-0013](ADR-0013-synergy-benchmark-priority-and-arbiter-scope.en.md) | The synergy benchmark becomes P0; the shared-interface plan is rejected (counterfactual arm only); three-way mixing stays in phase five | Accepted |
 | [ADR-0014](ADR-0014-adaptive-arbitration-unmeasurable-and-fit-retained.en.md) | Adaptive arbitration is not measurable (not disproved); `ESArbiter.fit` kept on standby; P4 headline changes | Accepted |
+| [ADR-0015](ADR-0015-world-model-as-phase-four-component.en.md) | The world model becomes a formal phase-four component (schedule unchanged) | Accepted |
+| [ADR-0016](ADR-0016-arousal-channel-and-consolidation-experiment.en.md) | The arousal channel becomes a component (naming instinct) and the consolidation experiment is scheduled | Accepted |

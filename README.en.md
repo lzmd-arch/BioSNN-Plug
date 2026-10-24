@@ -134,9 +134,9 @@ its activation condition; until that condition holds, it does not start. They ar
 
 | Item | Home | Activation condition |
 | :--- | :--- | :--- |
-| **World-model component** | Phase-four component (inherits Predictive E-prop) | Phase-three acceptance passes and the component ADR exists |
-| **Arousal channel** | Componentising the dynamics axis | Its ADR is accepted |
-| **PINN physical prior** | Roadmap v7.0 candidate (exploration note) | Phase-three acceptance + the CL probe lands; review in summer 2027 |
+| **World-model component** ([ADR-0015](docs/adr/ADR-0015-world-model-as-phase-four-component.en.md)) | Phase-four component (inherits Predictive E-prop) | Phase-three acceptance passes and the component ADR exists |
+| **Arousal channel** ([ADR-0016](docs/adr/ADR-0016-arousal-channel-and-consolidation-experiment.en.md)) | Componentising the dynamics axis | Its ADR is accepted |
+| **PINN physical prior** ([v7.0 candidate](docs/roadmap_v7_candidates.en.md)) | Roadmap v7.0 candidate (exploration note) | Phase-three acceptance + the CL probe lands; review in summer 2027 |
 
 ## Architecture
 
