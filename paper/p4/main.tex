@@ -1,0 +1,134 @@
+% ============================================================
+%  P4 paper skeleton v0.1  ·  BioSNN-Plug Arbitration Paper
+%  Build:  latexmk -pdf main  (needs hyperref, booktabs, graphicx, amsmath)
+%  写作纪律 (inherited from P2): 数字全部来自 research/ 复现记录;
+%  \todo{} 是任务清单; 一个数字只有一个家; 不利结果照登.
+% ============================================================
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs, graphicx, hyperref, amsmath, xcolor}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\title{When Rules Collide: Arbitrating Heterogeneous Local Learning Rules\\on Shared Synapses in a Purely Local Spiking Network}
+\author{Jinyao Shen\thanks{Independent researcher. Correspondence: \todo{GitHub URL}.}\\ \small{github.com/lzmd-arch/BioSNN-Plug}}
+\date{November 2026}
+
+\begin{document}
+\maketitle
+
+% ------------------------------------------------------------
+\begin{abstract}
+\todo{150-200 words. Outline: (1) problem --- multiple local learning rules acting on
+the same synapses produce conflicting updates; single-rule systems never face this;
+(2) what we built --- a continuous-mixing arbitration between heterogeneous local
+rules (Hebbian / e-prop / R-STDP), meta-learned by an evolution-strategy outer loop,
+under a retention constraint that excludes degenerate solutions, in a network with no
+backpropagation anywhere; (3) headline numbers --- \todo{synergy-benchmark result};
+\todo{conflict reduction at retention >= 0.8}; (4) stance --- arbitration is measured,
+not assumed; where it fails is reported.}
+\end{abstract}
+
+% ------------------------------------------------------------
+\section{Introduction}
+\subsection{The problem this paper measures}
+% 动机三层: (a) 生物学 - Science 2025: 同一神经元不同突触遵循不同可塑性规则
+%  (引用进仓后补); (b) 工程学 - 多层系统中 Hebbian/e-prop/R-STDP 必然共享突触;
+%  (c) 认识论 - 单方规则各有信息局限, 混合是否 > 单方是可测问题.
+\subsection{Why arbitration is not hyperparameter tuning}
+% 划界: 静态学习率调度 vs 随任务状态自适应的混合权重; 一句话立场.
+\subsection{Contributions}
+\begin{itemize}
+  \item \textbf{Formalisation}: arbitration as continuous mixing under a retention constraint;
+  degenerate solutions ($\alpha \to 0$) characterised and excluded by protocol
+  (inherited from \todo{P2 citation, same venue family}).
+  \item \textbf{Synergy benchmark}: \todo{one-line task description where each rule alone
+  underperforms the mixture} --- the first benchmark in which arbitration has a
+  non-trivial optimum to find.
+  \item \textbf{Mechanism comparison}: continuous mixing (ours) vs.\ discrete per-synapse
+  rule switching (Turcu et al., 2025) under matched conditions.
+  \item \textbf{Open assets}: rules, benchmark, pre-registration records, arbitration code.
+\end{itemize}
+
+% ------------------------------------------------------------
+\section{Related Work}
+\subsection{Switching synaptic plasticity rules}   % Turcu 2025 = closest neighbour.
+% 必须 delimit 的两点: 离散 vs 连续; 其强规则含 BP vs 我们全程纯局部 (含外层 ES).
+\subsection{Meta-learned plasticity}               % Confavreux 2025 (ES, single rule family,
+% failure mode beyond simple parameterisations -> our 1-scalar deliberate choice);
+% Miconi 2018 as contrast (global gradient meta-learning).
+\subsection{Neuromodulation and gating}            % Zanardi 2024 meta-plasticity as memory;
+% Frémaux multi-modulator framing; 划界: 单规则内调制 vs 规则间仲裁.
+\subsection{Multi-objective interference at the synapse}  % EWC/任务级冲突 resolution
+% vs 规则级冲突; 一句话划界.
+
+% ------------------------------------------------------------
+\section{Methods}
+\subsection{Arbitration formalism}
+% 两/三规则对同一突触的更新 u_A, u_B; 混合更新 u = (1-a) u_A + a u_B;
+% 冲突度量 = per-row cosine (继承 P2: per-synapse 退化已证); 保留约束 retention >= 0.8
+% (继承 P2 triviality analysis: alpha->0 退化解的识别与封堵).
+\subsection{Meta-learning the arbitration signal}
+% 外层 ES, 参数化刻意最小 (1 scalar -> per-row vector 的扩展实验);
+% Confavreux 失败模式的直接检验; 预注册: 参数化扩展的停止规则.
+\subsection{The synergy benchmark}
+% 核心节. 设计判据: 单方 < 混合才可解 (complementarity 任务);
+% \todo{任务规格: Hebbian 供特征结构 + e-prop 供时序标签的复合任务};
+% 负向验证: 单方基线必须如预期失败 (预注册期望值).
+\subsection{Protocol inheritance}
+% 从 P2 继承的六件套 (预算纪律/config dump/逐位复现/冻结随机流/验证集选择/联合报告)
+% 一句话引用, 不重写.
+
+% ------------------------------------------------------------
+\section{Experimental Setup}
+% RTX 5060 8GB; 与 P2 相同的软件栈表; 与 P2 W2 相同的 256 神经元骨干 (可复用资产).
+
+% ------------------------------------------------------------
+\section{Results}
+\subsection{Synergy: does the mixture beat both parents?}
+% 表: 单方 A / 单方 B / 静态混合 / 仲裁混合 × 5 seeds;
+% 关键读数: 仲裁 > 静态混合 > 单方 (预期的三层序), 以及实际落在哪层.
+\subsection{Arbitration without degeneracy}
+% 表: 冲突降幅与 retention 联合报告 (P2 的联合报告纪律);
+% min_retention=0.8 下的压缩上限; 退化解对照 (无约束时 alpha 漂向 0.2-0.3).
+\subsection{Continuous mixing vs.\ discrete switching}
+% 与 Turcu 式切换在协同基准上的同条件对比 (或: 分析性对比 + 我们的实现选择);
+% \todo{若不同条件, 明确声明不可直接比, 按 P2 预算纪律处理}.
+\subsection{Does arbitration recover part of the price of locality?}
+% 与 P2 的 7.41pp 对照臂的接口: 三规则系统在 sMNIST 上的读数;
+% 预注册声明: 能收回 1-2pp 也是结果; 收不回也是结果 (照实登).
+
+% ------------------------------------------------------------
+\section{Discussion}
+\subsection{When does arbitration pay?}   % 判据: 规则间互补性存在时才非平凡;
+% 给出可操作的判定 (与 P2 "何时局部规则够用" 同一语法).
+\subsection{The 1-scalar finding}          % 最小参数化的成败都是对 Confavreux
+% 警告的直接检验; 失败亦是结果.
+\subsection{Limits}                        % 两规则对 -> 三规则未验; 合成->真实任务
+% 一步之遥; 规模; 外层 ES 的样本成本.
+
+% ------------------------------------------------------------
+\section{Conclusion}
+% 三句话: 规则间冲突是可测对象; 仲裁在连续混合+retention 约束下 \todo{成立/部分成立};
+% 下一步: 认知核心集成 (路线图阶段三).
+
+% ------------------------------------------------------------
+\section*{Use of AI assistance}
+% 继承 P2 的四段式披露; 更新具体分工 (本论文中 agent 的角色).
+
+% ------------------------------------------------------------
+\section*{Data and code availability}
+% 仓库 + A/B 记录 DOI + 本论文 Zenodo 存款 DOI (存款后补).
+
+% ------------------------------------------------------------
+\bibliographystyle{plainnat}
+\bibliography{refs}   % \todo{从 paper/refs.bib 复制所需条目 + Turcu/Confavreux/Zanardi
+% 已在台账; 新引用的 Science 2025 多规则突触论文需先核验进台账}
+
+\appendix
+\section{Full configuration dumps}      % 继承 P2 附录 A 的格式
+\section{Pre-registration records}        % 三个预注册 (参数化扩展/协同基准单方基线/
+% 局部性代价接口) 的逐字记录与时间戳
+\section{Triviality analysis details}     % 本论文新发现的退化解 (若有) + 继承的两个
+
+\end{document}
