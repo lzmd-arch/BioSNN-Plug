@@ -549,6 +549,16 @@ paper, and it forced one licence onto files that have two different native ones.
   Chinese originals, and the README snapshot carrying the four-axis framing. The point is prior
   art: git timestamps are rewritable and are not an independent third party.
 
+- **P4 — the arbitration paper. Zenodo: PUBLISHED 2026-10-24.** Version DOI
+  **`10.5281/zenodo.23613539`**, concept DOI `10.5281/zenodo.23613538`, `publication_type = preprint`,
+  licence CC-BY-4.0, three attachments: the PDF (112,725 B), `main.tex` and `refs.bib`,
+  md5-verified from Zenodo's **public** API after publishing (0 mismatches). This is the
+  companion paper's second entry: mixing is measurable and measured (0.651 against 0.472 and
+  0.331), arbitration is measured and negative (paired +0.003 against a pre-registered 0.05),
+  and both rescue arms were registered before they ran. The repository copy of `main.tex`
+  carries this DOI in its Data availability paragraph, so the attached source and the
+  repository differ by exactly that one sentence --- the deposit precedes its own identifier.
+
 **Standing items for B:**
 
 1. **Contact method = the GitHub repository URL, not an email.** It replaces the author block's
