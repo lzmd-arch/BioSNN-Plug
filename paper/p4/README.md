@@ -33,14 +33,21 @@
 | §6 Discussion | 何时值得仲裁 / 1-scalar / 边界 | 时间尺度分离、对齐≠可分性两个诊断 | 素材在 |
 | 附录 C | 退化解细节 | [`section-3.3-triviality-draft.md`](section-3.3-triviality-draft.md) 四案 | 已成稿 |
 
-## 三、必须先拍的四件事
+## 三、四处冲突的裁决（2026-10-24 已决）
 
-1. **retention 门槛到底是 0.8 还是 0.2？** 骨架三处写 0.8，代码与全部实测用 0.2。
-   0.8 会让 α 只能落在 [0.8, 1]（几乎纯 Hebbian），与"混合"的立意相反 —— 需要确认骨架里的
-   0.8 是不是笔误，或者本该是"**α 下界 0.2**"的另一种写法。
-2. **标题**：*When Rules Collide* 还是 *When Can Arbitration Be Measured?*
-3. **§5.4 三规则**：按 ADR-0013 移除，还是标为 future work？
-4. **§3.3 与附录 C** 的分工：正文放四案摘要 + 附录放机制细节，这个安排是否照此执行？
+| # | 裁决 | 落地 |
+| :--- | :--- | :--- |
+| 1 | **retention 统一为双侧**：α ∈ [0.2, 0.8]（两规则各保留 ≥20%）；`min_retention` 改为双侧区间校验；retention 定义为"被压制一方实际保留的权重"，与降幅联合报告 | 库已改（`max_retention` + 起点夹取，75 条测试过）；骨架三处已改写 |
+| 2 | **标题**：论文用 *When Can Arbitration Be Measured? Mixed Local Plasticity Rules Under One Protocol*；**"Rules-Collide" 降为基准名** | 已改 |
+| 3 | **§5.4 三规则**：从结果结构移出，降级为 §6.3 Limits 一段话（≤4 句） | 已移 |
+| 4 | **退化解**：正文 §3.5 放陈述与教训，附录 C 放推导细节 | 正文小节已建 |
+
+⚠️ **编号待确认**：裁决里称退化解节为 "§3.3"，但骨架 Methods 已有四个小节，插在 protocol
+inheritance 之前后它是 **§3.5**，protocol inheritance 顺延为 §3.6。已按骨架顺序落位并在
+`main.tex` 里注明——若要真的做 §3.3，需要重排 Methods 的节序。
+
+附带裁决也已落地：§2.1 改为分析性对比 + future work 声明；§3.2 加了条件预注册
+（标量无增益则 per-row 扩展不予开展）。
 
 ## 四、写正文时的硬约束（来自已落库的记录）
 

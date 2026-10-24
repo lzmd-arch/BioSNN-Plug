@@ -10,7 +10,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{booktabs, graphicx, hyperref, amsmath, xcolor}
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
-\title{When Rules Collide: Arbitrating Heterogeneous Local Learning Rules\\on Shared Synapses in a Purely Local Spiking Network}
+\title{When Can Arbitration Be Measured?\\Mixed Local Plasticity Rules Under One Protocol}
 \author{Jinyao Shen\thanks{Independent researcher. Correspondence: \todo{GitHub URL}.}\\ \small{github.com/lzmd-arch/BioSNN-Plug}}
 \date{November 2026}
 
@@ -25,7 +25,7 @@ the same synapses produce conflicting updates; single-rule systems never face th
 rules (Hebbian / e-prop / R-STDP), meta-learned by an evolution-strategy outer loop,
 under a retention constraint that excludes degenerate solutions, in a network with no
 backpropagation anywhere; (3) headline numbers --- \todo{synergy-benchmark result};
-\todo{conflict reduction at retention >= 0.8}; (4) stance --- arbitration is measured,
+\todo{conflict reduction reported jointly with retention under the two-sided constraint $\alpha \in [0.2, 0.8]$}; (4) stance --- arbitration is measured,
 not assumed; where it fails is reported.}
 \end{abstract}
 
@@ -54,6 +54,8 @@ not assumed; where it fails is reported.}
 \section{Related Work}
 \subsection{Switching synaptic plasticity rules}   % Turcu 2025 = closest neighbour.
 % 必须 delimit 的两点: 离散 vs 连续; 其强规则含 BP vs 我们全程纯局部 (含外层 ES).
+% [2026-10-24 裁决] 实证对比**未做**, 按分析性对比 + 我们的设计理由写;
+% 实证对比进 future work, 并明确声明不可直接比较（不同条件, 按 P2 预算纪律处理）.
 \subsection{Meta-learned plasticity}               % Confavreux 2025 (ES, single rule family,
 % failure mode beyond simple parameterisations -> our 1-scalar deliberate choice);
 % Miconi 2018 as contrast (global gradient meta-learning).
@@ -66,15 +68,28 @@ not assumed; where it fails is reported.}
 \section{Methods}
 \subsection{Arbitration formalism}
 % 两/三规则对同一突触的更新 u_A, u_B; 混合更新 u = (1-a) u_A + a u_B;
-% 冲突度量 = per-row cosine (继承 P2: per-synapse 退化已证); 保留约束 retention >= 0.8
-% (继承 P2 triviality analysis: alpha->0 退化解的识别与封堵).
+% 冲突度量 = per-row cosine (继承 P2: per-synapse 退化已证).
+% 约束是**双侧**的: alpha in [0.2, 0.8] —— 两规则各保留至少 20% 权重("都不许被关掉");
+% retention 的定义 = 被压制一方在仲裁结果中实际保留的权重, 与冲突降幅**联合报告**
+% (继承 P2 triviality analysis: alpha->0 退化解的识别与封堵; alpha->1 是同一枚硬币的另一面).
 \subsection{Meta-learning the arbitration signal}
 % 外层 ES, 参数化刻意最小 (1 scalar -> per-row vector 的扩展实验);
 % Confavreux 失败模式的直接检验; 预注册: 参数化扩展的停止规则.
-\subsection{The synergy benchmark}
+% [2026-10-24 条件预注册] 标量仲裁若在本基准显示无增益 (R1/R2 结局), per-row 扩展
+% **不予开展** —— 组合空间 xN, 但前提已被否定. 这条写死, 防止未来"再试一维"的无限救援.
+\subsection{The Rules-Collide benchmark}
+% [2026-10-24 裁决] 协同性基准正式命名 **the Rules-Collide benchmark** ——
+% evocative 的名字给工件, 精确的名字("When Can Arbitration Be Measured?")给论文.
 % 核心节. 设计判据: 单方 < 混合才可解 (complementarity 任务);
 % \todo{任务规格: Hebbian 供特征结构 + e-prop 供时序标签的复合任务};
 % 负向验证: 单方基线必须如预期失败 (预注册期望值).
+\subsection{Triviality analyses: four cases}
+% [2026-10-24 裁决] 正文放**陈述与教训**(每案四五行: 现象 -> 机制 -> 纪律),
+% 推导细节与参数放附录 C. 完整草稿见 paper/p4/section-3.3-triviality-draft.md.
+% 四案: ① alpha->0 退化; ② 逐突触余弦退化; ③ 整数目标 ES 惰性; ④ 代理-构念错位.
+% NOTE 编号: 裁决里称本节为 "§3.3", 那是按当时的草稿结构; 本骨架 Methods 已有四个小节,
+% 插在 §3.4 之后即本节编号为 3.5, protocol inheritance 顺延为 3.6 —— 待作者确认编号.
+
 \subsection{Protocol inheritance}
 % 从 P2 继承的六件套 (预算纪律/config dump/逐位复现/冻结随机流/验证集选择/联合报告)
 % 一句话引用, 不重写.
@@ -90,13 +105,13 @@ not assumed; where it fails is reported.}
 % 关键读数: 仲裁 > 静态混合 > 单方 (预期的三层序), 以及实际落在哪层.
 \subsection{Arbitration without degeneracy}
 % 表: 冲突降幅与 retention 联合报告 (P2 的联合报告纪律);
-% min_retention=0.8 下的压缩上限; 退化解对照 (无约束时 alpha 漂向 0.2-0.3).
+% 双侧区间 [0.2, 0.8] 下的压缩上限; 退化解对照 (无约束时 alpha 漂向 0.2-0.3).
 \subsection{Continuous mixing vs.\ discrete switching}
 % 与 Turcu 式切换在协同基准上的同条件对比 (或: 分析性对比 + 我们的实现选择);
 % \todo{若不同条件, 明确声明不可直接比, 按 P2 预算纪律处理}.
-\subsection{Does arbitration recover part of the price of locality?}
-% 与 P2 的 7.41pp 对照臂的接口: 三规则系统在 sMNIST 上的读数;
-% 预注册声明: 能收回 1-2pp 也是结果; 收不回也是结果 (照实登).
+% [2026-10-24 裁决] 原 §5.4「Does arbitration recover part of the price of locality?」
+% 涉及**三规则系统**, 与 ADR-0013（三方混合属阶段五）冲突, 已从结果结构移出,
+% 降级为 §6.3 Limits 的一段话（内容不重写, 位移而已）。
 
 % ------------------------------------------------------------
 \section{Discussion}
@@ -106,6 +121,11 @@ not assumed; where it fails is reported.}
 % 警告的直接检验; 失败亦是结果.
 \subsection{Limits}                        % 两规则对 -> 三规则未验; 合成->真实任务
 % 一步之遥; 规模; 外层 ES 的样本成本.
+% [2026-10-24 裁决] 三规则混合未验, 此处补一段 (<=4 句):
+%  ① 三方同时混合未做验证 —— 本论文全部结论限于两规则对;
+%  ② 三方以上时冲突的定义本身待设计（两两 per-row cosine 不再唯一）;
+%  ③ 组合爆炸: n 条规则有 n(n-1)/2 对，调度维度随之出现;
+%  ④ 按 ADR-0013, 三方混合与调度维度排在阶段五, 不在本论文的主张范围内.
 
 % ------------------------------------------------------------
 \section{Conclusion}

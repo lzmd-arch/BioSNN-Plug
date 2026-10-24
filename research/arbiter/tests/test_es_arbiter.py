@@ -221,3 +221,24 @@ class TestTrivialSolution:
         updates_a, updates_b = trace()
         result = ESArbiter(alpha=0.5, seed=0).fit(updates_a, updates_b, steps=24)
         assert 0.0 <= result.reduction <= 1.0
+
+
+class TestTwoSidedBounds:
+    """P4 的约束是**双侧**的：两规则各保留至少 20% 权重，α ∈ [0.2, 0.8]。
+
+    单侧 `min_retention` 只能挡住"关掉 B"；"关掉 A"（α → 1）是同一枚硬币的另一面。
+    """
+
+    def test_max_retention_caps_alpha(self):
+        updates_a, updates_b = trace_partial()
+        arb = ESArbiter(alpha=0.5, seed=0)
+        arb.fit(updates_a, updates_b, steps=64, min_retention=0.2, max_retention=0.3)
+        assert 0.2 - 1e-12 <= arb.alpha <= 0.3 + 1e-12
+
+    def test_rejects_inverted_bounds(self):
+        with pytest.raises(ValueError, match="不能大于"):
+            ESArbiter().fit(*trace(), min_retention=0.8, max_retention=0.2)
+
+    def test_rejects_out_of_range_max(self):
+        with pytest.raises(ValueError, match="max_retention"):
+            ESArbiter().fit(*trace(), max_retention=1.5)

@@ -190,6 +190,7 @@ class SharedSynapseHarness:
         *,
         steps: int = 32,
         min_retention: float = 0.0,
+        max_retention: float = 1.0,
     ) -> ArbiterResult:
         """Tune `alpha` on a trace of both rules' updates, then keep the survivor."""
         aligned_a = [
@@ -198,7 +199,13 @@ class SharedSynapseHarness:
         aligned_b = [
             self.align_update(u, source="hebbian").detach().cpu().numpy() for u in updates_hebbian
         ]
-        result = self.arbiter.fit(aligned_a, aligned_b, steps=steps, min_retention=min_retention)
+        result = self.arbiter.fit(
+            aligned_a,
+            aligned_b,
+            steps=steps,
+            min_retention=min_retention,
+            max_retention=max_retention,
+        )
         self.sync_from_shared()
         return result
 

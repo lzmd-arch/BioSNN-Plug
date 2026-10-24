@@ -176,6 +176,7 @@ class ESArbiter:
         *,
         steps: int = 32,
         min_retention: float = 0.0,
+        max_retention: float = 1.0,
     ) -> ArbiterResult:
         """Tune `alpha` with ES on a trace of per-step updates.
 
@@ -191,8 +192,12 @@ class ESArbiter:
             steps: how many ES steps to run.
 
         Args:
-            min_retention: refuse solutions below this alpha. **Set it above 0 to rule
-                out the degenerate "turn rule B off" answer**; 0 means any alpha is fine.
+            min_retention: lower bound on alpha. **Set it above 0 to rule out the
+                degenerate "turn rule B off" answer**; 0 means any alpha is fine.
+            max_retention: upper bound on alpha -- the mirror degenerate answer is
+                "turn rule A off". The two-sided interval `[min_retention,
+                max_retention]` is what the P4 protocol calls *both sides keep at least
+                their floor*; the paper's constraint is `[0.2, 0.8]`.
 
         Returns:
             The surviving `alpha` and the event counts before / after.
@@ -202,6 +207,15 @@ class ESArbiter:
         """
         if not 0.0 <= min_retention <= 1.0:
             raise ValueError(f"min_retention 必须落在 [0, 1]，收到 {min_retention!r}。")
+        if not 0.0 <= max_retention <= 1.0:
+            raise ValueError(f"max_retention 必须落在 [0, 1]，收到 {max_retention!r}。")
+        if min_retention > max_retention:
+            raise ValueError(
+                f"min_retention 不能大于 max_retention，收到 {min_retention!r} > {max_retention!r}。"
+            )
+        # 起点也可能落在区间外（例如 α=0.5 而区间是 [0.2, 0.3]）：先夹进来，
+        # 否则搜索只接受"更好"的候选，α 会一直停在界外，约束等于没生效。
+        self.alpha = float(np.clip(self.alpha, min_retention, max_retention))
 
         if len(updates_a) != len(updates_b):
             raise ValueError(f"两条规则的步数必须相同，收到 {len(updates_a)} 与 {len(updates_b)}。")
@@ -215,7 +229,7 @@ class ESArbiter:
         rng = np.random.default_rng(self.seed)
         for _ in range(steps):
             trial = self.alpha + rng.normal(0.0, self.sigma)
-            trial = float(np.clip(trial, min_retention, 1.0))
+            trial = float(np.clip(trial, min_retention, max_retention))
             if trial == self.alpha:
                 continue
             current = self._alignment(updates_a, updates_b, self.alpha)
