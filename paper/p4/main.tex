@@ -101,9 +101,44 @@ not assumed; where it fails is reported.}
 % ------------------------------------------------------------
 \section{Results}
 \subsection{Synergy: does the mixture beat both parents?}
-% 表: 单方 A / 单方 B / 静态混合 / 仲裁混合 × 5 seeds;
-% 关键读数: 仲裁 > 静态混合 > 单方 (预期的三层序), 以及实际落在哪层.
-\subsection{Arbitration without degeneracy}
+
+The Rules-Collide benchmark pits three arms against each other on a fixed-permutation
+sequential MNIST with 1\% of the training labels: Hebbian alone (H), e-prop alone (E), and a
+50/50 mixture of the two (MIX). All three share the same $28 \to 256$ input weight, receive the
+same data and the same batches, and are scored by the Fisher ratio of the representation they
+produce, evaluated on a held-out probe set. Table~\ref{tab:synergy} reports five seeds per arm.
+
+\begin{table}[t]
+\centering
+\caption{Representation separability (Fisher ratio) on the Rules-Collide benchmark,
+40 epochs, 1\% labels, five seeds. Intervals are the interquartile range.
+The paired synergy margin subtracts, per seed, the stronger of the two single-rule arms.}
+\label{tab:synergy}
+\begin{tabular}{lccc}
+\toprule
+Arm & Fisher (median) & IQR & Seeds used \
+\midrule
+H alone (pure Hebbian)   & 0.472 & [0.471, 0.472] & 5/5 \
+E alone (pure e-prop)    & 0.331 & [0.327, 0.337] & 4/5 (one seed failed the run gate) \
+MIX (fixed $\alpha = 0.5$) & \textbf{0.651} & [0.636, 0.652] & 5/5 \
+\midrule
+Synergy margin (MIX $-$ best single) & \textbf{+0.179} & [+0.175, +0.182] & 4 paired seeds \
+\bottomrule
+\end{tabular}
+\end{table}
+
+The mixture beats both parents. The pre-registered criterion was a paired median margin of at
+least $\delta = 0.05$ together with a separation requirement (the mixture's lower quartile above
+the best single arm's upper quartile); both hold, with the margin more than three times the
+threshold. One e-prop seed is excluded: its weight moved less than the run gate allows
+($\|\Delta W\|/\|W_0\| = 0.0474 < 0.05$), so it is void rather than slow, and the paired margin
+is computed on four seeds, which is stated wherever the number appears.
+
+What this result does \emph{not} establish is that \emph{arbitration} is what produced it. The
+mixture here is a fixed 50/50 blend; the arm that would adapt the mixing weight is treated
+separately in Section~\ref{sec:pending}. Table~\ref{tab:synergy} is therefore a two-level
+ordering --- mixture over singles --- and the third level is deliberately left open.
+\subsection{Arbitration without degeneracy}\label{sec:pending}
 % 表: 冲突降幅与 retention 联合报告 (P2 的联合报告纪律);
 % 双侧区间 [0.2, 0.8] 下的压缩上限; 退化解对照 (无约束时 alpha 漂向 0.2-0.3).
 \subsection{Continuous mixing vs.\ discrete switching}
