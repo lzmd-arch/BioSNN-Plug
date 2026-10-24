@@ -43,11 +43,14 @@ be measured at all is a question about objectives, not about ideas.
 Three observations motivate the question, and none of them is new; what is new is that the
 question is made measurable.
 
-\textbf{Biology.} A synapse is not obliged to follow the same plasticity rule as its neighbours on
-the same neuron: synaptic state can gate which rule is engaged, and recent work argues that
-different synapses of one cell can express different rules at once \todo{[cite: verify before
-submission; not in the reference ledger yet]}. Treating one rule as universal is therefore a
-modelling assumption, justified only when a system has one learning signal to serve.
+\textbf{Biology.} A single neuron does not use one plasticity rule. In vivo imaging during
+learning finds distinct rules operating in different dendritic compartments of the same cell:
+apical compartments follow local co-activity in a Hebbian-like form, basal compartments follow
+coincidence with postsynaptic spiking in an STDP-like form, and blocking postsynaptic spiking
+attenuates the basal plasticity without touching the apical --- a causal dissociation, not a
+correlation \citep{wright2025distinct}. Heterogeneous rules coexisting on one neuron is a
+biological fact; treating one rule as universal is therefore a modelling assumption, justified
+only when a system has one learning signal to serve.
 
 \textbf{Engineering.} Any multi-layer system that carries more than one learning signal --- an
 unsupervised structural rule, a supervised error signal, a reward-modulated critic --- eventually
@@ -165,7 +168,7 @@ blended update and each rule's update over the outgoing weights of a presynaptic
 smallest group that carries a direction --- and count a conflict event when the cosine is
 negative.
 
-\subsection{Meta-learning the arbitration signal}
+\subsection{Meta-learning the arbitration signal}\label{sec:methods-meta}
 
 The arbiter is tuned by a one-parameter evolution strategy, never by backpropagation: the outer
 loop perturbs $\alpha$, scores the perturbation, and moves. This keeps the whole system inside the
@@ -338,12 +341,22 @@ signal rather than the final optimum, and it ends by parking on the constraint b
 same family as the two degeneracies of Section~\ref{sec:triviality}: a quantity that is
 optimised, but not the quantity that matters.
 
-\textbf{The line is sealed.} The pre-registration allowed these two rescue arms and no third.
-Both are negative, so the conclusion is not ``untested'' but \emph{measured and negative}: on
-this benchmark no adaptive arbitration scheme we could build beats a fixed 50/50 mixture, and the
-best static mixture is itself 50/50. What remains open is narrower and better posed: whether an
-objective exists that is affordable \emph{and} discriminating, which we have shown is the binding
-constraint rather than the arbitration idea itself.
+\textbf{What the two arms established, stated separately.} They answer different questions and
+should not be read as one result. The static sweep answers \emph{how much room adaptation has}:
+none, because the optimum is the value a system would pick without measuring. The slow-adaptive arm
+answers \emph{whether an adaptive scheme can take the room it has}: under the pre-registered
+criterion, adaptive $\approx$ static --- a paired median of $+0.003$ against a matched
+$50/50$ control, an order of magnitude below $\delta = 0.05$ --- and what adaptation did instead
+was drift away from the optimum and park on the constraint boundary.
+
+\textbf{The line is sealed.} The pre-registration allowed these two arms and no third, and its
+own conditional clause is therefore triggered: because the scalar arbiter showed no gain, the
+per-row extension is \emph{not pursued} (Section~\ref{sec:methods-meta}). The conclusion is not
+``untested'' but \emph{measured and negative}: on this benchmark no adaptive arbitration scheme we
+could build beats a fixed 50/50 mixture, and the best static mixture is itself 50/50. What remains
+open is narrower and better posed: whether an objective exists that is affordable \emph{and}
+discriminating, which we have shown is the binding constraint rather than the arbitration idea
+itself.
 \subsection{Continuous mixing vs.\ discrete switching}
 
 The closest neighbour switches plasticity rules \emph{discretely}, synapse by synapse
@@ -418,6 +431,17 @@ numbers should not be extrapolated to them. The slow-adaptive arm additionally r
 training split for validation; its control arm uses the same split, so the comparison is internal,
 but it is not directly comparable to the full-data static runs.
 
+\textbf{Compartments, not mixtures.} The in vivo result that motivates this paper
+\citep{wright2025distinct} can also be read against it: the brain does not appear to blend
+heterogeneous rules on shared synapses --- it separates them across dendritic compartments. We
+take that seriously and treat it as a different point in the design space rather than a
+counter-example. Compartmentalisation buys separation at the cost of structural change: rules must
+be physically partitioned, and a synapse cannot benefit from a rule its compartment does not
+express. Mixing on shared synapses is the complementary choice --- no new structure, but the rules
+must now settle their disagreements numerically. This benchmark measures the second choice; the
+first is future work, and the comparison between them is the interesting experiment neither this
+paper nor that one runs.
+
 Finally, nothing here was run on neuromorphic hardware; the locality claim concerns the learning
 rule, not the substrate.
 
@@ -428,6 +452,15 @@ Rules conflict on shared synapses, and the conflict is measurable: a fixed mixtu
 heterogeneous local rules separates representations far better than either rule alone
 (0.651 against 0.472 and 0.331), in a network with no backpropagation anywhere, under a
 protocol that pre-registers its criteria and voids runs whose weights did not move.
+
+The title asks when arbitration can be measured, and the answer has three layers.
+\textbf{Mixing is measurable and measured}: the mixture beats both parents by a margin that no
+seed-level noise explains. \textbf{Adaptation is measurable in principle but not at a price we
+could pay}: the only objective known to rank candidates the way the acceptance metric does requires
+a probe long enough to be a full training run, priced at about seven hours per fit; the adaptive
+scheme that \emph{was} affordable produced no gain over a fixed mix.
+\textbf{The protocol is itself the instrument}: four degeneracies were caught by pre-registered
+guards before any of them could reach a reader as a result.
 
 Arbitration itself, under the two-sided retention constraint and a one-scalar parameterisation,
 came back negative on this benchmark --- measurably negative, not merely untested: the static

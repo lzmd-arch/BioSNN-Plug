@@ -78,6 +78,8 @@ GFM では表の `|` は**バッククォートの内側でも区切り文字の
 | 32 | liyc5929. (2025). NeuroSeqBench: a benchmark suite for evaluating spiking neural networks on temporal processing tasks. *GitHub Repository*. | https://github.com/liyc5929/neuroseqbench | verified | **判定对照：基準 2 ✓（今回の検索で最も近い命中）、基準 1 ✗、基準 3 半。** **`E-prop` を STBP / T-STBP / OTTT / SLTT と並べて比較**し、「公平で一貫した評価を保証する」ガイドラインを称します。しかし**コードスイート＋ガイドライン**であって規範ではなく（基準 1 ✗）、可視の内容は**シード数も固定予算も定めていません**（基準 3 半：精度・PPL・パラメータ数・遅延・訓練速度・メモリ・エネルギーを報告し、NeuroBench 指標にも接続）。**本バッチで最も慎重に扱うべき一件**です：想定より近く、欠けているのは本論文が制御している次元そのものです。GPL-3.0、24 star |
 | 33 | Shen, S., Zhao, D., Feng, L., Yue, Z., Li, J., Li, T., Shen, G., & Zeng, Y. (2025). STEP: A Unified Spiking Transformer Evaluation Platform for Fair and Reproducible Benchmarking. *NeurIPS 2025 Datasets and Benchmarks Track*；arXiv:2505.11151. | https://arxiv.org/abs/2505.11151 | verified | **判定对照：三つとも不满足。** **プラットフォーム**であって規範ではなく（基準 1 ✗）、**スパイキング Transformer の訓練**が対象で局部規則ではありません（基準 2 ✗）。エネルギー推定モデルとアブレーション手順を内蔵しますが、対外的な報告要件はありません（基準 3 ✗）。**「判定对照が不满足でも登録する」という裁定に従って登録**：その "fair and reproducible benchmarking" という文言は本論文の主張の隣にあり、査読者が「これが相当物では？」と問う可能性があります。ゆえに**先に引き、境界を引きます**——それが扱うのは同一モデル系列内の実装不整合であり、「報告に何を含めるべきか」ではありません |
 
+| 27 | Wright, W. J., Hedrick, N. G., & Komiyama, T. (2025). Distinct synaptic plasticity rules operate across dendritic compartments in vivo during learning. *Science*, 388(6744), 322-328. | https://doi.org/10.1126/science.ads4706 | verified | PubMed・Science 公式・ADS の三系統が一致（被引用 84 件）。**発見は規則が樹状区画ごとに分離していることで、同一シナプス上の混合ではない**：頂端樹状突起は局所的共活動（Hebbian 型）、基底樹状突起はシナプス後発火との時間的一致（STDP 型）に従い、シナプス後発火の遮断は基底側のみを弱める——因果的な分離である。⚠️ P4 §1.1 の動機として使う際は、§6 で「区画分離とシナプス混合は設計空間の別の点であり、本ベンチマークは後者を測る」と明示すること。さもないと反例として引用されうる。 |
+
 ## TODO
 
 ### ✅ P0：TD-LTP の出典考証 —— 完了、結論は「出典がある」

@@ -70,6 +70,8 @@
 | 32 | liyc5929. (2025). NeuroSeqBench: a benchmark suite for evaluating spiking neural networks on temporal processing tasks. *GitHub Repository*. | https://github.com/liyc5929/neuroseqbench | verified | **判据对照：判据 2 ✓（本次最接近命中）、判据 1 ✗、判据 3 半**——它把 **`E-prop` 与 STBP / T-STBP / OTTT / SLTT 并列比较**，并自称提供"保证公平一致评估"的指南；但它是**代码套件 + 指南**而非规范（判据 1 ✗），可见内容**未规定种子数或固定预算**（判据 3 半：报准确率、PPL、参数量、时延、训练速度、显存、能效，并接 NeuroBench 指标）。**这是本批里最需要小心处理的一条**：它比预期更接近，缺的恰是本文控制的那几维。GPL-3.0，24 star |
 | 33 | Shen, S., Zhao, D., Feng, L., Yue, Z., Li, J., Li, T., Shen, G., & Zeng, Y. (2025). STEP: A Unified Spiking Transformer Evaluation Platform for Fair and Reproducible Benchmarking. *NeurIPS 2025 Datasets and Benchmarks Track*；arXiv:2505.11151. | https://arxiv.org/abs/2505.11151 | verified | **判据对照：三条全不满足**——是**平台**不是规范（判据 1 ✗）；面向**脉冲 Transformer 的训练**而非局部规则（判据 2 ✗）；内建能量估计模型与消融流程，但不含对外报告要求（判据 3 ✗）。**按裁决"判据对照为不满足也登记"**：它的措辞 "fair and reproducible benchmarking" 与本文主张相邻，审稿人可能反问"这不就是吗"，所以**先引先划界**——它解决的是同一家族内部的实现不一致，不是"报告该含什么" |
 
+| 27 | Wright, W. J., Hedrick, N. G., & Komiyama, T. (2025). Distinct synaptic plasticity rules operate across dendritic compartments in vivo during learning. *Science*, 388(6744), 322–328. | https://doi.org/10.1126/science.ads4706 | verified | PubMed / Science 官网 / ADS 三源一致（已被引 84 次）。**发现是规则按树突区室分离、不是同一突触上的混合**：顶树突随局部共活动（Hebbian 样）、基树突随与突触后发放的时序重合（STDP 样）；阻断突触后发放只削弱基树突可塑性——是因果分离，不是相关。⚠️ 用作 P4 §1.1 的动机时，必须在 §6 明说「区室分离 vs 突触混合是设计空间的不同点，本基准测的是后者」，否则会被反向引用为反例。 |
+
 ## 待办
 
 ### ✅ P0：TD-LTP 出处考证 —— 已完成，结论是"有出处"
