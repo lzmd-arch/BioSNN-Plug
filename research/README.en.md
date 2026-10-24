@@ -79,9 +79,20 @@ research/
 └─ ...
 ```
 
-One README per topic, stating three things plainly: **what claim is being tested**,
-**the current conclusion**, and **how to reproduce it**. The evaluation-metrics table in
-the project plan §9 is the acceptance criterion for those conclusions.
+**A topic with an external conclusion must have a README**, stating three things plainly:
+**what claim is being tested**, **the current conclusion**, and **how to reproduce it**.
+The evaluation-metrics table in the project plan §9 is the acceptance criterion for those
+conclusions.
+
+Two exemptions, both registered here and nowhere else:
+
+* `common/` — pure infrastructure (seeding / device / metrics / record). The usage contract
+  lives in each module's docstring; a directory-level README would only restate it.
+* **Topics whose conclusion already lives in the evidence layer** — the conclusion travels
+  with the data, and the directory does not keep a second copy. Currently `continual/`
+  (see [`sweep_results/continual_cifar100/README.md`](../sweep_results/continual_cifar100/README.md)).
+  `cognitive/` is still being laid down and has no external conclusion yet; add a README
+  when it produces one, per the first rule above.
 
 `research/` is a **package**, not a pile of loose scripts — that is what lets the three
 lines share the things in `common/` whose definitions must not drift. So entry-point
