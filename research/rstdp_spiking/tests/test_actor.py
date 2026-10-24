@@ -7,9 +7,14 @@ from __future__ import annotations
 
 import torch
 
+from research.components.cartpole_encoding import (
+    CARTPOLE_HALF_WIDTHS,
+    encode_state,
+    population_centers,
+)
 from research.rstdp_spiking.actor import SpikingActor
-from research.rstdp_spiking.encoding import encode_state, population_centers, spike_encode
 from research.rstdp_spiking.plasticity import STDPWindow
+from research.rstdp_spiking.spike_encoding import spike_encode
 
 
 def _actor(**kwargs) -> SpikingActor:
@@ -21,11 +26,15 @@ def _actor(**kwargs) -> SpikingActor:
 
 class TestEncoding:
     def test_centers_have_the_expected_shape(self):
-        centers = population_centers(10, generator=torch.Generator().manual_seed(0))
+        centers = population_centers(
+            10, half_widths=CARTPOLE_HALF_WIDTHS, generator=torch.Generator().manual_seed(0)
+        )
         assert centers.shape == (10, 4)
 
     def test_features_are_in_the_unit_interval(self):
-        centers = population_centers(16, generator=torch.Generator().manual_seed(0))
+        centers = population_centers(
+            16, half_widths=CARTPOLE_HALF_WIDTHS, generator=torch.Generator().manual_seed(0)
+        )
         state = torch.tensor([0.3, -0.4, 0.05, 1.2])
         features = encode_state(state, centers, sigma=0.5)
         assert features.shape == (16,)

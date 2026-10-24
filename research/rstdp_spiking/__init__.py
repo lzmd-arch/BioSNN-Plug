@@ -10,7 +10,7 @@
 | :--- | :--- |
 | `neurons.py` LIF 层 | **TD-LTP 群体 Critic**（现在接的是线性 TD(0) Critic） |
 | `plasticity.py` **带真实 Δt 的成对 STDP** + 资格痕迹 | 多层堆叠 |
-| `encoding.py` 群体编码 + 脉冲编码 | 系统超参扫描 |
+| `spike_encoding.py` 时间维脉冲编码（空间维编码在 `components/`） | 系统超参扫描 |
 | `actor.py` 脉冲 R-STDP Actor | |
 | `critic.py` 线性 TD(0) Critic | |
 | `cartpole.py` 训练 / 冻结随机流评测入口 + 结果 | |

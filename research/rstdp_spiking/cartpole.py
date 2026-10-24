@@ -41,9 +41,13 @@ from pathlib import Path
 import torch
 
 from research.common.provenance import collect
+from research.components.cartpole_encoding import (
+    CARTPOLE_HALF_WIDTHS,
+    encode_state,
+    population_centers,
+)
 from research.rstdp_spiking.actor import SpikingActor
 from research.rstdp_spiking.critic import LinearCritic
-from research.rstdp_spiking.encoding import encode_state, population_centers
 from research.rstdp_spiking.pop_critic import PopulationCritic
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -175,7 +179,9 @@ def train(
     generator = torch.Generator(device="cpu").manual_seed(seed)
     env = gymnasium.make("CartPole-v1")
 
-    centers = population_centers(n_features, generator=generator, device=device)
+    centers = population_centers(
+        n_features, half_widths=CARTPOLE_HALF_WIDTHS, generator=generator, device=device
+    )
     actor = SpikingActor(
         n_features,
         n_actions=2,

@@ -14,3 +14,10 @@
 * :mod:`~research.eprop.train_sequential` —— 验收运行脚本；
 * :mod:`~research.eprop.bptt_baseline` —— 代理梯度对照，用于量化差距报告。
 """
+
+from __future__ import annotations
+
+from .eprop import EPropLearner
+from .tasks import load_shd, load_smnist
+
+__all__ = ["EPropLearner", "load_shd", "load_smnist"]

@@ -72,8 +72,9 @@ semver に従っており、本ディレクトリのコードには意図的に�
 
 ```text
 research/
-├─ common/                  # 三本の線が共有する基盤（シード / デバイス / 指標 / 再現記録）
-├─ <フェーズまたはトピック>/
+├─ common/                  # 領域知識を持たない基盤（シード / デバイス / 指標 / 再現記録）
+├─ components/              # パラメータ化できる領域部品（CartPole 状態符号化 など）
+├─ <トピック>/
 │  ├─ README.md
 │  ├─ <実装>.py
 │  └─ tests/
@@ -93,6 +94,21 @@ research/
   （結論は [`sweep_results/continual_cifar100/README.md`](../sweep_results/continual_cifar100/README.md)）。
   `cognitive/` はまだ整備中で対外結論がないため、結論が出た時点で上の第 1 規則に従って
   README を追加します。
+
+**依存は一方向だけ：主題 → `components/` → `common/`。**
+
+* `common/` は**領域知識を持たない基盤**で、主題も `components/` も import しません；
+* `components/` は**パラメータ化でき、結論を出さない領域部品**で、`common/` だけに依存します；
+* **主題どうしで許される辺は二種類だけ**：①`arbiter/`・`continual/` のように**組み合わせや
+  ベンチマーク自体を目的とする**主題が、相手の**パッケージルートが公開する名前**を読む
+  （`from research.eprop import EPropLearner`）。サブモジュールには触れない。②何も読まない。
+
+どちらにも当てはまらない共有要求の正解は、その部分を `components/` の部品に引き上げ、
+**明示的なパラメータ**で両者の値を分けることです——コードを複製することではありません。
+複製の代償は一度払っています：二つの符号化式は文書で「同型」と書かれていましたが、
+実際の値域は違い、それを検出する仕組みはありませんでした。
+
+この規則は [`tests/test_architecture.py`](../tests/test_architecture.py) が AST で検査します。
 
 `research/` は**パッケージ**であり、散らばったスクリプトの寄せ集めではありません。
 そうすることで初めて、三本の線が `common/` にある「口径を揃えねばならないもの」を

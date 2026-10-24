@@ -63,8 +63,9 @@
 
 ```text
 research/
-├─ common/                  # 三条线共用的基础设施（种子 / 设备 / 指标 / 复现记录）
-├─ <阶段或主题>/
+├─ common/                  # 无领域知识的基建（种子 / 设备 / 指标 / 复现记录）
+├─ components/              # 可参数化的领域零件（CartPole 状态编码……），不出结论
+├─ <主题>/
 │  ├─ README.md
 │  ├─ <实现>.py
 │  └─ tests/
@@ -81,6 +82,23 @@ research/
 * **结论已经落在证据层的主题**——结论跟着数据走，目录里不再复制一份。目前是 `continual/`
   （结论见 [`sweep_results/continual_cifar100/README.md`](../sweep_results/continual_cifar100/README.md)）；
   `cognitive/` 还在铺设、尚无对外结论，出结论时按上面第一条补 README。
+
+**依赖只朝一个方向：主题 → `components/` → `common/`。**
+
+* `common/` 是**无领域知识的基建**，不 import 任何主题，也不 import `components/`；
+* `components/` 是**可参数化、不出结论的领域零件**，只依赖 `common/`；
+* **主题之间只有两种合法的边**：①`arbiter/`、`continual/` 这类**目的就是组合/基准**的
+  主题，读对方**包根导出的名字**（`from research.eprop import EPropLearner`），不碰
+  子模块；②什么都不 import。
+
+不满足这两条的共用需求，正确答案是把那段东西提升成 `components/` 里的零件、用**显式参数**
+区分两边的取值——不是复制一份代码。`components/cartpole_encoding.py` 就是这么来的：
+两条执行层线共用同一份编码实现，中心半宽 `(1.5, …)` 与 `CARTPOLE_HALF_WIDTHS` 是参数。
+复制代码的代价已经付过一次：两个编码公式在文档里被说成「同构」，取值范围其实不同，
+而没有任何检查能发现。
+
+这条规则由 [`tests/test_architecture.py`](../tests/test_architecture.py) 用 AST 检查，
+不靠自觉。
 
 `research/` 是一个**包**，不是一堆散脚本——这样三条线才能共用 `common/` 里那套
 口径必须一致的东西。所以入口脚本一律用**模块方式**跑：

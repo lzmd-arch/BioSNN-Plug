@@ -13,3 +13,9 @@
 * :mod:`~research.ib_hebbian.model` —— 多层堆叠 + 线性读出；
 * :mod:`~research.ib_hebbian.train_mnist` —— 验收运行脚本。
 """
+
+from __future__ import annotations
+
+from .model import IBHebbianPerceptron
+
+__all__ = ["IBHebbianPerceptron"]

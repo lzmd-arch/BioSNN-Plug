@@ -136,7 +136,10 @@ class TestInBus:
 
         out = bus.step({"image_diff": frames, "mnist_pulse": mnist})
         assert out.n_neurons == 128 == bus.bus_dim
-        assert out.data.dtype == np.float64
+        # ADR-0012 的 dtype 契约是 float32，两种融合工作点都一样。先投影后融合的
+        # 加权和内部是 float64，总线在出口收口——这条断言原先钉的是 float64，
+        # 与契约表的旧错法一致。
+        assert out.data.dtype == np.float32
 
     def test_is_deterministic(self):
         """同一 seed 两次必须给出同一输出——TAAF 不引入随机性。"""

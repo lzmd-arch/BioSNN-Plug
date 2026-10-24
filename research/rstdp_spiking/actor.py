@@ -23,10 +23,10 @@ from __future__ import annotations
 
 import torch
 
-from research.cognitive.arousal import ArousalChannel
-from research.rstdp_spiking.encoding import spike_encode
+from research.cognitive import ArousalChannel
 from research.rstdp_spiking.neurons import LIFLayer, LIFState
 from research.rstdp_spiking.plasticity import EligibilityTrace, STDPWindow, pair_based_stdp
+from research.rstdp_spiking.spike_encoding import spike_encode
 
 __all__ = ["SpikingActor"]
 

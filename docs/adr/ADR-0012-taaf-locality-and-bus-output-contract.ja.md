@@ -105,3 +105,9 @@ W1 のリッジ対 SGD 読み出しの対照と同じ設計です。
     レッドラインは `test_taaf.py::TestLocalityRedLine` の AST 断言で固定されています。
   - **消費側の更新**：Axo は `biosnn-bus>=0.3.0,<0.4` に上げ、常駐 daemon（`axo.busd`）が
     実際に `SpikeBus.step()` を呼びます（0.3.0 で実測済み）。
+  - **融合戦略の能力境界を宣言的にし、dtype を出口で統一**：`fuse_projected` は `hasattr`
+    ではなく `ProjectedFusionStrategy` プロトコルで宣言し、`isinstance` で判定します。
+    型検査器にも戦略の作者にも境界が見えます。あわせて `SpikeBus.step()` は出口で出力を
+    **`float32`** に統一します——先投影後融合の経路は `float64` を返しており、上の訂正後の
+    契約と一致していませんでした。連結経路はもともと `float32` なので、**既存の数値は
+    一つも変わりません**。

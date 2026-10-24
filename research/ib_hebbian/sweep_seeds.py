@@ -27,38 +27,13 @@ import time
 from pathlib import Path
 
 from research.common.device import select_device
+from research.common.seeding import parse_seeds
 from research.ib_hebbian.train_mnist import build_parser, train
 
 __all__ = ["main", "parse_seeds"]
 
 #: 论文表 1 / 表 4 在 MNIST 上的极差量级（百分点），用于把实测值放到同一把尺子上看。
 PAPER_SPREAD_PP = 0.3
-
-
-def parse_seeds(text: str) -> list[int]:
-    """``"0-4"`` → ``[0, 1, 2, 3, 4]``；``"0,1,2"`` 也接受。
-
-    Raises:
-        ValueError: 格式不对，或区间反了。
-    """
-    seeds: list[int] = []
-    for chunk in text.split(","):
-        chunk = chunk.strip()
-        if not chunk:
-            continue
-        if "-" in chunk:
-            low_text, _, high_text = chunk.partition("-")
-            low, high = int(low_text), int(high_text)
-            if high < low:
-                raise ValueError(f"种子区间反了：{chunk!r}。")
-            seeds.extend(range(low, high + 1))
-        else:
-            seeds.append(int(chunk))
-    if not seeds:
-        raise ValueError(f"没有解析出任何种子：{text!r}。")
-    if len(set(seeds)) != len(seeds):
-        raise ValueError(f"种子有重复：{text!r}。")
-    return seeds
 
 
 def build_parser_for_sweep() -> argparse.ArgumentParser:

@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from research.common.seeding import SeedBook, apply_seed, derive_seed
+from research.common.seeding import SeedBook, apply_seed, derive_seed, parse_seeds
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -120,3 +120,18 @@ class TestSeedBook:
         book.derive("x")
         book.as_dict()["注入"] = 1
         assert "注入" not in book.as_dict()
+
+
+class TestParseSeeds:
+    """runner 的种子解析口径只在这里定义一次。"""
+
+    def test_spec_forms(self):
+        assert parse_seeds("0-4") == [0, 1, 2, 3, 4]
+        assert parse_seeds("7") == [7]
+        assert parse_seeds("0,3,5") == [0, 3, 5]
+        assert parse_seeds(" 0-1 , 4 ") == [0, 1, 4]
+
+    @pytest.mark.parametrize("bad", ["4-1", "0-2,2", ""])
+    def test_rejects_bad_specs(self, bad):
+        with pytest.raises(ValueError):
+            parse_seeds(bad)

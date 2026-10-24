@@ -25,7 +25,7 @@ import random
 import zlib
 from dataclasses import dataclass, field
 
-__all__ = ["SeedBook", "apply_seed", "derive_seed", "device_generator"]
+__all__ = ["SeedBook", "apply_seed", "derive_seed", "device_generator", "parse_seeds"]
 
 
 def derive_seed(base: int, purpose: str) -> int:
@@ -149,3 +149,33 @@ def device_generator(generator, device):
         return generator
     seed = int(torch.randint(0, 2**31 - 1, (1,), generator=generator).item())
     return torch.Generator(device=device).manual_seed(seed)
+
+
+def parse_seeds(spec: str) -> list[int]:
+    """解析 ``"0-4"`` / ``"0,1,2"`` / ``"3"`` 形式的种子列表。
+
+    所有 runner 共用这一个实现。种子的**解析口径**也是复现口径的一部分：三份实现
+    各写一遍，迟早有一份先接受 ``"0-2,2"`` 这种重复写法，于是"均值"会偷偷给某个
+    种子加权而没人发现。重复一律报错，不给这种静默加权留口子。
+
+    Raises:
+        ValueError: 格式不对、区间反了，或有重复。
+    """
+    seeds: list[int] = []
+    for chunk in spec.split(","):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        if "-" in chunk:
+            low_text, _, high_text = chunk.partition("-")
+            low, high = int(low_text), int(high_text)
+            if high < low:
+                raise ValueError(f"种子区间反了：{chunk!r}。")
+            seeds.extend(range(low, high + 1))
+        else:
+            seeds.append(int(chunk))
+    if not seeds:
+        raise ValueError(f"没有解析出任何种子：{spec!r}。")
+    if len(set(seeds)) != len(seeds):
+        raise ValueError(f"种子有重复：{spec!r}。")
+    return seeds

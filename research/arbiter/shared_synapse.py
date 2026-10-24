@@ -106,8 +106,8 @@ class SharedSynapseHarness:
         arbiter: ESArbiter | None = None,
         seed: int = 0,
     ) -> None:
-        from research.eprop.eprop import EPropLearner
-        from research.ib_hebbian.model import IBHebbianPerceptron
+        from research.eprop import EPropLearner
+        from research.ib_hebbian import IBHebbianPerceptron
 
         self.config = config or SharedSynapseConfig()
         self.arbiter = arbiter or ESArbiter(alpha=0.5, seed=seed)

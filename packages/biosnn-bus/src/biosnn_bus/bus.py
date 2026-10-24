@@ -37,6 +37,7 @@ if TYPE_CHECKING:
 __all__ = [
     "ConcatenateFusion",
     "FusionStrategy",
+    "ProjectedFusionStrategy",
     "SparseRandomProjection",
     "SpikeBus",
 ]
@@ -66,9 +67,26 @@ class FusionStrategy(Protocol):
         """融合（先融合、后投影）。``trains`` 非空。"""
         ...
 
-    # ``fuse_projected`` 刻意不在 Protocol 里：它是一个**可选能力**，用
-    # ``hasattr`` 探测。写进 Protocol 就会逼所有实现者都实现它，而
-    # ConcatenateFusion 没有理由实现。
+
+@runtime_checkable
+class ProjectedFusionStrategy(Protocol):
+    """融合策略的**可选能力**：先投影、后融合。
+
+    实现本协议的策略接收的是「每一路已经各自投影到 ``bus_dim``」的序列，
+    只负责把它们合成一路。总线用 ``isinstance(strategy, ProjectedFusionStrategy)``
+    分派——这是**声明出来的**能力边界，不是 ``hasattr`` 探测：类型检查器看得见它，
+    新策略作者也一眼知道该实现哪个方法。
+
+    两个协议是互斥的工作点，一个策略实现其中一个即可：
+
+    * 只实现 :class:`FusionStrategy` → 先融合、后投影（默认的
+      :class:`ConcatenateFusion`）；
+    * 实现本协议 → 先投影、后融合（:class:`TemporalAttentionFusion` 走这条）。
+    """
+
+    def fuse_projected(self, trains: Sequence[SpikeTrain]) -> SpikeTrain:
+        """把已投影到同一维度、同通道、已对齐的多路合成一路。"""
+        ...
 
 
 class ConcatenateFusion:
@@ -188,7 +206,7 @@ class SpikeBus:
         bus_dim: int,
         *,
         dt: float = 1.0,
-        strategy: FusionStrategy | None = None,
+        strategy: FusionStrategy | ProjectedFusionStrategy | None = None,
         projection_density: float = 0.1,
         seed: int = 0,
     ) -> None:
@@ -199,7 +217,7 @@ class SpikeBus:
 
         self.bus_dim = int(bus_dim)
         self.dt = float(dt)
-        self.strategy: FusionStrategy = strategy or ConcatenateFusion()
+        self.strategy: FusionStrategy | ProjectedFusionStrategy = strategy or ConcatenateFusion()
         self.projection_density = float(projection_density)
         self.seed = int(seed)
 
@@ -284,7 +302,11 @@ class SpikeBus:
               **无关**；
             * **通道** 跨通道求和后的结果，``channel`` 字段已无意义；模态的通道信息
               只在 :meth:`describe` 里保留（按 ``modalities_by_channel`` 归组）；
-            * **dtype** ``float64``，稀疏随机投影带 ±1 权重的输入电流。
+            * **dtype** ``float32``，稀疏随机投影带 ±1 权重的输入电流。⚠️ **两种融合
+              工作点的中间量 dtype 不同**（拼接路径本来就产 float32；先投影后融合的
+              加权和是 float64），总线在出口统一成 ``float32``——契约只承诺一个值，
+              见 ADR-0012 的契约表（2026-10-24 更正：这一行原写 ``float64``，
+              与 0.1.0 起的实现一直不符）。
 
             ⚠️ **第二维恒为 ``bus_dim`` 是承诺，不是巧合**：下游认知核心可以按
             ``bus_dim`` 建维度而不必知道上游有几个模态。这一点在换融合策略
@@ -322,7 +344,7 @@ class SpikeBus:
             )
             if not group:
                 continue
-            if hasattr(self.strategy, "fuse_projected"):
+            if isinstance(self.strategy, ProjectedFusionStrategy):
                 # 先投影、后融合：每路各自投影到 bus_dim，策略再合成一路。
                 # 这样各路 spike_dim 不同也能加权求和，TAAF 走这个工作点。
                 projected = [
@@ -345,8 +367,11 @@ class SpikeBus:
             raise BioSNNBusError("没有可融合的脉冲序列。")
 
         stacked = np.sum(fused, axis=0) if len(fused) > 1 else fused[0]
+        # 出口统一 dtype：两种融合工作点的中间量 dtype 不同（见 Returns 的 dtype 一条），
+        # 而接口契约只承诺一个值（ADR-0012）。对默认的拼接路径这是空操作，不改变任何
+        # 既有数字；先投影后融合路径原本漏成 float64，这里收口。
         return SpikeTrain(
-            data=stacked,
+            data=np.asarray(stacked, dtype=np.float32),
             dt=self.dt,
             temporal_scale=max(train.temporal_scale for _, train in pairs),
         )

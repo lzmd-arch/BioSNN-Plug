@@ -24,6 +24,7 @@ from biosnn_bus import (
     SparseRandomProjection,
     SpikeBus,
     SpikeTrain,
+    TemporalAttentionFusion,
     UnknownModalityError,
 )
 from biosnn_bus.plugins import MnistPulsePlugin
@@ -133,6 +134,19 @@ class TestStepContract:
         bus.register(WrongDim(modality="bad", dim=4))
         with pytest.raises(PluginContractError, match="声明 spike_dim=4"):
             bus.step({"bad": make_pattern()})
+
+    @pytest.mark.parametrize("strategy", [None, TemporalAttentionFusion()])
+    def test_output_dtype_is_float32_for_both_working_points(self, strategy):
+        """ADR-0012 的 dtype 契约只有一个值，两种融合工作点都必须满足。
+
+        拼接路径的中间量本来就是 float32，先投影后融合路径的加权和是 float64——
+        两者在出口统一。这条契约从首版起写错过（原写 float64），且一直没人量，
+        所以钉在这里。
+        """
+        bus = SpikeBus(bus_dim=32, strategy=strategy)
+        bus.register(ConstantPlugin(modality="only"))
+        out = bus.step({"only": make_pattern()})
+        assert out.data.dtype == np.float32
 
 
 class TestFusion:

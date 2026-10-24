@@ -314,6 +314,12 @@ pre-registered round.
    each). The current configuration is a local optimum, **not** a proven best.
 4. **Training length matters a lot**: the same configuration gives 83.9 at 400 episodes and 102.8
    at 1200 (seed 0).
-5. **This is not a like-for-like comparison with the rate version**: its evaluation is
-   deterministic, while the spiking one must freeze the random stream and average over episodes.
-   The reported gap mixes the cost of spiking with the difference in evaluation protocol.
+5. **This is not a controlled comparison with the rate version — two protocols differ.**
+   (a) *Evaluation*: the rate version is deterministic, while this one must freeze the random
+   stream and average over episodes. (b) *Encoding*: the rate version draws population centres
+   uniformly in `[-1.5, 1.5]` on all four axes with `--encoding-sigma` defaulting to 0.5, while
+   this directory uses per-axis `CARTPOLE_HALF_WIDTHS` (±2.4 / ±3.0 / ±0.21 / ±3.0) and
+   `--sigma` defaulting to 1.0. **The implementation is shared**
+   (`research/components/cartpole_encoding.py`); only the parameters differ. The reported gap
+   therefore mixes the cost of spiking, the evaluation protocol and the encoding parameters —
+   **it is not attributable to a single variable**.

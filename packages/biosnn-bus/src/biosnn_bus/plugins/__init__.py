@@ -14,11 +14,12 @@ from __future__ import annotations
 from .audio_cochlea import AudioCochleaPlugin
 from .image_diff import DiffImagePlugin
 from .mnist_pulse import MnistPulsePlugin
-from .text_zscore import OllamaEmbedding, TextZScorePlugin
+from .text_zscore import EmbeddingBackend, OllamaEmbedding, TextZScorePlugin
 
 __all__ = [
     "AudioCochleaPlugin",
     "DiffImagePlugin",
+    "EmbeddingBackend",
     "MnistPulsePlugin",
     "OllamaEmbedding",
     "TextZScorePlugin",

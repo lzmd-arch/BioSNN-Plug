@@ -40,6 +40,7 @@ import torch
 from research.common.device import describe_device, measure_peak_memory, select_device
 from research.common.provenance import DegradationLog, collect
 from research.common.seeding import SeedBook
+from research.components.cartpole_encoding import encode_state, population_centers
 from research.rstdp.measure_bias import OFFSET_THRESHOLD, BiasTracker
 from research.rstdp.rstdp import RSTDPActor
 from research.rstdp.td_ltp import PopulationCritic, TDLCritic, td_error
@@ -49,16 +50,6 @@ __all__ = ["CartPoleAgent", "encode_state", "run_episode"]
 #: 计划书 §七 第一阶段的两项判据。
 ACCEPTANCE_STEPS = 200
 EPISODE_LIMIT = 500
-
-
-def encode_state(state: torch.Tensor, centers: torch.Tensor, sigma: float) -> torch.Tensor:
-    """高斯群体编码：``(4,)`` 或 ``(batch, 4)`` → 活动 ``(N,)`` 或 ``(batch, N)``。
-
-    ``x_i = exp(−‖s − c_i‖² / (2σ²))``。**不做归一化**——归一化会抹掉"离所有中心都远"
-    这一信息，而那正是 CartPole 状态空间边缘的情形。
-    """
-    squared = ((state.unsqueeze(-2) - centers) ** 2).sum(dim=-1)
-    return torch.exp(-squared / (2.0 * sigma**2))
 
 
 class CartPoleAgent:
@@ -636,13 +627,22 @@ def build_agent_inputs(
 
     抽成独立函数是为了让 :mod:`research.rstdp.sweep` 与 CLI 走**同一条**构造路径——
     两份实现必然会漂移，而种子派生路径一漂移，数字就不可比且不会报错。
+
+    ⚠️ **中心的取值范围是本线的受控变量**：四个轴统一取 ``[-1.5, 1.5]``，而脉冲线
+    用 ``CARTPOLE_HALF_WIDTHS`` 分轴取、``--sigma`` 默认也不同。**实现是同一份**
+    （:mod:`research.components.cartpole_encoding`），差异只是传进去的参数——所以
+    跨线比较里「脉冲化代价」仍混着编码参数差异，见 ``rstdp_spiking/README.md``
+    已知边界第 5 条。**改这里的参数会让 237.8 那组数字失去意义。**
     """
     import gymnasium
 
     generator = torch.Generator().manual_seed(book.derive("群体编码中心"))
-    # CartPole 的 4 维状态大致落在 [-3, 3]（位置/角度/速度各不同量纲），
-    # 这里用 [-1.5, 1.5] 的均匀中心覆盖，编码 σ 由参数控制。
-    centers = ((torch.rand(n_features, 4, generator=generator) - 0.5) * 3.0).to(device)
+    # 中心半宽是**本线的受控变量**：四个轴统一 1.5（历史选择）。脉冲线用
+    # CARTPOLE_HALF_WIDTHS 的分轴取值——参数不同，实现是同一份
+    # （research/components/cartpole_encoding.py）。
+    centers = population_centers(
+        n_features, half_widths=(1.5, 1.5, 1.5, 1.5), generator=generator, device=device
+    )
 
     direction_rng = torch.Generator().manual_seed(book.derive("Critic 感受野采样"))
     sample_env = gymnasium.make("CartPole-v1")

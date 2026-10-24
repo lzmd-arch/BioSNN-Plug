@@ -71,8 +71,9 @@ The docstring header of every module must state the grace period and its expiry 
 
 ```text
 research/
-├─ common/                  # shared infrastructure (seeding / device / metrics / record)
-├─ <phase-or-topic>/
+├─ common/                  # domain-free infrastructure (seeding / device / metrics / record)
+├─ components/              # parameterised domain parts (CartPole state encoding, ...)
+├─ <topic>/
 │  ├─ README.md
 │  ├─ <implementation>.py
 │  └─ tests/
@@ -93,6 +94,23 @@ Two exemptions, both registered here and nowhere else:
   (see [`sweep_results/continual_cifar100/README.md`](../sweep_results/continual_cifar100/README.md)).
   `cognitive/` is still being laid down and has no external conclusion yet; add a README
   when it produces one, per the first rule above.
+
+**Dependencies point one way only: topics → `components/` → `common/`.**
+
+* `common/` is **domain-free infrastructure**; it imports no topic and no component;
+* `components/` holds **parameterised domain parts that produce no conclusions** and depends only
+  on `common/`;
+* **between topics only two edges are legal**: (a) a topic whose *purpose is composition or
+  benchmarking* (`arbiter/`, `continual/`) reads names exported by the other topic's **package
+  root** (`from research.eprop import EPropLearner`) and never its submodules; (b) nothing.
+
+A sharing need that fits neither rule is answered by promoting the piece into `components/` and
+letting **explicit parameters** carry the difference — not by copying the code. The price of
+copying has already been paid once: two encoding formulas were described as "isomorphic" in the
+docs while their value ranges differed, and nothing could catch it.
+
+The rule is enforced by AST in [`tests/test_architecture.py`](../tests/test_architecture.py),
+not by good intentions.
 
 `research/` is a **package**, not a pile of loose scripts — that is what lets the three
 lines share the things in `common/` whose definitions must not drift. So entry-point

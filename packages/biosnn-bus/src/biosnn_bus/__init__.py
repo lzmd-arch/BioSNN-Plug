@@ -47,7 +47,13 @@
 
 from __future__ import annotations
 
-from .bus import ConcatenateFusion, FusionStrategy, SparseRandomProjection, SpikeBus
+from .bus import (
+    ConcatenateFusion,
+    FusionStrategy,
+    ProjectedFusionStrategy,
+    SparseRandomProjection,
+    SpikeBus,
+)
 from .errors import (
     BioSNNBusError,
     PluginContractError,
@@ -82,6 +88,7 @@ __all__ = [
     "PluginContractError",
     "PluginNotFoundError",
     "PluginRegistrationError",
+    "ProjectedFusionStrategy",
     "SparseRandomProjection",
     "SpikeBus",
     "SpikeTrain",

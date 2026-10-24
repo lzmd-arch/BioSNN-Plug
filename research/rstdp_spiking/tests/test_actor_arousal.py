@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from research.cognitive.arousal import ArousalChannel, ArousalConfig
+from research.cognitive import ArousalChannel, ArousalConfig
 from research.rstdp_spiking.actor import SpikingActor
 
 

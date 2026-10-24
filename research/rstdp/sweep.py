@@ -49,36 +49,15 @@ import statistics
 from pathlib import Path
 
 from research.common.device import select_device
-from research.rstdp.cartpole import TrialResult, run_trial
+from research.common.seeding import parse_seeds
+from research.rstdp.cartpole import ACCEPTANCE_STEPS, TrialResult, run_trial
 
 __all__ = ["expand_grid", "parse_seeds", "summarize"]
 
-#: 计划书 §七 的验收判据。
-ACCEPTANCE_STEPS = 200.0
+#: 验收判据 ``ACCEPTANCE_STEPS`` 与 :mod:`research.rstdp.cartpole` 共用同一个常量，
+#: 不在这里复制第二份——判据只能有一个出处。
 RUNS_PER_SECOND = 0.03  # 单次约 33 秒。**这个数随配置差得很远**：策略差时一回合只有几十步、
 # 整次几秒；策略好时一回合跑满 500 步、整次可以到一分钟以上。它只用于给量级，不是承诺。
-
-
-def parse_seeds(spec: str) -> list[int]:
-    """解析 ``"0-9"`` / ``"0,1,2"`` / ``"5"`` 形式的种子列表。"""
-    seeds: list[int] = []
-    for chunk in spec.split(","):
-        chunk = chunk.strip()
-        if not chunk:
-            continue
-        if "-" in chunk:
-            low, high = chunk.split("-", 1)
-            start, stop = int(low), int(high)
-            if stop < start:
-                raise ValueError(f"种子区间颠倒：{chunk!r}")
-            seeds.extend(range(start, stop + 1))
-        else:
-            seeds.append(int(chunk))
-    if not seeds:
-        raise ValueError(f"没有解析出任何种子：{spec!r}")
-    if len(set(seeds)) != len(seeds):
-        raise ValueError(f"种子列表有重复：{spec!r}")
-    return seeds
 
 
 def _coerce(raw: str):

@@ -1,4 +1,4 @@
-"""``research.common.metrics`` 的测试。
+"""``research.common.spike_metrics`` 的测试。
 
 指标口径是三条验证线共用的，所以这里测的不只是"算得对"，还有**定义是否按文档
 写的那样**：活跃神经元是"至少发放过一次"，稀疏度是密度的补数。
@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from research.common.metrics import (
+from research.common.spike_metrics import (
     DEAD_NEURON_THRESHOLD,
     active_neuron_count,
     active_neuron_fraction,

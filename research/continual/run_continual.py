@@ -37,7 +37,7 @@ from research.continual.frontends import image_features
 from research.continual.metrics import summarise
 from research.continual.ncm import ClassPrototypes
 from research.continual.readout import DeltaReadout, evaluate
-from research.ib_hebbian.model import IBHebbianPerceptron
+from research.ib_hebbian import IBHebbianPerceptron
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT = REPO_ROOT / "sweep_results" / "continual_cifar100"

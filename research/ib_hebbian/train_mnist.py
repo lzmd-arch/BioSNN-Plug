@@ -51,9 +51,9 @@ import numpy as np
 import torch
 
 from research.common.device import describe_device, measure_peak_memory, select_device
-from research.common.metrics import active_neuron_fraction, spike_sparsity
 from research.common.provenance import DegradationLog, collect
 from research.common.seeding import SeedBook
+from research.common.spike_metrics import active_neuron_fraction, spike_sparsity
 from research.ib_hebbian.model import IBHebbianPerceptron, preprocess_mnist
 from research.ib_hebbian.readout import RidgeReadout
 
@@ -92,25 +92,18 @@ def _via_pulse_bus(
     *,
     n_steps: int,
     seed: int,
-    via_bus: bool = False,
-    second_modality: bool = False,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """把 W1 的连续输入改走脉冲总线：``encode`` 成脉冲、``decode`` 成发放率。
+    """把 W1 的连续输入改走脉冲编码：``encode`` 成脉冲、``decode`` 成发放率。
 
     ⚠️ **这是「感知层接入脉冲总线」的映射层**（计划书 §七 第二阶段），
     ⚠️ **也是本项目自己的选择**——W1 原先直接吃连续值，现在多一道"编成脉冲、
     再还原"的往返。往返本身是有损的（``O(1/sqrt(n_steps))`` 的采样噪声），
     所以**两条路径的数字不会相等**，这也正是留着 ``--input-path`` 开关的理由。
 
-    **两条子路径**（``via_bus``）：
-
-    * ``False``（默认，对应 ``--input-path bus``）：**绕过** :class:`~biosnn_bus.bus.SpikeBus`
-      的投影，直接用插件的 ``encode`` / ``decode`` 这一对互逆操作——因为 ``step()`` 的
-      输出是融合后送进认知核心的输入电流（±1 加权），不是脉冲；
-    * ``True``（对应 ``--input-path bus-taaf``）：**真走** ``SpikeBus`` + TAAF
-      （先投影后融合、按发放率加权）。单模态下两路数值一致，多模态时才有差别。
-      这条路径存在的理由是**让 TAAF 有生产路径调用它**——否则它只是写完、测过、CI 绿，
-      却没有任何调用方（见 ``memterm-pure-layer-not-wired`` 同类问题）。
+    ⚠️ **这里刻意不经 ``SpikeBus.step()``**：``step()`` 的输出是融合后送进认知核心的
+    输入电流（±1 权重），不是脉冲；拿它当发放率会把投影矩阵算进特征。总线只在
+    **多模态融合**时才是必需的，而 W1 是单模态——需要多模态融合的实验应该在它
+    自己的主题里写，不在这里加一个走不到的开关。
     """
     from biosnn_bus.plugins import MnistPulsePlugin
 
@@ -125,41 +118,7 @@ def _via_pulse_bus(
         raw = np.clip(raw, 0.0, 1.0)
         return encode_batch(plugin, raw, batch_size=x.shape[0], n_in=n_in)
 
-    if not via_bus:
-        return _run(train_x), _run(test_x)
-
-    # 真走 SpikeBus + TAAF。⚠️ **单模态时 TAAF 的权重恒为 1**（只有自己一路），
-    # 所以与 via_bus=False 数值一致、且**没必要逐样本走 bus.step**——那会在热路径上
-    # 放一个 Python 循环，冒烟跑不完。多模态时才需要总线（加权求和在总线里做）。
-    #
-    # 单模态：批量调插件，与 via_bus=False 同一条路，只是这里显式标出"经总线语义"。
-    # 多模态：注册两个插件后逐样本走 bus.step（融合必须在总线里，绕不过去）。
-    # ⚠️ **这条分支当前走不到**：W1 只有图像一路，`second_modality` 恒为 False。
-    # 留着是因为它是 TAAF 真正的调用场景（文本 + 图像），等文本插件落地后接上。
-    if not second_modality:
-        return _run(train_x), _run(test_x)
-
-    from biosnn_bus import SpikeBus, TemporalAttentionFusion
-
-    bus = SpikeBus(bus_dim=n_in, seed=seed, strategy=TemporalAttentionFusion())
-    bus.register(plugin)
-
-    def _run_via_bus(x: torch.Tensor) -> torch.Tensor:
-        raw = (x.reshape(x.shape[0], 28, 28).cpu().numpy() + 1.0) / 2.0
-        raw = np.clip(raw, 0.0, 1.0)
-        rows = []
-        for i in range(x.shape[0]):
-            current = bus.step({plugin.modality_name: raw[i]})
-            # ⚠️ **`bus.step` 的输出是 ±1 投影电流，不是脉冲**（`is_binary=False`，
-            # 取值范围能到 ±20）。直接 `.mean(axis=0)` 拿到的是**电流的均值**，
-            # 不是发放率——这个错在 `encode_batch` 的第一版犯过一次，这里是第二次。
-            # 正确做法是先二值化（`.binary()`）把电流还原成"该神经元有没有被推高"，
-            # 再沿时间求发放率。
-            rate = np.asarray(current.binary(threshold=0.0).data, dtype=np.float64).mean(axis=0)
-            rows.append(rate[:n_in])
-        return torch.from_numpy(np.stack(rows, axis=0)).to(torch.float32)
-
-    return _run_via_bus(train_x), _run_via_bus(test_x)
+    return _run(train_x), _run(test_x)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -230,26 +189,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--input-path",
         default="raw",
-        choices=["raw", "bus", "bus-taaf"],
+        choices=["raw", "pulse"],
         help=(
             "W1 的输入从哪来。**默认 raw**：直接读 MNIST 的 .npy 并做论文 D.4 的 "
             "(x/255 − 0.5) / 0.5 预处理——这是验收数字 0.9779 对应的那条路径，**不动它**。"
-            " 选 bus：先经 biosnn-bus 的 MnistPulsePlugin 编成脉冲、再解码成发放率"
+            " 选 pulse：先经 biosnn-bus 的 MnistPulsePlugin 编成脉冲、再解码成发放率"
             "（research/ib_hebbian/bus_input.py），那是「感知层接入脉冲总线」"
             "（计划书 §七 第二阶段）的路径，⚠️ **未必等于 0.9779**——见该模块的说明。"
-            " 选 bus-taaf：**真走 SpikeBus + TAAF**（先投影后融合、按发放率加权）。"
-            "⚠️ **W1 是单模态**，单模态下 TAAF 的注意力权重恒为 1（只有自己一路），"
-            "所以这条路径在 W1 上**与 bus 数值一致、不产生融合效果**——TAAF 真正的"
-            "场景是多模态（文本 + 图像），而文本插件目前零实现（计划书 §2.3 那行的"
-            "编码方案无出处，见修订说明 ㉑）。留下这条路径是为了让 TAAF 有调用方，"
-            "不是为了让 W1 变成多模态"
+            " 多模态融合不在这里：这条任务只有一个模态，需要融合的实验在它自己的主题里做"
         ),
     )
     parser.add_argument(
         "--n-steps",
         type=int,
         default=16,
-        help="脉冲编码的时间步数（仅 --input-path bus）",
+        help="脉冲编码的时间步数（仅 --input-path pulse）",
     )
     parser.add_argument("--dropout", type=float, default=0.01)
     parser.add_argument("--seed", type=int, default=0)
@@ -323,15 +277,11 @@ def train(args: argparse.Namespace, device: torch.device):
 
     limit = apply_smoke_overrides(args) if args.smoke else None
     train_x_all, train_y_all, test_x, test_y = load_mnist(args.data_dir)
-    if args.input_path in ("bus", "bus-taaf"):
+    if args.input_path == "pulse":
         # 走脉冲总线：把每张图编成脉冲，再用插件自己的 decode 还原成发放率。
         # ⚠️ 这是本项目自己的选择，且与 raw 路径**数值不同**——见 bus_input.py。
         train_x_all, test_x = _via_pulse_bus(
-            train_x_all,
-            test_x,
-            n_steps=args.n_steps,
-            seed=args.seed,
-            via_bus=args.input_path == "bus-taaf",
+            train_x_all, test_x, n_steps=args.n_steps, seed=args.seed
         )
 
     # 论文 §5.1：验证集取训练集的 10%。

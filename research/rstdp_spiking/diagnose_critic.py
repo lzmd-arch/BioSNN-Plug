@@ -30,9 +30,13 @@ import argparse
 import numpy as np
 import torch
 
+from research.components.cartpole_encoding import (
+    CARTPOLE_HALF_WIDTHS,
+    encode_state,
+    population_centers,
+)
 from research.rstdp_spiking.actor import SpikingActor
 from research.rstdp_spiking.critic import LinearCritic
-from research.rstdp_spiking.encoding import encode_state, population_centers
 from research.rstdp_spiking.pop_critic import PopulationCritic
 
 __all__ = ["diagnose", "train_and_correlate"]
@@ -82,7 +86,7 @@ def train_and_correlate(
 
     generator = torch.Generator().manual_seed(seed)
     env = gymnasium.make("CartPole-v1")
-    centers = population_centers(features, generator=generator)
+    centers = population_centers(features, half_widths=CARTPOLE_HALF_WIDTHS, generator=generator)
     actor = SpikingActor(features, 2, steps=25, learning_rate=1e-3, generator=generator)
     critic = _build_critic(
         kind,

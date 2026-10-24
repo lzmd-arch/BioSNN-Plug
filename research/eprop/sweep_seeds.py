@@ -33,38 +33,10 @@ import time
 from pathlib import Path
 
 from research.common.device import measure_peak_memory, select_device
+from research.common.seeding import parse_seeds
 from research.eprop.train_sequential import build_parser, train
 
-# 三条验证线只共享 research/common/，**互不 import**——所以这个解析器各自带一份
-# （W3 的 sweep.py 也是这么做的）。
-
 __all__ = ["main", "parse_seeds"]
-
-
-def parse_seeds(spec: str) -> list[int]:
-    """解析 ``"0-4"`` / ``"0,1,2"`` / ``"3"`` 形式的种子列表。
-
-    Raises:
-        ValueError: 格式不对、区间反了，或有重复（重复会让"均值"偷偷给某个种子加权）。
-    """
-    seeds: list[int] = []
-    for chunk in spec.split(","):
-        chunk = chunk.strip()
-        if not chunk:
-            continue
-        if "-" in chunk:
-            low_text, _, high_text = chunk.partition("-")
-            low, high = int(low_text), int(high_text)
-            if high < low:
-                raise ValueError(f"种子区间反了：{chunk!r}。")
-            seeds.extend(range(low, high + 1))
-        else:
-            seeds.append(int(chunk))
-    if not seeds:
-        raise ValueError(f"没有解析出任何种子：{spec!r}。")
-    if len(set(seeds)) != len(seeds):
-        raise ValueError(f"种子有重复：{spec!r}。")
-    return seeds
 
 
 def build_parser_for_sweep() -> argparse.ArgumentParser:

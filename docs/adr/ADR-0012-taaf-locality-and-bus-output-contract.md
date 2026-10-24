@@ -125,3 +125,8 @@ dump**，否则换一组模态名就会悄悄换掉投影矩阵而无人察觉�
   - **消费方升级**：Axo（记忆终端）的 `biosnn-bus` 依赖从 `>=0.1.0,<0.2` 升到 `>=0.3.0,<0.4`；
     它新增的常驻 daemon（`axo.busd`）每轮真的调用 `SpikeBus.step()`，输出形状 `(T, bus_dim)`，
     已用 0.3.0 实测。
+  - **融合策略的能力边界改为声明式，dtype 在出口收口**：`fuse_projected` 不再用 `hasattr`
+    探测，改由 `ProjectedFusionStrategy` 协议声明（`isinstance` 判定），类型检查器与策略
+    作者都能看见这条边界。同时 `SpikeBus.step()` 在出口把输出统一成 **`float32`**——
+    先投影后融合路径原先返回 `float64`，与上面更正后的契约不符；拼接路径本来就是
+    `float32`，**既有数字一个没变**。

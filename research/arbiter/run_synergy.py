@@ -38,7 +38,7 @@ from research.arbiter.es_arbiter import ESArbiter
 from research.arbiter.separability import fisher_ratio, linear_probe_accuracy
 from research.arbiter.synergy_task import label_mask, make_permutation, permute_inputs
 from research.common.provenance import collect
-from research.eprop.tasks import load_smnist
+from research.eprop import load_smnist
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT = REPO_ROOT / "sweep_results" / "arbiter_synergy"

@@ -108,3 +108,9 @@ modality silently changes the projection matrix and nobody notices.
     implemented" sentence in Context is kept as history.
   - **Consumer upgrade**: Axo pins `biosnn-bus>=0.3.0,<0.4` and runs a resident daemon
     (`axo.busd`) that actually calls `SpikeBus.step()`; verified against 0.3.0.
+  - **The fusion capability boundary is declarative, and dtype is pinned at the boundary**:
+    `fuse_projected` is no longer detected with `hasattr` but declared by the
+    `ProjectedFusionStrategy` protocol (`isinstance`), so both type checkers and strategy
+    authors can see it. `SpikeBus.step()` now pins its output to **`float32`** — the
+    projected-fusion path used to return `float64`, contradicting the corrected contract;
+    the concatenate path was already `float32`, so **no existing number changed**.
