@@ -80,7 +80,7 @@
 | 部分 | 状态 | 最近更新 |
 | :--- | :--- | :--- |
 | `biosnn-bus` 骨架库 | **0.3.0（含音频插件，已发布到 PyPI）**——插件接口、注册与发现、脉冲总线、**TAAF 时间注意力融合**（rate-based gating，权重由各路发放率现算，**无反向传播**）；`Used in:` [Axo](https://github.com/lzmd-arch/Axo)（生产终端）：其独立进程 `axo.busd` 常驻实例化 `SpikeBus` 并持续 `step()`（融合 + 稀疏随机投影），新记忆经自定义 `ModalityPlugin` 编码后进总线；UI 只读 stdlib 写的 JSONL 事件，不 import 本库 | 2026-10-18 |
-| 模态插件 | **四路**：`image_diff`（DVS 事件编码）、`mnist_pulse`（发放率）、**`text_zscore`**（冻结本地 embedding + z-score top-k 群体编码）、**`audio_cochlea`**（对数频带分解 + 发放率；未发布到 PyPI） | 2026-10-18 |
+| 模态插件 | **四路**：`image_diff`（DVS 事件编码）、`mnist_pulse`（发放率）、**`text_zscore`**（冻结本地 embedding + z-score top-k 群体编码）、**`audio_cochlea`**（对数频带分解 + 发放率；随 0.3.0 发布到 PyPI） | 2026-10-18 |
 | 研究代码：三条验证线 | **第一阶段实现完成**——W1 Hebbian 感知 MNIST **97.79%**（默认闭式解读出；SGD 读出 98.01%）✓；W2 e-prop 序列 sMNIST **0.7764**（30 epoch × 5 种子）→ **0.8889**（**官方收官**：**LIF** @ lr=1e-2 @ 250 epoch，已收敛；同档 ALIF 0.8831 为对照；**同预算 BPTT 对照 0.9630，领先 7.41 个百分点**，这条差距照实写：局部规则仍落后于反向传播；**配方待遇量化**：BPTT 的优化器形式在小学习率上值 **+8.53 pp**（1e-3），在最终选定的学习率上只剩 **+0.88 pp**（落在并列带内）——操作点上两臂的配方是可比的）；lr 交互扫描完成，**LIF 在四档 lr 上全网格领先** ✓；W3 R-STDP CartPole 中位数 **237.8 步**（阈值 ≥ 200）✓。数字与复现记录见[复现记录](docs/reproducibility.md) | 2026-10-18 |
 | **网络规模** | **256 个脉冲神经元**（W2）；W1 另有 3,072 个**速率型**单元（不算脉冲神经元）。计划书 §2.2 的认知核心目标是约 5 万——**差约 195 倍**，详见 [research/README](research/README.md) | 2026-10-18 |
 | 仲裁器 | **零件就位**（`research/arbiter/`）：冲突判定（余弦 > 90°）+ ES 元学习仲裁器，**已接进两条研究线**（共享输入突触）。⚠️ 但只共享输入→隐藏一处，且「减少冲突事件 50%」在合成数据上是**平凡成立**的——见该目录 README | 2026-10-24 |
@@ -148,7 +148,7 @@ flowchart TB
         IMG["图像 image_diff<br/>DVS 事件编码<br/>✅ 已实现"]
         MN["MNIST mnist_pulse<br/>发放率编码<br/>✅ 已实现"]
         TXT["文本 text_zscore<br/>冻结 embedding + z-score top-k<br/>✅ 已实现"]
-        AUD["音频 audio_cochlea<br/>对数频带分解 + 发放率<br/>✅ 已实现（未发布到 PyPI）"]
+        AUD["音频 audio_cochlea<br/>对数频带分解 + 发放率<br/>✅ 已实现（0.3.0 已发布）"]
         THIRD["第三方插件<br/>entry points 接入<br/>✅ 机制已就绪"]
         HEB["学习规则：核化 IB-Hebbian + 除法归一化<br/>◐ 第一阶段已验证（W1，MNIST 97.79%）"]
     end

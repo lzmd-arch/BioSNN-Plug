@@ -91,7 +91,7 @@ Measurement discipline is not a slogan: preregistrations, trivial-solution check
 | Part | Status | Last update |
 | :--- | :--- | :--- |
 | `biosnn-bus` skeleton library | **0.3.0 (adds the audio plugin; published to PyPI)** — plugin interface, registration and discovery, the spike bus, **TAAF temporal-attention fusion** (rate-based gating; weights computed from each stream's firing rate, **no backpropagation**); `Used in:` [Axo](https://github.com/lzmd-arch/Axo) (a shipping terminal): its standalone `axo.busd` process instantiates `SpikeBus` and calls `step()` continuously (fusion plus sparse random projection), with new memories encoded by a custom `ModalityPlugin`; the UI reads only a stdlib-written JSONL event file and never imports this library | 2026-10-18 |
-| Modality plugins | **Four**: `image_diff` (DVS event coding), `mnist_pulse` (firing rates), **`text_zscore`** (frozen local embedding + z-score top-k population coding), **`audio_cochlea`** (log-band decomposition + firing rates; not yet on PyPI) | 2026-10-18 |
+| Modality plugins | **Four**: `image_diff` (DVS event coding), `mnist_pulse` (firing rates), **`text_zscore`** (frozen local embedding + z-score top-k population coding), **`audio_cochlea`** (log-band decomposition + firing rates; shipped in 0.3.0 on PyPI) | 2026-10-18 |
 | Research code: three verification lines | **Phase-1 implementations complete** — W1 Hebbian perception MNIST **97.79%** (default closed-form readout; SGD readout 98.01%) ✓; W2 e-prop sequential sMNIST **0.7764** (30 epochs x 5 seeds) -> **0.8889** (**official**: **LIF** @ lr=1e-2 @ 250 epochs, converged; ALIF 0.8831 same budget as control; **matched-budget BPTT control 0.9630, 7.41 points ahead** — stated as measured: the local rule still trails backpropagation; **recipe parity, quantified**: BPTT's optimizer formulation is worth **+8.53 pp** at small learning rates (1e-3) and only **+0.88 pp** at the rate finally chosen (inside the tie band) — at the operating point the two arms are comparable recipes); learning-rate interaction swept, **LIF leads across the whole grid** ✓; W3 R-STDP CartPole median **237.8 steps** (criterion >= 200) ✓. Numbers and provenance: [reproducibility record](docs/reproducibility.en.md) | 2026-10-18 |
 | **Network scale** | **256 spiking neurons** (W2); W1 adds 3,072 **rate-based** units (not spiking neurons). The plan's §2.2 cognitive core targets roughly 50,000 — **about 195x away**; see [research/README](research/README.en.md) | 2026-10-18 |
 | Arbiter | **Parts in place** (`research/arbiter/`): conflict detection (cosine > 90 degrees) + ES meta-learned arbiter, **wired into two research lines** (shared input synapses). ⚠️ Only the input->hidden weight is shared, and "50% fewer conflict events" holds **trivially** on synthetic data — see that directory's README | 2026-10-24 |
@@ -171,7 +171,7 @@ flowchart TB
         IMG["Image image_diff<br/>DVS event coding<br/>✅ implemented"]
         MN["MNIST mnist_pulse<br/>firing-rate coding<br/>✅ implemented"]
         TXT["Text text_zscore<br/>frozen embedding + z-score top-k<br/>✅ implemented"]
-        AUD["Audio audio_cochlea<br/>log-spaced bands + firing rates<br/>✅ implemented (not on PyPI yet)"]
+        AUD["Audio audio_cochlea<br/>log-spaced bands + firing rates<br/>✅ implemented (shipped in 0.3.0)"]
         THIRD["Third-party plugins<br/>attached via entry points<br/>✅ mechanism in place"]
         HEB["Learning rule: kernelised IB-Hebbian + divisive normalization<br/>◐ phase 1 verified (W1, MNIST 97.79%)"]
     end
