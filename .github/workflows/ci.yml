@@ -315,6 +315,36 @@ jobs:
           path: paper/main.pdf
           if-no-files-found: error
 
+  # ── P4 草稿的编译腿 ────────────────────────────────────────────────────────
+  # P2 的教训制度化：PDF 出库、可编译性由 CI 担保。P4 处于活跃写作期，
+  # 结构每天都在动，等到终审才发现破表正是 P2 吃过的亏。
+  # 与 P2 同款 tectonic；`paper/p4/refs.bib` 是 `paper/refs.bib` 的子集，
+  # 这条腿同时验它的语法。PDF 不入库，挂 artifact。
+  latex-build-p4:
+    name: paper P4 编译验证（tectonic）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装 tectonic
+        run: |
+          curl -sSL -o tectonic.tar.gz             "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-x86_64-unknown-linux-musl.tar.gz"
+          tar xzf tectonic.tar.gz
+          ./tectonic --version
+      - name: 编译 paper/p4/main.tex（同时验 p4/refs.bib 的语法）
+        working-directory: paper/p4
+        run: ../../tectonic main.tex
+      - name: 断言产出了 PDF
+        working-directory: paper/p4
+        run: |
+          test -f main.pdf || { echo "编译没产出 main.pdf"; exit 1; }
+          ls -l main.pdf
+      - name: 上传编译好的 PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-p4-pdf
+          path: paper/p4/main.pdf
+          if-no-files-found: error
+
   # ── 计划书 §12.1：第三方依赖许可审计 ──────────────────────────────────────
   # 计划书点名要核查 eprop-PyTorch 与 Lava/Loihi 相关组件的许可证条款。
   # 这里只做基线：列出全部依赖的许可证，并在出现强 copyleft 时失败。

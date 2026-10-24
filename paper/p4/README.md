@@ -57,3 +57,15 @@ inheritance 之前后它是 **§3.5**，protocol inheritance 顺延为 §3.6。�
   "不可测量"≠"被证伪"；但 R1/R2 是**可测**的，它们阴性就是阴性。
 * 判据改过一次（"两臂都失败" → 协同量 δ=0.05），改动必须如实写进 §3.3，否则读者无法解释
   为什么前后结论不同。
+
+## 五、写作纪律（2026-10-24 裁决）
+
+* **正文引用一律 `ef` / `\label`，禁止手写节号**。裁决里出现过"§3.3 vs §3.5"这类
+  伪冲突，根源就是手写编号；`ef` 让节号随写作自然演化。
+* **编译由 CI 担保**：`.github/workflows/ci.yml` 的 `latex-build-p4` 腿编译
+  `paper/p4/main.tex` 并验 `p4/refs.bib` 的语法；PDF **不入库**，挂 Actions artifact
+  （编译状态看 Actions 页面，构造成败不看本地）。
+* `p4/refs.bib` 是 `paper/refs.bib` 的**子集**，逐字复制；新增引用先在主文件与
+  `docs/references.md` 台账登记核验，再复制过来。
+* `min_retention` / `max_retention` 是**双侧**约束 α ∈ [0.2, 0.8]——单侧约束挡不住
+  "关掉另一条规则"这枚硬币的另一面。

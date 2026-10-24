@@ -57,6 +57,14 @@ the result itself:
 
 ## Consequences
 
+**⚠️ A constraint without enforcement is not a constraint.** Implementing the two-sided
+bound surfaced this: a search that only accepts *better* candidates can leave alpha
+**outside** the interval while formally satisfying it -- start at 0.5 with a [0.2, 0.3]
+interval and the result is still 0.5. This is the same family as `alpha -> 0`: **an
+optimizer can satisfy a constraint by parking outside it**. The fix is to clip at entry,
+with a test; every future constraint should be asked the same question -- *can a violating
+state survive without being rejected?*
+
 - "Does adaptive alpha beat static 0.5" stays **open**, now with an explicit price tag: an upgrade
   from "infeasible" to "priced", not a negative finding.
 - The arbiter's three-language READMEs, `DESIGN.md`, the results record and the task spec are
@@ -64,5 +72,5 @@ the result itself:
   marked with a **post-data date**, changing no criterion.
 - Reopening this line requires **first** an objective that passes its discrimination check at an
   affordable cost; until then no claim of the form "adaptive alpha is better" may be made.
-- P4's §3.3 triviality analysis now has four cases: the alpha -> 0 degeneracy, the per-synapse
+- P4's triviality analysis (a body section plus Appendix C) now has four cases: the alpha -> 0 degeneracy, the per-synapse
   cosine degeneracy, the inert integer-objective ES, and the proxy/construct mismatch.
