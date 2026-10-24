@@ -81,7 +81,7 @@ Two modules:
 * Infrastructure kept: the 43 tests, per-row cosine, and joint reporting of `retention` and
   conflict **remain as they are**.
 
-* **The synergy benchmark, first full run (2026-10-24, five seeds).** **MIX reaches Fisher 0.651 against H's 0.472 and E's 0.331** (synergy margin median **+0.179**; both the delta = 0.05 criterion and the separation criterion pass). ⚠️ **But the alpha the ES learned is bit-identical to a frozen 0.5** — the objective is an integer conflict count that a sigma = 0.1 perturbation cannot move, so alpha never moved. What this round shows is that a **fixed 50/50 mix** beats either arm alone, **not** that the arbiter learned how to mix.
+* **The synergy benchmark, first full run (2026-10-24, five seeds).** **MIX reaches Fisher 0.651 against H's 0.472 and E's 0.331** (synergy margin median **+0.179**; both the delta = 0.05 criterion and the separation criterion pass). ⚠️ **But the alpha the ES learned is bit-identical to a frozen 0.5** — the objective is an integer conflict count that a sigma = 0.1 perturbation cannot move, so alpha never moved. What this round shows is that a **fixed 50/50 mix** beats either arm alone, **not** that the arbiter learned how to mix. Two later objectives (Fisher as the objective, and a continuous proxy) each failed their own pre-registered check, so the adaptive arm **was not run** — the honest word is **not measurable**, not **disproved**.
 Numbers and controls: [`sweep_results/arbiter_synergy/`](../../sweep_results/arbiter_synergy/README.md).
 
 ## Known boundaries

@@ -2,13 +2,13 @@
 
 [中文](ADR-0012-taaf-locality-and-bus-output-contract.md) · [日本語](ADR-0012-taaf-locality-and-bus-output-contract.ja.md)
 
-- **Status**: partially accepted (locality and the output contract are accepted; the projection-layer training rule is **left open for phase two**)
+- **Status**: partially accepted (locality and the output contract are accepted; **TAAF shipped in `biosnn-bus 0.2.0`**; the projection-layer training rule is **left open for phase two**)
 - **Date**: 2026-10-13
 - **Related**: project plan §2.2 (spike bus: TAAF + dual-channel fusion), §3.1, §7 phase two; [ADR-0002](ADR-0002-numpy-core-torch-optional.en.md) (skeleton library does not depend on torch), [ADR-0006](ADR-0006-plugin-interface-fidelity.en.md) (plugin interface fidelity)
 
 ## Context
 
-Project plan §2.2 says the spike bus integrates "TAAF temporal-attention-guided adaptive fusion", and §7 phase two lists it as the task "TAAF quick fine-tuning". But the repository says otherwise: `FusionStrategy` has only one implementation, `ConcatenateFusion`, and `bus.py` says the `FusionStrategy` is where TAAF will **be inserted in future** -- **TAAF was never implemented**. The plan's "quick fine-tuning" phrasing assumes it already exists, so the wording and reality disagree.
+Project plan §2.2 says the spike bus integrates "TAAF temporal-attention-guided adaptive fusion", and §7 phase two lists it as the task "TAAF quick fine-tuning". But the repository says otherwise: `FusionStrategy` has only one implementation, `ConcatenateFusion`, and `bus.py` says the `FusionStrategy` is where TAAF will **be inserted in future** -- **TAAF was never implemented** (2026-10 update: it shipped in 0.2.0; this sentence now only describes the state on 2026-10-13, see the revision log below). The plan's "quick fine-tuning" phrasing assumes it already exists, so the wording and reality disagree.
 
 Three constraints were made explicit at the start:
 
@@ -42,7 +42,7 @@ What `SpikeBus.step()` returns:
 | :--- | :--- |
 | Shape | `(T, bus_dim)` -- the **second dimension is always** `bus_dim`, **regardless** of how many modalities are registered or what each one's `spike_dim` is |
 | Channel | The sum across channels; the `channel` field is meaningless afterwards; per-modality channel information lives only in `describe()` (grouped by `modalities_by_channel`) |
-| dtype | `float64`: input current from a sparse random projection with ±1 weights |
+| dtype | `float32`: input current from a sparse random projection with ±1 weights. **Corrected 2026-10-24**: this row said `float64`, but 0.1.0 and 0.3.0 have always returned `float32` (see the revision log) |
 
 **The second dimension being `bus_dim` is a promise, not a coincidence**: a downstream cognitive core can size itself to `bus_dim` without knowing how many modalities feed it. This stays true when the fusion strategy changes -- the two work-points differ only in **how one path is produced**, not in the output dimension.
 
@@ -95,3 +95,16 @@ that lives only in code and not in the artifact is no reproducibility guarantee 
 `SparseRandomProjection` derives its seed via `zlib.crc32` from `(bus seed, channel, modality name,
 dimension)`; **those derivation inputs should also go into the config dump**, otherwise renaming a
 modality silently changes the projection matrix and nobody notices.
+
+## Revision log
+
+- **2026-10-24**
+  - **dtype contract corrected to `float32`**: both 0.1.0 and 0.3.0 return `float32` from
+    `SpikeBus.step()` (the projection's intermediate and output arrays are `np.float32`). The
+    `float64` in the contract table never matched the implementation. Changing the library to
+    `float64` would be a breaking change and is out of scope here.
+  - **TAAF shipped**: `biosnn-bus 0.2.0` added `TemporalAttentionFusion`; the locality red line
+    is enforced by the AST assertions in `test_taaf.py::TestLocalityRedLine`. The "never
+    implemented" sentence in Context is kept as history.
+  - **Consumer upgrade**: Axo pins `biosnn-bus>=0.3.0,<0.4` and runs a resident daemon
+    (`axo.busd`) that actually calls `SpikeBus.step()`; verified against 0.3.0.

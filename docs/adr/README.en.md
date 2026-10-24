@@ -46,3 +46,4 @@ and link the two to each other.
 | [ADR-0011](ADR-0011-gas-modality-as-out-of-repo-plugin.en.md) | The gas (chemical sensing) modality ships as an out-of-repo third-party package, not under packages/ | Accepted |
 | [ADR-0012](ADR-0012-taaf-locality-and-bus-output-contract.en.md) | TAAF's locality red line, the open projection-layer training rule, and the `SpikeBus` output-shape contract | Partially accepted |
 | [ADR-0013](ADR-0013-synergy-benchmark-priority-and-arbiter-scope.en.md) | The synergy benchmark becomes P0; the shared-interface plan is rejected (counterfactual arm only); three-way mixing stays in phase five | Accepted |
+| [ADR-0014](ADR-0014-adaptive-arbitration-unmeasurable-and-fit-retained.en.md) | Adaptive arbitration is not measurable (not disproved); `ESArbiter.fit` kept on standby; P4 headline changes | Accepted |

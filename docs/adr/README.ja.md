@@ -45,3 +45,4 @@ Michael Nygard の古典的な 4 段構成を採用します：
 | [ADR-0011](ADR-0011-gas-modality-as-out-of-repo-plugin.ja.md) | ガス（化学センシング）モダリティはリポジトリ外のサードパーティパッケージとして提供し、packages/ には置かない | 承認済み |
 | [ADR-0012](ADR-0012-taaf-locality-and-bus-output-contract.ja.md) | TAAF の局所性のレッドライン、未決の射影層の学習規則、`SpikeBus` 出力形状の契約 | 部分採用 |
 | [ADR-0013](ADR-0013-synergy-benchmark-priority-and-arbiter-scope.ja.md) | 協同性ベンチマークを P0 へ；共有インターフェース案は却下（反対事実アームのみ）；三者混合は第 5 フェーズ据え置き | 採択済み |
+| [ADR-0014](ADR-0014-adaptive-arbitration-unmeasurable-and-fit-retained.ja.md) | 適応的仲裁は「測定不能」（「反証」ではない）；`ESArbiter.fit` は待機で保持；P4 の見出し転換 | 採択済み |

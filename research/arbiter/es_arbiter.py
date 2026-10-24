@@ -179,6 +179,12 @@ class ESArbiter:
     ) -> ArbiterResult:
         """Tune `alpha` with ES on a trace of per-step updates.
 
+        ⚠️ **Not used by any reported result.** The synergy-benchmark arm that was meant
+        to call this never ran: no objective passed its own pre-registered check (see
+        `sweep_results/arbiter_synergy_task_spec.md`, section 预注册). **No sanctioned
+        objective is mounted here** — this is a tool standing by, not a weapon in service.
+        Do not read any arbitration conclusion as coming from it.
+
         Args:
             updates_a: rule A's proposed update at each training step.
             updates_b: rule B's proposed update at each training step (same shapes).

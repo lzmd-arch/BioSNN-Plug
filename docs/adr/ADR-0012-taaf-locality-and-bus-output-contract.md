@@ -2,7 +2,7 @@
 
 [English](ADR-0012-taaf-locality-and-bus-output-contract.en.md) · [日本語](ADR-0012-taaf-locality-and-bus-output-contract.ja.md)
 
-- **状态**：部分采纳（局部性与输出契约已采纳；投影层训练规则**留待阶段二裁决**）
+- **状态**：部分采纳（局部性与输出契约已采纳；**TAAF 已在 `biosnn-bus 0.2.0` 落地**；投影层训练规则**留待阶段二裁决**）
 - **日期**：2026-10-13
 - **相关**：计划书 §2.2（脉冲总线：TAAF + 双通道融合）、§3.1、§七 第二阶段；[ADR-0002](ADR-0002-numpy-core-torch-optional.md)（骨架库不依赖 torch）、[ADR-0006](ADR-0006-plugin-interface-fidelity.md)（插件接口保真）
 
@@ -11,7 +11,7 @@
 计划书 §2.2 说脉冲总线集成「TAAF 时间注意力引导的自适应融合」，§七 第二阶段把它列为
 任务「TAAF 快速微调」。但仓库实况是：`FusionStrategy` 只有 `ConcatenateFusion` 一个
 实现，`bus.py` 的注释写着「`FusionStrategy` 是 TAAF **未来插入**的位置」——
-**TAAF 从未实现**。计划书那句"快速微调"假设它已经存在，所以措辞与实况不符。
+**TAAF 从未实现**（2026-10 更新：0.2.0 已实现，本文该句只描述 2026-10-13 当时的实况，见文末修订记录）。计划书那句"快速微调"假设它已经存在，所以措辞与实况不符。
 
 三条约束在开工时被明确：
 
@@ -54,7 +54,7 @@ out    = Σ_i w_i · projected_i
 | :--- | :--- |
 | 形状 | `(T, bus_dim)` —— **第二维恒等于** `bus_dim`，与注册了几个模态、各模态 `spike_dim` 多少**无关** |
 | 通道 | 跨通道求和后的结果；`channel` 字段已无意义，模态的通道信息只在 `describe()` 里保留（按 `modalities_by_channel` 归组） |
-| dtype | `float64`，稀疏随机投影带 ±1 权重的输入电流 |
+| dtype | `float32`，稀疏随机投影带 ±1 权重的输入电流。**2026-10-24 更正**：本格原写 `float64`，而 0.1.0 与 0.3.0 的实现一直返回 `float32`——契约表从首版起就与实现不符（详见修订记录） |
 
 **第二维恒为 `bus_dim` 是承诺，不是巧合**：下游认知核心可以按 `bus_dim` 建维度而
 不必知道上游有几个模态。这一点在换融合策略时**都不变**——两条工作点的差异只在
@@ -112,3 +112,16 @@ out    = Σ_i w_i · projected_i
 种子只在代码里而不在产物里，等于没有复现保证。当前 `SparseRandomProjection` 用
 `zlib.crc32` 从 `(bus seed, channel, modality 名, 维度)` 派生，**这些派生输入也应进 config
 dump**，否则换一组模态名就会悄悄换掉投影矩阵而无人察觉。
+
+## 修订记录
+
+- **2026-10-24**
+  - **dtype 契约更正为 `float32`**：0.1.0 与 0.3.0 的 `SpikeBus.step()` 实测都返回 `float32`
+    （`SparseRandomProjection` 的中间量与输出都用 `np.float32`），契约表原先的 `float64`
+    从首版起就与实现不符。要真的改成 `float64` 是一次破坏性变更，需单独立项，不在本次修订内。
+  - **TAAF 已实现**：`biosnn-bus 0.2.0` 引入 `TemporalAttentionFusion`，局部性红线由
+    `test_taaf.py::TestLocalityRedLine` 的 AST 断言钉住。本文 Context 里「TAAF 从未实现」
+    现在只作为历史记录保留。
+  - **消费方升级**：Axo（记忆终端）的 `biosnn-bus` 依赖从 `>=0.1.0,<0.2` 升到 `>=0.3.0,<0.4`；
+    它新增的常驻 daemon（`axo.busd`）每轮真的调用 `SpikeBus.step()`，输出形状 `(T, bus_dim)`，
+    已用 0.3.0 实测。
