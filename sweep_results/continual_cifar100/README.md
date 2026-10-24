@@ -1,5 +1,7 @@
 # CIFAR-100 类增量：四条路线的对照（2026-10-18）
 
+**→ 正式预注册运行已单独成目录：[`formal/`](formal/README.md)（2026-10-24）。本文件保留为探索记录，两者协议不同，不可混报。**
+
 **这些是探索性探针，不是正式验收**：单种子、`--limit-per-class 200`、隐藏层 1 epoch（W1 路线）。
 正式运行要按 `sweep_results/continual_cifar100_prereg.md` 的口径另跑。
 
