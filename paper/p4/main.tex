@@ -83,7 +83,7 @@ not assumed; where it fails is reported.}
 % 核心节. 设计判据: 单方 < 混合才可解 (complementarity 任务);
 % \todo{任务规格: Hebbian 供特征结构 + e-prop 供时序标签的复合任务};
 % 负向验证: 单方基线必须如预期失败 (预注册期望值).
-\subsection{Triviality analyses: four cases}
+\subsection{Triviality analyses: four cases}\label{sec:triviality}
 % [2026-10-24 裁决] 正文放**陈述与教训**(每案四五行: 现象 -> 机制 -> 纪律),
 % 推导细节与参数放附录 C. 完整草稿见 paper/p4/section-3.3-triviality-draft.md.
 % 四案: ① alpha->0 退化; ② 逐突触余弦退化; ③ 整数目标 ES 惰性; ④ 代理-构念错位.
@@ -100,7 +100,7 @@ not assumed; where it fails is reported.}
 
 % ------------------------------------------------------------
 \section{Results}
-\subsection{Synergy: does the mixture beat both parents?}
+\subsection{Synergy: does the mixture beat both parents?}\label{sec:synergy}
 
 The Rules-Collide benchmark pits three arms against each other on a fixed-permutation
 sequential MNIST with 1\% of the training labels: Hebbian alone (H), e-prop alone (E), and a
@@ -150,8 +150,45 @@ mixture here is a fixed 50/50 blend; the arm that would adapt the mixing weight 
 separately in Section~\ref{sec:pending}. Table~\ref{tab:synergy} is therefore a two-level
 ordering --- mixture over singles --- and the third level is deliberately left open.
 \subsection{Arbitration without degeneracy}\label{sec:pending}
-% 表: 冲突降幅与 retention 联合报告 (P2 的联合报告纪律);
-% 双侧区间 [0.2, 0.8] 下的压缩上限; 退化解对照 (无约束时 alpha 漂向 0.2-0.3).
+
+The adaptive arm was run under a pre-registration written before any of its numbers existed,
+and the answer is negative. We report it in the order the constraints were discovered.
+
+\textbf{First, no objective could be priced.} The natural objective --- an evolution strategy
+climbing on the count of conflict events --- turned out to have no gradient: at $\alpha = 0.5$
+the blend already conflicts with the other rule zero times, every perturbation scores the same,
+and $\alpha$ never moves; the arm was bit-identical to a frozen $0.5$ in all five seeds. Two
+replacements were then checked against a pre-registered discrimination rule and failed it: an
+end-to-end Fisher objective has no discriminating power on probes short enough to afford (its
+range across $\alpha$ is $0.026$--$0.039$, not growing with probe length), and a smooth proxy
+for ``agreement with both rules'' peaks at $\alpha = 0.9$ while assigning the same value to
+$\alpha = 0$ and $\alpha = 1$ --- arms that differ by $0.14$ in Fisher. Adaptive arbitration is
+therefore \emph{not measurable by any objective we could afford}; the only known-valid objective,
+a full-course probe, is priced at about seven hours per fit and is left as future work.
+
+\textbf{Second, the static optimum is itself the default.} A sweep of the mixing weight over
+$\alpha \in \{0.3, \dots, 0.7\}$ (Section~\ref{sec:synergy}) locates the optimum at equal
+weights. A frozen $0.5$ is therefore not a straw man but the best static setting this benchmark
+admits.
+
+\textbf{Third, slow adaptation moves, and moves the wrong way.} With no outer optimizer and no
+probe, we let $\alpha(t)$ drift at routine validation checkpoints (step $0.05$, interval
+$[0.2, 0.8]$, every five epochs, validation carved from the training split so that the choice
+never touches the evaluation set). The trajectory is monotone and identical in shape across all
+five seeds: $0.50 \to 0.55 \to \dots \to 0.80$, parking at the upper bound. Final Fisher is
+$0.642$ against $0.632$ for a matched fixed-$0.5$ control trained on the same split --- a paired
+median of $+0.003$, below the pre-registered $\delta = 0.05$ --- and $0.651$ for the full-data
+frozen $0.5$, i.e.\ \emph{worse} by $0.009$. The drift tracks a \emph{transient} validation
+signal rather than the final optimum, and it ends by parking on the constraint boundary --- the
+same family as the two degeneracies of Section~\ref{sec:triviality}: a quantity that is
+optimised, but not the quantity that matters.
+
+\textbf{The line is sealed.} The pre-registration allowed these two rescue arms and no third.
+Both are negative, so the conclusion is not ``untested'' but \emph{measured and negative}: on
+this benchmark no adaptive arbitration scheme we could build beats a fixed 50/50 mixture, and the
+best static mixture is itself 50/50. What remains open is narrower and better posed: whether an
+objective exists that is affordable \emph{and} discriminating, which we have shown is the binding
+constraint rather than the arbitration idea itself.
 \subsection{Continuous mixing vs.\ discrete switching}
 % 与 Turcu 式切换在协同基准上的同条件对比 (或: 分析性对比 + 我们的实现选择);
 % \todo{若不同条件, 明确声明不可直接比, 按 P2 预算纪律处理}.
