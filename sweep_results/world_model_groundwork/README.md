@@ -66,3 +66,14 @@
 - 不说明"世界模型实现完了"——没有 rollout、没有规划、没有神经网络、没有 PINN；
 - 不说明"CartPole 就是阶段四的预测对象"——它只是现有环境里最便宜的地基；
 - 不改阶段四的入口条件（阶段三验收）。
+
+
+## 学习规则臂（P3，未启动）
+
+当前所有基线都是**测量仪器**：`ridge_quadratic` 用闭式解，吃了全局标签与批处理统计。
+它回答"这个测量能不能分辨模型好坏"，不回答"世界模型能不能由局部规则学出来"。
+
+ADR-0015 / v7 候选 1 的第 1 问——**物理约束能否在纯局部规则下注入、并且可测**——必须先写
+预注册；本轮不实现、不调参。多步 rollout 与 Acrobot 的预注册分别见
+[`../world_model_rollout_prereg.md`](../world_model_rollout_prereg.md) 与
+[`../world_model_acrobot_prereg.md`](../world_model_acrobot_prereg.md)。

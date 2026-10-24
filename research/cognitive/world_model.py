@@ -32,7 +32,11 @@ __all__ = [
     "WorldModel",
     "action_sensitivity",
     "auroc",
+    "build_rollout_windows",
     "per_dim_nmse",
+    "rollout",
+    "rollout_nmse",
+    "rollout_teacher_forcing",
 ]
 
 
@@ -82,15 +86,19 @@ class WorldModel(Protocol):
     def predict(self, states: np.ndarray, actions: np.ndarray) -> Prediction: ...
 
 
-def _checked(states: np.ndarray, actions: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _checked(
+    states: np.ndarray, actions: np.ndarray, *, n_actions: int | None = None
+) -> tuple[np.ndarray, np.ndarray]:
     s = np.asarray(states, dtype=np.float64)
     a = np.asarray(actions, dtype=np.int64).reshape(-1)
     if s.ndim != 2:
         raise ValueError(f"states 必须是 (n, n_dims)，收到 {s.shape}。")
     if a.shape[0] != s.shape[0]:
         raise ValueError(f"actions 与 states 条数不一致：{a.shape[0]} vs {s.shape[0]}。")
-    if np.any((a < 0) | (a > 1)):
-        raise ValueError("CartPole 的动作只能是 0 或 1。")
+    if np.any(a < 0):
+        raise ValueError("动作不能为负。")
+    if n_actions is not None and np.any(a >= n_actions):
+        raise ValueError(f"动作必须落在 [0, {n_actions})，收到最大值 {int(a.max())}。")
     return s, a
 
 
@@ -155,6 +163,7 @@ class PerActionMeanModel:
     """每个动作一个平均漂移：动作条件化的最弱形式（与状态无关）。"""
 
     def __init__(self) -> None:
+        self.n_actions_ = 2
         self.delta_ = np.zeros((2, 1))
         self.termination_rate_ = np.zeros(2)
 
@@ -168,16 +177,18 @@ class PerActionMeanModel:
         s, a = _checked(states, actions)
         delta = _deltas(s, next_states)
         term = np.asarray(terminated, dtype=np.float64)
-        self.delta_ = np.zeros((2, s.shape[1]))
+        self.n_actions_ = int(a.max()) + 1
+        self.delta_ = np.zeros((self.n_actions_, s.shape[1]))
+        self.termination_rate_ = np.zeros(self.n_actions_)
         global_delta = delta.mean(axis=0)
         global_rate = float(term.mean())
-        for action in (0, 1):
+        for action in range(self.n_actions_):
             mask = a == action
             self.delta_[action] = delta[mask].mean(axis=0) if mask.any() else global_delta
             self.termination_rate_[action] = float(term[mask].mean()) if mask.any() else global_rate
 
     def predict(self, states: np.ndarray, actions: np.ndarray) -> Prediction:
-        _, a = _checked(states, actions)
+        _, a = _checked(states, actions, n_actions=self.n_actions_)
         return Prediction(
             delta=self.delta_[a],
             termination=self.termination_rate_[a],
@@ -204,16 +215,17 @@ class RidgeActionModel:
             raise ValueError(f"ridge 必须为正，收到 {ridge!r}。")
         self.ridge = float(ridge)
         self.quadratic = bool(quadratic)
+        self.n_actions_ = 2
         self.mean_ = np.zeros(1)
         self.scale_ = np.ones(1)
         self.coef_ = np.zeros((1, 1))
 
     def _features(self, states: np.ndarray, actions: np.ndarray) -> np.ndarray:
         z = (states - self.mean_) / self.scale_
-        onehot = np.zeros((states.shape[0], 2), dtype=np.float64)
+        onehot = np.zeros((states.shape[0], self.n_actions_), dtype=np.float64)
         onehot[np.arange(states.shape[0]), actions] = 1.0
-        # 每个动作一组 z：交互项是 (n, 8)，不是 onehot (n,2) 与 z (n,4) 的逐元素乘。
-        interaction = np.hstack([onehot[:, [0]] * z, onehot[:, [1]] * z])
+        # 每个动作一组 z：交互项是 (n, n_actions·n_dims)，不是 onehot 与 z 的逐元素乘。
+        interaction = np.hstack([onehot[:, [i]] * z for i in range(self.n_actions_)])
         parts = [np.ones((states.shape[0], 1)), z, onehot, interaction]
         if self.quadratic:
             # 终止是**双侧阈值**（|θ'| 超过界限），单个线性分数表达不了：两边的贡献
@@ -232,6 +244,7 @@ class RidgeActionModel:
     ) -> None:
         s, a = _checked(states, actions)
         delta = _deltas(s, next_states)
+        self.n_actions_ = int(a.max()) + 1
         self.mean_ = s.mean(axis=0)
         # 零方差维（理论上不会有，防御一下）不能除零；标准差下限是"不缩放"。
         self.scale_ = np.maximum(s.std(axis=0), 1e-8)
@@ -241,9 +254,101 @@ class RidgeActionModel:
         self.coef_ = np.linalg.solve(gram, design.T @ targets)
 
     def predict(self, states: np.ndarray, actions: np.ndarray) -> Prediction:
-        s, a = _checked(states, actions)
+        s, a = _checked(states, actions, n_actions=self.n_actions_)
         out = self._features(s, a) @ self.coef_
         return Prediction(delta=out[:, :-1], termination=out[:, -1])
+
+
+def build_rollout_windows(
+    states: np.ndarray,
+    actions: np.ndarray,
+    next_states: np.ndarray,
+    episode: np.ndarray,
+    horizon: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """从按回合排列的转移里切出长度 ``horizon`` 的窗口。
+
+    Returns:
+        ``(起点状态, 动作序列, 目标序列)``：形状分别是 ``(n, d)``、``(n, k)``、
+        ``(n, k, d)``。目标第 k 列是 ``s_{t+k+1}``——自由 rollout 要预测的就是它。
+
+    **按回合切**：窗口不跨回合边界，否则预测器会被要求"从终止后的状态继续"。
+    """
+    s = np.asarray(states, dtype=np.float64)
+    a = np.asarray(actions, dtype=np.int64)
+    nxt = np.asarray(next_states, dtype=np.float64)
+    eps = np.asarray(episode, dtype=np.int64)
+    if not (s.shape[0] == a.shape[0] == nxt.shape[0] == eps.shape[0]):
+        raise ValueError("states / actions / next_states / episode 条数必须一致。")
+    if horizon < 1:
+        raise ValueError(f"horizon 必须 >= 1，收到 {horizon!r}。")
+
+    starts: list[int] = []
+    for index in range(s.shape[0]):
+        if index + horizon > s.shape[0]:
+            break
+        # 窗口内的每一步都必须属于同一回合
+        if np.all(eps[index : index + horizon] == eps[index]):
+            starts.append(index)
+    if not starts:
+        return (
+            np.empty((0, s.shape[1])),
+            np.empty((0, horizon), dtype=np.int64),
+            np.empty((0, horizon, s.shape[1])),
+        )
+    idx = np.asarray(starts, dtype=np.int64)
+    action_windows = np.stack([a[i : i + horizon] for i in idx])
+    target_windows = np.stack([nxt[i : i + horizon] for i in idx])
+    return s[idx], action_windows, target_windows
+
+
+def rollout(
+    model: WorldModel, start_states: np.ndarray, action_sequences: np.ndarray
+) -> np.ndarray:
+    """自由 rollout：每一步都吃自己上一步的预测。返回 ``(n, k, d)`` 的预测状态。"""
+    start = np.asarray(start_states, dtype=np.float64)
+    actions = np.asarray(action_sequences, dtype=np.int64)
+    if actions.ndim != 2 or actions.shape[0] != start.shape[0]:
+        raise ValueError(f"动作序列必须是 (n, k)，收到 {actions.shape}。")
+    current = start
+    predictions: list[np.ndarray] = []
+    for step in range(actions.shape[1]):
+        current = current + model.predict(current, actions[:, step]).delta
+        predictions.append(current)
+    return np.stack(predictions, axis=1)
+
+
+def rollout_teacher_forcing(
+    model: WorldModel,
+    start_states: np.ndarray,
+    action_sequences: np.ndarray,
+    targets: np.ndarray,
+) -> np.ndarray:
+    """教师强制：每一步都从**真实**状态出发，只预测一步。"""
+    start = np.asarray(start_states, dtype=np.float64)
+    actions = np.asarray(action_sequences, dtype=np.int64)
+    true_states = np.asarray(targets, dtype=np.float64)
+    if true_states.shape[:2] != actions.shape:
+        raise ValueError(
+            f"targets 前两维应等于动作序列 {actions.shape}，收到 {true_states.shape}。"
+        )
+    current = start
+    predictions: list[np.ndarray] = []
+    for step in range(actions.shape[1]):
+        predictions.append(current + model.predict(current, actions[:, step]).delta)
+        current = true_states[:, step]
+    return np.stack(predictions, axis=1)
+
+
+def rollout_nmse(predicted: np.ndarray, targets: np.ndarray, scale: np.ndarray) -> np.ndarray:
+    """逐 horizon 的归一化误差：``mean_d MSE_{k,d} / scale_d``，返回 ``(k,)``。"""
+    pred = np.asarray(predicted, dtype=np.float64)
+    true = np.asarray(targets, dtype=np.float64)
+    if pred.shape != true.shape:
+        raise ValueError(f"预测与目标形状不一致：{pred.shape} vs {true.shape}。")
+    scale_safe = np.maximum(np.asarray(scale, dtype=np.float64), 1e-12)
+    # 先逐维归一化再对维度取平均；先平均再除会碰到 (k,) 与 (d,) 的广播错误。
+    return (((pred - true) ** 2) / scale_safe).mean(axis=(0, 2))
 
 
 def per_dim_nmse(
@@ -262,16 +367,33 @@ def per_dim_nmse(
     return mse / np.maximum(np.asarray(scale, dtype=np.float64), 1e-12)
 
 
-def action_sensitivity(model: WorldModel, states: np.ndarray, scale: np.ndarray) -> float:
-    """换一个动作，预测差多少（按 ``scale`` 逐维归一化后的均值）。
+def action_sensitivity(
+    model: WorldModel,
+    states: np.ndarray,
+    scale: np.ndarray,
+    *,
+    n_actions: int | None = None,
+) -> float:
+    """换动作，预测差多少（按 ``scale`` 逐维归一化后的均值）。
 
-    动作无关的模型恒为 0。这是 ADR-0015「换动作必须换预测」的可测形式。
+    对**所有动作两两配对**取平均；二动作时就是 ``|pred(0) − pred(1)|``。动作无关的
+    模型恒为 0。这是 ADR-0015「换动作必须换预测」的可测形式。
     """
     s = np.asarray(states, dtype=np.float64)
-    zero = np.zeros(s.shape[0], dtype=np.int64)
-    one = np.ones(s.shape[0], dtype=np.int64)
-    delta = np.abs(model.predict(s, zero).delta - model.predict(s, one).delta)
-    return float(np.mean(delta / np.maximum(np.asarray(scale, dtype=np.float64), 1e-12)))
+    count = int(n_actions or getattr(model, "n_actions_", 2))
+    if count < 2:
+        return 0.0
+    predictions = [
+        model.predict(s, np.full(s.shape[0], action, dtype=np.int64)).delta
+        for action in range(count)
+    ]
+    diffs = [
+        np.abs(predictions[first] - predictions[second])
+        for first in range(count)
+        for second in range(first + 1, count)
+    ]
+    scale_safe = np.maximum(np.asarray(scale, dtype=np.float64), 1e-12)
+    return float(np.mean(np.stack(diffs) / scale_safe))
 
 
 def _rankdata(values: np.ndarray) -> np.ndarray:

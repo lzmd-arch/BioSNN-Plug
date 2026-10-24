@@ -16,7 +16,11 @@ from .world_model import (
     WorldModel,
     action_sensitivity,
     auroc,
+    build_rollout_windows,
     per_dim_nmse,
+    rollout,
+    rollout_nmse,
+    rollout_teacher_forcing,
 )
 
 __all__ = [
@@ -30,5 +34,9 @@ __all__ = [
     "WorldModel",
     "action_sensitivity",
     "auroc",
+    "build_rollout_windows",
     "per_dim_nmse",
+    "rollout",
+    "rollout_nmse",
+    "rollout_teacher_forcing",
 ]

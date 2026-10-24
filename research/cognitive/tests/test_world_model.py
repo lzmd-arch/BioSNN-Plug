@@ -13,7 +13,11 @@ from research.cognitive.world_model import (
     RidgeActionModel,
     action_sensitivity,
     auroc,
+    build_rollout_windows,
     per_dim_nmse,
+    rollout,
+    rollout_nmse,
+    rollout_teacher_forcing,
 )
 
 
@@ -137,3 +141,111 @@ class TestRunner:
             "action_sensitivity",
         }
         assert result["nmse"] >= 0.0
+
+
+class TestActionSpaces:
+    def test_ridge_supports_three_actions(self) -> None:
+        rng = np.random.default_rng(0)
+        states = rng.normal(size=(300, 4))
+        actions = rng.integers(0, 3, size=300)
+        delta = np.zeros((300, 4))
+        delta[:, 0] = 0.5 * actions - 0.1 * states[:, 0]
+        delta[:, 1] = -0.2 * actions
+        next_states = states + delta
+        terminated = (actions == 2).astype(float)
+
+        model = RidgeActionModel(ridge=1e-6)
+        model.fit(states, actions, next_states, terminated)
+
+        assert model.n_actions_ == 3
+        assert np.allclose(model.predict(states, actions).delta, delta, atol=1e-6)
+        assert action_sensitivity(model, states, np.ones(4)) > 0.0
+        with pytest.raises(ValueError):
+            model.predict(states[:2], np.array([3, 3]))
+
+    def test_per_action_mean_supports_three_actions(self) -> None:
+        rng = np.random.default_rng(1)
+        states = rng.normal(size=(90, 2))
+        actions = np.repeat([0, 1, 2], 30)
+        next_states = states + np.stack([actions * 0.5, -actions * 0.2], axis=1)
+        terminated = np.zeros(90)
+
+        model = PerActionMeanModel()
+        model.fit(states, actions, next_states, terminated)
+
+        assert model.n_actions_ == 3
+        zero = model.predict(states[:1], np.array([0])).delta
+        two = model.predict(states[:1], np.array([2])).delta
+        assert not np.allclose(zero, two)
+
+
+class TestRollout:
+    def test_windows_do_not_cross_episode_boundaries(self) -> None:
+        states = np.arange(12, dtype=float).reshape(6, 2)
+        next_states = states + 1.0
+        actions = np.zeros(6, dtype=int)
+        episode = np.array([0, 0, 0, 1, 1, 1])
+
+        start, acts, targets = build_rollout_windows(
+            states, actions, next_states, episode, horizon=2
+        )
+
+        assert start.shape == (4, 2)
+        assert acts.shape == (4, 2)
+        assert targets.shape == (4, 2, 2)
+        assert np.allclose(targets[0], next_states[0:2])
+
+    def test_free_rollout_of_copy_last_stays_put(self) -> None:
+        states = np.arange(12, dtype=float).reshape(6, 2)
+        next_states = states + 1.0
+        actions = np.zeros(6, dtype=int)
+        episode = np.zeros(6, dtype=int)
+        model = CopyLastModel()
+        model.fit(states, actions, next_states, np.zeros(6))
+
+        start, action_windows, _targets = build_rollout_windows(
+            states, actions, next_states, episode, horizon=3
+        )
+        predicted = rollout(model, start, action_windows)
+
+        assert np.allclose(predicted, start[:, None, :])
+
+    def test_teacher_forcing_matches_targets_on_a_perfect_linear_model(self) -> None:
+        """必须是**一条轨迹**：IID 的（状态, 动作）配对切窗口不是动力学序列。"""
+        rng = np.random.default_rng(0)
+        n = 400
+        states = np.zeros((n, 4))
+        states[0] = rng.normal(size=4)
+        actions = rng.integers(0, 2, size=n)
+
+        def delta(state: np.ndarray, action: int) -> np.ndarray:
+            return np.array(
+                [
+                    0.1 * state[1] + 0.5 * action,
+                    0.2 * action - 0.1 * state[0],
+                    state[3],
+                    -0.3 * action,
+                ]
+            )
+
+        for step in range(n - 1):
+            states[step + 1] = states[step] + delta(states[step], int(actions[step]))
+        next_states = np.vstack(
+            [states[1:], (states[-1] + delta(states[-1], int(actions[-1])))[None, :]]
+        )
+        episode = np.zeros(n, dtype=int)
+        model = RidgeActionModel(ridge=1e-6)
+        model.fit(states, actions, next_states, np.zeros(n))
+
+        start, action_windows, targets = build_rollout_windows(
+            states, actions, next_states, episode, horizon=3
+        )
+        teacher = rollout_teacher_forcing(model, start, action_windows, targets)
+        free = rollout(model, start, action_windows)
+
+        assert np.allclose(teacher, targets, atol=1e-6)
+        assert np.allclose(free, targets, atol=1e-6)
+
+    def test_rollout_nmse_is_zero_for_a_perfect_prediction(self) -> None:
+        targets = np.ones((5, 3, 4))
+        assert np.allclose(rollout_nmse(targets, targets, np.ones(4)), 0.0)

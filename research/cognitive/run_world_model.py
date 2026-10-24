@@ -31,7 +31,11 @@ from research.cognitive.world_model import (
     RidgeActionModel,
     action_sensitivity,
     auroc,
+    build_rollout_windows,
     per_dim_nmse,
+    rollout,
+    rollout_nmse,
+    rollout_teacher_forcing,
 )
 from research.common.provenance import collect
 from research.common.seeding import parse_seeds
@@ -132,6 +136,31 @@ def evaluate(model: Any, train: Transitions, test: Transitions) -> dict[str, Any
     }
 
 
+def _rollout_curves(
+    train: Transitions,
+    test: Transitions,
+    *,
+    horizon: int,
+    models: dict[str, Any],
+) -> dict[str, Any]:
+    """在测试回合上切窗口，报每个 horizon 的自由 rollout 与教师强制误差。"""
+    start, actions, targets = build_rollout_windows(
+        test.states, test.actions, test.next_states, test.episode, horizon
+    )
+    if start.shape[0] == 0:
+        return {"horizon": horizon, "windows": 0, "curves": {}}
+    scale = train.next_states.var(axis=0)
+    curves: dict[str, Any] = {}
+    for name, model in models.items():
+        free = rollout(model, start, actions)
+        teacher = rollout_teacher_forcing(model, start, actions, targets)
+        curves[name] = {
+            "free_nmse": rollout_nmse(free, targets, scale).tolist(),
+            "teacher_nmse": rollout_nmse(teacher, targets, scale).tolist(),
+        }
+    return {"horizon": horizon, "windows": int(start.shape[0]), "curves": curves}
+
+
 def _run_one_seed(
     seed: int,
     *,
@@ -139,6 +168,7 @@ def _run_one_seed(
     test_episodes: int,
     env_name: str,
     primary_model: str,
+    rollout_horizon: int,
 ) -> dict[str, Any]:
     data = collect_transitions(train_episodes + test_episodes, seed=seed, env_name=env_name)
     train = data.subset(data.episode < train_episodes)
@@ -155,6 +185,15 @@ def _run_one_seed(
             and ridge["termination_auroc"] >= TERMINATION_AUROC_MIN
         ),
     }
+    rollout_info = None
+    if rollout_horizon > 0:
+        fitted = {}
+        for name in dict.fromkeys((primary_model, "copy_last")):
+            model = MODELS[name]()
+            model.fit(train.states, train.actions, train.next_states, train.terminated)
+            fitted[name] = model
+        rollout_info = _rollout_curves(train, test, horizon=rollout_horizon, models=fitted)
+
     return {
         "seed": seed,
         "n_train": int(train.states.shape[0]),
@@ -164,6 +203,7 @@ def _run_one_seed(
         "nmse_ratio_vs_copy_last": float(ratio),
         "checks": checks,
         "passed": all(checks.values()),
+        "rollout": rollout_info,
     }
 
 
@@ -173,6 +213,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--train-episodes", type=int, default=200)
     parser.add_argument("--test-episodes", type=int, default=100)
     parser.add_argument("--env", default="CartPole-v1")
+    parser.add_argument(
+        "--rollout-horizon",
+        type=int,
+        default=0,
+        help=">0 时额外报 k 步自由 rollout / 教师强制的误差曲线；0=不算。",
+    )
     parser.add_argument(
         "--primary-model",
         choices=tuple(MODELS),
@@ -198,6 +244,7 @@ def main(argv: list[str] | None = None) -> int:
             test_episodes=args.test_episodes,
             env_name=args.env,
             primary_model=args.primary_model,
+            rollout_horizon=args.rollout_horizon,
         )
         for seed in seeds
     ]
@@ -221,6 +268,7 @@ def main(argv: list[str] | None = None) -> int:
             "behaviour_policy": "uniform random",
             "ridge_lambda": 1.0,
             "primary_model": args.primary_model,
+            "rollout_horizon": args.rollout_horizon,
         },
         "per_seed": per_seed,
         "aggregate": {
