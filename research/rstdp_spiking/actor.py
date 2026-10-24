@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import torch
 
+from research.cognitive.arousal import ArousalChannel
 from research.rstdp_spiking.encoding import spike_encode
 from research.rstdp_spiking.neurons import LIFLayer, LIFState
 from research.rstdp_spiking.plasticity import EligibilityTrace, STDPWindow, pair_based_stdp
@@ -54,6 +55,7 @@ class SpikingActor:
         normalize: bool = True,
         action_sampling: str = "boltzmann",
         logit_scale: float = 1.0,
+        arousal: ArousalChannel | None = None,
         device: torch.device | None = None,
         generator: torch.Generator | None = None,
     ) -> None:
@@ -78,6 +80,8 @@ class SpikingActor:
         self.normalize = bool(normalize)
         self.action_sampling = action_sampling
         self.logit_scale = float(logit_scale)
+        # 唤醒通道：**只调采样温度**，不碰权重。None 时行为与从前逐位相同。
+        self.arousal = arousal
         self.device = device
 
         self.layer = LIFLayer(
@@ -137,6 +141,16 @@ class SpikingActor:
             total += self._simulate(self._window(features, generator)).sum(dim=0).squeeze(0)
         return total / repeats
 
+    def sampling_scale(self) -> float:
+        """采样尺度 = logit_scale ÷ 唤醒增益。
+
+        语义写死：**唤醒越高 → 尺度越小 → 分布越平 → 探索越多**。
+        ``arousal is None`` 时返回 ``logit_scale``，与从前逐位相同。
+        """
+        if self.arousal is None:
+            return self.logit_scale
+        return self.logit_scale / self.arousal.gain(1.0)
+
     @torch.no_grad()
     def step(
         self,
@@ -162,7 +176,7 @@ class SpikingActor:
         if greedy:
             return int(spike_counts.argmax().item())
         if self.action_sampling == "boltzmann":
-            probabilities = torch.softmax(self.logit_scale * spike_counts, dim=-1)
+            probabilities = torch.softmax(self.sampling_scale() * spike_counts, dim=-1)
             return int(torch.multinomial(probabilities, 1, generator=generator).item())
         if exploration > 0 and float(torch.rand(1, generator=generator).item()) < exploration:
             return int(torch.randint(self.n_actions, (1,), generator=generator).item())

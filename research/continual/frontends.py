@@ -75,11 +75,23 @@ def resnet18_features(
         raise ValueError(f"images 必须是 (n, H, W, 3)，收到 {images.shape}。")
 
     tag = f"{_backbone}-imagenet1k-v1/224-cifar/avgpool"
+    expected_dim = BACKBONES[_backbone][1]
     if cache is not None and cache.is_file():
         payload = np.load(cache, allow_pickle=False)
-        if payload["tag"].item() == tag and payload["n"].item() == images.shape[0]:
+        # ⚠️ 维度必须一起校验：曾经有一份 dim=1000 的缓存（分类 logits，不是池化特征）
+        # 因为 tag 被改过、条数也对，差点被当成 512 维特征命中。tag 是自报的，dim 不是。
+        if (
+            payload["tag"].item() == tag
+            and payload["n"].item() == images.shape[0]
+            and payload["features"].shape[1] == expected_dim
+        ):
             print(f"  特征缓存命中 {cache.name}")
             return payload["features"]
+        print(
+            f"  特征缓存不匹配（tag={payload['tag'].item()!r}, n={int(payload['n'].item())}, "
+            f"dim={payload['features'].shape[1]}，期望 {tag!r} / {images.shape[0]} / "
+            f"{expected_dim}）——重算 {cache.name}"
+        )
 
     import torch
     from torchvision import models, transforms
