@@ -27,9 +27,9 @@ Rules-Collide benchmark places a Hebbian rule and e-prop on the one weight they 
 scores representation separability: a fixed 50/50 mixture reaches a Fisher ratio of 0.651 against
 0.472 and 0.331 for the rules alone (five seeds; paired margin +0.179). Arbitration itself ---
 choosing that weight rather than fixing it --- comes back negative, and measurably so: no adaptive
-scheme we could build beats the fixed mixture, the static optimum turns out to be the default
-value, and the only affordable objective was shown to lack discriminating power before it was
-used. Four triviality analyses --- degenerate measurements that could otherwise have been
+scheme we could build beats the fixed mixture (paired margin $+0.003$ against the pre-registered
+$\delta = 0.05$), the static optimum turns out to be the default value, and the only affordable
+objective was shown to lack discriminating power before it was used. Four triviality analyses --- degenerate measurements that could otherwise have been
 published as results --- are reported together with the guards that now catch them. The claim is
 narrow and, we think, useful: arbitration is not a free improvement on mixing, and whether it can
 be measured at all is a question about objectives, not about ideas.
@@ -81,9 +81,10 @@ scheme that had to earn its place against the value the sweep found.
   \item \textbf{A formalisation} of arbitration as continuous mixing under a two-sided retention
   constraint, with the degenerate endpoints characterised and excluded by protocol rather than by
   intent.
-  \item \textbf{The Rules-Collide benchmark}: a task in which two heterogeneous local rules share
-  the one weight they already have in common, and in which their fixed mixture separates
-  representations far better than either rule alone (0.651 against 0.472 and 0.331).
+  \item \textbf{The Rules-Collide benchmark}: a testbed that separates ``mixtures help'' from
+  ``arbitration helps'', and measures each. The mixture's advantage is measurable (+0.179
+  separability); the arbiter's headroom, measured rather than assumed, is empty on this benchmark
+  within budget.
   \item \textbf{A negative result about arbitration itself}, obtained under pre-registration and
   reported with its price tag: no adaptive scheme we could build beats the fixed mixture, and the
   static optimum turns out to be the default value.
@@ -264,7 +265,9 @@ The Rules-Collide benchmark pits three arms against each other on a fixed-permut
 sequential MNIST with 1\% of the training labels: Hebbian alone (H), e-prop alone (E), and a
 50/50 mixture of the two (MIX). All three share the same $28 \to 256$ input weight, receive the
 same data and the same batches, and are scored by the Fisher ratio of the representation they
-produce, evaluated on a held-out probe set. Table~\ref{tab:synergy} reports five seeds per arm.
+produce, evaluated on a held-out probe set.\footnote{Numbers in the text are rounded to three
+decimals; the archived records carry four. Rounding happens only at presentation, never in the
+records or in any statistic.} Table~\ref{tab:synergy} reports five seeds per arm.
 
 \begin{table}[t]
 \centering
@@ -300,8 +303,7 @@ equal weights; the adjacent $\alpha = 0.6$ is statistically indistinguishable (p
 $-0.008$), while 0.4 and 0.7 are clearly worse. Two consequences follow. First, the 50/50
 default the benchmark shipped with happens to be at the optimum. Second, an adaptive scheme
 has essentially no headroom left to beat it on this task, and that is the question
-Section~
-ef{sec:pending} asks.
+Section~\ref{sec:pending} asks.
 
 What this result does \emph{not} establish is that \emph{arbitration} is what produced it. The
 mixture here is a fixed 50/50 blend; the arm that would adapt the mixing weight is treated
