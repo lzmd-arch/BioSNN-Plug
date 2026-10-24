@@ -115,6 +115,21 @@ class ClassPrototypes:
                 self._diag_second = diag if self._diag_second is None else self._diag_second + diag
             self._n_seen += x.shape[0]
 
+    def shrink_toward(self, target: np.ndarray, lam: float) -> None:
+        """把每个**已见类**的原型朝 ``target`` 收缩一轮：``μ_c ← (1-λ)·μ_c + λ·target``。
+
+        这是「巩固」在原型读出上的最小实现（ADR-0016 / `sweep_results/consolidation_prereg.md`）：
+        **只操作已存统计**，不重放原始样本，因此不改变基准「无回放」的前提。
+        """
+        if not 0.0 <= lam <= 1.0:
+            raise ValueError(f"lam 必须落在 [0, 1]，收到 {lam!r}。")
+        seen = self.seen_classes
+        if seen.size == 0:
+            return
+        target = np.asarray(target, dtype=np.float64)
+        moved = (1.0 - lam) * self.prototypes() + lam * target
+        self.sums[seen] = moved * self.counts[seen][:, None]
+
     def _mean_of(self, label: int) -> np.ndarray:
         if self.counts[label] == 0:
             return np.zeros(self.sums.shape[1])

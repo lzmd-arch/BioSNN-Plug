@@ -184,6 +184,9 @@ def run_with_frozen_frontend(
     device: torch.device,
     backbone: str = "resnet18",
     whiten_mode: str = "diag",
+    consolidation: str = "none",
+    consolidation_rounds: int = 3,
+    consolidation_lambda: float = 0.02,
 ) -> dict:
     """冻结 ResNet18 前端 + 类原型：**没有特征漂移，也没有逐任务覆盖**。
 
@@ -221,6 +224,17 @@ def run_with_frozen_frontend(
             labels = train.y[mask]
         prototypes.add(features, labels)
 
+        # 巩固（预注册见 sweep_results/consolidation_prereg.md）：
+        # 只操作已存统计，不重放原始样本。C1 朝全体已见类均值收缩；
+        # C2 同量算力但目标换成一个坐标被打乱的均值（排除"多算了几遍"）。
+        if consolidation != "none" and prototypes.seen_classes.size:
+            shrink_rng = np.random.default_rng(seed + 7919)
+            for _ in range(consolidation_rounds):
+                mu_all = prototypes.prototypes().mean(axis=0)
+                if consolidation == "shuffled":
+                    mu_all = mu_all[shrink_rng.permutation(mu_all.shape[0])]
+                prototypes.shrink_toward(mu_all, consolidation_lambda)
+
         for i in range(t + 1):
             subset_classes = np.asarray(sorted(seen[: (i + 1) * len(classes)]))
             pick = np.isin(test.y, subset_classes)
@@ -232,6 +246,7 @@ def run_with_frozen_frontend(
     return {
         "seed": seed,
         "mode": "incremental-resnet18",
+        "consolidation": consolidation,
         "n_tasks": n_tasks,
         "limit_per_class": limit_per_class,
         "accuracy_matrix": matrix.tolist(),
@@ -302,6 +317,12 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="隐藏层只在第一个任务上训练，之后冻结（去掉特征漂移）",
     )
+    parser.add_argument(
+        "--consolidation",
+        choices=("none", "stats", "shuffled"),
+        default="none",
+        help="巩固臂：none=无（C0）、stats=朝全体均值收缩（C1）、shuffled=目标打乱（C2）",
+    )
     parser.add_argument("--joint", action="store_true", help="跑联合训练上界")
     parser.add_argument("--smoke", action="store_true", help="2 任务、每类 20 张")
     parser.add_argument("--out", type=Path, default=OUT)
@@ -326,6 +347,7 @@ def main(argv: list[str] | None = None) -> int:
                     limit_per_class=args.limit_per_class,
                     whiten=args.whiten,
                     whiten_mode=args.whiten_mode,
+                    consolidation=args.consolidation,
                     data_root=args.data_root,
                     device=device,
                     backbone=args.backbone,
