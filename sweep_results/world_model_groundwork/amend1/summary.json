@@ -1,0 +1,383 @@
+{
+  "experiment": "世界模型打底：CartPole 一步动力学基线",
+  "config": {
+    "env": "CartPole-v1",
+    "train_episodes": 200,
+    "test_episodes": 100,
+    "behaviour_policy": "uniform random",
+    "ridge_lambda": 1.0,
+    "primary_model": "ridge_quadratic"
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "n_train": 4796,
+      "n_test": 2276,
+      "test_termination_rate": 0.043936731107205626,
+      "models": {
+        "copy_last": {
+          "nmse": 0.07328060963540817,
+          "nmse_per_dim": [
+            0.014863324097752486,
+            0.1311193269376168,
+            0.0245587602368309,
+            0.12258102726943247
+          ],
+          "termination_auroc": 0.5,
+          "action_sensitivity": 0.0
+        },
+        "mean_delta": {
+          "nmse": 0.07332227838993752,
+          "nmse_per_dim": [
+            0.014856364335356823,
+            0.13117439909884038,
+            0.02460462207089292,
+            0.12265372805465993
+          ],
+          "termination_auroc": 0.5,
+          "action_sensitivity": 0.0
+        },
+        "per_action_mean": {
+          "nmse": 0.010182584646434836,
+          "nmse_per_dim": [
+            0.014858182788906006,
+            5.475167246314728e-06,
+            0.024606908829928453,
+            0.0012597717996585662
+          ],
+          "termination_auroc": 0.4824172794117647,
+          "action_sensitivity": 0.5544698133121346
+        },
+        "ridge_action": {
+          "nmse": 1.2684689703778081e-06,
+          "nmse_per_dim": [
+            1.2231034377101041e-08,
+            1.2909766100537164e-07,
+            2.6412768727366308e-08,
+            4.906134417401394e-06
+          ],
+          "termination_auroc": 0.5322334558823529,
+          "action_sensitivity": 0.54429360345149
+        },
+        "ridge_quadratic": {
+          "nmse": 4.885362556839639e-08,
+          "nmse_per_dim": [
+            1.2602319556390119e-08,
+            7.048092006708438e-08,
+            2.7173868936163845e-08,
+            8.51573937139472e-08
+          ],
+          "termination_auroc": 0.9965487132352941,
+          "action_sensitivity": 0.5440993454181843
+        }
+      },
+      "nmse_ratio_vs_copy_last": 6.666651084298703e-07,
+      "checks": {
+        "nmse_ratio": true,
+        "action_sensitivity": true,
+        "termination_auroc": true
+      },
+      "passed": true
+    },
+    {
+      "seed": 1,
+      "n_train": 4395,
+      "n_test": 2163,
+      "test_termination_rate": 0.04623208506703652,
+      "models": {
+        "copy_last": {
+          "nmse": 0.06585508100189036,
+          "nmse_per_dim": [
+            0.014532567688977158,
+            0.11335824893978946,
+            0.022253383723771177,
+            0.11327612365502368
+          ],
+          "termination_auroc": 0.5,
+          "action_sensitivity": 0.0
+        },
+        "mean_delta": {
+          "nmse": 0.06586678100537195,
+          "nmse_per_dim": [
+            0.01452846410827094,
+            0.11337299703123631,
+            0.022259339800809404,
+            0.11330632308117113
+          ],
+          "termination_auroc": 0.5,
+          "action_sensitivity": 0.0
+        },
+        "per_action_mean": {
+          "nmse": 0.009495940948293409,
+          "nmse_per_dim": [
+            0.01453396585487727,
+            4.795748333477224e-06,
+            0.0222572763572357,
+            0.0011877258327271847
+          ],
+          "termination_auroc": 0.5216383906931653,
+          "action_sensitivity": 0.5027959773230434
+        },
+        "ridge_action": {
+          "nmse": 1.265594818242918e-06,
+          "nmse_per_dim": [
+            1.499260686246867e-08,
+            1.2953490659347277e-07,
+            2.5277586831891416e-08,
+            4.89257417268384e-06
+          ],
+          "termination_auroc": 0.5616141541444498,
+          "action_sensitivity": 0.48240271539753377
+        },
+        "ridge_quadratic": {
+          "nmse": 5.026193333941538e-08,
+          "nmse_per_dim": [
+            1.5523070425065467e-08,
+            7.041767255056131e-08,
+            2.6440832329301543e-08,
+            8.866615805273321e-08
+          ],
+          "termination_auroc": 0.9948133785748909,
+          "action_sensitivity": 0.48233029579620673
+        }
+      },
+      "nmse_ratio_vs_copy_last": 7.632202796618323e-07,
+      "checks": {
+        "nmse_ratio": true,
+        "action_sensitivity": true,
+        "termination_auroc": true
+      },
+      "passed": true
+    },
+    {
+      "seed": 2,
+      "n_train": 4345,
+      "n_test": 2437,
+      "test_termination_rate": 0.04103405826836274,
+      "models": {
+        "copy_last": {
+          "nmse": 0.06479620493639728,
+          "nmse_per_dim": [
+            0.00464988691035804,
+            0.11861336459106915,
+            0.022001715351406444,
+            0.11391985289275548
+          ],
+          "termination_auroc": 0.5,
+          "action_sensitivity": 0.0
+        },
+        "mean_delta": {
+          "nmse": 0.06481912541717195,
+          "nmse_per_dim": [
+            0.004670233002806437,
+            0.11862819008795542,
+            0.022045111376886153,
+            0.11393296720103982
+          ],
+          "termination_auroc": 0.5,
+          "action_sensitivity": 0.0
+        },
+        "per_action_mean": {
+          "nmse": 0.006927361703647702,
+          "nmse_per_dim": [
+            0.00467035055175683,
+            4.007022768091341e-06,
+            0.02205721916447293,
+            0.0009778700755929545
+          ],
+          "termination_auroc": 0.49489302524604195,
+          "action_sensitivity": 0.5076375786533743
+        },
+        "ridge_action": {
+          "nmse": 1.1365876874316664e-06,
+          "nmse_per_dim": [
+            1.5317472163522036e-09,
+            1.3007697547941355e-07,
+            1.1205684871311993e-08,
+            4.403536342159588e-06
+          ],
+          "termination_auroc": 0.5030295250320924,
+          "action_sensitivity": 0.49942627259322886
+        },
+        "ridge_quadratic": {
+          "nmse": 4.291382966332038e-08,
+          "nmse_per_dim": [
+            2.5278658152192074e-09,
+            7.05285723373225e-08,
+            1.6685800009736118e-08,
+            8.191308049100369e-08
+          ],
+          "termination_auroc": 0.9923705605477108,
+          "action_sensitivity": 0.49960990173594094
+        }
+      },
+      "nmse_ratio_vs_copy_last": 6.622892452643451e-07,
+      "checks": {
+        "nmse_ratio": true,
+        "action_sensitivity": true,
+        "termination_auroc": true
+      },
+      "passed": true
+    },
+    {
+      "seed": 3,
+      "n_train": 4198,
+      "n_test": 2291,
+      "test_termination_rate": 0.04364906154517678,
+      "models": {
+        "copy_last": {
+          "nmse": 0.06399802606283975,
+          "nmse_per_dim": [
+            0.00912507507353941,
+            0.11502136824840617,
+            0.022827035500263822,
+            0.10901862542914958
+          ],
+          "termination_auroc": 0.5,
+          "action_sensitivity": 0.0
+        },
+        "mean_delta": {
+          "nmse": 0.06402528645283326,
+          "nmse_per_dim": [
+            0.009163563356089196,
+            0.11502557361718133,
+            0.022872111254354725,
+            0.10903989758370775
+          ],
+          "termination_auroc": 0.5,
+          "action_sensitivity": 0.0
+        },
+        "per_action_mean": {
+          "nmse": 0.008264634135629549,
+          "nmse_per_dim": [
+            0.00916913820920253,
+            4.151847545655589e-06,
+            0.022889189977381097,
+            0.0009960565083889114
+          ],
+          "termination_auroc": 0.48783204016430853,
+          "action_sensitivity": 0.5181917570042519
+        },
+        "ridge_action": {
+          "nmse": 1.1459463840884095e-06,
+          "nmse_per_dim": [
+            8.28302164199853e-09,
+            1.3362531595263385e-07,
+            2.6137208297809592e-08,
+            4.415739990461196e-06
+          ],
+          "termination_auroc": 0.48487905066179826,
+          "action_sensitivity": 0.48035137577636994
+        },
+        "ridge_quadratic": {
+          "nmse": 4.822641090243867e-08,
+          "nmse_per_dim": [
+            9.036112672040602e-09,
+            7.215673357814211e-08,
+            2.7778604635125394e-08,
+            8.393419272444656e-08
+          ],
+          "termination_auroc": 0.9961068005476951,
+          "action_sensitivity": 0.4804136802418367
+        }
+      },
+      "nmse_ratio_vs_copy_last": 7.53560912255092e-07,
+      "checks": {
+        "nmse_ratio": true,
+        "action_sensitivity": true,
+        "termination_auroc": true
+      },
+      "passed": true
+    },
+    {
+      "seed": 4,
+      "n_train": 4570,
+      "n_test": 2273,
+      "test_termination_rate": 0.04399472063352398,
+      "models": {
+        "copy_last": {
+          "nmse": 0.07426640170210859,
+          "nmse_per_dim": [
+            0.015460360953539408,
+            0.13363788724281989,
+            0.023940641107168925,
+            0.12402671750490611
+          ],
+          "termination_auroc": 0.5,
+          "action_sensitivity": 0.0
+        },
+        "mean_delta": {
+          "nmse": 0.07435958846034121,
+          "nmse_per_dim": [
+            0.01552372763688075,
+            0.1337094579540127,
+            0.024094390725640107,
+            0.12411077752483128
+          ],
+          "termination_auroc": 0.5,
+          "action_sensitivity": 0.0
+        },
+        "per_action_mean": {
+          "nmse": 0.01019344217391564,
+          "nmse_per_dim": [
+            0.015528865752474965,
+            4.881554208689899e-06,
+            0.02409601375785077,
+            0.0011440076311281327
+          ],
+          "termination_auroc": 0.4661412793373217,
+          "action_sensitivity": 0.5598489365310668
+        },
+        "ridge_action": {
+          "nmse": 1.2534784451657402e-06,
+          "nmse_per_dim": [
+            9.5103876174163e-09,
+            1.4155202739533266e-07,
+            2.176781086725625e-08,
+            4.841083554782955e-06
+          ],
+          "termination_auroc": 0.4580027611596871,
+          "action_sensitivity": 0.5520544787272772
+        },
+        "ridge_quadratic": {
+          "nmse": 5.637134358915773e-08,
+          "nmse_per_dim": [
+            1.1092453503809901e-08,
+            8.986772219480437e-08,
+            2.4350594054612175e-08,
+            1.0017460460340448e-07
+          ],
+          "termination_auroc": 0.9976576161988034,
+          "action_sensitivity": 0.5521235111892514
+        }
+      },
+      "nmse_ratio_vs_copy_last": 7.590423434714116e-07,
+      "checks": {
+        "nmse_ratio": true,
+        "action_sensitivity": true,
+        "termination_auroc": true
+      },
+      "passed": true
+    }
+  ],
+  "aggregate": {
+    "nmse_ratio_vs_copy_last": {
+      "mean": 4.932542861254571e-08,
+      "min": 4.291382966332038e-08,
+      "max": 5.637134358915773e-08
+    },
+    "action_sensitivity": {
+      "mean": 0.5117153468762841,
+      "min": 0.4804136802418367,
+      "max": 0.5521235111892514
+    },
+    "termination_auroc": {
+      "mean": 0.9954994138208789,
+      "min": 0.9923705605477108,
+      "max": 0.9976576161988034
+    }
+  },
+  "seeds_passed": 5,
+  "verdict": "task_ready",
+  "repro": "```text\n实验名称：世界模型打底：CartPole 一步动力学基线\n日期：2026-10-25 00:57:29 中国标准时间\nGit commit：3e865d1ff62f9eac5e5955511b915764655a60c3\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=b44e27d159f44710a675344f12e3c89f6791bd5b69a802d052888afabd14efdb\n运行命令：run_world_model.py --seeds 0-4 --primary-model ridge_quadratic --out sweep_results/world_model_groundwork/amend1\n耗时：0.6 s\n备注：按回合切分；分母用训练集 Var(s')；奖励恒为 1，不评。\n备注：ridge_action 是测量标尺，不是局部学习规则。\n```"
+}

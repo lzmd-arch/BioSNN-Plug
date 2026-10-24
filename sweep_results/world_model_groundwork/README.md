@@ -51,6 +51,7 @@
 - 另写 [`../world_model_groundwork_prereg_amend1.md`](../world_model_groundwork_prereg_amend1.md)：
   增加 `ridge_quadratic` 作为主基线，原 `ridge_action` 降为负对照；判据不变；
 - 重跑写 `amend1/`，不覆盖本目录。
+- **修订 1 已跑完：5/5 通过（`task_ready`），见 [`amend1/README.md`](amend1/README.md)。**
 
 ## 这个结果说明什么 / 不说明什么
 
