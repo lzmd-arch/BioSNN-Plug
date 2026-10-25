@@ -47,6 +47,8 @@ OUT = REPO_ROOT / "sweep_results" / "world_model_groundwork"
 NMSE_RATIO_MAX = 0.90
 ACTION_SENSITIVITY_MIN = 0.01
 TERMINATION_AUROC_MIN = 0.75
+#: 测试集终止率低于这个值，终止 AUROC 记为 not_evaluable（预注册 Acrobot 那条）。
+TERMINATION_RATE_MIN = 0.01
 
 MODELS = {
     "copy_last": CopyLastModel,
@@ -177,12 +179,19 @@ def _run_one_seed(
     ridge = results[primary_model]
     baseline = results["copy_last"]
     ratio = ridge["nmse"] / baseline["nmse"] if baseline["nmse"] > 0 else float("inf")
+    termination_rate = float(test.terminated.mean())
+    evaluable = termination_rate >= TERMINATION_RATE_MIN
     checks = {
         "nmse_ratio": bool(ratio <= NMSE_RATIO_MAX),
         "action_sensitivity": bool(ridge["action_sensitivity"] >= ACTION_SENSITIVITY_MIN),
-        "termination_auroc": bool(
-            np.isfinite(ridge["termination_auroc"])
-            and ridge["termination_auroc"] >= TERMINATION_AUROC_MIN
+        # 终止事件太稀疏时**不判失败**，记 not_evaluable（None）；预注册 Acrobot 那条。
+        "termination_auroc": (
+            bool(
+                np.isfinite(ridge["termination_auroc"])
+                and ridge["termination_auroc"] >= TERMINATION_AUROC_MIN
+            )
+            if evaluable
+            else None
         ),
     }
     rollout_info = None
@@ -198,11 +207,12 @@ def _run_one_seed(
         "seed": seed,
         "n_train": int(train.states.shape[0]),
         "n_test": int(test.states.shape[0]),
-        "test_termination_rate": float(test.terminated.mean()),
+        "test_termination_rate": termination_rate,
+        "termination_evaluable": evaluable,
         "models": results,
         "nmse_ratio_vs_copy_last": float(ratio),
         "checks": checks,
-        "passed": all(checks.values()),
+        "passed": all(value for value in checks.values() if value is not None),
         "rollout": rollout_info,
     }
 
