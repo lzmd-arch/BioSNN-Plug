@@ -74,7 +74,7 @@ from .registry import (
 from .taaf import TemporalAttentionFusion
 from .types import FusionChannel, Membrane, SpikeTrain
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "ENTRY_POINT_GROUP",
