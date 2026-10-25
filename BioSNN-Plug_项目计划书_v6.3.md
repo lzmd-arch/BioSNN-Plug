@@ -463,6 +463,16 @@
 >    有效性门（掌握、从头可达、非零样本、阈值非平凡、末值不更差）。通过与否**只覆盖速度**，
 >    ACC/AF 另算。见 [`sweep_results/relearn_3x_prereg.md`](sweep_results/relearn_3x_prereg.md)。
 
+> ㊽ **2026-10-26：CL 归一化臂结果——ACC 有小杠杆，AF 不动（`no_signal`）**。
+>    Route R、无回放、5 种子。参考 R-delta-mini **0.2466 / 0.8047**；
+>    **N1**（逐维标准化，native）**0.2686 / 0.9033**（ACC +2.2 pp，AF **+9.9 pp 更差**）；
+>    **N1-scale**（对齐任务 1 行范数）**0.3151 / 0.7917**（ACC **+6.9 pp**，AF −1.3 pp）。
+>    预注册判据要求 AF −10 pp，两臂都没过。关键读数：本仓 ResNet18 特征行范数恒为 1.0，
+>    N1 同时把有效步长放大约 22.5 倍，所以它的 AF 恶化不能单独归给归一化；控制臂说明
+>    **归一化是 ACC 的小杠杆，不是 AF 的杠杆**。按判读表，下一机制是**参数隔离**，
+>    需新预注册（未开始）。见
+>    [`sweep_results/continual_v2/README.md`](sweep_results/continual_v2/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
