@@ -420,9 +420,7 @@ def run_with_frozen_frontend_delta(
         print(f"  task {t + 1}/{n_tasks}: 本任务 {matrix[t, t]:.3f}")
 
     scores = summarise(matrix)
-    gate_failed = any(
-        np.isfinite(ratio) and ratio < GATE_MIN_WEIGHT_CHANGE for ratio in ratios
-    )
+    gate_failed = any(np.isfinite(ratio) and ratio < GATE_MIN_WEIGHT_CHANGE for ratio in ratios)
     return {
         "seed": seed,
         "mode": "incremental-resnet18-delta",
