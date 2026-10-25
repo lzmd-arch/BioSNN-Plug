@@ -26,6 +26,7 @@ from research.common.provenance import collect
 from research.components.cartpole_encoding import encode_state
 from research.rstdp_spiking.cartpole import train
 from research.rstdp_spiking.critic import LinearCritic
+from research.rstdp_spiking.pop_critic import PopulationCritic
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT = REPO_ROOT / "sweep_results" / "rstdp_spiking_diagnosis" / "noise"
@@ -85,6 +86,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--episodes", type=int, default=1200)
     parser.add_argument("--eval-episodes", type=int, default=10)
     parser.add_argument("--eval-noise-seeds", type=int, default=20)
+    parser.add_argument("--critic", choices=("td", "pop"), default="td")
     parser.add_argument("--train-episodes", type=int, default=300)
     parser.add_argument("--critic-episodes", type=int, default=200)
     parser.add_argument("--device", default="cuda")
@@ -101,12 +103,20 @@ def main(argv: list[str] | None = None) -> int:
         args.out = REPO_ROOT / "data" / f"_smoke_w3_{args.experiment}"
 
     if args.out == OUT:
-        args.out = OUT.parent / args.experiment
+        name = args.experiment if args.experiment != "critic" else f"critic_{args.critic}"
+        args.out = OUT.parent / name
 
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     started = time.perf_counter()
 
     if args.experiment == "critic":
+        train_kwargs = {
+            **BASE_CONFIG,
+            "critic_kind": args.critic,
+        }
+        if args.critic == "pop":
+            # 与 10 种子对照的默认群体臂一致：gradient 后因子 + 均匀读出 + 归一化。
+            train_kwargs["pop_post"] = "gradient"
         result = train(
             seed=args.seed,
             episodes=args.train_episodes,
@@ -115,17 +125,32 @@ def main(argv: list[str] | None = None) -> int:
             warmup=0 if args.smoke else BASE_CONFIG["warmup"],
             device=device,
             keep_actor=True,
-            **{key: value for key, value in BASE_CONFIG.items() if key != "warmup"},
+            **{key: value for key, value in train_kwargs.items() if key != "warmup"},
         )
         if result.actor is None or result.centers is None:  # pragma: no cover - 防御
             raise RuntimeError("train 没有返回 actor/centers。")
         actor = result.actor
         centers = result.centers
-        critic = LinearCritic(
-            BASE_CONFIG["n_features"],
-            gamma=BASE_CONFIG["gamma"],
-            learning_rate=1e-2,
-        )
+        if args.critic == "td":
+            critic = LinearCritic(
+                BASE_CONFIG["n_features"],
+                gamma=BASE_CONFIG["gamma"],
+                learning_rate=1e-2,
+            )
+        else:
+            critic = PopulationCritic(
+                BASE_CONFIG["n_features"],
+                n_units=64,
+                gain=8.0,
+                bias=0.4,
+                gamma=BASE_CONFIG["gamma"],
+                learning_rate=1e-2,
+                trace_post_factor="gradient",
+                readout="uniform",
+                normalize=True,
+                generator=torch.Generator(device="cpu").manual_seed(50_000 + args.seed),
+                device=device,
+            )
         import gymnasium
 
         env = gymnasium.make("CartPole-v1")
@@ -185,6 +210,7 @@ def main(argv: list[str] | None = None) -> int:
             "experiment": "W3 诊断 ①：Critic 信号",
             "config": {
                 **BASE_CONFIG,
+                "critic_kind": args.critic,
                 "train_episodes": args.train_episodes,
                 "critic_episodes": args.critic_episodes,
                 "eval_episodes": args.eval_episodes,
