@@ -117,8 +117,8 @@ class TestActorPlumbing:
         chosen = greedy_actor.step(
             features, generator=torch.Generator().manual_seed(11), greedy=True, learn_trace=False
         )
-        window = probe_actor._window(features, torch.Generator().manual_seed(11))
-        counts = probe_actor._simulate(window).sum(dim=0).squeeze(0)
+        _, post = probe_actor.window_spikes(features, generator=torch.Generator().manual_seed(11))
+        counts = post.sum(dim=0).squeeze(0)
         assert chosen == int(counts.argmax().item())
 
 

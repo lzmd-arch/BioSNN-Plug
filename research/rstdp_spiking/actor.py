@@ -127,6 +127,18 @@ class SpikingActor:
 
     # ------------------------------------------------------------------ 对外
     @torch.no_grad()
+    def window_spikes(
+        self, features: torch.Tensor, *, generator: torch.Generator
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """一个决策窗口的 ``(pre, post)`` 脉冲。
+
+        这是 ``step`` 的输入侧，也是信用分配诊断（A1）量「痕迹该往哪边走」的对象；
+        **把它做成对外接口**，诊断就不必伸手进私有方法，改窗口实现时两边不会漂移。
+        """
+        pre_spikes = self._window(features, generator)
+        return pre_spikes, self._simulate(pre_spikes)
+
+    @torch.no_grad()
     def counts(
         self, features: torch.Tensor, *, generator: torch.Generator, repeats: int = 1
     ) -> torch.Tensor:
@@ -170,8 +182,7 @@ class SpikingActor:
         （速率版在这里踩过一个坑：boltzmann 分支不看 ``exploration``，于是「贪心评测」实际
         量的是一个随机策略。这里把贪心做成显式分支，不给那个坑留位置。）
         """
-        pre_spikes = self._window(features, generator)
-        post_spikes = self._simulate(pre_spikes)
+        pre_spikes, post_spikes = self.window_spikes(features, generator=generator)
         if learn_trace:
             self.trace.accumulate(pair_based_stdp(pre_spikes, post_spikes, self.window))
 

@@ -1,14 +1,17 @@
 """W3 脉冲化的判别实验：**诊断，不是验收**。
 
-预注册阈值见 [`diagnosis-plan.md`](diagnosis-plan.md)；本轮先做 ③（评测噪声），
-因为它在三条里最便宜、也最先该排除——在噪声里比较算法等于浪费 GPU。
+预注册阈值见 [`diagnosis-plan.md`](diagnosis-plan.md)；③ 评测噪声先做，因为它在三条里
+最便宜、也最先该排除——在噪声里比较算法等于浪费 GPU。``actor`` 是 A1（信用分配的
+符号检验，纯 CPU），预注册见 ``sweep_results/rstdp_spiking_actor_diagnosis_prereg.md``。
 
 跑法::
 
     uv run python -m research.rstdp_spiking.diagnose --experiment noise --device cuda
     uv run python -m research.rstdp_spiking.diagnose --experiment noise --smoke
+    uv run python -m research.rstdp_spiking.diagnose --experiment actor
 
-产物：``sweep_results/rstdp_spiking_diagnosis/noise/summary.json`` + 自证块。
+产物：``sweep_results/rstdp_spiking_diagnosis/*/summary.json``（以及 actor 的
+``sweep_results/rstdp_spiking_actor_diagnosis/summary.json``）+ 自证块。
 """
 
 from __future__ import annotations
@@ -24,8 +27,10 @@ import torch
 
 from research.common.provenance import collect
 from research.components.cartpole_encoding import encode_state
+from research.rstdp_spiking.actor import SpikingActor
 from research.rstdp_spiking.cartpole import train
 from research.rstdp_spiking.critic import LinearCritic
+from research.rstdp_spiking.plasticity import pair_based_stdp
 from research.rstdp_spiking.pop_critic import PopulationCritic
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -81,12 +86,15 @@ def mc_returns(rewards: list[float], gamma: float) -> list[float]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="W3 脉冲化诊断（③ 评测噪声）")
-    parser.add_argument("--experiment", choices=("noise", "entropy", "critic"), default="noise")
+    parser.add_argument(
+        "--experiment", choices=("noise", "entropy", "critic", "actor"), default="noise"
+    )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--episodes", type=int, default=1200)
     parser.add_argument("--eval-episodes", type=int, default=10)
     parser.add_argument("--eval-noise-seeds", type=int, default=20)
     parser.add_argument("--critic", choices=("td", "pop"), default="td")
+    parser.add_argument("--actor-windows", type=int, default=20)
     parser.add_argument("--train-episodes", type=int, default=300)
     parser.add_argument("--critic-episodes", type=int, default=200)
     parser.add_argument("--device", default="cuda")
@@ -103,11 +111,79 @@ def main(argv: list[str] | None = None) -> int:
         args.out = REPO_ROOT / "data" / f"_smoke_w3_{args.experiment}"
 
     if args.out == OUT:
-        name = args.experiment if args.experiment != "critic" else f"critic_{args.critic}"
-        args.out = OUT.parent / name
+        if args.experiment == "actor":
+            args.out = OUT.parent / "rstdp_spiking_actor_diagnosis"
+        else:
+            name = args.experiment if args.experiment != "critic" else f"critic_{args.critic}"
+            args.out = OUT.parent / name
 
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     started = time.perf_counter()
+
+    if args.experiment == "actor":
+        windows = 3 if args.smoke else args.actor_windows
+        rows: list[dict[str, Any]] = []
+        for index in range(windows):
+            generator = torch.Generator(device="cpu").manual_seed(index)
+            actor = SpikingActor(
+                BASE_CONFIG["n_features"],
+                2,
+                steps=BASE_CONFIG["steps"],
+                learning_rate=1e-4,
+                generator=generator,
+            )
+            features = torch.rand(
+                BASE_CONFIG["n_features"],
+                generator=torch.Generator(device="cpu").manual_seed(10_000 + index),
+            )
+            pre, post = actor.window_spikes(features, generator=generator)
+            counts = post.sum(dim=0).squeeze(0)
+            chosen = int(counts.argmax())
+            other = 1 - chosen
+            columns = pair_based_stdp(pre, post, actor.window).sum(dim=0)
+            tie = float(counts[chosen]) == float(counts[other])
+            rows.append(
+                {
+                    "window": index,
+                    "counts": [float(value) for value in counts],
+                    "chosen": chosen,
+                    "columns": [float(value) for value in columns],
+                    "tie": tie,
+                    "favor": bool(columns[chosen] > columns[other]),
+                }
+            )
+        passed = sum(1 for row in rows if row["favor"] and not row["tie"])
+        verdict = "credit_assignment_ok" if passed == len(rows) else "credit_assignment_inverted"
+        summary = {
+            "experiment": "W3 诊断 A1：Actor 信用分配的符号检验",
+            "config": {
+                "features": BASE_CONFIG["n_features"],
+                "steps": BASE_CONFIG["steps"],
+                "windows": len(rows),
+                "device": "cpu",
+            },
+            "rows": rows,
+            "passed": passed,
+            "verdict": verdict,
+            "repro": collect(
+                "W3 诊断 A1：Actor 信用分配的符号检验",
+                seeds=str(args.seed),
+                elapsed_s=time.perf_counter() - started,
+                notes=[
+                    "诊断，不是验收；预注册见 sweep_results/rstdp_spiking_actor_diagnosis_prereg.md。",
+                    "正信号下'被选中动作'的资格列和必须更大；20/20 才算通过。",
+                ],
+            ).render_block(),
+        }
+        args.out.mkdir(parents=True, exist_ok=True)
+        (args.out / "summary.json").write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        print(f"{passed}/{len(rows)} 个窗口的资格列偏向被选中动作 → {verdict}")
+        print(f"written to {args.out}")
+        return 0
 
     if args.experiment == "critic":
         train_kwargs = {
