@@ -439,6 +439,14 @@
 >    <https://zhuanlan.zhihu.com/p/2097820309457985862>（P4 发布后的对外解读）。
 >    台账只记链接与日期；标题与正文以平台为准。
 
+> ㊺ **2026-10-26：W3 诊断 A1——Actor 信用分配失败（7/20）**。预注册 A1：正信号下
+>    被选中动作的资格列和必须更大，20/20 才通过。实测 **7/20**（4 平局，3 个窗口被选列
+>    为负）→ `credit_assignment_inverted`；按预注册 **A2 不跑**。机制：
+>    `pair_based_stdp = LTP − LTD`，发放多的动作也拿到更多 LTD，"发放更多"不蕴含
+>    "净增量更大"，而更新又把整条痕迹乘一个全局 S。修复候选（动作门控痕迹／优势化
+>    第二因子／拆开 LTP-LTD）**均未实现**，各自需要新预注册。见
+>    [`sweep_results/rstdp_spiking_actor_diagnosis/`](sweep_results/rstdp_spiking_actor_diagnosis/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

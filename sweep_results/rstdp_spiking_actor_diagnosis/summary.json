@@ -1,0 +1,294 @@
+{
+  "experiment": "W3 诊断 A1：Actor 信用分配的符号检验",
+  "config": {
+    "features": 64,
+    "steps": 25,
+    "windows": 20,
+    "device": "cpu"
+  },
+  "rows": [
+    {
+      "window": 0,
+      "counts": [
+        1.0,
+        4.0
+      ],
+      "chosen": 1,
+      "columns": [
+        378.1563415527344,
+        275.25347900390625
+      ],
+      "tie": false,
+      "favor": false
+    },
+    {
+      "window": 1,
+      "counts": [
+        5.0,
+        7.0
+      ],
+      "chosen": 1,
+      "columns": [
+        47.970096588134766,
+        391.4386901855469
+      ],
+      "tie": false,
+      "favor": true
+    },
+    {
+      "window": 2,
+      "counts": [
+        4.0,
+        6.0
+      ],
+      "chosen": 1,
+      "columns": [
+        375.46429443359375,
+        274.20965576171875
+      ],
+      "tie": false,
+      "favor": false
+    },
+    {
+      "window": 3,
+      "counts": [
+        1.0,
+        1.0
+      ],
+      "chosen": 0,
+      "columns": [
+        194.94583129882812,
+        56.41956329345703
+      ],
+      "tie": true,
+      "favor": true
+    },
+    {
+      "window": 4,
+      "counts": [
+        5.0,
+        6.0
+      ],
+      "chosen": 1,
+      "columns": [
+        174.4756317138672,
+        -5.600055694580078
+      ],
+      "tie": false,
+      "favor": false
+    },
+    {
+      "window": 5,
+      "counts": [
+        4.0,
+        6.0
+      ],
+      "chosen": 1,
+      "columns": [
+        10.663497924804688,
+        333.4342041015625
+      ],
+      "tie": false,
+      "favor": true
+    },
+    {
+      "window": 6,
+      "counts": [
+        5.0,
+        5.0
+      ],
+      "chosen": 0,
+      "columns": [
+        66.5835952758789,
+        194.55868530273438
+      ],
+      "tie": true,
+      "favor": false
+    },
+    {
+      "window": 7,
+      "counts": [
+        5.0,
+        1.0
+      ],
+      "chosen": 0,
+      "columns": [
+        52.48814392089844,
+        157.09487915039062
+      ],
+      "tie": false,
+      "favor": false
+    },
+    {
+      "window": 8,
+      "counts": [
+        2.0,
+        3.0
+      ],
+      "chosen": 1,
+      "columns": [
+        352.18426513671875,
+        40.73513412475586
+      ],
+      "tie": false,
+      "favor": false
+    },
+    {
+      "window": 9,
+      "counts": [
+        6.0,
+        7.0
+      ],
+      "chosen": 1,
+      "columns": [
+        208.44796752929688,
+        107.13069152832031
+      ],
+      "tie": false,
+      "favor": false
+    },
+    {
+      "window": 10,
+      "counts": [
+        4.0,
+        7.0
+      ],
+      "chosen": 1,
+      "columns": [
+        211.9656219482422,
+        269.57476806640625
+      ],
+      "tie": false,
+      "favor": true
+    },
+    {
+      "window": 11,
+      "counts": [
+        8.0,
+        3.0
+      ],
+      "chosen": 0,
+      "columns": [
+        110.30122375488281,
+        376.247802734375
+      ],
+      "tie": false,
+      "favor": false
+    },
+    {
+      "window": 12,
+      "counts": [
+        4.0,
+        5.0
+      ],
+      "chosen": 1,
+      "columns": [
+        353.6766357421875,
+        434.789794921875
+      ],
+      "tie": false,
+      "favor": true
+    },
+    {
+      "window": 13,
+      "counts": [
+        6.0,
+        3.0
+      ],
+      "chosen": 0,
+      "columns": [
+        253.75897216796875,
+        176.80419921875
+      ],
+      "tie": false,
+      "favor": true
+    },
+    {
+      "window": 14,
+      "counts": [
+        6.0,
+        4.0
+      ],
+      "chosen": 0,
+      "columns": [
+        165.0742645263672,
+        219.51312255859375
+      ],
+      "tie": false,
+      "favor": false
+    },
+    {
+      "window": 15,
+      "counts": [
+        4.0,
+        5.0
+      ],
+      "chosen": 1,
+      "columns": [
+        231.07679748535156,
+        -60.75711441040039
+      ],
+      "tie": false,
+      "favor": false
+    },
+    {
+      "window": 16,
+      "counts": [
+        5.0,
+        2.0
+      ],
+      "chosen": 0,
+      "columns": [
+        250.72802734375,
+        144.8096160888672
+      ],
+      "tie": false,
+      "favor": true
+    },
+    {
+      "window": 17,
+      "counts": [
+        1.0,
+        0.0
+      ],
+      "chosen": 0,
+      "columns": [
+        56.75095748901367,
+        0.0
+      ],
+      "tie": false,
+      "favor": true
+    },
+    {
+      "window": 18,
+      "counts": [
+        5.0,
+        5.0
+      ],
+      "chosen": 0,
+      "columns": [
+        356.5279541015625,
+        215.30467224121094
+      ],
+      "tie": true,
+      "favor": true
+    },
+    {
+      "window": 19,
+      "counts": [
+        3.0,
+        3.0
+      ],
+      "chosen": 0,
+      "columns": [
+        -110.31598663330078,
+        13.879379272460938
+      ],
+      "tie": true,
+      "favor": false
+    }
+  ],
+  "passed": 7,
+  "verdict": "credit_assignment_inverted",
+  "repro": "```text\n实验名称：W3 诊断 A1：Actor 信用分配的符号检验\n日期：2026-10-26 01:33:03 中国标准时间\nGit commit：c6ff08fd0026dc343c0a6af01d3dfa472949dbef\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：diagnose.py --experiment actor --out data/_w3_actor_final\n耗时：0.1 s\n备注：诊断，不是验收；预注册见 sweep_results/rstdp_spiking_actor_diagnosis_prereg.md。\n备注：正信号下'被选中动作'的资格列和必须更大；20/20 才算通过。\n```"
+}

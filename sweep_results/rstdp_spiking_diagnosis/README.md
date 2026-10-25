@@ -58,8 +58,15 @@
 
 修正后的两条结果用发布配置 + 最好权重快照重跑，自证块均为 commit `fbf9b22`、工作区干净。
 
-## 下一步
+## 下一步：Actor 信用分配 A1 已执行，**失败**
 
-三条判别实验已跑完（③ ② ①），结论见上。下一步是**Actor 信用分配**的诊断：
-先写死判据（例如固定 Critic、只开关痕迹/成功信号路径，看权重是否按预期方向变化），
-再动 GPU；同时把固定策略换成更强的（当前 25–27 步偏弱）。
+预注册见 [`../rstdp_spiking_actor_diagnosis_prereg.md`](../rstdp_spiking_actor_diagnosis_prereg.md)，
+结果见 [`../rstdp_spiking_actor_diagnosis/README.md`](../rstdp_spiking_actor_diagnosis/README.md)：
+**7/20** 个窗口的被选列增量更大（4 个平局；其中 3 个窗口被选列为负）→
+`credit_assignment_inverted`。按预注册 **A2（oracle EMA）不跑**。
+
+**第二因子与动作选择不同向**：`pair_based_stdp = LTP − LTD`，发放多的动作也拿到更多
+LTD，净增量可以更小甚至为负；而 `apply_success_signal` 用全局标量 S 乘整条痕迹。
+修复候选（动作门控痕迹 / 优势化第二因子 / 拆开 LTP-LTD）尚未实现，各自需要新预注册。
+
+另一条线——**固定策略太弱**（① 里训练最好只有 25–27 步）——尚未处理。

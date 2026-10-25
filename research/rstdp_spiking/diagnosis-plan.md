@@ -81,6 +81,26 @@
 先跑 ③（分钟级），再跑 ②（与现有训练同跑，加日志即可），最后跑 ①（200 回合，单臂）。
 ③不过就先修评测——在噪声里比较算法是浪费 GPU。
 
+## A1：Actor 信用分配的符号检验（2026-10-26 执行）
+
+Plan B 的两条候选在 ③②① 之后剩下"Actor 的信用分配"与"固定策略太弱"。第一条先写死了
+判据（[`sweep_results/rstdp_spiking_actor_diagnosis_prereg.md`](../../sweep_results/rstdp_spiking_actor_diagnosis_prereg.md)）：
+
+- **A1（纯 CPU）**：正信号下，被选中动作（脉冲计数更大）的 `pair_based_stdp` 增量列和
+  必须大于另一列，**20/20**；否则 Actor 的第二因子本身与动作选择不同向，A2 不跑；
+- **A2（oracle EMA）**：同种子成对比较 EMA 与线性 TD，`ema_best ≥ td_best + 20` 且
+  `ema_best ≥ 30`；A1 失败时按预注册**不执行**。
+
+**结果：A1 7/20 → `credit_assignment_inverted`，A2 未跑。** 被选列在 4 个窗口里是负的
+（−5.60、−60.76、−110.32），正信号会把它往下压。机制：`pair_based_stdp = LTP − LTD`，
+发放多的动作同时拿到更多 LTD，"发放更多"不蕴含"净增量更大"；速率版的后因子是
+动作门控的非负量，脉冲版丢掉了"哪个动作"这个信息。详见
+[`sweep_results/rstdp_spiking_actor_diagnosis/README.md`](../../sweep_results/rstdp_spiking_actor_diagnosis/README.md)。
+
+**下一步候选**（未实现，各自需要新预注册）：动作门控的痕迹、优势化第二因子
+（`e − mean_actions(e)`）、拆开 LTP/LTD 并只对未选动作施加 LTD。任何一条落地时，
+A1 必须变成 20/20 的守卫，否则不采信。
+
 ## 与阶段四的关系
 
 这条线不阻塞认知层：阶段四入口的卡口是 AF（巩固实验），不是脉冲化 CartPole。
