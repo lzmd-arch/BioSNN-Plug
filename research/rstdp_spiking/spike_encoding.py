@@ -46,5 +46,8 @@ def spike_encode(
     if not 0.0 < max_rate <= 1.0:
         raise ValueError(f"max_rate 应在 (0, 1] 内，收到 {max_rate}。")
     probability = features.clamp(min=0.0, max=1.0) * max_rate
-    draws = torch.rand(steps, *probability.shape, generator=generator, device=probability.device)
-    return (draws < probability).to(probability.dtype)
+    # **先在生成器所在的设备上采样，再搬到特征设备**：CPU 生成器不能直接给 CUDA
+    # 张量采样（实测 RuntimeError）。这样同一个 CPU 种子在 CPU/GPU 上得到同一串脉冲。
+    sample_device = generator.device
+    draws = torch.rand(steps, *probability.shape, generator=generator, device=sample_device)
+    return (draws.to(probability.device) < probability).to(probability.dtype)

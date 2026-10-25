@@ -58,8 +58,10 @@ class LinearCritic:
         self.weights = torch.zeros(self.n_features)
 
     def value(self, features: torch.Tensor) -> float:
-        """``V(s)``。"""
-        return float(torch.dot(self.weights, features.detach().flatten()))
+        """``V(s)``。**权重跟着特征走**：CPU 上逐位不变，CUDA 上首次调用时搬一次。"""
+        x = features.detach().flatten()
+        self.weights = self.weights.to(x.device)
+        return float(torch.dot(self.weights, x))
 
     def update(
         self,
@@ -72,6 +74,7 @@ class LinearCritic:
         """做一次 TD(0) 更新，返回 δ（Actor 的成功信号）。"""
         x = features.detach().flatten()
         x_next = next_features.detach().flatten()
+        self.weights = self.weights.to(x.device)
         delta = float(reward) + (0.0 if terminated else self.gamma * self.value(x_next))
         delta -= self.value(x)
         self.weights.add_(self.learning_rate * delta * x)

@@ -176,7 +176,10 @@ class SpikingActor:
         if greedy:
             return int(spike_counts.argmax().item())
         if self.action_sampling == "boltzmann":
+            # 采样在生成器所在的设备上做（CPU 生成器不能直接采 CUDA 张量）；
+            # CPU 上逐位不变，CUDA 上把概率搬到 CPU 再采，随机流仍由同一个种子决定。
             probabilities = torch.softmax(self.sampling_scale() * spike_counts, dim=-1)
+            probabilities = probabilities.to(generator.device)
             return int(torch.multinomial(probabilities, 1, generator=generator).item())
         if exploration > 0 and float(torch.rand(1, generator=generator).item()) < exploration:
             return int(torch.randint(self.n_actions, (1,), generator=generator).item())
