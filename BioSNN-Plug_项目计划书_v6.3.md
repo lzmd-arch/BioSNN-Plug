@@ -447,6 +447,22 @@
 >    第二因子／拆开 LTP-LTD）**均未实现**，各自需要新预注册。见
 >    [`sweep_results/rstdp_spiking_actor_diagnosis/`](sweep_results/rstdp_spiking_actor_diagnosis/README.md)。
 
+> ㊻ **2026-10-26：CL 归一化臂预注册（v3）**。按预注册 v2 的机制顺序（回放 → 归一化），
+>    下一步是**输入的固定对角标准化**：统计量只由任务 1 的训练特征算出并冻结，同一组
+>    `mu` / `sd` 用于全部任务的训练与测试；无回放。两个臂：N1（标准化）、N1-scale
+>    （再对齐任务 1 的平均行范数，把"几何"与"整体步长"分开）。参考臂 R-delta-mini
+>    （0.2466 / 0.8047）；阶段门不变（AF<8% / ACC≥65%），另加"机制信号"（AF −10 pp 且
+>    ACC ≥ 参考 −1 pp）。判读表与"不做什么"先写死。见
+>    [`sweep_results/continual_v2_normalization_prereg.md`](sweep_results/continual_v2_normalization_prereg.md)。
+
+> ㊼ **2026-10-26：「规则改变后重学快 3×」标准设计**。把第 941 行的验收句操作化：
+>    规则改变 = CartPole-v1 重力 9.8 → 14.0（动作语义不变，避免"反相关旧策略"）；
+>    重学 = 保留完整 agent 状态（Actor/Critic/基线）在 R1 上继续训练 800 回合；
+>    从头 = 同种子随机初始化、同一套调度；速度 = 达标（best-so-far ≥ 150 步）所需回合数。
+>    种子 65–74（从未用于调参/验收）；判据 = 比值中位数 ≥3 且 ≥8/10 种子更快，外加五条
+>    有效性门（掌握、从头可达、非零样本、阈值非平凡、末值不更差）。通过与否**只覆盖速度**，
+>    ACC/AF 另算。见 [`sweep_results/relearn_3x_prereg.md`](sweep_results/relearn_3x_prereg.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
