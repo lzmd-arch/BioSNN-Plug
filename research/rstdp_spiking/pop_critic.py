@@ -141,14 +141,17 @@ class PopulationCritic:
             raise ValueError(f"mask_density 应在 (0, 1] 内，收到 {mask_density}。")
 
         gen = generator or torch.Generator(device=device)
-        weights = torch.randn(n_units, n_features, generator=gen, device=device)
+        # 在生成器所在设备采样再搬到目标设备：CPU 生成器不能直接给 CUDA 张量采样。
+        sample_device = gen.device
+        weights = torch.randn(n_units, n_features, generator=gen, device=sample_device)
+        weights = weights.to(device)
         self.weights = weights / (weights.norm(dim=1, keepdim=True) + 1e-12)
 
         # 每个单元一个固定的输入子空间（结构约束，不训练）。像固定连接概率：
         # 它不涉及任何学习信号，因此不影响局部性主张（与 ADR-0012 的"固定随机投影"同一取舍）。
         self.mask: torch.Tensor | None = None
         if mask_density is not None:
-            draws = torch.rand(n_units, n_features, generator=gen, device=device)
+            draws = torch.rand(n_units, n_features, generator=gen, device=sample_device).to(device)
             self.mask = (draws < float(mask_density)).to(self.weights.dtype)
             # 保证每行至少一个连接，否则该单元永远是死的
             empty = self.mask.sum(dim=1) == 0
