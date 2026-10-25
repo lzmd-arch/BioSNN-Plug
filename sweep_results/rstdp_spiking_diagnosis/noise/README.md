@@ -5,7 +5,7 @@
 不能作为 ③ 的结论。修正后的重跑见 [`../noise_lr1e-4/`](../noise_lr1e-4/README.md)。**
 
 
-**诊断，不是验收。** 阈值见 [`../../research/rstdp_spiking/diagnosis-plan.md`](../../research/rstdp_spiking/diagnosis-plan.md) ③：
+**诊断，不是验收。** 阈值见 [`../../../research/rstdp_spiking/diagnosis-plan.md`](../../../research/rstdp_spiking/diagnosis-plan.md) ③：
 20 个评测种子的 95% CI 半宽 ≤ 中位数的 20% 才算"评测可用"。
 
 ## 协议
