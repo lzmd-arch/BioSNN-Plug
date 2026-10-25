@@ -14,6 +14,8 @@
 * 10 个任务 × 10 类，类别按 id 升序分组；
 * 特征：W1 感知层（`IBHebbianPerceptron`，3 层 × 1024），**隐藏层在每个任务上继续用局部规则更新**；
 * 读出：100 维 delta 规则，只喂当前任务的类，**无回放、无正则**——测的就是朴素增量；
+* 归一化是显式的独立臂（`--normalize`，默认关），统计量只在任务 1 上拟合并冻结，
+  见 [`normalization.py`](normalization.py) 与预注册 v3；
 * 每学完一个任务，在**已见过的所有类**上评测（不提供任务 id）。
 
 ## 对照
@@ -36,13 +38,24 @@ from research.continual.data import CifarSplit, load_cifar100, task_classes
 from research.continual.frontends import image_features
 from research.continual.metrics import summarise
 from research.continual.ncm import ClassPrototypes
+from research.continual.normalization import build_transform
 from research.continual.readout import DeltaReadout, evaluate
 from research.ib_hebbian import IBHebbianPerceptron
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT = REPO_ROOT / "sweep_results" / "continual_cifar100"
 
-__all__ = ["evaluate_seen", "features_of", "main", "run_incremental", "train_hidden"]
+__all__ = [
+    "evaluate_seen",
+    "evaluate_task",
+    "features_of",
+    "main",
+    "run_incremental",
+    "run_joint",
+    "run_with_frozen_frontend",
+    "run_with_frozen_frontend_delta",
+    "train_hidden",
+]
 
 
 def _to_tensor(split: CifarSplit, device: torch.device) -> tuple[torch.Tensor, torch.Tensor]:
@@ -347,11 +360,16 @@ def run_with_frozen_frontend_delta(
     readout_batch: int = 0,
     replay_rho: float = 0.0,
     replay_per_class: int = 20,
+    normalize: str = "none",
+    normalize_scale: str = "native",
 ) -> dict:
-    """Route R 的 delta 读出：冻结特征 + 线性读出 + 可选 latent replay。
+    """Route R 的 delta 读出：冻结特征 + 线性读出 + 可选 latent replay / 归一化。
 
     与 :func:`run_with_frozen_frontend` 的区别只在读出：NCM 不遗忘，delta 会——
     回放臂要对照的就是后者。评估口径是 CIL（全部已见类 argmax、不提供任务 id）。
+
+    ``normalize`` 是预注册 v3 的独立机制：``task1-standardize`` 在任务 1 的训练特征上
+    拟合一次并**冻结**，同一组统计量用于全部任务的训练与测试（见 normalization.py）。
     """
     np.random.seed(seed)
     train, test = load_cifar100(data_root)
@@ -373,6 +391,7 @@ def run_with_frozen_frontend_delta(
     replay_labels = np.empty((0,), dtype=int)
     rng = np.random.default_rng(seed)
     ratios: list[float] = []
+    transform = build_transform(normalize, scale=normalize_scale)
 
     for t, classes in enumerate(tasks):
         seen.extend(int(c) for c in classes)
@@ -386,6 +405,12 @@ def run_with_frozen_frontend_delta(
             subset = np.concatenate(keep) if keep else np.array([], dtype=int)
             features = features[subset]
             labels = labels[subset]
+
+        if t == 0:
+            # 统计量只在这一批（任务 1 的训练特征）上算一次；之后冻结。
+            transform.fit(features)
+            test_features = transform.transform(test_features)
+        features = transform.transform(features)
 
         before = readout.weights.copy()
         _train_delta_readout(
@@ -429,6 +454,9 @@ def run_with_frozen_frontend_delta(
         "replay_rho": replay_rho,
         "replay_per_class": replay_per_class,
         "readout_batch": readout_batch,
+        "normalize": normalize,
+        "normalize_scale": normalize_scale,
+        "normalizer": transform.digest(),
         "accuracy_matrix": matrix.tolist(),
         "acc": scores.acc,
         "af": scores.af,
@@ -514,10 +542,26 @@ def main(argv: list[str] | None = None) -> int:
         default=0,
         help="0=全批量（v1 协议）；>0=minibatch 大小（回放臂用 128）",
     )
+    parser.add_argument(
+        "--normalize",
+        choices=("none", "task1-standardize"),
+        default="none",
+        help="归一化臂：none=关（默认）；task1-standardize=任务 1 统计量冻结的逐维标准化",
+    )
+    parser.add_argument(
+        "--normalize-scale",
+        choices=("native", "match-task1"),
+        default="native",
+        help="native=标准化本身；match-task1=再对齐任务 1 的平均行范数（控制臂）",
+    )
     parser.add_argument("--joint", action="store_true", help="跑联合训练上界")
     parser.add_argument("--smoke", action="store_true", help="2 任务、每类 20 张")
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
+    if args.normalize == "none" and args.normalize_scale != "native":
+        parser.error("--normalize none 时 --normalize-scale 必须为 native。")
+    if args.readout == "ncm" and args.normalize != "none":
+        parser.error("归一化臂只接 delta 读出；NCM 的白化是另一条路径。")
 
     if args.smoke:
         args.tasks = 2
@@ -558,6 +602,8 @@ def main(argv: list[str] | None = None) -> int:
                         readout_batch=args.readout_batch,
                         replay_rho=args.replay_rho,
                         replay_per_class=args.replay_per_class,
+                        normalize=args.normalize,
+                        normalize_scale=args.normalize_scale,
                     )
                 )
             continue
@@ -607,6 +653,8 @@ def main(argv: list[str] | None = None) -> int:
             "readout_batch": args.readout_batch,
             "replay_rho": args.replay_rho,
             "replay_per_class": args.replay_per_class,
+            "normalize": args.normalize,
+            "normalize_scale": args.normalize_scale,
         },
         "per_seed": results,
         "void_seeds": [row["seed"] for row in results if not row.get("valid", True)],
