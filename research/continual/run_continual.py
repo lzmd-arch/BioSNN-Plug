@@ -399,8 +399,12 @@ def run_with_frozen_frontend_delta(
             rho=replay_rho,
             rng=rng,
         )
-        denominator = max(float(np.linalg.norm(before)), 1e-12)
-        ratios.append(float(np.linalg.norm(readout.weights - before) / denominator))
+        denominator = float(np.linalg.norm(before))
+        if t == 0 or denominator < 1e-12:
+            # 第一个任务从零初始化出发，相对变化没有分母；不参与跑门。
+            ratios.append(float("nan"))
+        else:
+            ratios.append(float(np.linalg.norm(readout.weights - before) / denominator))
 
         if replay_rho > 0:
             new_features, new_labels = _sample_replay(
@@ -416,7 +420,9 @@ def run_with_frozen_frontend_delta(
         print(f"  task {t + 1}/{n_tasks}: 本任务 {matrix[t, t]:.3f}")
 
     scores = summarise(matrix)
-    gate_failed = any(ratio < GATE_MIN_WEIGHT_CHANGE for ratio in ratios)
+    gate_failed = any(
+        np.isfinite(ratio) and ratio < GATE_MIN_WEIGHT_CHANGE for ratio in ratios
+    )
     return {
         "seed": seed,
         "mode": "incremental-resnet18-delta",
