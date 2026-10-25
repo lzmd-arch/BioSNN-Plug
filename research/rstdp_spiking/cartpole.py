@@ -67,6 +67,8 @@ class TrainResult:
     eval_scores: list[dict]
     best_steps: float
     selected_episode: int
+    eval_noise: tuple[float, ...] = ()
+    """同一份最终权重、20 个评测种子各跑一次的平均步数（诊断 ③ 用）。空 = 没跑。"""
 
 
 def _state_tensor(raw, device: torch.device) -> torch.Tensor:
@@ -172,6 +174,7 @@ def train(
     pop_mask_density: float | None = None,
     warmup: int,
     device: torch.device,
+    eval_noise_seeds: int = 0,
 ) -> TrainResult:
     """训练一个种子。返回逐回合回报与评测曲线。"""
     import gymnasium
@@ -255,12 +258,28 @@ def train(
                 selected_episode = episode + 1
 
     env.close()
+
+    # 诊断 ③：同一份权重、不同评测种子各跑一次，量"评测口径本身有多吵"。
+    noise: list[float] = []
+    if eval_noise_seeds > 0:
+        for index in range(eval_noise_seeds):
+            noise.append(
+                evaluate(
+                    actor,
+                    centers,
+                    sigma,
+                    episodes=eval_episodes,
+                    seed=20_000 + index,
+                )
+            )
+
     return TrainResult(
         seed=seed,
         returns=returns,
         eval_scores=eval_scores,
         best_steps=best_steps,
         selected_episode=selected_episode,
+        eval_noise=tuple(noise),
     )
 
 
