@@ -435,6 +435,10 @@
 >    按预注册，下一机制是归一化，**不回头调 ρ**。见
 >    [`sweep_results/continual_v2/README.md`](sweep_results/continual_v2/README.md)。
 
+> ㊹ **2026-10-26：知乎篇一已发布**——
+>    <https://zhuanlan.zhihu.com/p/2097820309457985862>（P4 发布后的对外解读）。
+>    台账只记链接与日期；标题与正文以平台为准。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
