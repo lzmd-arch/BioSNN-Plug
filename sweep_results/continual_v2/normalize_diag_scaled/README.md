@@ -1,6 +1,6 @@
 # CL 归一化臂 N1-scale：标准化 + 对齐任务 1 的行范数（2026-10-26）
 
-**预注册（先于数据）：** [`../continual_v2_normalization_prereg.md`](../continual_v2_normalization_prereg.md)。
+**预注册（先于数据）：** [`../continual_v2_normalization_prereg.md`](../../continual_v2_normalization_prereg.md)。
 本目录是 **N1-scale（match-task1）**：逐维标准化后乘一个标量，使任务 1 训练特征的
 平均行范数回到原始值。它是 **N1 的控制臂**——把整体梯度尺度对齐，只留下逐维几何变化。
 无回放。参考臂 **R-delta-mini**：ACC 0.2466 / AF 0.8047。

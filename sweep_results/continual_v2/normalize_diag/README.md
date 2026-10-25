@@ -1,6 +1,6 @@
 # CL 归一化臂 N1：逐维标准化（2026-10-26）
 
-**预注册（先于数据）：** [`../continual_v2_normalization_prereg.md`](../continual_v2_normalization_prereg.md)。
+**预注册（先于数据）：** [`../continual_v2_normalization_prereg.md`](../../continual_v2_normalization_prereg.md)。
 本目录是 **N1（native）**：任务 1 训练特征上的逐维标准化，统计量冻结，无回放。
 参考臂 **R-delta-mini**：ACC 0.2466 / AF 0.8047（[`../step0_delta_minibatch/`](../step0_delta_minibatch/README.md)）。
 
