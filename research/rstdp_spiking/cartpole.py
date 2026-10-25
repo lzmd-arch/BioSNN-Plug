@@ -35,8 +35,9 @@ import argparse
 import json
 import tempfile
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import torch
 
@@ -71,6 +72,10 @@ class TrainResult:
     """同一份最终权重、20 个评测种子各跑一次的平均步数（诊断 ③ 用）。空 = 没跑。"""
     entropies: tuple[float, ...] = ()
     """每回合 Boltzmann 动作分布的平均熵（诊断 ② 用）。空 = 没记。"""
+    actor: Any = field(default=None, repr=False, compare=False)
+    """``keep_actor=True`` 时的最终 actor（已载入最好权重）。诊断 ① 用。"""
+    centers: Any = field(default=None, repr=False, compare=False)
+    """与 actor 配套的群体编码中心。诊断 ① 必须用同一组中心。"""
 
 
 def _state_tensor(raw, device: torch.device) -> torch.Tensor:
@@ -178,6 +183,7 @@ def train(
     device: torch.device,
     eval_noise_seeds: int = 0,
     entropy_log: bool = False,
+    keep_actor: bool = False,
 ) -> TrainResult:
     """训练一个种子。返回逐回合回报与评测曲线。"""
     import gymnasium
@@ -287,6 +293,9 @@ def train(
                 )
             )
 
+    if keep_actor and best_state is not None:
+        actor.layer.load_state_dict(best_state)
+
     return TrainResult(
         seed=seed,
         returns=returns,
@@ -295,6 +304,8 @@ def train(
         selected_episode=selected_episode,
         eval_noise=tuple(noise),
         entropies=tuple(entropies),
+        actor=actor if keep_actor else None,
+        centers=centers if keep_actor else None,
     )
 
 

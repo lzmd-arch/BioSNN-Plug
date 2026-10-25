@@ -6,7 +6,7 @@ import numpy as np
 import torch
 
 from research.rstdp_spiking.cartpole import train
-from research.rstdp_spiking.diagnose import bootstrap_ci
+from research.rstdp_spiking.diagnose import bootstrap_ci, mc_returns
 
 
 def test_bootstrap_ci_is_deterministic_and_brackets_the_mean() -> None:
@@ -68,3 +68,31 @@ def test_entropy_is_logged_and_bounded_by_log_two() -> None:
 
     assert len(result.entropies) == 2
     assert all(0.0 <= value <= np.log(2) + 1e-6 for value in result.entropies)
+
+
+def test_mc_returns_discounts_backwards() -> None:
+    assert mc_returns([1.0, 1.0], 0.5) == [1.5, 1.0]
+    assert mc_returns([], 0.99) == []
+
+
+def test_train_can_return_the_best_actor() -> None:
+    result = train(
+        seed=0,
+        episodes=2,
+        eval_every=2,
+        eval_episodes=1,
+        n_features=16,
+        sigma=1.0,
+        steps=5,
+        learning_rate=1e-4,
+        baseline_decay=0.05,
+        critic_kind="td",
+        critic_rate=1e-2,
+        gamma=0.99,
+        warmup=0,
+        device=torch.device("cpu"),
+        keep_actor=True,
+    )
+
+    assert result.actor is not None
+    assert result.centers is not None

@@ -23,7 +23,9 @@ import numpy as np
 import torch
 
 from research.common.provenance import collect
+from research.components.cartpole_encoding import encode_state
 from research.rstdp_spiking.cartpole import train
+from research.rstdp_spiking.critic import LinearCritic
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT = REPO_ROOT / "sweep_results" / "rstdp_spiking_diagnosis" / "noise"
@@ -47,7 +49,7 @@ BASE_CONFIG: dict[str, Any] = {
     "warmup": 10,
 }
 
-__all__ = ["bootstrap_ci", "main"]
+__all__ = ["bootstrap_ci", "main", "mc_returns"]
 
 
 def bootstrap_ci(
@@ -65,13 +67,26 @@ def bootstrap_ci(
     return float(low), float(high)
 
 
+def mc_returns(rewards: list[float], gamma: float) -> list[float]:
+    """从 t 起的折扣蒙特卡洛回报 ``G_t = Σ γ^k r_{t+k}``。"""
+    values: list[float] = []
+    running = 0.0
+    for reward in reversed(rewards):
+        running = float(reward) + gamma * running
+        values.append(running)
+    values.reverse()
+    return values
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="W3 脉冲化诊断（③ 评测噪声）")
-    parser.add_argument("--experiment", choices=("noise", "entropy"), default="noise")
+    parser.add_argument("--experiment", choices=("noise", "entropy", "critic"), default="noise")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--episodes", type=int, default=1200)
     parser.add_argument("--eval-episodes", type=int, default=10)
     parser.add_argument("--eval-noise-seeds", type=int, default=20)
+    parser.add_argument("--train-episodes", type=int, default=300)
+    parser.add_argument("--critic-episodes", type=int, default=200)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--out", type=Path, default=OUT)
     parser.add_argument("--smoke", action="store_true")
@@ -81,13 +96,131 @@ def main(argv: list[str] | None = None) -> int:
         args.episodes = 5
         args.eval_episodes = 1
         args.eval_noise_seeds = 3
-        args.out = REPO_ROOT / "data" / "_smoke_w3_noise"
+        args.train_episodes = 5
+        args.critic_episodes = 3
+        args.out = REPO_ROOT / "data" / f"_smoke_w3_{args.experiment}"
 
     if args.out == OUT:
         args.out = OUT.parent / args.experiment
 
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     started = time.perf_counter()
+
+    if args.experiment == "critic":
+        result = train(
+            seed=args.seed,
+            episodes=args.train_episodes,
+            eval_every=25,
+            eval_episodes=args.eval_episodes,
+            warmup=0 if args.smoke else BASE_CONFIG["warmup"],
+            device=device,
+            keep_actor=True,
+            **{key: value for key, value in BASE_CONFIG.items() if key != "warmup"},
+        )
+        if result.actor is None or result.centers is None:  # pragma: no cover - 防御
+            raise RuntimeError("train 没有返回 actor/centers。")
+        actor = result.actor
+        centers = result.centers
+        critic = LinearCritic(
+            BASE_CONFIG["n_features"],
+            gamma=BASE_CONFIG["gamma"],
+            learning_rate=1e-2,
+        )
+        import gymnasium
+
+        env = gymnasium.make("CartPole-v1")
+        episodes: list[tuple[list[Any], list[float]]] = []
+        try:
+            for episode in range(args.critic_episodes):
+                generator = torch.Generator(device="cpu").manual_seed(30_000 + episode)
+                raw, _ = env.reset(seed=40_000 + episode)
+                features = encode_state(
+                    torch.tensor(raw, dtype=torch.float32, device=device),
+                    centers,
+                    BASE_CONFIG["sigma"],
+                )
+                states: list[Any] = []
+                rewards: list[float] = []
+                for _ in range(500):
+                    action = actor.step(
+                        features, generator=generator, greedy=False, learn_trace=False
+                    )
+                    raw_next, reward, terminated, truncated, _ = env.step(action)
+                    next_features = encode_state(
+                        torch.tensor(raw_next, dtype=torch.float32, device=device),
+                        centers,
+                        BASE_CONFIG["sigma"],
+                    )
+                    critic.update(
+                        features, float(reward), next_features, terminated=bool(terminated)
+                    )
+                    states.append(features.detach())
+                    rewards.append(float(reward))
+                    features = next_features
+                    if terminated or truncated:
+                        break
+                episodes.append((states, rewards))
+        finally:
+            env.close()
+
+        last = episodes[-20:] if len(episodes) >= 20 else episodes
+        returns: list[float] = []
+        predictions: list[float] = []
+        for states, rewards in last:
+            for state, target in zip(
+                states, mc_returns(rewards, BASE_CONFIG["gamma"]), strict=True
+            ):
+                returns.append(target)
+                predictions.append(critic.value(state))
+        targets = np.asarray(returns, dtype=np.float64)
+        values = np.asarray(predictions, dtype=np.float64)
+        mean_target = float(targets.mean()) if targets.size else float("nan")
+        var_critic = float(((targets - values) ** 2).mean()) if targets.size else float("nan")
+        var_constant = (
+            float(((targets - mean_target) ** 2).mean()) if targets.size else float("nan")
+        )
+        reduction = 1.0 - var_critic / var_constant if var_constant > 1e-12 else float("nan")
+        verdict = "signal" if np.isfinite(reduction) and reduction >= 0.30 else "no_signal"
+        summary = {
+            "experiment": "W3 诊断 ①：Critic 信号",
+            "config": {
+                **BASE_CONFIG,
+                "train_episodes": args.train_episodes,
+                "critic_episodes": args.critic_episodes,
+                "eval_episodes": args.eval_episodes,
+                "device": str(device),
+            },
+            "seed": args.seed,
+            "train_best_steps": result.best_steps,
+            "n_episodes_evaluated": len(last),
+            "var_critic": var_critic,
+            "var_constant": var_constant,
+            "reduction": reduction,
+            "threshold": 0.30,
+            "verdict": verdict,
+            "repro": collect(
+                "W3 诊断 ①：Critic 信号",
+                seeds=str(args.seed),
+                elapsed_s=time.perf_counter() - started,
+                notes=[
+                    "诊断，不是验收；操作化见 research/rstdp_spiking/diagnosis-plan.md ①。",
+                    "固定策略 = 最好权重快照；目标是折扣蒙特卡洛回报。",
+                ],
+                device=device,
+            ).render_block(),
+        }
+        args.out.mkdir(parents=True, exist_ok=True)
+        (args.out / "summary.json").write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        print(
+            f"Critic 误差方差 {var_critic:.3f} vs 常数基线 {var_constant:.3f}，"
+            f"下降 {reduction:.1%} → {verdict}"
+        )
+        print(f"written to {args.out}")
+        return 0
 
     if args.experiment == "entropy":
         result = train(
