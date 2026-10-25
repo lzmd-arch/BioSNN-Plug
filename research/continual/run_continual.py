@@ -664,7 +664,11 @@ def main(argv: list[str] | None = None) -> int:
             "W5 持续学习：CIFAR-100 类增量",
             seeds=",".join(str(s) for s in seeds),
             elapsed_s=time.perf_counter() - started,
-            notes=["隐藏层每任务继续局部更新；读出为 delta 规则，无回放无正则"],
+            notes=[
+                f"特征：{args.features}/{args.backbone}；读出：{args.readout}；"
+                f"归一化：{args.normalize}（{args.normalize_scale}）；"
+                f"回放 ρ：{args.replay_rho}；batching：{args.readout_batch or '全批量'}"
+            ],
             device=device,
         ).render_block(),
     }
