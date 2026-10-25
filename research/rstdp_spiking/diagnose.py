@@ -36,7 +36,10 @@ BASE_CONFIG: dict[str, Any] = {
     "n_features": 64,
     "sigma": 1.0,
     "steps": 25,
-    "learning_rate": 1e-2,
+    # **与 `sweep_results/rstdp_spiking/td_10seeds/summary.json` 的发布配置一致**。
+    # 写成 1e-2 会把输出层推到几乎沉默，greedy 永远选动作 0——评测值会因此逐位相同，
+    # 看起来像“评测很稳”，其实是策略退化（本诊断第一版踩过）。
+    "learning_rate": 1e-4,
     "baseline_decay": 0.05,
     "critic_kind": "td",
     "critic_rate": 1e-2,

@@ -1,5 +1,10 @@
 # W3 诊断 ③：评测噪声（seed 0，2026-10-25）
 
+**⚠️ 2026-10-25 更正：本目录的 `BASE_CONFIG.learning_rate` 误写成 1e-2（发布配置是 1e-4），
+策略退化为沉默、greedy 恒选动作 0；这里的数只说明“退化策略上评测很稳”，
+不能作为 ③ 的结论。修正后的重跑见 [`../noise_lr1e-4/`](../noise_lr1e-4/README.md)。**
+
+
 **诊断，不是验收。** 阈值见 [`../../research/rstdp_spiking/diagnosis-plan.md`](../../research/rstdp_spiking/diagnosis-plan.md) ③：
 20 个评测种子的 95% CI 半宽 ≤ 中位数的 20% 才算"评测可用"。
 
