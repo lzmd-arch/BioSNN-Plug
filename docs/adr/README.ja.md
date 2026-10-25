@@ -48,3 +48,4 @@ Michael Nygard の古典的な 4 段構成を採用します：
 | [ADR-0014](ADR-0014-adaptive-arbitration-unmeasurable-and-fit-retained.ja.md) | 適応的仲裁は「測定不能」（「反証」ではない）；`ESArbiter.fit` は待機で保持；P4 の見出し転換 | 採択済み |
 | [ADR-0015](ADR-0015-world-model-as-phase-four-component.ja.md) | 世界モデルを第 4 フェーズの正式コンポーネントに（スケジュール不変） | 採択済み |
 | [ADR-0016](ADR-0016-arousal-channel-and-consolidation-experiment.ja.md) | 覚醒チャネルのコンポーネント化（「本能」の命名を含む）と固定化比較実験の予定 | 採択済み |
+| [ADR-0017](ADR-0017-cl-main-route-switch-and-replay-first.ja.md) | CL 主路線を Route R へ（リプレイ先行）；Route W は保持；第 4 フェーズ入口を書き換え | 採用済み |
