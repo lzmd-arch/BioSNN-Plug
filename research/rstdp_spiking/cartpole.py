@@ -224,6 +224,9 @@ def train(
     baseline = 0.0
     best_steps = -1.0
     selected_episode = -1
+    # 选中最好一步时**快照权重**。只记 best_steps 而不存权重，会让诊断 ③ 去评测
+    # "训练结束时已经游走的权重"，而不是报告里那个 156.9 所对应的策略。
+    best_state: dict[str, torch.Tensor] | None = None
 
     for episode in range(episodes):
         steps_alive = run_episode(
@@ -256,12 +259,17 @@ def train(
             if score > best_steps:
                 best_steps = score
                 selected_episode = episode + 1
+                best_state = {
+                    key: value.detach().clone() for key, value in actor.layer.state_dict().items()
+                }
 
     env.close()
 
     # 诊断 ③：同一份权重、不同评测种子各跑一次，量"评测口径本身有多吵"。
     noise: list[float] = []
     if eval_noise_seeds > 0:
+        if best_state is not None:
+            actor.layer.load_state_dict(best_state)
         for index in range(eval_noise_seeds):
             noise.append(
                 evaluate(
