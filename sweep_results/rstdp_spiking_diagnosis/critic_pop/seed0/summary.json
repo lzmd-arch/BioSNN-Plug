@@ -1,0 +1,27 @@
+{
+  "experiment": "W3 诊断 ①：Critic 信号",
+  "config": {
+    "n_features": 64,
+    "sigma": 1.0,
+    "steps": 25,
+    "learning_rate": 0.0001,
+    "baseline_decay": 0.05,
+    "critic_kind": "pop",
+    "critic_rate": 0.01,
+    "gamma": 0.99,
+    "warmup": 10,
+    "train_episodes": 300,
+    "critic_episodes": 200,
+    "eval_episodes": 10,
+    "device": "cuda"
+  },
+  "seed": 0,
+  "train_best_steps": 25.3,
+  "n_episodes_evaluated": 20,
+  "var_critic": 25.583999072917894,
+  "var_constant": 40.492092443794284,
+  "reduction": 0.36817295603011413,
+  "threshold": 0.3,
+  "verdict": "signal",
+  "repro": "```text\n实验名称：W3 诊断 ①：Critic 信号\n日期：2026-10-26 00:44:08 中国标准时间\nGit commit：504c0661cab229fa8b39b56ecc58f8517d11025e\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：diagnose.py --experiment critic --critic pop --seed 0 --train-episodes 300 --critic-episodes 200 --device cuda --out data/w3_critic_pop/seed0\n耗时：145.1 s\n备注：诊断，不是验收；操作化见 research/rstdp_spiking/diagnosis-plan.md ①。\n备注：固定策略 = 最好权重快照；目标是折扣蒙特卡洛回报。\n```"
+}
