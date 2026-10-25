@@ -69,6 +69,8 @@ class TrainResult:
     selected_episode: int
     eval_noise: tuple[float, ...] = ()
     """同一份最终权重、20 个评测种子各跑一次的平均步数（诊断 ③ 用）。空 = 没跑。"""
+    entropies: tuple[float, ...] = ()
+    """每回合 Boltzmann 动作分布的平均熵（诊断 ② 用）。空 = 没记。"""
 
 
 def _state_tensor(raw, device: torch.device) -> torch.Tensor:
@@ -175,6 +177,7 @@ def train(
     warmup: int,
     device: torch.device,
     eval_noise_seeds: int = 0,
+    entropy_log: bool = False,
 ) -> TrainResult:
     """训练一个种子。返回逐回合回报与评测曲线。"""
     import gymnasium
@@ -220,6 +223,7 @@ def train(
         critic = None
 
     returns: list[float] = []
+    entropies: list[float] = []
     eval_scores: list[dict] = []
     baseline = 0.0
     best_steps = -1.0
@@ -244,6 +248,8 @@ def train(
             env_seed=seed * 100_000 + episode,
         )
         returns.append(steps_alive)
+        if entropy_log:
+            entropies.append(actor.episode_entropy)
 
         if critic is None:
             # 无 Critic 的对照：回报的指数滑动平均当基线
@@ -288,6 +294,7 @@ def train(
         best_steps=best_steps,
         selected_episode=selected_episode,
         eval_noise=tuple(noise),
+        entropies=tuple(entropies),
     )
 
 

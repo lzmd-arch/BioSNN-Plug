@@ -67,7 +67,7 @@ def bootstrap_ci(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="W3 脉冲化诊断（③ 评测噪声）")
-    parser.add_argument("--experiment", choices=("noise",), default="noise")
+    parser.add_argument("--experiment", choices=("noise", "entropy"), default="noise")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--episodes", type=int, default=1200)
     parser.add_argument("--eval-episodes", type=int, default=10)
@@ -83,8 +83,66 @@ def main(argv: list[str] | None = None) -> int:
         args.eval_noise_seeds = 3
         args.out = REPO_ROOT / "data" / "_smoke_w3_noise"
 
+    if args.out == OUT:
+        args.out = OUT.parent / args.experiment
+
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     started = time.perf_counter()
+
+    if args.experiment == "entropy":
+        result = train(
+            seed=args.seed,
+            episodes=args.episodes,
+            eval_every=25,
+            eval_episodes=args.eval_episodes,
+            warmup=0 if args.smoke else BASE_CONFIG["warmup"],
+            device=device,
+            entropy_log=True,
+            **{key: value for key, value in BASE_CONFIG.items() if key != "warmup"},
+        )
+        entropies = np.asarray(result.entropies, dtype=np.float64)
+        upto = entropies[:100] if entropies.size >= 100 else entropies
+        window = upto[-10:] if upto.size >= 10 else upto
+        early_mean = float(window.mean()) if window.size else float("nan")
+        if early_mean < 0.1:
+            verdict = "collapse"
+        elif early_mean >= 0.3:
+            verdict = "no_collapse"
+        else:
+            verdict = "uncertain"
+        summary = {
+            "experiment": "W3 诊断 ②：策略熵崩塌",
+            "config": {
+                **BASE_CONFIG,
+                "episodes": args.episodes,
+                "eval_episodes": args.eval_episodes,
+                "device": str(device),
+            },
+            "seed": args.seed,
+            "entropy_window_mean": early_mean,
+            "thresholds": {"collapse": 0.1, "no_collapse": 0.3},
+            "verdict": verdict,
+            "entropies": [float(value) for value in entropies],
+            "repro": collect(
+                "W3 诊断 ②：策略熵崩塌",
+                seeds=str(args.seed),
+                elapsed_s=time.perf_counter() - started,
+                notes=[
+                    "诊断，不是验收；阈值见 research/rstdp_spiking/diagnosis-plan.md。",
+                    "取第 100 回合前最后 10 回合的 Boltzmann 熵均值（nats）。",
+                ],
+                device=device,
+            ).render_block(),
+        }
+        args.out.mkdir(parents=True, exist_ok=True)
+        (args.out / "summary.json").write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        print(f"第 100 回合前最后 10 回合平均熵 {early_mean:.3f} nats → {verdict}")
+        print(f"written to {args.out}")
+        return 0
     result = train(
         seed=args.seed,
         episodes=args.episodes,

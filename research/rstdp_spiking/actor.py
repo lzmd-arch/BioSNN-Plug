@@ -83,6 +83,9 @@ class SpikingActor:
         # 唤醒通道：**只调采样温度**，不碰权重。None 时行为与从前逐位相同。
         self.arousal = arousal
         self.device = device
+        self.last_entropy = 0.0
+        self._entropy_sum = 0.0
+        self._entropy_count = 0
 
         self.layer = LIFLayer(
             n_features,
@@ -180,6 +183,11 @@ class SpikingActor:
             # CPU 上逐位不变，CUDA 上把概率搬到 CPU 再采，随机流仍由同一个种子决定。
             probabilities = torch.softmax(self.sampling_scale() * spike_counts, dim=-1)
             probabilities = probabilities.to(generator.device)
+            # 诊断 ②：Boltzmann 动作分布的熵（nats）。只记采样分支，贪婪/ε 分支不计。
+            entropy = float(-(probabilities * probabilities.clamp(min=1e-12).log()).sum())
+            self.last_entropy = entropy
+            self._entropy_sum += entropy
+            self._entropy_count += 1
             return int(torch.multinomial(probabilities, 1, generator=generator).item())
         if exploration > 0 and float(torch.rand(1, generator=generator).item()) < exploration:
             return int(torch.randint(self.n_actions, (1,), generator=generator).item())
@@ -192,9 +200,16 @@ class SpikingActor:
         if self.normalize:
             self._normalize()
 
+    @property
+    def episode_entropy(self) -> float:
+        """本回合采样决策的平均熵（nats）；没有采样决策时为 0。**读完后由 end_episode 清零。**"""
+        return self._entropy_sum / self._entropy_count if self._entropy_count else 0.0
+
     @torch.no_grad()
     def end_episode(self) -> None:
         self.trace.reset()
+        self._entropy_sum = 0.0
+        self._entropy_count = 0
 
     @torch.no_grad()
     def trace_rms(self) -> float:
