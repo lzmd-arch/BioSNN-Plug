@@ -97,9 +97,9 @@ Plan B 的两条候选在 ③②① 之后剩下"Actor 的信用分配"与"固�
 动作门控的非负量，脉冲版丢掉了"哪个动作"这个信息。详见
 [`sweep_results/rstdp_spiking_actor_diagnosis/README.md`](../../sweep_results/rstdp_spiking_actor_diagnosis/README.md)。
 
-**下一步候选**（未实现，各自需要新预注册）：动作门控的痕迹、优势化第二因子
-（`e − mean_actions(e)`）、拆开 LTP/LTD 并只对未选动作施加 LTD。任何一条落地时，
-A1 必须变成 20/20 的守卫，否则不采信。
+**下一步**：已选定"动作门控 + 拆开 LTP/LTD + 按 S 的符号选相位"作为唯一机制，预注册见
+[`sweep_results/rstdp_spiking_actor_fix_prereg.md`](../../sweep_results/rstdp_spiking_actor_fix_prereg.md)。
+**代码与数据都还没有**；落地时 A1′ 必须先达到 20/20（正/负/未选列三条），否则不采信。
 
 ## 与阶段四的关系
 

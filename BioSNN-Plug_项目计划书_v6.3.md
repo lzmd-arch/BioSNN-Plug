@@ -473,6 +473,14 @@
 >    需新预注册（未开始）。见
 >    [`sweep_results/continual_v2/README.md`](sweep_results/continual_v2/README.md)。
 
+> ㊾ **2026-10-26：Actor 信用分配的符号一致化预注册**。A1 失败后按"第二因子"方向落一个
+>    机制：保留真实的 Δt（`LTP` / `LTD` 仍由同一个 STDP 窗口决定），但**只给被选动作列**
+>    累计两条非负痕迹，回合末按 S 的符号选一条——正信号只强化 pre→post，负信号只弱化
+>    post→pre。不引入新超参数，Critic / 信号 / 学习率 / 归一化全不动，`pair-stdp` 保留为
+>    默认与历史规则。守卫 A1′（正 20/20、负 20/20、未选列为零）不过就不跑阶段 2；
+>    阶段 2 用同 10 种子配对比较，机制标记（+20 步、≥7/10）与验收门（中位数 ≥200）分开报。
+>    见 [`sweep_results/rstdp_spiking_actor_fix_prereg.md`](sweep_results/rstdp_spiking_actor_fix_prereg.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
