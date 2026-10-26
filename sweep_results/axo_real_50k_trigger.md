@@ -28,8 +28,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "D:\Projects\BioSNN-Plug-neu
 ## 注册每日任务（需要你自己执行）
 
 ```powershell
-schtasks /Create /SC DAILY /ST 09:37 /TN "AxoReal50kBenchmark" ^
-  /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"D:\Projects\BioSNN-Plug-neuron\scripts\run_real_50k_trigger.ps1\"" /F
+schtasks /Create /SC DAILY /ST 09:37 /TN "AxoReal50kBenchmark" /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"D:\Projects\BioSNN-Plug-neuron\scripts\run_real_50k_trigger.ps1\"" /F
 ```
 
 或直接在「任务计划程序」里新建一个每日 09:37 的任务，操作同上。任务只会在用户
