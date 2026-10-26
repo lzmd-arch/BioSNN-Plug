@@ -11,7 +11,15 @@ from __future__ import annotations
 
 import numpy as np
 
-__all__ = ["HebbianEpisodicMemory", "RawNearestNeighbor", "SparseEncoder", "build_values"]
+__all__ = [
+    "EpisodicMemoryV1",
+    "HebbianEpisodicMemory",
+    "PseudoInverseMemory",
+    "RawNearestNeighbor",
+    "SparseEncoder",
+    "build_action_term",
+    "build_values",
+]
 
 #: CartPole 四维状态的已知界；只用于归一化，不看测试数据。
 CARTPOLE_SCALE = np.array([2.4, 3.0, 0.21, 3.0], dtype=np.float64)
@@ -53,6 +61,29 @@ class SparseEncoder:
         # 那会把稀疏码变稠密，记忆容量与指标全变。
         keys[rows, index] = np.where(selected >= 0.0, 1.0, -1.0)
         return keys
+
+
+def build_action_term(actions: np.ndarray, terminated: np.ndarray) -> np.ndarray:
+    """``(n, 4)``：动作 one-hot(2) + 终止 one-hot(2)；时间戳单独存。"""
+    actions = np.asarray(actions, dtype=int)
+    terminated = np.asarray(terminated, dtype=int)
+    if actions.shape != terminated.shape:
+        raise ValueError("actions 与 terminated 形状必须一致。")
+    values = np.zeros((actions.shape[0], 4), dtype=np.float64)
+    values[np.arange(actions.shape[0]), actions] = 1.0
+    values[np.arange(actions.shape[0]), 2 + terminated] = 1.0
+    return values
+
+
+def _sparsify(keys: np.ndarray, k: int) -> np.ndarray:
+    if not 1 <= k <= keys.shape[1]:
+        raise ValueError(f"k 必须在 [1, {keys.shape[1]}]，收到 {k}。")
+    output = np.zeros_like(keys)
+    index = np.argpartition(-np.abs(keys), k - 1, axis=1)[:, :k]
+    rows = np.arange(keys.shape[0])[:, None]
+    selected = keys[rows, index]
+    output[rows, index] = np.where(selected >= 0.0, 1.0, -1.0)
+    return output
 
 
 def build_values(actions: np.ndarray, terminated: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
@@ -112,3 +143,53 @@ class RawNearestNeighbor:
             - 2.0 * query @ self.states.T
         )
         return self.values[np.argmin(distances, axis=1)]
+
+
+class EpisodicMemoryV1:
+    """动作/终止 4 维值 + **独立**时间标量记忆；可选局部吸引子迭代。"""
+
+    def __init__(self, *, sparsity: int = 32) -> None:
+        self.sparsity = int(sparsity)
+        self.keys: np.ndarray | None = None
+        self.value_matrix: np.ndarray | None = None
+        self.time_vector: np.ndarray | None = None
+
+    def store(self, keys: np.ndarray, action_term: np.ndarray, times: np.ndarray) -> None:
+        keys = np.asarray(keys, dtype=np.float64)
+        action_term = np.asarray(action_term, dtype=np.float64)
+        times = np.asarray(times, dtype=np.float64)
+        if keys.shape[0] != action_term.shape[0] or keys.shape[0] != times.shape[0]:
+            raise ValueError("keys / action_term / times 行数必须一致。")
+        self.keys = keys
+        self.value_matrix = keys.T @ action_term
+        self.time_vector = keys.T @ times
+
+    def recall(
+        self, keys: np.ndarray, *, attractor_steps: int = 0
+    ) -> tuple[np.ndarray, np.ndarray]:
+        if self.keys is None or self.value_matrix is None or self.time_vector is None:
+            raise RuntimeError("记忆为空；先 store。")
+        query = np.asarray(keys, dtype=np.float64)
+        for _ in range(attractor_steps):
+            # 局部吸引子：q ← top-k(sign(Kᵀ(K q)))，只有矩阵-向量与 top-k。
+            query = _sparsify(np.sign((query @ self.keys.T) @ self.keys), self.sparsity)
+        return query @ self.value_matrix, query @ self.time_vector
+
+
+class PseudoInverseMemory:
+    """``V K⁺`` 的闭式读出（非局部，只作上限对照）。"""
+
+    def __init__(self) -> None:
+        self.coef: np.ndarray | None = None
+
+    def store(self, keys: np.ndarray, values: np.ndarray) -> None:
+        self.coef = np.linalg.lstsq(
+            np.asarray(keys, dtype=np.float64),
+            np.asarray(values, dtype=np.float64),
+            rcond=None,
+        )[0]
+
+    def recall(self, keys: np.ndarray) -> np.ndarray:
+        if self.coef is None:
+            raise RuntimeError("记忆为空；先 store。")
+        return np.asarray(keys, dtype=np.float64) @ self.coef

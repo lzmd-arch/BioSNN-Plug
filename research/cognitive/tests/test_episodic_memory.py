@@ -57,3 +57,35 @@ def test_runner_smoke_writes_summary(tmp_path):
     assert summary["gate"]["v0_ready"] is False
     assert len(summary["per_seed"]) == 2
     assert (tmp_path / "summary.json").exists()
+
+
+def test_v1_memory_separates_time_and_recalls_one_event():
+    from research.cognitive.episodic_memory import EpisodicMemoryV1
+
+    memory = EpisodicMemoryV1(sparsity=2)
+    keys = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
+    values = np.array([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]])
+    times = np.array([0.2, 0.8])
+    memory.store(keys, values, times)
+
+    recalled_values, recalled_times = memory.recall(keys, attractor_steps=0)
+    assert np.array_equal(recalled_values[0], values[0])
+    assert np.allclose(recalled_times, times)
+
+
+def test_pseudo_inverse_recalls_stored_values():
+    from research.cognitive.episodic_memory import PseudoInverseMemory
+
+    memory = PseudoInverseMemory()
+    keys = np.array([[1.0, 0.0], [0.0, 1.0]])
+    values = np.array([[1.0, 0.0], [0.0, 1.0]])
+    memory.store(keys, values)
+    assert np.allclose(memory.recall(keys), values)
+
+
+def test_v1_runner_smoke(tmp_path):
+    from research.cognitive.run_episodic_memory_v1 import run as run_v1
+
+    summary = run_v1([0], episodes=10, out=tmp_path, capacities=(20,))
+    assert summary["gate"]["v1_ready"] is False
+    assert len(summary["per_seed"]) == 4
