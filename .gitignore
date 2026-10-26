@@ -96,3 +96,7 @@ paper/*.log
 paper/*.out
 paper/*.blg
 paper/*.bbl
+
+# ---- 本地编辑器 / 工具链（不进库）----
+.vscode/
+ToolsRuby/

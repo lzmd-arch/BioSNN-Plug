@@ -53,7 +53,7 @@ SELF_BLOB_PREFIX = "https://github.com/lzmd-arch/BioSNN-Plug/blob/main/"
 #: ``.github/releases/v0.1.0.md`` 也在内。补偿范围若小于豁免范围，差额就是净损失，
 #: 「把检查从网络域挪到本地域」这句话就成了空话。
 #: 扫全仓还顺带覆盖了其它文件的相对路径链接（纯本地解析，零成本）。
-SKIP_DIRS = {".git", ".venv", "node_modules", "data"}
+SKIP_DIRS = {".git", ".venv", "node_modules", "data", ".vscode", "ToolsRuby"}
 
 #: 图片也算链接（``![alt](src)``），所以前缀的 ``!`` 可选。
 LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)\s]+)")
