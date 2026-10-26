@@ -9,7 +9,13 @@ import torch
 
 from research.continual import run_continual, task_inference
 from research.continual.data import CifarSplit
-from research.continual.task_inference import _route, _task_stats, run_with_task_inference
+from research.continual.task_inference import (
+    _route,
+    _route_full,
+    _task_stats,
+    _task_stats_full,
+    run_with_task_inference,
+)
 
 
 def _features(labels: np.ndarray, dims: int = 100) -> np.ndarray:
@@ -33,6 +39,22 @@ class TestPrototypeAndRouting:
         prototypes = [np.array([0.0, 0.0]), np.array([10.0, 0.0])]
 
         assert _route(features, prototypes).tolist() == [0, 1]
+
+    def test_full_covariance_uses_the_correlation_structure(self):
+        features = np.array([[5.0, 0.0]])
+        prototypes = [np.array([0.0, 0.0]), np.array([10.0, 0.0])]
+        inverse_covariances = [np.eye(2), np.diag([0.01, 1.0])]
+
+        assert _route_full(features, prototypes, inverse_covariances).tolist() == [1]
+
+    def test_full_stats_return_an_inverse(self):
+        features = np.array([[0.0, 0.0], [2.0, 0.0], [10.0, 0.0], [12.0, 0.0]])
+        labels = np.array([0, 0, 1, 1])
+        mean, inverse = _task_stats_full(features, labels, np.array([0, 1]))
+
+        assert np.allclose(mean, [6.0, 0.0])
+        assert inverse.shape == (2, 2)
+        assert np.allclose(inverse, inverse.T)
 
     def test_mahalanobis_uses_the_within_task_variance(self):
         features = np.array([[5.0, 0.0]])
@@ -79,6 +101,13 @@ class TestRunnerWiring:
         assert all(accuracy >= 0.5 for accuracy in result["head_train_accuracy"])
         assert all(norm > 0 for norm in result["head_weight_norm"])
         assert np.array(result["accuracy_matrix"]).shape == (10, 10)
+
+    def test_classifier_routing_learns_the_task_boundary(self, monkeypatch):
+        result = self._run(monkeypatch, "classifier")
+
+        assert result["valid"] is True
+        assert result["routing_accuracy"] > 0.9
+        assert all(accuracy >= 0.5 for accuracy in result["classifier_train_accuracy"])
 
     def test_oracle_uses_the_true_task_head(self, monkeypatch):
         result = self._run(monkeypatch, "oracle")

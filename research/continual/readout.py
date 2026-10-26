@@ -39,7 +39,13 @@ class DeltaReadout:
     """
 
     def __init__(
-        self, n_in: int, n_classes: int, *, learning_rate: float = 0.01, seed: int = 0
+        self,
+        n_in: int,
+        n_classes: int,
+        *,
+        learning_rate: float = 0.01,
+        seed: int = 0,
+        learn_bias: bool = True,
     ) -> None:
         if n_in <= 0 or n_classes <= 0:
             raise ValueError(f"n_in 与 n_classes 必须为正，收到 {n_in}、{n_classes}。")
@@ -49,6 +55,7 @@ class DeltaReadout:
         self.n_classes = int(n_classes)
         self.learning_rate = float(learning_rate)
         self.seed = int(seed)
+        self.learn_bias = bool(learn_bias)
         self.weights = np.zeros((n_classes, n_in), dtype=np.float64)
         self.bias = np.zeros(n_classes, dtype=np.float64)
         # 特征级掩码（预注册 v7）：``(n_classes, n_in)`` 的 0/1 矩阵，按类共享任务掩码。
@@ -116,7 +123,8 @@ class DeltaReadout:
                 if self.masks is not None:
                     update = update * self.masks
                 self.weights += update
-                self.bias += scale * error.sum(axis=0)
+                if self.learn_bias:
+                    self.bias += scale * error.sum(axis=0)
             else:
                 active = np.asarray(active_classes, dtype=int)
                 if active.ndim != 1 or active.size == 0:
@@ -134,12 +142,14 @@ class DeltaReadout:
                 if inactive_scale == 0.0:
                     # 与 v4 的完全冻结**逐位一致**：只加激活行，不碰其余行。
                     self.weights[index] += weight_update[index]
-                    self.bias[index] += bias_update[index]
+                    if self.learn_bias:
+                        self.bias[index] += bias_update[index]
                 else:
                     mask = np.full(self.n_classes, inactive_scale, dtype=np.float64)
                     mask[index] = 1.0
                     self.weights += weight_update * mask[:, None]
-                    self.bias += bias_update * mask
+                    if self.learn_bias:
+                        self.bias += bias_update * mask
         if not (np.all(np.isfinite(self.weights)) and np.all(np.isfinite(self.bias))):
             raise RuntimeError(
                 "delta 读出发散（权重出现 inf/NaN）。检查步长与特征尺度："

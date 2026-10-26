@@ -64,6 +64,40 @@ def _train_head(
             head.step(features[index], labels[index])
 
 
+def _task_stats_full(
+    features: np.ndarray,
+    labels: np.ndarray,
+    classes: np.ndarray,
+    *,
+    shrinkage: float = 0.1,
+    eps: float = 1e-6,
+) -> tuple[np.ndarray, np.ndarray]:
+    """均值 + 收缩全协方差的逆；只用本任务训练特征。"""
+    if not 0.0 <= shrinkage < 1.0:
+        raise ValueError(f"shrinkage 应在 [0, 1)，收到 {shrinkage}。")
+    means = [features[labels == label].mean(axis=0) for label in classes]
+    centered = [features[labels == label] - means[index] for index, label in enumerate(classes)]
+    count = sum(row.shape[0] for row in centered)
+    scatter = sum(row.T @ row for row in centered) / max(count - len(classes), 1)
+    diagonal = np.diag(np.diag(scatter))
+    covariance = (1.0 - shrinkage) * scatter + shrinkage * diagonal
+    covariance = covariance + eps * np.eye(covariance.shape[0])
+    return np.mean(means, axis=0), np.linalg.inv(covariance)
+
+
+def _route_full(
+    features: np.ndarray,
+    means: list[np.ndarray],
+    inverse_covariances: list[np.ndarray],
+) -> np.ndarray:
+    """全协方差 Mahalanobis；逐任务算，避免 n×tasks×dim² 的临时张量。"""
+    distances = np.empty((features.shape[0], len(means)))
+    for index, (mean, inverse) in enumerate(zip(means, inverse_covariances, strict=True)):
+        diff = features - mean
+        distances[:, index] = np.einsum("ni,ni->n", diff @ inverse, diff)
+    return np.argmin(distances, axis=1)
+
+
 def _route(
     features: np.ndarray,
     prototypes: list[np.ndarray],
@@ -108,9 +142,12 @@ def run_with_task_inference(
     readout_batch: int = 128,
     routing: str = "routed",
 ) -> dict:
-    """跑一个种子的 task-inference 臂；``routing`` 为 ``routed`` 或 ``oracle``。"""
-    if routing not in ("routed", "mahalanobis", "oracle"):
-        raise ValueError(f"routing 只能是 'routed' / 'mahalanobis' / 'oracle'，收到 {routing!r}。")
+    """跑一个种子的 task-inference 臂；``routing`` 见函数内的白名单。"""
+    if routing not in ("routed", "mahalanobis", "mahalanobis-full", "classifier", "oracle"):
+        raise ValueError(
+            "routing 只能是 routed / mahalanobis / mahalanobis-full / classifier / oracle，"
+            f"收到 {routing!r}。"
+        )
     np.random.seed(seed)
     train, test = load_cifar100(data_root)
     cache_dir = Path(data_root) / "_features"
@@ -127,9 +164,22 @@ def run_with_task_inference(
     heads: list[DeltaReadout] = []
     prototypes: list[np.ndarray] = []
     variances: list[np.ndarray] = []
+    inverse_covariances: list[np.ndarray] = []
     head_train_accuracy: list[float] = []
     head_weight_norm: list[float] = []
+    classifier = None
+    classifier_train_accuracy: list[float] = []
     rng = np.random.default_rng(seed)
+    if routing == "classifier":
+        classifier = DeltaReadout(
+            int(train_features.shape[1]),
+            n_tasks,
+            learning_rate=learning_rate,
+            seed=seed + 2000,
+            # 无偏置：增量训练时旧任务行的偏置会在新任务数据上变成常数优势，
+            # 让 argmax 永远偏向最后学到的任务；所有权重都是输入驱动的。
+            learn_bias=False,
+        )
 
     for t, classes in enumerate(tasks):
         mask = np.isin(train.y, classes)
@@ -161,6 +211,21 @@ def run_with_task_inference(
             float(np.mean(np.argmax(head.predict(features), axis=1) == local))
         )
         head_weight_norm.append(float(np.linalg.norm(head.weights)))
+        if routing == "mahalanobis-full":
+            _, inverse = _task_stats_full(features, labels, classes)
+            inverse_covariances.append(inverse)
+        if classifier is not None:
+            task_labels = np.full(features.shape[0], t, dtype=int)
+            _train_head(
+                classifier,
+                features,
+                task_labels,
+                epochs=readout_epochs,
+                batch=readout_batch,
+                rng=rng,
+            )
+            seen_logits = classifier.predict(features)[:, : t + 1]
+            classifier_train_accuracy.append(float(np.mean(np.argmax(seen_logits, axis=1) == t)))
 
         for i, task in enumerate(tasks[: t + 1]):
             pick = np.isin(test.y, task)
@@ -170,6 +235,11 @@ def run_with_task_inference(
                 inferred = np.full(x.shape[0], i, dtype=int)
             elif routing == "mahalanobis":
                 inferred = _route(x, prototypes[: t + 1], variances[: t + 1])
+            elif routing == "mahalanobis-full":
+                inferred = _route_full(x, prototypes[: t + 1], inverse_covariances[: t + 1])
+            elif routing == "classifier":
+                seen_logits = classifier.predict(x)[:, : t + 1]
+                inferred = np.argmax(seen_logits, axis=1)
             else:
                 inferred = _route(x, prototypes[: t + 1])
             predicted = np.empty(x.shape[0], dtype=int)
@@ -190,6 +260,10 @@ def run_with_task_inference(
             inferred = np.full(x.shape[0], i, dtype=int)
         elif routing == "mahalanobis":
             inferred = _route(x, prototypes, variances)
+        elif routing == "mahalanobis-full":
+            inferred = _route_full(x, prototypes, inverse_covariances)
+        elif routing == "classifier":
+            inferred = np.argmax(classifier.predict(x), axis=1)
         else:
             inferred = _route(x, prototypes)
         for k in range(n_tasks):
@@ -200,6 +274,11 @@ def run_with_task_inference(
         norm <= 0.0 or accuracy < GATE_MIN_TRAIN_ACCURACY
         for norm, accuracy in zip(head_weight_norm, head_train_accuracy, strict=True)
     )
+    if classifier is not None:
+        if float(np.linalg.norm(classifier.weights)) <= 0.0:
+            gate_failed = True
+        if any(accuracy < GATE_MIN_TRAIN_ACCURACY for accuracy in classifier_train_accuracy):
+            gate_failed = True
     return {
         "seed": seed,
         "mode": "task-inference",
@@ -215,6 +294,7 @@ def run_with_task_inference(
         "confusion_matrix": confusion.tolist(),
         "head_train_accuracy": head_train_accuracy,
         "head_weight_norm": head_weight_norm,
+        "classifier_train_accuracy": classifier_train_accuracy,
         "gate_failed": gate_failed,
         "valid": not gate_failed,
     }
