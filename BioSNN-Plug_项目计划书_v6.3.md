@@ -504,6 +504,13 @@
 >    甚至低于 TD。下一嫌疑从 Critic 转向**信用时域／策略参数化**，需新预注册。见
 >    [`sweep_results/rstdp_spiking_actor_diagnosis/a2_oracle_ema/README.md`](sweep_results/rstdp_spiking_actor_diagnosis/a2_oracle_ema/README.md)。
 
+> 53. **2026-10-26：D1（rate-features）——不是资格形状的问题**。把 Spiking Actor 的
+>    资格换回速率版形状的 `E ← λE + x·1[a]`（连续特征），默认群体 Critic、10 种子、CPU：
+>    中位数 **62.15**，低于 sign-consistent 的 **75.65**（配对中位 −18.60，3/10 变好），
+>    相对 pair-stdp 55.05 也只有 −4.6。资格与策略不同向（动作仍由脉冲计数决定，而
+>    `x·a` 是线性 logits 的梯度形状）。下一嫌疑转向**脉冲编码／策略参数化**，需新预注册。
+>    见 [`sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md`](sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

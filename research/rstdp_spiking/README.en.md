@@ -324,6 +324,12 @@ Conclusion: **sign consistency fixed the trace, but it is not the (only) bottlen
 suspect is the critic / credit horizon. Full table and provenance:
 [`sweep_results/rstdp_spiking_actor_fix/README.md`](../../sweep_results/rstdp_spiking_actor_fix/README.md).
 
+A2 (oracle EMA) also failed; D1 (`rate-features`, replacing the eligibility with the rate-style
+`x·a`) gives a 10-seed median of **62.15**, below sign-consistent's 75.65 (3/10 better), so
+**eligibility shape is not the blocker**; the next suspect is **spike encoding / policy
+parameterisation** (the action is still chosen by spike counts). See
+[`sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md`](../../sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md).
+
 ## Known boundaries
 
 1. **The default critic is a linear TD(0) one.** The TD-LTP population critic is implemented

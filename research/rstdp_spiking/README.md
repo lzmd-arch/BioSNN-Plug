@@ -282,6 +282,11 @@ A1 量到的问题（被选动作的资格列和在 20 个窗口里只有 7 个�
 结论：**符号一致性修好了痕迹，但不是（唯一的）瓶颈**；下一嫌疑是 Critic／信用时域。
 完整表格与自证见 [`sweep_results/rstdp_spiking_actor_fix/README.md`](../../sweep_results/rstdp_spiking_actor_fix/README.md)。
 
+A2（oracle EMA）补跑也没过；D1（`rate-features`，把资格换回速率版 `x·a`）10 种子中位数
+**62.15**，低于 sign-consistent 的 75.65（3/10 变好）——**不是资格形状的问题**，下一嫌疑
+转向**脉冲编码／策略参数化**（动作仍由脉冲计数决定）。见
+[`sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md`](../../sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md)。
+
 ## 已知边界
 
 1. **默认 Critic 是线性 TD(0)。** TD-LTP 群体 Critic 已实现（`pop_critic.py`，`--critic pop`），

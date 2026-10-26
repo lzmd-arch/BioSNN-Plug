@@ -113,6 +113,13 @@ Plan B 的两条候选在 ③②① 之后剩下"Actor 的信用分配"与"固�
   而不是 Critic 的精度。见
   [`sweep_results/rstdp_spiking_actor_diagnosis/a2_oracle_ema/README.md`](../../sweep_results/rstdp_spiking_actor_diagnosis/a2_oracle_ema/README.md)。
 
+- **D1（rate-features）**：把资格换回速率版形状的 `E ← λE + x·1[a]`（连续特征），
+  默认群体 Critic、10 种子：中位数 **62.15**，低于 sign-consistent 的 75.65
+  （配对中位 −18.60，3/10 变好），相对 pair-stdp 55.05 只有 −4.6。**不是资格形状的
+  问题**；动作仍由脉冲计数决定，而 `x·a` 是线性 logits 的梯度形状——下一嫌疑是
+  **脉冲编码／策略参数化**。见
+  [`sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md`](../../sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md)。
+
 下一项需要新预注册；不回头调 lr / 宽度 / 回合数。
 
 ## 与阶段四的关系

@@ -304,6 +304,12 @@ A1′ では **18/18**（無発火の 2 窓を除外）、負 20/20、ゲーテ�
 Critic／信用の時間軸です。表と自証：
 [`sweep_results/rstdp_spiking_actor_fix/README.md`](../../sweep_results/rstdp_spiking_actor_fix/README.md)。
 
+A2（oracle EMA）の追試も未達。D1（`rate-features`、資格を速率版の `x·a` に戻す）は
+10 シード中央値 **62.15** で sign-consistent の 75.65 を下回り（3/10 で改善）、
+**資格の形はボトルネックではない**ことが分かりました。次の疑いは**スパイク符号化／
+方策のパラメータ化**（行動は依然としてスパイク数で決まる）です。詳細：
+[`sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md`](../../sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md)。
+
 ## 既知の境界
 
 1. **既定の Critic は線形 TD(0)。** TD-LTP 集団 Critic は実装済み（`pop_critic.py`、`--critic pop`）
