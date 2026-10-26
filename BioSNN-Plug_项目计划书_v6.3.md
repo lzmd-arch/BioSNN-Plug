@@ -783,6 +783,14 @@
 >    两个 ready 组件：工作记忆 v4（局部 RLS）与元认知 v3（测量置信度）。见
 >    [`sweep_results/metacognitive_gate_v3/README.md`](sweep_results/metacognitive_gate_v3/README.md)。
 
+> 84. **2026-10-27：P3 v2（想象状态训练终止头）——一步想象不够，闭环 AUROC 0.632**。
+>    终止头输入换成模型一步预测状态、标签仍取真实转移：H=500、5 种子，闭环 H=10 NMSE 仍
+>    ~2e-8、首发散步 115.5，但终止 AUROC **0.632**（低于真实状态头 0.665），`p3_ready=false`。
+>    原因：闭环状态约 115 步后发散，训练只覆盖一步想象中的分布；多步想象没有可信标签。
+>    P3 的状态/闭环稳定性部分仍然过；终止闭环卡在分布偏移。下一步要么更强状态模型把发散步
+>    推远，要么接受"闭环终止不可评"。见
+>    [`sweep_results/world_model_closed_loop_imagined/README.md`](sweep_results/world_model_closed_loop_imagined/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
