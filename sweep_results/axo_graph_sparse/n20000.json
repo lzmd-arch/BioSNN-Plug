@@ -1,0 +1,13 @@
+{
+  "n": 20000,
+  "width": 4096,
+  "full_s": 46.0252979999932,
+  "extract_s": 9.810334899986628,
+  "sparse_s": 45.30625470000086,
+  "sparse_total_s": 55.11658959998749,
+  "speedup": 0.8350534445985324,
+  "edges": 160000,
+  "nbr_idx_equal": false,
+  "nbr_idx_mismatch": 158364,
+  "weight_max_diff": 0.0
+}

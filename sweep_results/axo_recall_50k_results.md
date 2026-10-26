@@ -236,6 +236,13 @@ hit@1 0.8961 / hit@8 0.9481 / MRR 0.9095 / AUC 0.9289。
 `tools/bench_consolidation.py --scale 2000/5000/20000` 的 205 s（20k）里包含
 全局 W 与 weight/idf 两趟，不能直接当生产成本读。
 
+## 建图加速原型：否（2026-10-26）
+
+稀疏 posting 的精确 Jaccard 在 n=20,000 上是 **55.1 s**（含 9.8 s 关联码提取），
+而现有稠密分块 BLAS 是 **46.0 s**；n=2,000 也打平（1.21 s vs 1.17 s）。边权最大
+差 0.0，差异只在同分并列的邻居选择。**不换生产。** 详见
+`axo_graph_sparse_results.md`。
+
 ## 当前 Axo 相关提交
 
 - `357e757`：MMR 候选 Jaccard 矩阵。
