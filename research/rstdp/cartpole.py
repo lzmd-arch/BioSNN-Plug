@@ -581,6 +581,9 @@ class AgentContext:
     #: 训练**开始前**的 Critic 权重快照。用来量「训练到底把 Critic 转动了多少」——
     #: 单看解释方差说不清「学不准」是因为规则在乱动还是因为压根没动。
     initial_critic_weights: torch.Tensor
+    #: 训练开始前的 Actor 学习率；warm start 时用它把学习率重置回基准值，
+    #: 否则会从上一阶段衰减后的 0.01× 继续衰减。
+    actor_learning_rate: float | None = None
 
 
 def _greedy_score(
@@ -676,6 +679,16 @@ def build_agent_inputs(
     return centers, sampled[choice].to(device)
 
 
+def make_cartpole(gravity: float | None = None):
+    """建 CartPole；``gravity`` 通过实例属性设置（gymnasium 不接受 make kwarg）。"""
+    import gymnasium
+
+    env = gymnasium.make("CartPole-v1")
+    if gravity is not None:
+        env.unwrapped.gravity = float(gravity)
+    return env
+
+
 def run_trial(
     seed: int,
     *,
@@ -717,6 +730,8 @@ def run_trial(
     verbose: bool = False,
     return_agent: bool = False,
     return_context: bool = False,
+    gravity: float | None = None,
+    initial_context: AgentContext | None = None,
 ):
     """训练一个种子并做贪心评测。
 
@@ -735,8 +750,6 @@ def run_trial(
         :class:`TrialResult`；``return_agent=True`` 时返回 ``(result, agent)``；
         ``return_context=True`` 时返回 ``(result, AgentContext)``。
     """
-    import gymnasium
-
     book = SeedBook(base=seed)
     device = device if device is not None else select_device(None)
     defaults = {name: agent_default(name) for name in CLI_TO_AGENT_PARAM.values()}
@@ -772,44 +785,53 @@ def run_trial(
         if value is None:
             resolved[key] = defaults[key]
 
-    centers, init_directions = build_agent_inputs(
-        book,
-        n_features=n_features,
-        encoding_sigma=encoding_sigma,
-        critic_units=resolved["critic_units"],
-        device=device,
-    )
+    if initial_context is not None:
+        # warm start：复用上一阶段的 agent、编码中心与编码宽度；随机流（环境/探索）
+        # 仍由本阶段的种子重新开始，两臂只差初始权重。
+        agent = initial_context.agent
+        centers = initial_context.centers
+        encoding_sigma = initial_context.encoding_sigma
+        if initial_context.actor_learning_rate is not None:
+            agent.actor.learning_rate = initial_context.actor_learning_rate
+    else:
+        centers, init_directions = build_agent_inputs(
+            book,
+            n_features=n_features,
+            encoding_sigma=encoding_sigma,
+            critic_units=resolved["critic_units"],
+            device=device,
+        )
+        agent = CartPoleAgent(
+            n_features,
+            actor_learning_rate=resolved["actor_learning_rate"],
+            actor_signal_clip=resolved["actor_signal_clip"],
+            actor_polyak_tau=resolved["actor_polyak_tau"],
+            actor_action_sampling=resolved["actor_action_sampling"],
+            actor_logit_scale=resolved["actor_logit_scale"],
+            actor_trace_center=resolved["actor_trace_center"],
+            critic_learning_rate=resolved["critic_learning_rate"],
+            critic_value_scale=resolved["critic_value_scale"],
+            trace_decay=resolved["trace_decay"],
+            discount=resolved["discount"],
+            success_signal=resolved["success_signal"],
+            normalize_weights=resolved["normalize_weights"],
+            critic_kind=resolved["critic_kind"],
+            critic_units=resolved["critic_units"],
+            critic_output_bias=resolved["critic_output_bias"],
+            critic_bias_learning_rate=resolved["critic_bias_learning_rate"],
+            critic_trace_post_factor=resolved["critic_trace_post_factor"],
+            critic_readout=resolved["critic_readout"],
+            critic_gain=resolved["critic_gain"],
+            critic_threshold=resolved["critic_threshold"],
+            critic_init_directions=init_directions,
+            device=device,
+            generator=torch.Generator().manual_seed(book.derive("Actor 与 Critic 初始权重")),
+        )
 
-    agent = CartPoleAgent(
-        n_features,
-        actor_learning_rate=resolved["actor_learning_rate"],
-        actor_signal_clip=resolved["actor_signal_clip"],
-        actor_polyak_tau=resolved["actor_polyak_tau"],
-        actor_action_sampling=resolved["actor_action_sampling"],
-        actor_logit_scale=resolved["actor_logit_scale"],
-        actor_trace_center=resolved["actor_trace_center"],
-        critic_learning_rate=resolved["critic_learning_rate"],
-        critic_value_scale=resolved["critic_value_scale"],
-        trace_decay=resolved["trace_decay"],
-        discount=resolved["discount"],
-        success_signal=resolved["success_signal"],
-        normalize_weights=resolved["normalize_weights"],
-        critic_kind=resolved["critic_kind"],
-        critic_units=resolved["critic_units"],
-        critic_output_bias=resolved["critic_output_bias"],
-        critic_bias_learning_rate=resolved["critic_bias_learning_rate"],
-        critic_trace_post_factor=resolved["critic_trace_post_factor"],
-        critic_readout=resolved["critic_readout"],
-        critic_gain=resolved["critic_gain"],
-        critic_threshold=resolved["critic_threshold"],
-        critic_init_directions=init_directions,
-        device=device,
-        generator=torch.Generator().manual_seed(book.derive("Actor 与 Critic 初始权重")),
-    )
-
+    actor_learning_rate_base = agent.actor.learning_rate
     initial_critic_weights = agent.critic.weights.detach().clone()
 
-    env = gymnasium.make("CartPole-v1")
+    env = make_cartpole(gravity)
     # **必须给环境播种。** gymnasium 的 CartPole 有自己的 RNG，不播种的话每次运行的
     # 初始状态与状态转移都不同——上面那一串种子就覆盖不到实验的一半。实测发现过：
     # 同一个 seed 两次跑出 20.4 步与 9.3 步。
@@ -825,7 +847,7 @@ def run_trial(
     # ``select_action`` 里那个 ``torch.rand`` 被短路掉了。污染全在环境这一侧。）
     eval_env = None
     if greedy_eval_every:
-        eval_env = gymnasium.make("CartPole-v1")
+        eval_env = make_cartpole(gravity)
         eval_env.reset(seed=book.derive("评测环境种子"))
 
     started = time.perf_counter()
@@ -923,6 +945,7 @@ def run_trial(
             book=book,
             encoding_sigma=encoding_sigma,
             initial_critic_weights=initial_critic_weights,
+            actor_learning_rate=actor_learning_rate_base,
         )
     if return_agent:
         return result, agent
