@@ -17,6 +17,7 @@ __all__ = [
     "PseudoInverseMemory",
     "RawNearestNeighbor",
     "SparseEncoder",
+    "StateIndexedMemory",
     "build_action_term",
     "build_values",
 ]
@@ -184,6 +185,50 @@ class EpisodicMemoryV1:
             # 局部吸引子：q ← top-k(sign(Kᵀ(K q)))，只有矩阵-向量与 top-k。
             query = _sparsify(np.sign((query @ self.keys.T) @ self.keys), self.sparsity)
         return query @ self.value_matrix, query @ self.time_vector
+
+
+class StateIndexedMemory:
+    """非局部的状态索引读出：k 近邻 / softmax attention；时间戳取最近邻。"""
+
+    def __init__(self, *, neighbors: int = 5, beta: float = 10.0) -> None:
+        if neighbors < 1:
+            raise ValueError("neighbors 必须 ≥1。")
+        if beta <= 0:
+            raise ValueError("beta 必须为正。")
+        self.neighbors = int(neighbors)
+        self.beta = float(beta)
+        self.states: np.ndarray | None = None
+        self.action_term: np.ndarray | None = None
+        self.times: np.ndarray | None = None
+
+    def store(self, states: np.ndarray, action_term: np.ndarray, times: np.ndarray) -> None:
+        values = np.asarray(states, dtype=np.float64)
+        self.mean = values.mean(axis=0)
+        self.scale = np.maximum(values.std(axis=0), 1e-8)
+        self.states = (values - self.mean) / self.scale
+        self.action_term = np.asarray(action_term, dtype=np.float64)
+        self.times = np.asarray(times, dtype=np.float64)
+
+    def recall(self, states: np.ndarray, *, attention: bool) -> tuple[np.ndarray, np.ndarray]:
+        if self.states is None or self.action_term is None or self.times is None:
+            raise RuntimeError("记忆为空；先 store。")
+        query = (np.asarray(states, dtype=np.float64) - self.mean) / self.scale
+        distances = (
+            (query**2).sum(axis=1)[:, None]
+            + (self.states**2).sum(axis=1)[None, :]
+            - 2.0 * query @ self.states.T
+        )
+        k = min(self.neighbors, self.states.shape[0])
+        index = np.argpartition(distances, k - 1, axis=1)[:, :k]
+        if attention:
+            selected = np.take_along_axis(distances, index, axis=1)
+            weights = np.exp(-(selected - selected.min(axis=1, keepdims=True)) / self.beta)
+            weights /= weights.sum(axis=1, keepdims=True)
+        else:
+            weights = np.full((query.shape[0], k), 1.0 / k)
+        values = np.einsum("nk,nkv->nv", weights, self.action_term[index])
+        times = self.times[index[:, 0]]
+        return values, times
 
 
 class PseudoInverseMemory:

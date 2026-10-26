@@ -110,3 +110,25 @@ def test_v2_runner_smoke(tmp_path):
     summary = run_v2([0], episodes=10, out=tmp_path, capacities=(20,))
     assert summary["gate"]["v2_ready"] is False
     assert len(summary["per_seed"]) == 4 + 2
+
+
+def test_state_indexed_memory_recalls_clean_events():
+    from research.cognitive.episodic_memory import StateIndexedMemory
+
+    states = np.array([[0.0, 0.0], [10.0, 0.0]])
+    values = np.array([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]])
+    times = np.array([0.1, 0.9])
+    for attention in (False, True):
+        memory = StateIndexedMemory(neighbors=1)
+        memory.store(states, values, times)
+        recalled, recalled_times = memory.recall(states[:1] + 0.01, attention=attention)
+        assert np.array_equal(recalled[0], values[0])
+        assert recalled_times[0] == times[0]
+
+
+def test_v3_runner_smoke(tmp_path):
+    from research.cognitive.run_episodic_memory_v3 import run as run_v3
+
+    summary = run_v3([0], episodes=10, out=tmp_path, capacities=(20,))
+    assert summary["gate"]["v3_ready"] is False
+    assert len(summary["per_seed"]) == 3
