@@ -570,6 +570,16 @@
 >    保底臂**（新预注册），测量任务边界信息是否必须以某种形式进入推理。见
 >    [`sweep_results/continual_v2/feature_mask_fisher/README.md`](sweep_results/continual_v2/feature_mask_fisher/README.md)。
 
+> 61. **2026-10-26：CL 任务推断保底臂——跑门误判，结果为探索性；oracle 0.82 / routed 0.42**。
+>    per-task 头 + 最近原型路由：routed ACC **0.421 / AF 0.171**、路由准确率 **0.489**；
+>    oracle（真实任务 id）ACC **0.820**、AF 0.0（构造性）。**但预注册跑门把 5 个种子全判
+>    作废**：每头"最后一个 epoch 的相对变化" 0.0470–0.0479 < 0.05——零初始化 + 收敛后
+>    本来就小，这是跑门操作化错误，不是没学会。**事后不改判据**，本轮只作探索性读数；
+>    oracle 0.82 说明头/特征够用，瓶颈在**路由**（原型分不开任务边界）。下一步：
+>    新预注册修正跑门（权重非零 + 任务内训练准确率 ≥0.5）+ 更强的局部任务判别器
+>    （对角 Mahalanobis 或 delta 分类器）再确认。见
+>    [`sweep_results/continual_v2/task_inference_routed/README.md`](sweep_results/continual_v2/task_inference_routed/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

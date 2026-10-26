@@ -150,6 +150,32 @@ R-NCM 与探索期的 0.658 / 0.127 一致——**旧数字不是累计矩阵造
 [`feature_mask_fisher/`](feature_mask_fisher/README.md)、
 [`feature_mask_random/`](feature_mask_random/README.md)。
 
+## 任务推断保底臂（routed / oracle）
+
+预注册：[`../continual_v2_task_inference_prereg.md`](../continual_v2_task_inference_prereg.md)。
+per-task 10 类 delta 头 + 最近任务原型路由；推理不提供任务 id；oracle 用真实任务下标作上界。
+5 种子。
+
+⚠️ **预注册跑门把 5 个种子全判作废**：每头"最后一个 epoch 的相对变化"是
+**0.0470–0.0479**，低于 0.05。这不是头没学会（oracle 同批头做到 0.82），而是跑门
+**操作化错了**——零初始化 + 收敛后，末 epoch 相对变化本来就小。**事后不改判据**，
+以下只作探索性读数。
+
+| 臂 | ACC | AF | 路由准确率 |
+| :--- | ---: | ---: | ---: |
+| **routed**（最近原型） | 0.421 | 0.171 | **0.489** |
+| **oracle**（真实任务 id） | 0.820 | 0.0（构造性） | 1.0 |
+
+- routed 的路由准确率只有 0.489（随机 0.10），远低于 0.90 的可读性门槛；任务 9 只有
+  6%、任务 4 只有 16% 被正确路由；
+- oracle 0.82 说明**头/特征能到 0.82**，瓶颈是**路由**；
+- 这只支持"任务边界信息必须以某种形式进入推理"的**方向**，不是确认性结论。
+
+下一份预注册：修正跑门（权重非零 + 任务内训练准确率 ≥0.5），加更强的**局部**任务
+判别器（per-task 对角 Mahalanobis 或 delta 任务分类器），再跑确认性一次。结果：
+[`task_inference_routed/`](task_inference_routed/README.md)、
+[`task_inference_oracle/`](task_inference_oracle/README.md)。
+
 ## 跑门
 
 每个任务 `‖ΔW‖/‖W‖`（t=0 从零初始化，分母不存在，不参与判定）：
