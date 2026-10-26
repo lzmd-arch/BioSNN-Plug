@@ -25,7 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT = REPO_ROOT / "sweep_results" / "world_model_closed_loop"
 
 POLICY_NOISE = 0.1
-HORIZON = 100
+HORIZON = 500
 NMSE_RATIO_MAX = 0.90
 TERMINATION_AUROC_MIN = 0.75
 TERMINATION_RATE_MIN = 0.01
@@ -193,10 +193,11 @@ def run(seeds: list[int], *, episodes: int, test_episodes: int, horizon: int, ou
         open_mean = float(np.mean([o for _, _, o in valid])) if valid else float("nan")
         scores = [s for loop in loops for s in loop.termination_scores]
         labels = [lab for loop in loops for lab in loop.termination_labels]
-        rate = float(np.mean(labels)) if labels else 0.0
+        step_rate = float(np.mean(labels)) if labels else 0.0
+        episode_rate = float(np.mean([any(loop.termination_labels) for loop in loops]))
         term_auroc = (
             auroc(np.asarray(scores), np.asarray(labels, dtype=int))
-            if rate >= TERMINATION_RATE_MIN and len(set(labels)) > 1
+            if episode_rate >= TERMINATION_RATE_MIN and len(set(labels)) > 1
             else None
         )
         divergences = []
@@ -210,7 +211,8 @@ def run(seeds: list[int], *, episodes: int, test_episodes: int, horizon: int, ou
                 "copy_last_nmse_h10": base_mean,
                 "open_loop_nmse_h10": open_mean,
                 "ratio_vs_copy": closed_mean / base_mean if base_mean else None,
-                "termination_rate": rate,
+                "termination_rate": episode_rate,
+                "termination_step_rate": step_rate,
                 "termination_auroc": term_auroc,
                 "divergence_step_median": statistics.median(divergences),
                 "valid_episodes": len(valid),
@@ -219,7 +221,8 @@ def run(seeds: list[int], *, episodes: int, test_episodes: int, horizon: int, ou
         )
         print(
             f"seed {seed}: closed {closed_mean:.6g} / copy {base_mean:.6g} / open {open_mean:.6g} | "
-            f"term rate {rate:.3f} AUROC {term_auroc} | diverge {rows[-1]['divergence_step_median']}",
+            f"term ep {episode_rate:.3f} / step {step_rate:.4f} AUROC {term_auroc} | "
+            f"diverge {rows[-1]['divergence_step_median']}",
             flush=True,
         )
 
