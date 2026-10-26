@@ -807,6 +807,15 @@
 >    下一步：要么写死一个真正的端到端任务/指标再逐组件接，要么先做 WM v5（ALIF 脉冲）。
 >    见 [`sweep_results/stage4_integration_demo/README.md`](sweep_results/stage4_integration_demo/README.md)。
 
+> 87. **2026-10-27：工作记忆 v5（LIF/ALIF 脉冲）——表示层丢信息，不 ready**。
+>    每个 τ 一组 ALIF 单元（身份输入/无循环），60 步脉冲计数 + 局部 RLS：LIF 多尺度 R²
+>    **0.212 / 0.222**、ALIF **0.187 / 0.186**；ridge 在**同一份计数**上几乎相同（0.212/0.222
+>    与 0.187/0.186），说明瓶颈在**表示**不在读出——阈值/复位/不应期把连续 cue 压成个位数
+>    计数，8 个独立值在 28 个低计数里分不开。`v5_ready=false`；v4 的速率漏积分器仍是可用
+>    的局部表示。v6 若继续应改膜电位/更长窗口/rate 输入，需新预注册。运行 2598.7 s，下次
+>    脉冲扫描要减种子/窗口或并行。见
+>    [`sweep_results/working_memory_v5/README.md`](sweep_results/working_memory_v5/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
