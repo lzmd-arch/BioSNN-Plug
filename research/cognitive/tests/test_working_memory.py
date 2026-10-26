@@ -33,3 +33,22 @@ def test_runner_smoke(tmp_path):
     summary = run([0], train_episodes=50, test_episodes=20, out=tmp_path)
     assert "w0_ready" in summary["gate"]
     assert (tmp_path / "summary.json").exists()
+
+
+def test_delta_readout_learns_a_linear_map():
+    from research.cognitive.working_memory import LinearDeltaReadout
+
+    rng = np.random.default_rng(0)
+    states = rng.normal(size=(200, 8))
+    targets = states @ rng.normal(size=(8, 3))
+    readout = LinearDeltaReadout(8, 3, learning_rate=0.05)
+    readout.fit(states, targets, epochs=100, batch=32, rng=rng)
+    assert average_r2(readout.predict(states), targets) > 0.99
+
+
+def test_v2_runner_smoke(tmp_path):
+    from research.cognitive.run_working_memory_v2 import run as run_v2
+
+    summary = run_v2([0], train_episodes=50, test_episodes=20, out=tmp_path)
+    assert "w2_ready" in summary["gate"]
+    assert (tmp_path / "summary.json").exists()

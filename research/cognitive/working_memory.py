@@ -14,6 +14,7 @@ __all__ = [
     "N_DIMS",
     "TAUS",
     "TEST_STEP",
+    "LinearDeltaReadout",
     "average_r2",
     "encode_episode",
     "encode_timeline",
@@ -81,6 +82,50 @@ def encode_timeline(
                 inputs = inputs + vector
         state = alphas[:, None] * state + (1.0 - alphas)[:, None] * inputs[None, :]
     return state.reshape(-1)
+
+
+class LinearDeltaReadout:
+    """局部 delta 读出：只用读出误差与突触前状态更新，无闭式求解。"""
+
+    def __init__(
+        self, n_in: int, n_out: int, *, learning_rate: float = 0.01, seed: int = 0
+    ) -> None:
+        if n_in <= 0 or n_out <= 0:
+            raise ValueError("n_in / n_out 必须为正。")
+        if learning_rate <= 0:
+            raise ValueError("learning_rate 必须为正。")
+        self.learning_rate = float(learning_rate)
+        self.seed = int(seed)
+        self.weights = np.zeros((n_out, n_in), dtype=np.float64)
+        self.bias = np.zeros(n_out, dtype=np.float64)
+
+    def fit(
+        self,
+        states: np.ndarray,
+        targets: np.ndarray,
+        *,
+        epochs: int,
+        batch: int,
+        rng: np.random.Generator,
+    ) -> None:
+        values = np.asarray(states, dtype=np.float64)
+        truth = np.asarray(targets, dtype=np.float64)
+        if values.shape[0] != truth.shape[0]:
+            raise ValueError("states 与 targets 行数不一致。")
+        for _ in range(epochs):
+            order = rng.permutation(values.shape[0])
+            for start in range(0, values.shape[0], batch):
+                index = order[start : start + batch]
+                x = values[index]
+                error = truth[index] - (x @ self.weights.T + self.bias)
+                scale = self.learning_rate / x.shape[0]
+                self.weights += scale * (error.T @ x)
+                self.bias += scale * error.sum(axis=0)
+        if not (np.all(np.isfinite(self.weights)) and np.all(np.isfinite(self.bias))):
+            raise RuntimeError("delta 读出 diverged（inf/NaN）。")
+
+    def predict(self, states: np.ndarray) -> np.ndarray:
+        return np.asarray(states, dtype=np.float64) @ self.weights.T + self.bias
 
 
 def fit_ridge(states: np.ndarray, targets: np.ndarray, *, l2: float = 1e-3) -> np.ndarray:
