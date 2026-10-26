@@ -767,6 +767,14 @@
 >    RLS/正则），不是放宽退化线。**"局部学习的工作记忆"仍未证明**。见
 >    [`sweep_results/working_memory_v3/README.md`](sweep_results/working_memory_v3/README.md)。
 
+> 82. **2026-10-27：工作记忆 v4——局部 RLS 先验对齐后 ready，且反超 ridge**。
+>    RLS（λ=1、δ=**1000**=1/ridge λ，逐样本 20 epoch）三线索 R² **0.9994 / 0.9982 / 0.9994**，
+>    均值 **0.9990** > ridge 0.9931；fast A −0.005、mid/slow 各漏线索，四条判据全过，
+>    `w4_ready=true`。v3 的失败是**先验不匹配**（δ=1 等价 λ=1，正则强 1000 倍把系数压小），
+>    不是局部规则不行。这是**阶段四第一个“局部读出 + 机制正面”的 ready 组件**；v1 的 ridge
+>    测量头已被取代。v5 若要脉冲 ALIF 是后续，不是本轮。见
+>    [`sweep_results/working_memory_v4/README.md`](sweep_results/working_memory_v4/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
