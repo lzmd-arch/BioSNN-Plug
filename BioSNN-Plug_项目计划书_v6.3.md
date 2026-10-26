@@ -552,6 +552,16 @@
 >    **输出行轴走到头**，不调第三档；下一机制转向**特征级隔离或任务推断**。见
 >    [`sweep_results/continual_v2/partial_isolation_alpha010/README.md`](sweep_results/continual_v2/partial_isolation_alpha010/README.md)。
 
+> 59. **2026-10-26：CL 特征级掩码隔离预注册**。输出行轴已封（α 0→0.1 是相变），下一根轴
+>    是特征级隔离。**先更正规格里与 Route R 不符的一处**：Route R 没有"输入→隐藏投影"，
+>    掩码落在冻结的 512 维输入特征上——每个任务用本任务训练特征算逐维 Fisher 分数，
+>    取 top-k（k=256）为二值掩码并冻结；每个类只看到自己的任务掩码，推理时所有已见类
+>    并用、不提供任务 id。主臂 F1（Fisher）对控制臂 F1-control（随机 k=256 掩码），
+>    判据：阶段门；vs P1 的机制信号（ACC +5 pp、AF −10 pp）；**学到的掩码必须优于随机
+>    掩码**（AF −5 pp）；对角线 ≥0.758；两两 Jaccard 必须报出。若特征轴不过，才启动
+>    任务推断保底臂（新预注册）。见
+>    [`sweep_results/continual_v2_feature_isolation_prereg.md`](sweep_results/continual_v2_feature_isolation_prereg.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
