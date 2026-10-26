@@ -1,0 +1,92 @@
+{
+  "experiment": "阶段四端到端：延迟线索问答 + OOD 弃权",
+  "config": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "coverage": 0.8,
+    "members": 5,
+    "epochs": 20,
+    "ood_scale": 3.0
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "r2_a": 0.9996764940874816,
+      "r2_b": 0.999274185945283,
+      "r2_q": 0.9993556570987985,
+      "r2_mean": 0.999435445710521,
+      "selective_mse": 0.0005370244165288084,
+      "ood_auroc": 0.93816,
+      "ood_abstain": 0.898,
+      "ood_answer_mse": 0.0006158914167648184,
+      "episodic_mse": 0.8457714877162371
+    },
+    {
+      "seed": 1,
+      "r2_a": 0.9996652746420026,
+      "r2_b": 0.9992387193740737,
+      "r2_q": 0.999383745505817,
+      "r2_mean": 0.9994292465072978,
+      "selective_mse": 0.00051153779769606,
+      "ood_auroc": 0.92446,
+      "ood_abstain": 0.874,
+      "ood_answer_mse": 0.00066268907727927,
+      "episodic_mse": 0.7621499997798965
+    },
+    {
+      "seed": 2,
+      "r2_a": 0.9996539178455872,
+      "r2_b": 0.9992117947190422,
+      "r2_q": 0.999311675253518,
+      "r2_mean": 0.9993924626060492,
+      "selective_mse": 0.0005510373614089771,
+      "ood_auroc": 0.930732,
+      "ood_abstain": 0.888,
+      "ood_answer_mse": 0.000648789795502338,
+      "episodic_mse": 0.8253484170256209
+    },
+    {
+      "seed": 3,
+      "r2_a": 0.9996554963960823,
+      "r2_b": 0.9992107953551713,
+      "r2_q": 0.9993407627028119,
+      "r2_mean": 0.9994023514846885,
+      "selective_mse": 0.0005139668855172881,
+      "ood_auroc": 0.919052,
+      "ood_abstain": 0.896,
+      "ood_answer_mse": 0.0006529755773029804,
+      "episodic_mse": 0.8307727590313623
+    },
+    {
+      "seed": 4,
+      "r2_a": 0.9996363523536747,
+      "r2_b": 0.9991689743967472,
+      "r2_q": 0.9992514930954924,
+      "r2_mean": 0.9993522732819714,
+      "selective_mse": 0.0005401611349452424,
+      "ood_auroc": 0.924036,
+      "ood_abstain": 0.878,
+      "ood_answer_mse": 0.0006089936436121967,
+      "episodic_mse": 0.8478379412278773
+    }
+  ],
+  "gate": {
+    "r2_mean": 0.9994023559181056,
+    "selective_mse": 0.0005307455192192752,
+    "ood_auroc": 0.9272880000000001,
+    "ood_abstain": 0.8868,
+    "episodic_mse": 0.8223761209561988,
+    "r2_ok": true,
+    "selective_ok": true,
+    "ood_auroc_ok": true,
+    "ood_abstain_ok": true,
+    "episodic_ok": false,
+    "e2e_ready": false
+  },
+  "repro": "```text\n实验名称：阶段四端到端：延迟线索问答 + OOD 弃权\n日期：2026-10-27 01:50:25 中国标准时间\nGit commit：a22f0edebbac29ef7768d6c42fdbc49994f94d2f\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_e2e_delayed_recall.py --seeds 0-4 --out data/_e2e\n耗时：30.8 s\n备注：A/B/Q 三线索；OOD 为 A/B ×3；训练只用 in-dist\n备注：门控 = 成员分歧 + 世界模型一步惊喜；阈值取 in-dist 80% 覆盖\n```"
+}
