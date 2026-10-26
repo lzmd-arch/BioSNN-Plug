@@ -12,6 +12,7 @@ import numpy as np
 from research.continual import DeltaReadout
 
 __all__ = [
+    "LogisticCalibrator",
     "coverage_threshold",
     "ece",
     "ece_confidence",
@@ -145,6 +146,64 @@ def risk_coverage_auc(confidence: np.ndarray, correct: np.ndarray) -> float:
     curve = running / steps
     # 覆盖率等分，梯形积分；避免依赖 numpy 版本的 trapz/trapezoid 命名差异。
     return float(np.mean((curve[:-1] + curve[1:]) / 2.0)) if curve.size > 1 else float(curve[0])
+
+
+class LogisticCalibrator:
+    """通用 L2 逻辑回归标定头（IRLS）；把特征映射成 P(正确)。"""
+
+    def __init__(self, *, l2: float = 1.0, iterations: int = 50) -> None:
+        if l2 < 0:
+            raise ValueError("l2 必须非负。")
+        self.l2 = float(l2)
+        self.iterations = int(iterations)
+        self.mean: np.ndarray | None = None
+        self.scale: np.ndarray | None = None
+        self.weights: np.ndarray | None = None
+
+    def fit(self, features: np.ndarray, labels: np.ndarray) -> None:
+        values = np.asarray(features, dtype=np.float64)
+        truth = np.asarray(labels, dtype=np.float64)
+        if values.ndim == 1:
+            values = values[:, None]
+        if values.shape[0] != truth.shape[0]:
+            raise ValueError("features 与 labels 行数不一致。")
+        self.mean = values.mean(axis=0)
+        self.scale = np.maximum(values.std(axis=0), 1e-8)
+        design = (values - self.mean) / self.scale
+        augmented = np.hstack([np.ones((design.shape[0], 1)), design])
+
+        positives = float(np.sum(truth == 1.0))
+        negatives = float(truth.size - positives)
+        if positives == 0 or negatives == 0:
+            raise ValueError("标定集必须同时包含正确与错误样本。")
+        sample_weight = np.where(
+            truth == 1.0,
+            truth.size / (2.0 * positives),
+            truth.size / (2.0 * negatives),
+        )
+        weights = np.zeros(augmented.shape[1], dtype=np.float64)
+        penalty = self.l2 * np.eye(augmented.shape[1])
+        penalty[0, 0] = 0.0
+        for _ in range(self.iterations):
+            probabilities = sigmoid(augmented @ weights)
+            gradient = augmented.T @ (sample_weight * (probabilities - truth)) + penalty @ weights
+            curvature = (
+                augmented.T
+                @ (augmented * (sample_weight * probabilities * (1.0 - probabilities))[:, None])
+                + penalty
+            )
+            weights -= np.linalg.solve(curvature, gradient)
+        self.weights = weights
+
+    def predict_proba(self, features: np.ndarray) -> np.ndarray:
+        if self.weights is None or self.mean is None or self.scale is None:
+            raise RuntimeError("标定头为空；先 fit。")
+        values = np.asarray(features, dtype=np.float64)
+        if values.ndim == 1:
+            values = values[:, None]
+        design = (values - self.mean) / self.scale
+        augmented = np.hstack([np.ones((design.shape[0], 1)), design])
+        return sigmoid(augmented @ self.weights)
 
 
 def train_readout(

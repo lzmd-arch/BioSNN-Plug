@@ -77,3 +77,31 @@ def test_coverage_threshold_and_selective_accuracy_at():
     accuracy, coverage = selective_accuracy_at(confidence, correct, threshold=threshold)
     assert accuracy == 1.0
     assert coverage == 0.5
+
+
+def test_logistic_calibrator_ranks_separable_data():
+    from research.cognitive.metacognitive_gate import LogisticCalibrator
+
+    rng = np.random.default_rng(0)
+    features = rng.normal(size=(400, 3))
+    labels = (features[:, 0] > 0).astype(int)
+    calibrator = LogisticCalibrator()
+    calibrator.fit(features, labels)
+    from research.cognitive.world_model import auroc
+
+    assert auroc(calibrator.predict_proba(features), labels) > 0.95
+
+
+def test_v3_runner_smoke(tmp_path):
+    from research.cognitive.run_metacognitive_gate_v3 import run as run_v3
+
+    summary = run_v3(
+        [0],
+        data_root=__import__("pathlib").Path("data/cifar100"),
+        out=tmp_path,
+        epochs=2,
+        members=2,
+        train_limit=5000,
+    )
+    assert "v3_ready" in summary["gate"]
+    assert (tmp_path / "summary.json").exists()
