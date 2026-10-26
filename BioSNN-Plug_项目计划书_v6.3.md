@@ -428,6 +428,9 @@
 >    - **阶段四入口改写**：**Route R + 回放 → AF < 8% 且 ACC ≥ 65%**（CIL 口径；
 >      🔄 2026-10-26 由 [ADR-0018](docs/adr/ADR-0018-task-aware-cl-gate.md) 改为**任务感知 CIL**，
 >      允许推理时提供任务 id；纯 CIL 的阴性结果保留）。
+>      🔄 **2026-10-26 进一步由 [ADR-0019](docs/adr/ADR-0019-stage-four-entry-decoupled-from-relearn.md)
+>      解耦**：阶段四入口不再等待「重学快 3×」；3× 记为**未达的开放项**，阶段四可在任务感知
+>      CL 门通过后开始。
 >      🔄 本条取代 ㊶ 里以 Route W 表述的门禁；㊶ 原文保留。
 >    - **阶段三不会因为时间过去而自动关闭**：门是测量的函数，不是日历的函数。
 
@@ -641,6 +644,14 @@
 >    下一步需裁决：接受门不可达并写 ADR，或改成"保留探索状态的实用重学"（两臂不再只差
 >    初始权重），或换任务/算法。见
 >    [`sweep_results/relearn_3x/calibration_v3/README.md`](sweep_results/relearn_3x/calibration_v3/README.md)。
+
+> 68. **2026-10-26：阶段四入口与「重学快 3×」解耦（[ADR-0019](docs/adr/ADR-0019-stage-four-entry-decoupled-from-relearn.md)）**。
+>    v1/v2/v3 三轮预注册都没有 3×（旧策略过于鲁棒、scratch 总能学会）；按裁决，阶段四
+>    **不再等待 3×**：任务感知 CL 门（ADR-0018）通过即可开始。**3× 记为未达的开放项**，
+>    不是通过——所有对外材料必须写「3× 未达（ADR-0019）」。3× 的实用重学/换任务版本
+>    转为阶段四开放研究项，各自需要新预注册，且不得与原始 3× 混报。阶段三因此记为
+>    **部分验收**：CL（任务感知）过，重学 3× 未达。见
+>    [`docs/adr/ADR-0019-stage-four-entry-decoupled-from-relearn.md`](docs/adr/ADR-0019-stage-four-entry-decoupled-from-relearn.md)。
 
 ## 一、项目定位
 
@@ -1114,6 +1125,8 @@ class NeurogenesisController:
 > - **阶段四入口**：**Route R + 回放 → AF < 8% 且 ACC ≥ 65%**（CIL 口径；
 >   🔄 2026-10-26 由 [ADR-0018](docs/adr/ADR-0018-task-aware-cl-gate.md) 改为**任务感知 CIL**，
 >   允许推理时提供任务 id；纯 CIL 阴性结果保留）。
+>   🔄 **2026-10-26 由 [ADR-0019](docs/adr/ADR-0019-stage-four-entry-decoupled-from-relearn.md)
+>   与「重学快 3×」解耦**：3× 记为未达的开放项，阶段四可在任务感知 CL 门通过后开始。
 
 **任务**：音频插件接入；R-STDP + TD-LTP Critic [Frémaux et al., 2013]；仲裁器扩展至三规则冲突维度（第 1–3 类）[Confavreux et al., 2025]；持续学习基准（CIFAR-100-B0 10 步增量，参考 PS-SNN 的 76.42%）[Hu et al., 2026]；**执行层脉冲化**——把 `research/rstdp/` 的速率型 actor-critic 换成脉冲实现（LIF + **带真实 Δt 窗口的 STDP 资格痕迹** + TD-LTP 群体 Critic），使 §3.2 的 `STDP(Δt_ij)` 公式与「仅计 pre-before-post」那处结构差别**第一次可验**。
 
@@ -1136,7 +1149,8 @@ class NeurogenesisController:
 >   `sweep_results/continual_cifar100/formal_cil/README.md`。
 > - **未开始**：仲裁器**三方混合**（阶段五）。
 **成功标准**：三模态接入，跨模态检索可用；平均增量准确率 65%+，AF < 8%；规则改变后重新学习速度比从头训练快 3 倍以上。
-（🔄 2026-10-26：CL 的 ACC/AF 口径按 [ADR-0018](docs/adr/ADR-0018-task-aware-cl-gate.md) 改为**任务感知 CIL**。）
+（🔄 2026-10-26：CL 的 ACC/AF 口径按 [ADR-0018](docs/adr/ADR-0018-task-aware-cl-gate.md) 改为**任务感知 CIL**；
+「重学快 3×」按 [ADR-0019](docs/adr/ADR-0019-stage-four-entry-decoupled-from-relearn.md) 记为**未达的开放项**，不再阻塞阶段四。）
 
 ### 第四阶段：神经发生 + 规模扩展 + 认知增强（16-24 个月）
 

@@ -47,3 +47,4 @@
 | [ADR-0016](ADR-0016-arousal-channel-and-consolidation-experiment.md) | 唤醒通道组件化（含「本能」的命名）＋巩固对比实验排期 | 已采纳 |
 | [ADR-0017](ADR-0017-cl-main-route-switch-and-replay-first.md) | CL 主路线切换为 Route R（回放先行）；Route W 保留；阶段四入口改写 | 已采纳 |
 | [ADR-0018](ADR-0018-task-aware-cl-gate.md) | 阶段三 CL 门口径改为任务感知 CIL（task-incremental）；纯 CIL 阴性结果保留 | 已采纳 |
+| [ADR-0019](ADR-0019-stage-four-entry-decoupled-from-relearn.md) | 阶段四入口与「重学快 3×」解耦；3× 记为未达的开放项 | 已采纳 |
