@@ -519,6 +519,14 @@
 >    下一步设计与**计数策略同向**的局部资格，不是改用线性策略。见
 >    [`sweep_results/rstdp_spiking_policy_control/linear_rate/README.md`](sweep_results/rstdp_spiking_policy_control/linear_rate/README.md)。
 
+> 55. **2026-10-26：计数同向资格的预注册（v3，尚未实现/跑数）**。机制：
+>    `E ← λE + x ⊗ [z ⊙ (1[a] − π)]`——`x` 是**输入脉冲计数**，`z` 是 **LIF 发放计数**，
+>    `π` 是 Actor 的实际采样分布；这是"资格 = E[z]·(1[a]−π_count)"的形状展开，
+>    是计数策略梯度的局部近似。对照臂是已跑的 D1（62.15）与 D2（179.80，仅作 sanity）；
+>    判据：配对 vs D1 ≥+20 且 ≥7/10、中位数 ≥150。**限制**：配方级（输入侧与动作因子
+>    同时换），只声称"同向 > 不同向"，不声称哪一件单独起作用；200 验收线不在本轮。
+>    见 [`sweep_results/rstdp_spiking_count_aligned_prereg.md`](sweep_results/rstdp_spiking_count_aligned_prereg.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

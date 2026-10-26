@@ -126,7 +126,11 @@ Plan B 的两条候选在 ③②① 之后剩下"Actor 的信用分配"与"固�
   策略同向的局部资格，不改用线性策略。见
   [`sweep_results/rstdp_spiking_policy_control/linear_rate/README.md`](../../sweep_results/rstdp_spiking_policy_control/linear_rate/README.md)。
 
-下一项需要新预注册；不回头调 lr / 宽度 / 回合数。
+**下一步（预注册 v3，代码与数据尚未产生）**：计数同向资格
+`E ← λE + x ⊗ [z ⊙ (1[a] − π)]`——`x` 用输入脉冲计数、`z` 用 LIF 发放计数、
+`π` 用 Actor 的实际采样分布；判据是相对 D1 的配对 ≥+20 且 ≥7/10、中位数 ≥150。
+见 [`sweep_results/rstdp_spiking_count_aligned_prereg.md`](../../sweep_results/rstdp_spiking_count_aligned_prereg.md)。
+不回头调 lr / 宽度 / 回合数。
 
 ## 与阶段四的关系
 
