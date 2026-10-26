@@ -57,9 +57,11 @@ def _first_reaching(curve: list[float], threshold: float, every: int) -> int | N
     return None
 
 
-def _initial_score(context, seed: int, gravity: float) -> float:
+def _initial_score(
+    context, seed: int, gravity: float, env_overrides: dict[str, float] | None
+) -> float:
     """warm 臂在**训练前**的新规则上评测；独立环境，不推进训练环境的 RNG。"""
-    env = make_cartpole(gravity)
+    env = make_cartpole(gravity, env_overrides)
     env.reset(seed=seed * 1000 + 7)
     try:
         return _greedy_score(
@@ -75,7 +77,12 @@ def _initial_score(context, seed: int, gravity: float) -> float:
 
 
 def run(
-    seeds: list[int], *, episodes: int, out: Path, gravity: float = GRAVITY_NEW
+    seeds: list[int],
+    *,
+    episodes: int,
+    out: Path,
+    gravity: float = GRAVITY_NEW,
+    env_overrides: dict[str, float] | None = None,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     rows: list[dict[str, Any]] = []
@@ -90,7 +97,7 @@ def run(
             return_context=True,
         )
         # Phase B warm：保留完整 agent 状态，在 R1 上重学。
-        warm_initial = _initial_score(context, seed, gravity)
+        warm_initial = _initial_score(context, seed, gravity, env_overrides)
         result_warm = run_trial(
             seed,
             episodes=episodes,
@@ -177,6 +184,7 @@ def run(
         "experiment": "规则改变后重学快 3×（角标：CartPole 重力 9.8 → 14.0）",
         "config": {
             "gravity_new": gravity,
+            "env_overrides": env_overrides or {},
             "threshold": THRESHOLD,
             "eval_every": EVAL_EVERY,
             "eval_episodes": EVAL_EPISODES,
@@ -212,9 +220,29 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seeds", default="65-74")
     parser.add_argument("--episodes", type=int, default=800)
     parser.add_argument("--gravity", type=float, default=GRAVITY_NEW)
+    parser.add_argument("--length", type=float, default=None)
+    parser.add_argument("--masspole", type=float, default=None)
+    parser.add_argument("--masscart", type=float, default=None)
+    parser.add_argument("--force-mag", type=float, default=None)
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
-    run(_parse_seeds(args.seeds), episodes=args.episodes, out=args.out, gravity=args.gravity)
+    overrides = {
+        name: value
+        for name, value in (
+            ("length", args.length),
+            ("masspole", args.masspole),
+            ("masscart", args.masscart),
+            ("force_mag", args.force_mag),
+        )
+        if value is not None
+    }
+    run(
+        _parse_seeds(args.seeds),
+        episodes=args.episodes,
+        out=args.out,
+        gravity=args.gravity,
+        env_overrides=overrides,
+    )
     return 0
 
 

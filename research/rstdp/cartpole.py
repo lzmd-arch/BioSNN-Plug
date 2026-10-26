@@ -679,13 +679,20 @@ def build_agent_inputs(
     return centers, sampled[choice].to(device)
 
 
-def make_cartpole(gravity: float | None = None):
-    """建 CartPole；``gravity`` 通过实例属性设置（gymnasium 不接受 make kwarg）。"""
+_CARTPOLE_OVERRIDES = ("gravity", "length", "masspole", "masscart", "force_mag")
+
+
+def make_cartpole(gravity: float | None = None, overrides: dict[str, float] | None = None):
+    """建 CartPole；物理参数通过实例属性设置（gymnasium 不接受 make kwarg）。"""
     import gymnasium
 
     env = gymnasium.make("CartPole-v1")
     if gravity is not None:
         env.unwrapped.gravity = float(gravity)
+    for name, value in (overrides or {}).items():
+        if name not in _CARTPOLE_OVERRIDES:
+            raise ValueError(f"未知的 CartPole 覆盖键 {name!r}；可选 {_CARTPOLE_OVERRIDES}。")
+        setattr(env.unwrapped, name, float(value))
     return env
 
 
@@ -731,6 +738,7 @@ def run_trial(
     return_agent: bool = False,
     return_context: bool = False,
     gravity: float | None = None,
+    env_overrides: dict[str, float] | None = None,
     initial_context: AgentContext | None = None,
 ):
     """训练一个种子并做贪心评测。
@@ -831,7 +839,7 @@ def run_trial(
     actor_learning_rate_base = agent.actor.learning_rate
     initial_critic_weights = agent.critic.weights.detach().clone()
 
-    env = make_cartpole(gravity)
+    env = make_cartpole(gravity, env_overrides)
     # **必须给环境播种。** gymnasium 的 CartPole 有自己的 RNG，不播种的话每次运行的
     # 初始状态与状态转移都不同——上面那一串种子就覆盖不到实验的一半。实测发现过：
     # 同一个 seed 两次跑出 20.4 步与 9.3 步。
@@ -847,7 +855,7 @@ def run_trial(
     # ``select_action`` 里那个 ``torch.rand`` 被短路掉了。污染全在环境这一侧。）
     eval_env = None
     if greedy_eval_every:
-        eval_env = make_cartpole(gravity)
+        eval_env = make_cartpole(gravity, env_overrides)
         eval_env.reset(seed=book.derive("评测环境种子"))
 
     started = time.perf_counter()
