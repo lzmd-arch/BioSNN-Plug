@@ -82,3 +82,11 @@ def test_v3_runner_smoke(tmp_path):
     summary = run_v3([0], train_episodes=50, test_episodes=20, out=tmp_path, epochs=5)
     assert "v3_ready" in summary["gate"]
     assert (tmp_path / "summary.json").exists()
+
+
+def test_v4_runner_smoke(tmp_path):
+    from research.cognitive.run_working_memory_v4 import run as run_v4
+
+    summary = run_v4([0], train_episodes=50, test_episodes=20, out=tmp_path, epochs=5)
+    assert "w4_ready" in summary["gate"]
+    assert (tmp_path / "summary.json").exists()
