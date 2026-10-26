@@ -22,8 +22,7 @@ from research.cognitive.metacognitive_gate import (
 from research.cognitive.world_model import auroc
 from research.common.provenance import collect
 from research.common.seeding import parse_seeds
-from research.continual.data import load_cifar100
-from research.continual.frontends import image_features
+from research.continual import image_features, load_cifar100
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT = REPO_ROOT / "sweep_results" / "metacognitive_gate_v0"

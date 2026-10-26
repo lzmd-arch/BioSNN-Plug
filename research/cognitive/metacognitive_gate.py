@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from research.continual.readout import DeltaReadout
+from research.continual import DeltaReadout
 
 __all__ = [
     "ece",
