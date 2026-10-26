@@ -48,14 +48,14 @@ class SparseEncoder:
         keys = np.zeros_like(projected)
         index = np.argpartition(-np.abs(projected), self.k - 1, axis=1)[:, : self.k]
         rows = np.arange(values.shape[0])[:, None]
-        keys[rows, index] = np.sign(projected[rows, index])
-        keys[keys == 0.0] = 1.0
+        selected = projected[rows, index]
+        # 只对被选中的 k 个位置取符号；0 归到 +1。**不能**把整张 keys 的 0 改成 1——
+        # 那会把稀疏码变稠密，记忆容量与指标全变。
+        keys[rows, index] = np.where(selected >= 0.0, 1.0, -1.0)
         return keys
 
 
-def build_values(
-    actions: np.ndarray, terminated: np.ndarray, timestamps: np.ndarray
-) -> np.ndarray:
+def build_values(actions: np.ndarray, terminated: np.ndarray, timestamps: np.ndarray) -> np.ndarray:
     """``(n, 5)``：动作 one-hot(2) + 终止 one-hot(2) + 归一化时间戳。"""
     actions = np.asarray(actions, dtype=int)
     terminated = np.asarray(terminated, dtype=int)
