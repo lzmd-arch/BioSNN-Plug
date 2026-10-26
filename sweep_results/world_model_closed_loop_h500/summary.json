@@ -1,0 +1,94 @@
+{
+  "experiment": "世界模型 P3：CartPole 闭环想象",
+  "config": {
+    "policy_noise": 0.1,
+    "horizon": 500,
+    "train_episodes": 200,
+    "test_episodes": 100,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "closed_nmse_h10": 2.6131241409557154e-08,
+      "copy_last_nmse_h10": 120.41905700976264,
+      "open_loop_nmse_h10": 5.488346146678806e-10,
+      "ratio_vs_copy": 2.1700254144523517e-10,
+      "termination_rate": 1.0,
+      "termination_step_rate": 0.0067226890756302525,
+      "termination_auroc": 0.616730964467005,
+      "divergence_step_median": 115.0,
+      "valid_episodes": 90,
+      "test_episodes": 100
+    },
+    {
+      "seed": 1,
+      "closed_nmse_h10": 2.3219624806162272e-08,
+      "copy_last_nmse_h10": 126.4515593215662,
+      "open_loop_nmse_h10": 3.7820947278341866e-10,
+      "ratio_vs_copy": 1.836246617340225e-10,
+      "termination_rate": 1.0,
+      "termination_step_rate": 0.006652474720596061,
+      "termination_auroc": 0.599227832842218,
+      "divergence_step_median": 115.0,
+      "valid_episodes": 92,
+      "test_episodes": 100
+    },
+    {
+      "seed": 2,
+      "closed_nmse_h10": 4.94419318247126e-08,
+      "copy_last_nmse_h10": 122.63045063744752,
+      "open_loop_nmse_h10": 6.176428002626774e-10,
+      "ratio_vs_copy": 4.031782609270994e-10,
+      "termination_rate": 1.0,
+      "termination_step_rate": 0.006770022341073725,
+      "termination_auroc": 0.6260752504941722,
+      "divergence_step_median": 115.5,
+      "valid_episodes": 92,
+      "test_episodes": 100
+    },
+    {
+      "seed": 3,
+      "closed_nmse_h10": 1.8389932289759806e-08,
+      "copy_last_nmse_h10": 123.2273211123434,
+      "open_loop_nmse_h10": 4.465086986864961e-10,
+      "ratio_vs_copy": 1.4923583604478544e-10,
+      "termination_rate": 1.0,
+      "termination_step_rate": 0.006640547181087721,
+      "termination_auroc": 0.6216538538672371,
+      "divergence_step_median": 116.0,
+      "valid_episodes": 88,
+      "test_episodes": 100
+    },
+    {
+      "seed": 4,
+      "closed_nmse_h10": 2.281792494636859e-08,
+      "copy_last_nmse_h10": 118.30757202829409,
+      "open_loop_nmse_h10": 4.5613818132750504e-10,
+      "ratio_vs_copy": 1.928695226786627e-10,
+      "termination_rate": 1.0,
+      "termination_step_rate": 0.0066480521207286265,
+      "termination_auroc": 0.6156940168652122,
+      "divergence_step_median": 117.5,
+      "valid_episodes": 92,
+      "test_episodes": 100
+    }
+  ],
+  "gate": {
+    "ratio_vs_copy": 2.2918216456596107e-10,
+    "ratio_ok": true,
+    "termination_rate": 1.0,
+    "termination_auroc": 0.615876383707169,
+    "termination_ok": false,
+    "divergence_median": 115.5,
+    "divergence_ok": true,
+    "p3_ready": false
+  },
+  "repro": "```text\n实验名称：世界模型 P3：CartPole 闭环想象\n日期：2026-10-26 14:08:59 中国标准时间\nGit commit：b0026a9a9b0cb76b5a9371270924ec70b2bace71\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_world_model_closed_loop.py --seeds 0-4 --episodes 200 --test-episodes 100 --horizon 500 --out data/_p3_h500\n耗时：11.4 s\n备注：行为策略：θ+0.5θ̇ 平衡启发式 + ε=0.1 动作噪声\n备注：闭环：策略在模型预测状态上选动作，动作同时喂给模型与真实环境\n备注：归一化用训练集逐维方差\n```"
+}

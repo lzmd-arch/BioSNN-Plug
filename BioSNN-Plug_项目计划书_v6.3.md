@@ -653,6 +653,15 @@
 >    **部分验收**：CL（任务感知）过，重学 3× 未达。见
 >    [`docs/adr/ADR-0019-stage-four-entry-decoupled-from-relearn.md`](docs/adr/ADR-0019-stage-four-entry-decoupled-from-relearn.md)。
 
+> 69. **2026-10-26：世界模型 P3 闭环想象——状态/稳定性过，终止预测不过**。
+>    CartPole 平衡启发式 + ε=0.1；H=500（修订 1；v1 的 H=100 终止不可评，原样保留）。
+>    闭环 H=10 NMSE 比 `copy_last` 低十个数量级（~2e-10）；中位首发散步 **115.5**；
+>    终止回合率 100%、步率 0.67%，但 **终止 AUROC 0.616 <0.75** → **`p3_ready=false`**。
+>    读数：状态模型几乎完美，闭环在约 115 步后发散；终止头排序弱，是模型问题，不是闭环
+>    失败。按预注册不调 λ/不换模型；终止头/神经世界模型作为 P3 开放项。阶段四按顺序
+>    进入下一项：**情景记忆 v0**（需新预注册）。见
+>    [`sweep_results/world_model_closed_loop_h500/README.md`](sweep_results/world_model_closed_loop_h500/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
