@@ -89,6 +89,27 @@ R-NCM 与探索期的 0.658 / 0.127 一致——**旧数字不是累计矩阵造
 [`isolation_current_rows/`](isolation_current_rows/README.md)、
 [`isolation_random_rows/`](isolation_random_rows/README.md)。
 
+## 隔离 + 回放（P1+R）
+
+预注册：[`../continual_v2_isolation_replay_prereg.md`](../continual_v2_isolation_replay_prereg.md)。
+隔离（只更新当前行）+ latent replay ρ0.3，5 种子。
+
+| 臂 | ACC | AF |
+| :--- | ---: | ---: |
+| replay ρ0.3 | 0.3630 | 0.7399 |
+| P1（只隔离） | 0.5426 | 0.1739 |
+| **P1+R** | **0.4310** | **0.0291** |
+
+- **AF 第一次过 8% 线（2.91%）**，但 ACC 43.10% 不过 65%；阶段门只过一半；
+- 相对 replay-alone 过（AF −71.1 pp、ACC +6.8 pp），但相对 P1 **ACC 掉了 11.2 pp**、
+  **"不是少学"不过**（对角线 0.328）——回放在隔离下救不回获取；
+- 原因：回放样本是旧类，隔离只让当前行更新，回放无法重训旧行；它还挤掉了当前样本的
+  更新量（每批 128 → 90）。
+
+结论：**隔离与回放不叠加**。下一机制按预注册写死：**部分隔离**（旧行 `α·η` 小步长，
+α=0.1 / 0.3），先预注册再跑。结果：
+[`isolation_replay/`](isolation_replay/README.md)。
+
 ## 跑门
 
 每个任务 `‖ΔW‖/‖W‖`（t=0 从零初始化，分母不存在，不参与判定）：

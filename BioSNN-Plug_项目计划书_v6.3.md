@@ -535,6 +535,15 @@
 >    "输出行隔离有效"**；这是"用获取换保持"，下一步必须与回放叠加并按新预注册重跑。
 >    见 [`sweep_results/continual_v2/isolation_current_rows/README.md`](sweep_results/continual_v2/isolation_current_rows/README.md)。
 
+> 57. **2026-10-26：CL 隔离 + 回放（P1+R）——AF 首次过 8%，但 ACC 掉到 43%**。
+>    只更新当前行 + latent replay ρ0.3，5 种子：**ACC 0.4310 / AF 0.0291**。AF 第一次
+>    低于阶段门的 8%，但 ACC 43.1% <65%，阶段门只过一半；相对 replay-alone 过
+>    （AF −71.1 pp、ACC +6.8 pp），相对 P1 **ACC −11.2 pp**、"不是少学"不过（对角线
+>    0.328）。原因：回放样本是旧类、隔离只让当前行更新，回放无法重训旧行，还挤掉了
+>    当前样本的更新量（128→90）。结论：**隔离与回放不叠加**；下一机制是**部分隔离**
+>    （旧行 α·η，α=0.1/0.3），需新预注册。见
+>    [`sweep_results/continual_v2/isolation_replay/README.md`](sweep_results/continual_v2/isolation_replay/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
