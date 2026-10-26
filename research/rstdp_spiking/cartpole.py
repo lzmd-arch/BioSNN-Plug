@@ -184,6 +184,7 @@ def train(
     eval_noise_seeds: int = 0,
     entropy_log: bool = False,
     keep_actor: bool = False,
+    trace_rule: str = "pair-stdp",
 ) -> TrainResult:
     """训练一个种子。返回逐回合回报与评测曲线。"""
     import gymnasium
@@ -199,6 +200,7 @@ def train(
         n_actions=2,
         steps=steps,
         learning_rate=learning_rate,
+        trace_rule=trace_rule,
         generator=generator,
         device=device,
     )
@@ -319,6 +321,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--sigma", type=float, default=1.0)
     parser.add_argument("--steps", type=int, default=25, help="每个决策的脉冲窗口长度")
     parser.add_argument("--learning-rate", type=float, default=1e-2)
+    parser.add_argument(
+        "--trace-rule",
+        choices=("pair-stdp", "sign-consistent"),
+        default="pair-stdp",
+        help="Actor 痕迹规则：pair-stdp=历史的有符号规则（默认）；"
+        "sign-consistent=按成功信号符号选 LTP/LTD 两相",
+    )
     parser.add_argument("--baseline-decay", type=float, default=0.05)
     parser.add_argument(
         "--critic",
@@ -418,6 +427,7 @@ def main(argv: list[str] | None = None) -> int:
             pop_trace_demean_rate=args.pop_trace_demean_rate,
             pop_mask_density=args.pop_mask_density,
             device=device,
+            trace_rule=args.trace_rule,
         )
         results.append(outcome)
         print(
@@ -453,6 +463,7 @@ def main(argv: list[str] | None = None) -> int:
             "pop_mask_density": args.pop_mask_density,
             "gamma": args.gamma,
             "warmup": args.warmup,
+            "trace_rule": args.trace_rule,
         },
         "per_seed": [
             {
@@ -473,6 +484,7 @@ def main(argv: list[str] | None = None) -> int:
             notes=[
                 "episodic R-STDP，成功信号 = 回报 − EMA 基线（**TD-LTP Critic 尚未接入**）",
                 "评测冻结随机流（环境种子 + 脉冲发生器种子）",
+                f"Actor 痕迹规则：{args.trace_rule}",
             ],
             device=device,
         ).render_block(),

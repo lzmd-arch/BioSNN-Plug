@@ -38,7 +38,15 @@ import math
 
 import torch
 
-__all__ = ["EligibilityTrace", "STDPWindow", "pair_based_stdp"]
+__all__ = [
+    "EligibilityTrace",
+    "PairBasedTrace",
+    "STDPWindow",
+    "SignConsistentTrace",
+    "build_trace",
+    "ltp_ltd",
+    "pair_based_stdp",
+]
 
 
 class STDPWindow:
@@ -76,12 +84,17 @@ class STDPWindow:
 
 
 @torch.no_grad()
-def pair_based_stdp(
+def ltp_ltd(
     pre_spikes: torch.Tensor,
     post_spikes: torch.Tensor,
     window: STDPWindow,
-) -> torch.Tensor:
-    """一遍扫描算出成对 STDP 的权重变化，``(n_pre, n_post)``。
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """一遍扫描算出成对 STDP 的**两相**，``(LTP, LTD)``，各自非负。
+
+    返回的是**已乘幅度**的项：``LTP = a₊·Σ…``、``LTD = a₋·Σ…``。所以
+    :func:`pair_based_stdp` 恰好是 ``LTP − LTD``——把两相分开，是为了让 Actor 能按
+    成功信号的符号选相位（预注册见 ``rstdp_spiking_actor_fix_prereg.md``），而不是
+    先代数相加再乘一个全局标量。
 
     Args:
         pre_spikes: ``(T, batch, n_pre)`` 的 0/1 张量。
@@ -89,7 +102,7 @@ def pair_based_stdp(
         window: 窗口参数。
 
     Returns:
-        ``Δw``，形状 ``(n_pre, n_post)``，**已经对时间与 batch 求和**。
+        ``(LTP, LTD)``，形状均为 ``(n_pre, n_post)``，**已经对时间与 batch 求和**。
 
     Note:
         迹在**同一时刻**的贡献被排除（用更新前的迹），所以同时发放的一对 pre/post
@@ -121,7 +134,22 @@ def pair_based_stdp(
         pre_trace = pre_trace + pre_spikes[t]
         post_trace = post_trace + post_spikes[t]
 
-    return window.a_plus * ltp - window.a_minus * ltd
+    return window.a_plus * ltp, window.a_minus * ltd
+
+
+@torch.no_grad()
+def pair_based_stdp(
+    pre_spikes: torch.Tensor,
+    post_spikes: torch.Tensor,
+    window: STDPWindow,
+) -> torch.Tensor:
+    """有符号的成对 STDP 增量 ``LTP − LTD``（历史规则，默认路径）。
+
+    预注册 v3 的符号一致化规则不用这条代数相加，而是分别取 :func:`ltp_ltd` 的两相；
+    这里保留它，既为默认路径，也为「两相之差与旧实现逐位相同」的守卫。
+    """
+    ltp, ltd = ltp_ltd(pre_spikes, post_spikes, window)
+    return ltp - ltd
 
 
 class EligibilityTrace:
@@ -159,3 +187,138 @@ class EligibilityTrace:
 
     def reset(self) -> None:
         self.value.zero_()
+
+
+class PairBasedTrace:
+    """有符号的资格痕迹：``e ← λ·e + (LTP − LTD)``，动作不参与门控。
+
+    这是**历史规则**，默认路径。保留它的独立类，是为了让 Actor 不必在
+    ``step`` / ``apply_success_signal`` 里写 if——规则换的是对象，不是分支。
+    """
+
+    def __init__(
+        self,
+        n_pre: int,
+        n_post: int,
+        *,
+        decay: float = 0.9,
+        device: torch.device | None = None,
+    ) -> None:
+        self.inner = EligibilityTrace(n_pre, n_post, decay=decay, device=device)
+
+    @property
+    def value(self) -> torch.Tensor:
+        return self.inner.value
+
+    def accumulate_window(
+        self,
+        pre_spikes: torch.Tensor,
+        post_spikes: torch.Tensor,
+        window: STDPWindow,
+        action: int,
+    ) -> None:
+        """动作参数在这里**不用**：历史规则对所有动作都累积同一条有符号痕迹。"""
+        del action
+        self.inner.accumulate(pair_based_stdp(pre_spikes, post_spikes, window))
+
+    def apply(
+        self,
+        weights: torch.Tensor,
+        learning_rate: float,
+        success_signal: float,
+    ) -> None:
+        weights.add_(learning_rate * success_signal * self.value)
+
+    def rms(self) -> float:
+        return self.inner.rms()
+
+    def reset(self) -> None:
+        self.inner.reset()
+
+
+class SignConsistentTrace:
+    """符号一致的资格痕迹：两条非负痕迹，**只给被选动作列**累计。
+
+    预注册 ``rstdp_spiking_actor_fix_prereg.md`` 的唯一机制：
+
+    * ``E⁺ ← λ·E⁺ + LTP``（只加在被选动作列）；
+    * ``E⁻ ← λ·E⁻ + LTD``（同上）；
+    * ``S > 0`` 只写 ``E⁺``，``S < 0`` 只写 ``E⁻``，``S = 0`` 不更新。
+
+    LTP / LTD 仍然来自真实 Δt 的 :func:`ltp_ltd`；改变的是组合方式——不再把两相
+    代数相加后乘一个全局标量，从而避免 A1 量到的"正信号把被选动作压低"。
+    """
+
+    def __init__(
+        self,
+        n_pre: int,
+        n_post: int,
+        *,
+        decay: float = 0.9,
+        device: torch.device | None = None,
+    ) -> None:
+        if not 0.0 <= decay < 1.0:
+            raise ValueError(f"decay 应在 [0, 1) 内，收到 {decay}。")
+        self.decay = float(decay)
+        self.positive = torch.zeros(n_pre, n_post, device=device)
+        self.negative = torch.zeros(n_pre, n_post, device=device)
+
+    @property
+    def value(self) -> torch.Tensor:
+        """有符号的诊断视图（``E⁺ − E⁻``）；**更新不用它**。"""
+        return self.positive - self.negative
+
+    def accumulate_window(
+        self,
+        pre_spikes: torch.Tensor,
+        post_spikes: torch.Tensor,
+        window: STDPWindow,
+        action: int,
+    ) -> None:
+        if not 0 <= int(action) < self.positive.shape[1]:
+            raise ValueError(f"动作 {action} 越界（共 {self.positive.shape[1]} 个）。")
+        ltp, ltd = ltp_ltd(pre_spikes, post_spikes, window)
+        column = int(action)
+        self.positive.mul_(self.decay)
+        self.negative.mul_(self.decay)
+        self.positive[:, column].add_(ltp[:, column])
+        self.negative[:, column].add_(ltd[:, column])
+
+    def apply(
+        self,
+        weights: torch.Tensor,
+        learning_rate: float,
+        success_signal: float,
+    ) -> None:
+        signal = float(success_signal)
+        if signal > 0:
+            weights.add_(learning_rate * signal * self.positive)
+        elif signal < 0:
+            weights.sub_(learning_rate * (-signal) * self.negative)
+
+    def rms(self) -> float:
+        """两相的联合均方根；用来观察痕迹有没有失控。"""
+        return float((self.positive.pow(2) + self.negative.pow(2)).mean().sqrt().item())
+
+    def reset(self) -> None:
+        self.positive.zero_()
+        self.negative.zero_()
+
+
+_TRACE_RULES = ("pair-stdp", "sign-consistent")
+
+
+def build_trace(
+    rule: str,
+    n_pre: int,
+    n_post: int,
+    *,
+    decay: float = 0.9,
+    device: torch.device | None = None,
+) -> PairBasedTrace | SignConsistentTrace:
+    """按名字建痕迹对象；未知取值直接报错，不静默退化。"""
+    if rule == "pair-stdp":
+        return PairBasedTrace(n_pre, n_post, decay=decay, device=device)
+    if rule == "sign-consistent":
+        return SignConsistentTrace(n_pre, n_post, decay=decay, device=device)
+    raise ValueError(f"未知的 trace_rule：{rule!r}；可选 {_TRACE_RULES}。")

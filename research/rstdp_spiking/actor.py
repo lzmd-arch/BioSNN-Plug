@@ -25,7 +25,7 @@ import torch
 
 from research.cognitive import ArousalChannel
 from research.rstdp_spiking.neurons import LIFLayer, LIFState
-from research.rstdp_spiking.plasticity import EligibilityTrace, STDPWindow, pair_based_stdp
+from research.rstdp_spiking.plasticity import STDPWindow, build_trace
 from research.rstdp_spiking.spike_encoding import spike_encode
 
 __all__ = ["SpikingActor"]
@@ -51,6 +51,7 @@ class SpikingActor:
         n_refractory: int = 2,
         learning_rate: float = 1e-3,
         trace_decay: float = 0.9,
+        trace_rule: str = "pair-stdp",
         weight_norm: float = 1.0,
         normalize: bool = True,
         action_sampling: str = "boltzmann",
@@ -95,7 +96,11 @@ class SpikingActor:
             n_refractory=n_refractory,
             generator=generator,
         ).to(device)
-        self.trace = EligibilityTrace(n_features, n_actions, decay=trace_decay, device=device)
+        # 规则换的是对象，不是 step/apply 里的 if：默认仍是历史的有符号 pair-stdp。
+        self.trace = build_trace(
+            trace_rule, n_features, n_actions, decay=trace_decay, device=device
+        )
+        self.trace_rule = trace_rule
         if self.normalize:
             self._normalize()
 
@@ -183,13 +188,13 @@ class SpikingActor:
         量的是一个随机策略。这里把贪心做成显式分支，不给那个坑留位置。）
         """
         pre_spikes, post_spikes = self.window_spikes(features, generator=generator)
-        if learn_trace:
-            self.trace.accumulate(pair_based_stdp(pre_spikes, post_spikes, self.window))
-
         spike_counts = post_spikes.sum(dim=0).squeeze(0)
+
+        # 先把动作定下来，再累计痕迹：符号一致的规则需要知道**被选的是哪一列**。
+        # pair-stdp 不看 action，所以这个顺序对默认路径逐位不变（它不消耗随机流）。
         if greedy:
-            return int(spike_counts.argmax().item())
-        if self.action_sampling == "boltzmann":
+            chosen = int(spike_counts.argmax().item())
+        elif self.action_sampling == "boltzmann":
             # 采样在生成器所在的设备上做（CPU 生成器不能直接采 CUDA 张量）；
             # CPU 上逐位不变，CUDA 上把概率搬到 CPU 再采，随机流仍由同一个种子决定。
             probabilities = torch.softmax(self.sampling_scale() * spike_counts, dim=-1)
@@ -199,15 +204,26 @@ class SpikingActor:
             self.last_entropy = entropy
             self._entropy_sum += entropy
             self._entropy_count += 1
-            return int(torch.multinomial(probabilities, 1, generator=generator).item())
-        if exploration > 0 and float(torch.rand(1, generator=generator).item()) < exploration:
-            return int(torch.randint(self.n_actions, (1,), generator=generator).item())
-        return int(spike_counts.argmax().item())
+            chosen = int(torch.multinomial(probabilities, 1, generator=generator).item())
+        elif exploration > 0 and float(torch.rand(1, generator=generator).item()) < exploration:
+            chosen = int(torch.randint(self.n_actions, (1,), generator=generator).item())
+        else:
+            chosen = int(spike_counts.argmax().item())
+
+        if learn_trace:
+            self.trace.accumulate_window(pre_spikes, post_spikes, self.window, chosen)
+        return chosen
 
     @torch.no_grad()
     def apply_success_signal(self, success_signal: float) -> None:
-        """``w ← w + η·S·e``，然后归一化。痕迹的清理由 :meth:`end_episode` 负责。"""
-        self.layer.weight.add_(self.learning_rate * float(success_signal) * self.trace.value)
+        """把成功信号写进权重，然后归一化；具体规则由痕迹对象决定。
+
+        - ``pair-stdp``（默认）：``w ← w + η·S·e``；
+        - ``sign-consistent``：``S > 0`` 只加 ``η·S·E⁺``、``S < 0`` 只减 ``η·|S|·E⁻``。
+
+        痕迹的清理由 :meth:`end_episode` 负责。
+        """
+        self.trace.apply(self.layer.weight, self.learning_rate, float(success_signal))
         if self.normalize:
             self._normalize()
 

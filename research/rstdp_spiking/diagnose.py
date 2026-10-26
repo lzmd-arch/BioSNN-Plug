@@ -87,7 +87,9 @@ def mc_returns(rewards: list[float], gamma: float) -> list[float]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="W3 脉冲化诊断（③ 评测噪声）")
     parser.add_argument(
-        "--experiment", choices=("noise", "entropy", "critic", "actor"), default="noise"
+        "--experiment",
+        choices=("noise", "entropy", "critic", "actor", "actor-symbol"),
+        default="noise",
     )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--episodes", type=int, default=1200)
@@ -113,6 +115,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.out == OUT:
         if args.experiment == "actor":
             args.out = OUT.parent / "rstdp_spiking_actor_diagnosis"
+        elif args.experiment == "actor-symbol":
+            args.out = OUT.parent.parent / "rstdp_spiking_actor_fix" / "a1_symbol_consistency"
         else:
             name = args.experiment if args.experiment != "critic" else f"critic_{args.critic}"
             args.out = OUT.parent / name
@@ -182,6 +186,121 @@ def main(argv: list[str] | None = None) -> int:
             newline="\n",
         )
         print(f"{passed}/{len(rows)} 个窗口的资格列偏向被选中动作 → {verdict}")
+        print(f"written to {args.out}")
+        return 0
+
+    if args.experiment == "actor-symbol":
+        # A1′：符号一致的更新方向。用两条独立初始化的 actor（同种子 → 同权重）分别
+        # 施加 +1 / −1，量**实际写进权重**的增量，而不是只看痕迹的值。
+        windows = 3 if args.smoke else args.actor_windows
+        rows: list[dict[str, Any]] = []
+        for index in range(windows):
+            features = torch.rand(
+                BASE_CONFIG["n_features"],
+                generator=torch.Generator(device="cpu").manual_seed(10_000 + index),
+            )
+            actors = []
+            for signal in (1.0, -1.0):
+                actor = SpikingActor(
+                    BASE_CONFIG["n_features"],
+                    2,
+                    steps=BASE_CONFIG["steps"],
+                    learning_rate=1.0,
+                    trace_rule="sign-consistent",
+                    normalize=False,
+                    generator=torch.Generator(device="cpu").manual_seed(index),
+                )
+                actors.append((signal, actor))
+            pre, post = actors[0][1].window_spikes(
+                features, generator=torch.Generator(device="cpu").manual_seed(index)
+            )
+            counts = post.sum(dim=0).squeeze(0)
+            chosen = int(counts.argmax())
+            other = 1 - chosen
+            tie = float(counts[chosen]) == float(counts[other])
+
+            deltas = {}
+            for signal, actor in actors:
+                actor.trace.accumulate_window(pre, post, actor.window, chosen)
+                before = actor.layer.weight.clone()
+                actor.apply_success_signal(signal)
+                deltas[signal] = actor.layer.weight - before
+
+            positive_delta = deltas[1.0]
+            negative_delta = deltas[-1.0]
+            rows.append(
+                {
+                    "window": index,
+                    "counts": [float(value) for value in counts],
+                    "chosen": chosen,
+                    "tie": tie,
+                    "positive_selected_sum": float(positive_delta[:, chosen].sum()),
+                    "positive_other_abs": float(positive_delta[:, other].abs().sum()),
+                    "positive_all_nonneg": bool(torch.all(positive_delta >= 0).item()),
+                    "negative_selected_sum": float(negative_delta[:, chosen].sum()),
+                    "negative_other_abs": float(negative_delta[:, other].abs().sum()),
+                    "negative_all_nonpos": bool(torch.all(negative_delta <= 0).item()),
+                    "positive_ok": bool(
+                        float(positive_delta[:, chosen].sum()) > 0
+                        and float(positive_delta[:, other].abs().sum()) == 0.0
+                    ),
+                    "negative_ok": bool(
+                        float(negative_delta[:, chosen].sum()) <= 0
+                        and float(negative_delta[:, other].abs().sum()) == 0.0
+                    ),
+                }
+            )
+
+        positive_passed = sum(1 for row in rows if row["positive_ok"])
+        negative_passed = sum(1 for row in rows if row["negative_ok"])
+        negative_strict = sum(1 for row in rows if row["negative_selected_sum"] < 0)
+        gating_passed = sum(
+            1
+            for row in rows
+            if row["positive_other_abs"] == 0.0 and row["negative_other_abs"] == 0.0
+        )
+        ok = (
+            positive_passed == len(rows)
+            and negative_passed == len(rows)
+            and gating_passed == len(rows)
+        )
+        verdict = "symbol_consistent_ok" if ok else "symbol_consistent_failed"
+        summary = {
+            "experiment": "W3 诊断 A1′：Actor 符号一致化的更新方向",
+            "config": {
+                "features": BASE_CONFIG["n_features"],
+                "steps": BASE_CONFIG["steps"],
+                "windows": len(rows),
+                "device": "cpu",
+                "normalize": False,
+                "learning_rate": 1.0,
+            },
+            "rows": rows,
+            "positive_passed": positive_passed,
+            "negative_passed": negative_passed,
+            "negative_strict": negative_strict,
+            "gating_passed": gating_passed,
+            "verdict": verdict,
+            "repro": collect(
+                "W3 诊断 A1′：Actor 符号一致化的更新方向",
+                seeds=str(args.seed),
+                elapsed_s=time.perf_counter() - started,
+                notes=[
+                    "诊断，不是验收；预注册见 sweep_results/rstdp_spiking_actor_fix_prereg.md。",
+                    "正信号 20/20、负信号 20/20、未选列逐位为 0，才算通过。",
+                ],
+            ).render_block(),
+        }
+        args.out.mkdir(parents=True, exist_ok=True)
+        (args.out / "summary.json").write_text(
+            json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        print(
+            f"正 {positive_passed}/{len(rows)}、负 {negative_passed}/{len(rows)}"
+            f"（严格负 {negative_strict}）、门控 {gating_passed}/{len(rows)} → {verdict}"
+        )
         print(f"written to {args.out}")
         return 0
 
