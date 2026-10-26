@@ -211,7 +211,9 @@ class SpikingActor:
             chosen = int(spike_counts.argmax().item())
 
         if learn_trace:
-            self.trace.accumulate_window(pre_spikes, post_spikes, self.window, chosen)
+            self.trace.accumulate_window(
+                pre_spikes, post_spikes, self.window, chosen, features=features
+            )
         return chosen
 
     @torch.no_grad()

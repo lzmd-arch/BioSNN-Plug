@@ -90,6 +90,39 @@ class TestSignConsistentTrace:
         assert torch.allclose(trace.positive[:, 0], 0.5 * kept)
 
 
+class TestRateFeatureTrace:
+    def test_only_the_selected_column_gets_the_features(self):
+        features = torch.arange(1, 17, dtype=torch.float32)
+        trace = build_trace("rate-features", 16, 2, decay=0.9)
+        trace.accumulate_window(None, None, STDPWindow(), 1, features=features)
+
+        assert torch.equal(trace.value[:, 1], features)
+        assert float(trace.value[:, 0].abs().sum()) == 0.0
+
+    def test_decay_then_add(self):
+        features = torch.ones(16)
+        trace = build_trace("rate-features", 16, 2, decay=0.5)
+        trace.accumulate_window(None, None, STDPWindow(), 0, features=features)
+        trace.accumulate_window(None, None, STDPWindow(), 0, features=features)
+
+        assert torch.allclose(trace.value[:, 0], torch.full((16,), 1.5))
+
+    def test_features_are_required(self):
+        trace = build_trace("rate-features", 16, 2)
+        with pytest.raises(ValueError):
+            trace.accumulate_window(None, None, STDPWindow(), 0)
+
+    def test_signal_moves_weights_along_the_features(self):
+        features = torch.arange(1, 17, dtype=torch.float32)
+        trace = build_trace("rate-features", 16, 2)
+        trace.accumulate_window(None, None, STDPWindow(), 0, features=features)
+        weights = torch.zeros(16, 2)
+        trace.apply(weights, 0.5, 2.0)
+
+        assert torch.equal(weights[:, 0], features)
+        assert float(weights[:, 1].abs().sum()) == 0.0
+
+
 class TestActorWiring:
     def test_step_writes_the_action_it_chose(self):
         """``step`` 必须把**自己选的动作**交给痕迹，而不是随手一列。"""
@@ -119,6 +152,22 @@ class TestActorWiring:
         assert float(actor.trace.positive[:, other].abs().sum()) == 0.0
         assert float(actor.trace.negative[:, other].abs().sum()) == 0.0
         assert float(actor.trace.positive[:, chosen].sum()) > 0.0
+
+    def test_rate_rule_receives_the_continuous_features(self):
+        features = torch.rand(16, generator=torch.Generator().manual_seed(13)) + 0.1
+        actor = SpikingActor(
+            16,
+            2,
+            steps=8,
+            trace_rule="rate-features",
+            normalize=False,
+            generator=torch.Generator().manual_seed(14),
+        )
+        chosen = actor.step(features, generator=torch.Generator().manual_seed(15), greedy=True)
+
+        assert torch.allclose(actor.trace.value[:, chosen], features)
+        other = 1 - chosen
+        assert float(actor.trace.value[:, other].abs().sum()) == 0.0
 
     def test_apply_success_signal_goes_through_the_trace_object(self):
         actor = SpikingActor(

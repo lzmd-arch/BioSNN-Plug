@@ -41,6 +41,7 @@ import torch
 __all__ = [
     "EligibilityTrace",
     "PairBasedTrace",
+    "RateFeatureTrace",
     "STDPWindow",
     "SignConsistentTrace",
     "build_trace",
@@ -216,9 +217,11 @@ class PairBasedTrace:
         post_spikes: torch.Tensor,
         window: STDPWindow,
         action: int,
+        *,
+        features: torch.Tensor | None = None,
     ) -> None:
-        """动作参数在这里**不用**：历史规则对所有动作都累积同一条有符号痕迹。"""
-        del action
+        """动作与连续特征在这里**都不用**：历史规则对所有动作累积同一条有符号痕迹。"""
+        del action, features
         self.inner.accumulate(pair_based_stdp(pre_spikes, post_spikes, window))
 
     def apply(
@@ -274,7 +277,10 @@ class SignConsistentTrace:
         post_spikes: torch.Tensor,
         window: STDPWindow,
         action: int,
+        *,
+        features: torch.Tensor | None = None,
     ) -> None:
+        del features
         if not 0 <= int(action) < self.positive.shape[1]:
             raise ValueError(f"动作 {action} 越界（共 {self.positive.shape[1]} 个）。")
         ltp, ltd = ltp_ltd(pre_spikes, post_spikes, window)
@@ -305,7 +311,64 @@ class SignConsistentTrace:
         self.negative.zero_()
 
 
-_TRACE_RULES = ("pair-stdp", "sign-consistent")
+class RateFeatureTrace:
+    """速率版形状的资格：``E ← λ·E + x_t · 1[a_t]``（连续特征，动作门控）。
+
+    这是**诊断对照**，不是候选最终规则：它把 STDP 的第二因子换回速率版已验证的
+    ``x · a``，用来判别"STDP 资格的形状/时域"是不是瓶颈（预注册见
+    ``rstdp_spiking_credit_diagnosis_prereg.md``）。δ_t 仍由同一群体 Critic 给出，
+    更新仍是 ``w ← w + η·δ_t·E``，随后仍做列归一化。
+    """
+
+    def __init__(
+        self,
+        n_pre: int,
+        n_post: int,
+        *,
+        decay: float = 0.9,
+        device: torch.device | None = None,
+    ) -> None:
+        if not 0.0 <= decay < 1.0:
+            raise ValueError(f"decay 应在 [0, 1) 内，收到 {decay}。")
+        self.decay = float(decay)
+        self.value = torch.zeros(n_pre, n_post, device=device)
+
+    def accumulate_window(
+        self,
+        pre_spikes: torch.Tensor,
+        post_spikes: torch.Tensor,
+        window: STDPWindow,
+        action: int,
+        *,
+        features: torch.Tensor | None = None,
+    ) -> None:
+        del pre_spikes, post_spikes, window
+        if features is None:
+            raise ValueError("rate-features 需要连续特征 x_t；调用方必须显式传入 features。")
+        x = torch.as_tensor(features, dtype=self.value.dtype, device=self.value.device)
+        if x.shape != (self.value.shape[0],):
+            raise ValueError(f"特征形状 {tuple(x.shape)} 与 ({self.value.shape[0]},) 不一致。")
+        if not 0 <= int(action) < self.value.shape[1]:
+            raise ValueError(f"动作 {action} 越界（共 {self.value.shape[1]} 个）。")
+        self.value.mul_(self.decay)
+        self.value[:, int(action)].add_(x)
+
+    def apply(
+        self,
+        weights: torch.Tensor,
+        learning_rate: float,
+        success_signal: float,
+    ) -> None:
+        weights.add_(learning_rate * float(success_signal) * self.value)
+
+    def rms(self) -> float:
+        return float(self.value.pow(2).mean().sqrt().item())
+
+    def reset(self) -> None:
+        self.value.zero_()
+
+
+_TRACE_RULES = ("pair-stdp", "sign-consistent", "rate-features")
 
 
 def build_trace(
@@ -315,10 +378,12 @@ def build_trace(
     *,
     decay: float = 0.9,
     device: torch.device | None = None,
-) -> PairBasedTrace | SignConsistentTrace:
+) -> PairBasedTrace | SignConsistentTrace | RateFeatureTrace:
     """按名字建痕迹对象；未知取值直接报错，不静默退化。"""
     if rule == "pair-stdp":
         return PairBasedTrace(n_pre, n_post, decay=decay, device=device)
     if rule == "sign-consistent":
         return SignConsistentTrace(n_pre, n_post, decay=decay, device=device)
+    if rule == "rate-features":
+        return RateFeatureTrace(n_pre, n_post, decay=decay, device=device)
     raise ValueError(f"未知的 trace_rule：{rule!r}；可选 {_TRACE_RULES}。")

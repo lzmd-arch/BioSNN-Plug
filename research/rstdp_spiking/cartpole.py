@@ -323,10 +323,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--learning-rate", type=float, default=1e-2)
     parser.add_argument(
         "--trace-rule",
-        choices=("pair-stdp", "sign-consistent"),
+        choices=("pair-stdp", "sign-consistent", "rate-features"),
         default="pair-stdp",
         help="Actor 痕迹规则：pair-stdp=历史的有符号规则（默认）；"
-        "sign-consistent=按成功信号符号选 LTP/LTD 两相",
+        "sign-consistent=按成功信号符号选 LTP/LTD 两相；"
+        "rate-features=速率版形状的 x·a（诊断对照）",
     )
     parser.add_argument("--baseline-decay", type=float, default=0.05)
     parser.add_argument(
