@@ -717,6 +717,15 @@
 >    "闭环终止不可评"。见
 >    [`sweep_results/world_model_closed_loop_head/README.md`](sweep_results/world_model_closed_loop_head/README.md)。
 
+> 76. **2026-10-26：元认知 v2（ensemble）——多样性有了，校准仍不过**。
+>    K=5 bootstrap(80%) 读出、均值 logits、温度/阈值只在校准集选：选择性 **0.5453**
+>    （+6.63 pp，过）；AUROC **0.738**（不过 0.75）、ECE **0.177**（不过 0.10）。成员 AUROC
+>    0.713，ensemble 只提升 ~0.025；温度每次撞网格下界 0.01，均值 logits 尺度太小。
+>    结论：**弃权策略容易过，"知道自己不确定"难**；v3 要换置信度组合方式（均值概率/
+>    ensemble margin/极宽 T），不是继续加成员。按顺序下一项是**情景记忆 v2（重做编码器）**；
+>    元认知 v3 并行开放。见
+>    [`sweep_results/metacognitive_gate_v2/README.md`](sweep_results/metacognitive_gate_v2/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
