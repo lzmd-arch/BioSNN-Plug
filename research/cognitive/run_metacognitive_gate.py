@@ -12,10 +12,11 @@ import numpy as np
 import torch
 
 from research.cognitive.metacognitive_gate import (
+    coverage_threshold,
     ece,
     fit_temperature,
     risk_coverage_auc,
-    selective_accuracy,
+    selective_accuracy_at,
     softmax,
     train_readout,
 )
@@ -69,11 +70,12 @@ def run(
         temperature = fit_temperature(logits[calibration], labels[calibration])
         probs_pre = softmax(logits[evaluation], 1.0)
         probs_post = softmax(logits[evaluation], temperature)
+        probs_cal = softmax(logits[calibration], temperature)
         correct = np.argmax(logits[evaluation], axis=1) == labels[evaluation]
         confidence = probs_post.max(axis=1)
-        selective, actual_coverage, threshold = selective_accuracy(
-            confidence, correct, coverage=COVERAGE
-        )
+        # 阈值只在**校准集**上取 80% 覆盖；评估集不参与选择。
+        threshold = coverage_threshold(probs_cal.max(axis=1), COVERAGE)
+        selective, actual_coverage = selective_accuracy_at(confidence, correct, threshold=threshold)
         base = float(np.mean(correct))
         rows.append(
             {
