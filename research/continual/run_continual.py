@@ -290,6 +290,22 @@ GATE_MIN_WEIGHT_CHANGE = 0.05
 """预注册 v2 的跑门：每个任务读出权重的相对变化不得低于此值。"""
 
 
+def _active_rows_for_task(
+    isolation: str,
+    classes: np.ndarray,
+    rng: np.random.Generator,
+    n_classes: int = 100,
+) -> np.ndarray | None:
+    """按隔离臂给出本任务允许更新的输出行；``none`` 返回 ``None``（全行更新）。"""
+    if isolation == "none":
+        return None
+    if isolation == "current-rows":
+        return np.asarray(classes, dtype=int)
+    if isolation == "random-rows":
+        return np.sort(rng.choice(n_classes, size=len(classes), replace=False)).astype(int)
+    raise ValueError(f"未知的 isolation：{isolation!r}；可选 none / current-rows / random-rows。")
+
+
 def _sample_replay(
     features: np.ndarray,
     labels: np.ndarray,
@@ -322,13 +338,14 @@ def _train_delta_readout(
     batch: int,
     rho: float,
     rng: np.random.Generator,
+    active_classes: np.ndarray | None = None,
 ) -> None:
     """训练 delta 读出；``batch <= 0`` 走 v1 的全批量，否则按 ρ 混入回放。"""
     if rho > 0 and batch <= 0:
         raise ValueError("replay 需要 --readout-batch > 0（预注册 v2 的 minibatch 混合）。")
     if batch <= 0:
         for _ in range(epochs):
-            readout.step(features, labels)
+            readout.step(features, labels, active_classes=active_classes)
         return
     n_replay = round(rho * batch) if replay_features.shape[0] else 0
     n_current = batch - n_replay
@@ -344,7 +361,7 @@ def _train_delta_readout(
                 replay_index = rng.integers(0, replay_features.shape[0], size=n_replay)
                 x = np.concatenate([x, replay_features[replay_index]], axis=0)
                 y = np.concatenate([y, replay_labels[replay_index]], axis=0)
-            readout.step(x, y)
+            readout.step(x, y, active_classes=active_classes)
 
 
 def run_with_frozen_frontend_delta(
@@ -362,6 +379,7 @@ def run_with_frozen_frontend_delta(
     replay_per_class: int = 20,
     normalize: str = "none",
     normalize_scale: str = "native",
+    isolation: str = "none",
 ) -> dict:
     """Route R 的 delta 读出：冻结特征 + 线性读出 + 可选 latent replay / 归一化。
 
@@ -392,6 +410,8 @@ def run_with_frozen_frontend_delta(
     rng = np.random.default_rng(seed)
     ratios: list[float] = []
     transform = build_transform(normalize, scale=normalize_scale)
+    isolation_rng = np.random.default_rng(seed + 7919)
+    active_rows: list[list[int]] = []
 
     for t, classes in enumerate(tasks):
         seen.extend(int(c) for c in classes)
@@ -411,6 +431,8 @@ def run_with_frozen_frontend_delta(
             transform.fit(features)
             test_features = transform.transform(test_features)
         features = transform.transform(features)
+        active = _active_rows_for_task(isolation, classes, isolation_rng)
+        active_rows.append([] if active is None else [int(c) for c in active])
 
         before = readout.weights.copy()
         _train_delta_readout(
@@ -423,6 +445,7 @@ def run_with_frozen_frontend_delta(
             batch=readout_batch,
             rho=replay_rho,
             rng=rng,
+            active_classes=active,
         )
         denominator = float(np.linalg.norm(before))
         if t == 0 or denominator < 1e-12:
@@ -457,6 +480,8 @@ def run_with_frozen_frontend_delta(
         "normalize": normalize,
         "normalize_scale": normalize_scale,
         "normalizer": transform.digest(),
+        "isolation": isolation,
+        "active_rows": active_rows,
         "accuracy_matrix": matrix.tolist(),
         "acc": scores.acc,
         "af": scores.af,
@@ -543,6 +568,13 @@ def main(argv: list[str] | None = None) -> int:
         help="0=全批量（v1 协议）；>0=minibatch 大小（回放臂用 128）",
     )
     parser.add_argument(
+        "--isolation",
+        choices=("none", "current-rows", "random-rows"),
+        default="none",
+        help="输出行参数隔离：none=全行更新；current-rows=只更新当前任务类；"
+        "random-rows=只更新同样数量的随机行（控制臂）",
+    )
+    parser.add_argument(
         "--normalize",
         choices=("none", "task1-standardize"),
         default="none",
@@ -562,6 +594,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--normalize none 时 --normalize-scale 必须为 native。")
     if args.readout == "ncm" and args.normalize != "none":
         parser.error("归一化臂只接 delta 读出；NCM 的白化是另一条路径。")
+    if args.readout == "ncm" and args.isolation != "none":
+        parser.error("参数隔离臂只接 delta 读出；NCM 没有可冻结的输出行。")
 
     if args.smoke:
         args.tasks = 2
@@ -604,6 +638,7 @@ def main(argv: list[str] | None = None) -> int:
                         replay_per_class=args.replay_per_class,
                         normalize=args.normalize,
                         normalize_scale=args.normalize_scale,
+                        isolation=args.isolation,
                     )
                 )
             continue
@@ -655,6 +690,7 @@ def main(argv: list[str] | None = None) -> int:
             "replay_per_class": args.replay_per_class,
             "normalize": args.normalize,
             "normalize_scale": args.normalize_scale,
+            "isolation": args.isolation,
         },
         "per_seed": results,
         "void_seeds": [row["seed"] for row in results if not row.get("valid", True)],
@@ -667,6 +703,7 @@ def main(argv: list[str] | None = None) -> int:
             notes=[
                 f"特征：{args.features}/{args.backbone}；读出：{args.readout}；"
                 f"归一化：{args.normalize}（{args.normalize_scale}）；"
+                f"隔离：{args.isolation}；"
                 f"回放 ρ：{args.replay_rho}；batching：{args.readout_batch or '全批量'}"
             ],
             device=device,

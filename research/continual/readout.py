@@ -56,8 +56,18 @@ class DeltaReadout:
         """``(n, n_in)`` → ``(n, n_classes)`` 的 logits。"""
         return np.asarray(features, dtype=np.float64) @ self.weights.T + self.bias
 
-    def step(self, features: np.ndarray, labels: np.ndarray) -> None:
-        """一次批量 delta 更新（按样本数的均值，避免步长随批量大小漂移）。"""
+    def step(
+        self,
+        features: np.ndarray,
+        labels: np.ndarray,
+        *,
+        active_classes: np.ndarray | None = None,
+    ) -> None:
+        """一次批量 delta 更新（按样本数的均值，避免步长随批量大小漂移）。
+
+        ``active_classes`` 给出时**只更新这些输出行和对应偏置**，其余行逐位冻结——
+        这是预注册 v4 的输出级参数隔离。``None`` 走原路径（全行更新），逐位不变。
+        """
         x = np.asarray(features, dtype=np.float64)
         y = np.asarray(labels, dtype=int)
         if x.ndim != 2 or x.shape[1] != self.n_in:
@@ -70,8 +80,20 @@ class DeltaReadout:
         with np.errstate(over="ignore", invalid="ignore"):
             error = target - self.predict(x)
             scale = self.learning_rate / x.shape[0]
-            self.weights += scale * (error.T @ x)
-            self.bias += scale * error.sum(axis=0)
+            if active_classes is None:
+                self.weights += scale * (error.T @ x)
+                self.bias += scale * error.sum(axis=0)
+            else:
+                active = np.asarray(active_classes, dtype=int)
+                if active.ndim != 1 or active.size == 0:
+                    raise ValueError("active_classes 必须是非空一维数组。")
+                if active.min() < 0 or active.max() >= self.n_classes:
+                    raise ValueError(
+                        f"active_classes 必须在 [0, {self.n_classes}) 内，收到 {active}。"
+                    )
+                index = np.unique(active)
+                self.weights[index] += scale * (error.T @ x)[index]
+                self.bias[index] += scale * error.sum(axis=0)[index]
         if not (np.all(np.isfinite(self.weights)) and np.all(np.isfinite(self.bias))):
             raise RuntimeError(
                 "delta 读出发散（权重出现 inf/NaN）。检查步长与特征尺度："
