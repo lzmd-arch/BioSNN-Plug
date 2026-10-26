@@ -799,6 +799,14 @@
 >    只有 0.604**。**情景记忆轴封存**；将来要做得换任务/时间编码/评估口径，不调 k/β。见
 >    [`sweep_results/episodic_memory_v3/README.md`](sweep_results/episodic_memory_v3/README.md)。
 
+> 86. **2026-10-27：阶段四集成 demo——能串起来，但端到端元认知没有继承**。
+>    WM v4 + 元认知 ensemble 分歧 + P3 世界模型 + 字面情景索引在同一输入上运行，重复调用
+>    逐位一致，`integration_ok=true`：WM R² **0.9978 / 0.9950 / 0.9989**、世界模型一步 NMSE
+>    **4.33e-9**。但元认知分歧在“WM 回归误差”这个新任务上 AUROC 只有 **0.562**，情景检索
+>    MSE 1.194——**组合可运行 ≠ 端到端能力**；v3 的分类置信度不能自动迁移到回归。
+>    下一步：要么写死一个真正的端到端任务/指标再逐组件接，要么先做 WM v5（ALIF 脉冲）。
+>    见 [`sweep_results/stage4_integration_demo/README.md`](sweep_results/stage4_integration_demo/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

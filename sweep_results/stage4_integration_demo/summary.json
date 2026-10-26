@@ -1,0 +1,35 @@
+{
+  "experiment": "阶段四集成 demo（组合/等价性）",
+  "config": {
+    "members": 3,
+    "epochs": 10,
+    "seeds": [
+      0
+    ]
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "wm_r2": [
+        0.9977940921699429,
+        0.9949632587063271,
+        0.9989029987451532
+      ],
+      "wm_parity": true,
+      "metacog_error_auroc": 0.5616,
+      "metacog_mean_error": 0.002663752146995699,
+      "episodic_retrieval_mse": 1.194116523687732
+    }
+  ],
+  "world_model": {
+    "one_step_nmse": 4.326844042161658e-09,
+    "parity": true
+  },
+  "gate": {
+    "wm_parity": true,
+    "world_model_parity": true,
+    "metrics_finite": true,
+    "integration_ok": true
+  },
+  "repro": "```text\n实验名称：阶段四集成 demo\n日期：2026-10-27 00:48:38 中国标准时间\nGit commit：5fa6007083465cb055cf098b24c988db488e1e4a\nGit 状态：有 1 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：integration_demo.py --seeds 0 --out data/_integration_demo\n耗时：0.9 s\n备注：组合/等价性 demo，不是新的性能主张\n备注：WM v4（局部 RLS）+ 元认知 ensemble 分歧 + P3 世界模型 + 字面情景索引\n```"
+}
