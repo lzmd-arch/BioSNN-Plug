@@ -9,7 +9,7 @@ import torch
 
 from research.continual import run_continual, task_inference
 from research.continual.data import CifarSplit
-from research.continual.task_inference import _route, _task_prototype, run_with_task_inference
+from research.continual.task_inference import _route, _task_stats, run_with_task_inference
 
 
 def _features(labels: np.ndarray, dims: int = 100) -> np.ndarray:
@@ -20,18 +20,26 @@ def _features(labels: np.ndarray, dims: int = 100) -> np.ndarray:
 
 
 class TestPrototypeAndRouting:
-    def test_prototype_is_the_mean_of_class_means(self):
-        features = np.array([[1.0, 0.0], [3.0, 0.0], [10.0, 0.0], [14.0, 0.0]])
+    def test_stats_are_the_mean_of_class_means_and_within_variance(self):
+        features = np.array([[1.0, 0.0], [3.0, 0.0], [10.0, 2.0], [14.0, 2.0]])
         labels = np.array([0, 0, 1, 1])
-        prototype = _task_prototype(features, labels, np.array([0, 1]))
+        mean, variance = _task_stats(features, labels, np.array([0, 1]))
 
-        assert np.allclose(prototype, [7.0, 0.0])
+        assert np.allclose(mean, [7.0, 1.0])
+        assert np.allclose(variance, [2.5, 0.0])
 
     def test_route_picks_the_nearest_prototype(self):
         features = np.array([[1.0, 0.0], [9.0, 0.0]])
         prototypes = [np.array([0.0, 0.0]), np.array([10.0, 0.0])]
 
         assert _route(features, prototypes).tolist() == [0, 1]
+
+    def test_mahalanobis_uses_the_within_task_variance(self):
+        features = np.array([[5.0, 0.0]])
+        prototypes = [np.array([0.0, 0.0]), np.array([10.0, 0.0])]
+        variances = [np.array([1.0, 1.0]), np.array([100.0, 1.0])]
+
+        assert _route(features, prototypes, variances).tolist() == [1]
 
 
 class TestRunnerWiring:
@@ -68,6 +76,8 @@ class TestRunnerWiring:
         assert result["routing_accuracy"] == 1.0
         assert result["acc"] > 0.8
         assert result["valid"] is True
+        assert all(accuracy >= 0.5 for accuracy in result["head_train_accuracy"])
+        assert all(norm > 0 for norm in result["head_weight_norm"])
         assert np.array(result["accuracy_matrix"]).shape == (10, 10)
 
     def test_oracle_uses_the_true_task_head(self, monkeypatch):

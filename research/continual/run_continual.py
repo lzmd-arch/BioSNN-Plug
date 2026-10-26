@@ -627,9 +627,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--task-inference",
-        choices=("none", "routed", "oracle"),
+        choices=("none", "routed", "mahalanobis", "oracle"),
         default="none",
-        help="任务推断保底臂：none=关；routed=最近任务原型；oracle=真实任务 id（上界）",
+        help="任务推断保底臂：none=关；routed=最近任务原型；mahalanobis=对角 Mahalanobis；"
+        "oracle=真实任务 id（上界）",
     )
     parser.add_argument(
         "--feature-mask",

@@ -33,14 +33,18 @@ from research.continual.readout import DeltaReadout
 
 __all__ = ["run_with_task_inference"]
 
-#: 头在最后一个 epoch 的相对权重变化下限（与全局跑门同一条纪律）。
-GATE_MIN_WEIGHT_CHANGE = 0.05
+#: 头的训练准确率下限。从零初始化的头训到收敛后，末 epoch 的相对变化会饱和在
+#: lr 的有效尺度（实测 0.047），不能用来判"更新有没有进权重"；用训练准确率更直接。
+GATE_MIN_TRAIN_ACCURACY = 0.5
 
 
-def _task_prototype(features: np.ndarray, labels: np.ndarray, classes: np.ndarray) -> np.ndarray:
-    """本任务各类均值的再平均；只用训练特征。"""
+def _task_stats(
+    features: np.ndarray, labels: np.ndarray, classes: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """本任务的均值与**类内**逐维方差；只用训练特征。"""
     means = [features[labels == label].mean(axis=0) for label in classes]
-    return np.mean(means, axis=0)
+    variances = [features[labels == label].var(axis=0) for label in classes]
+    return np.mean(means, axis=0), np.mean(variances, axis=0)
 
 
 def _train_head(
@@ -51,33 +55,33 @@ def _train_head(
     epochs: int,
     batch: int,
     rng: np.random.Generator,
-) -> float:
-    """训练一个头，返回最后一个 epoch 的相对权重变化（跑门用）。"""
-    before_last = head.weights.copy()
-    for epoch in range(epochs):
-        if epoch == epochs - 1:
-            before_last = head.weights.copy()
+) -> None:
+    """训练一个头；跑门在训练后用训练准确率与权重范数判。"""
+    for _ in range(epochs):
         order = rng.permutation(features.shape[0])
         for start in range(0, features.shape[0], batch):
             index = order[start : start + batch]
             head.step(features[index], labels[index])
-    denominator = float(np.linalg.norm(before_last))
-    if denominator < 1e-12:
-        return float("inf") if np.linalg.norm(head.weights) > 0 else 0.0
-    return float(np.linalg.norm(head.weights - before_last) / denominator)
 
 
 def _route(
     features: np.ndarray,
     prototypes: list[np.ndarray],
+    variances: list[np.ndarray] | None = None,
 ) -> np.ndarray:
-    """最近任务原型；用范数展开避免 ``n × tasks × dim`` 的临时张量。"""
+    """最近任务原型（欧氏）或对角 Mahalanobis 最近任务。"""
     matrix = np.stack(prototypes)
-    distances = (
-        (features**2).sum(axis=1)[:, None]
-        + (matrix**2).sum(axis=1)[None, :]
-        - 2.0 * features @ matrix.T
-    )
+    if variances is None:
+        distances = (
+            (features**2).sum(axis=1)[:, None]
+            + (matrix**2).sum(axis=1)[None, :]
+            - 2.0 * features @ matrix.T
+        )
+    else:
+        scale = np.stack(variances).clip(min=1e-6)
+        # (n, tasks, dim) 的临时张量太大；逐任务算。
+        squared = (features[:, None, :] - matrix[None, :, :]) ** 2 / scale[None, :, :]
+        distances = squared.sum(axis=2)
     return np.argmin(distances, axis=1)
 
 
@@ -105,8 +109,8 @@ def run_with_task_inference(
     routing: str = "routed",
 ) -> dict:
     """跑一个种子的 task-inference 臂；``routing`` 为 ``routed`` 或 ``oracle``。"""
-    if routing not in ("routed", "oracle"):
-        raise ValueError(f"routing 只能是 'routed' 或 'oracle'，收到 {routing!r}。")
+    if routing not in ("routed", "mahalanobis", "oracle"):
+        raise ValueError(f"routing 只能是 'routed' / 'mahalanobis' / 'oracle'，收到 {routing!r}。")
     np.random.seed(seed)
     train, test = load_cifar100(data_root)
     cache_dir = Path(data_root) / "_features"
@@ -122,7 +126,9 @@ def run_with_task_inference(
     routing_matrix = np.full((n_tasks, n_tasks), np.nan)
     heads: list[DeltaReadout] = []
     prototypes: list[np.ndarray] = []
-    gate_ratios: list[float] = []
+    variances: list[np.ndarray] = []
+    head_train_accuracy: list[float] = []
+    head_weight_norm: list[float] = []
     rng = np.random.default_rng(seed)
 
     for t, classes in enumerate(tasks):
@@ -139,18 +145,22 @@ def run_with_task_inference(
         head = DeltaReadout(
             int(features.shape[1]), len(classes), learning_rate=learning_rate, seed=seed + t
         )
-        gate_ratios.append(
-            _train_head(
-                head,
-                features,
-                local,
-                epochs=readout_epochs,
-                batch=readout_batch,
-                rng=rng,
-            )
+        _train_head(
+            head,
+            features,
+            local,
+            epochs=readout_epochs,
+            batch=readout_batch,
+            rng=rng,
         )
         heads.append(head)
-        prototypes.append(_task_prototype(features, labels, classes))
+        mean, variance = _task_stats(features, labels, classes)
+        prototypes.append(mean)
+        variances.append(variance)
+        head_train_accuracy.append(
+            float(np.mean(np.argmax(head.predict(features), axis=1) == local))
+        )
+        head_weight_norm.append(float(np.linalg.norm(head.weights)))
 
         for i, task in enumerate(tasks[: t + 1]):
             pick = np.isin(test.y, task)
@@ -158,6 +168,8 @@ def run_with_task_inference(
             y = test.y[pick]
             if routing == "oracle":
                 inferred = np.full(x.shape[0], i, dtype=int)
+            elif routing == "mahalanobis":
+                inferred = _route(x, prototypes[: t + 1], variances[: t + 1])
             else:
                 inferred = _route(x, prototypes[: t + 1])
             predicted = np.empty(x.shape[0], dtype=int)
@@ -176,6 +188,8 @@ def run_with_task_inference(
         x = test_features[pick]
         if routing == "oracle":
             inferred = np.full(x.shape[0], i, dtype=int)
+        elif routing == "mahalanobis":
+            inferred = _route(x, prototypes, variances)
         else:
             inferred = _route(x, prototypes)
         for k in range(n_tasks):
@@ -183,7 +197,8 @@ def run_with_task_inference(
 
     scores = summarise(matrix)
     gate_failed = any(
-        not np.isfinite(ratio) or ratio < GATE_MIN_WEIGHT_CHANGE for ratio in gate_ratios
+        norm <= 0.0 or accuracy < GATE_MIN_TRAIN_ACCURACY
+        for norm, accuracy in zip(head_weight_norm, head_train_accuracy, strict=True)
     )
     return {
         "seed": seed,
@@ -198,7 +213,8 @@ def run_with_task_inference(
         "routing_accuracy_matrix": routing_matrix.tolist(),
         "routing_accuracy": float(np.nanmean(np.diag(routing_matrix))),
         "confusion_matrix": confusion.tolist(),
-        "head_gate_ratios": gate_ratios,
+        "head_train_accuracy": head_train_accuracy,
+        "head_weight_norm": head_weight_norm,
         "gate_failed": gate_failed,
         "valid": not gate_failed,
     }
