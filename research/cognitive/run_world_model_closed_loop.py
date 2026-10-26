@@ -185,12 +185,18 @@ def run(
         model = RidgeActionModel(quadratic=True)
         model.fit(states, actions, next_states, terminated)
         termination_head = None
-        if termination_model == "dedicated":
+        if termination_model in ("dedicated", "imagined"):
             termination_head = TerminationHead()
-            termination_head.fit(states, actions, terminated)
+            if termination_model == "dedicated":
+                termination_head.fit(states, actions, terminated)
+            else:
+                # 用模型的一步预测状态当输入，标签仍来自真实转移的 terminated。
+                imagined_states = states + model.predict(states, actions).delta
+                termination_head.fit(imagined_states, actions, terminated)
         elif termination_model != "ridge":
             raise ValueError(
-                f"termination_model 只能是 'ridge' 或 'dedicated'，收到 {termination_model!r}。"
+                "termination_model 只能是 'ridge' / 'dedicated' / 'imagined'，"
+                f"收到 {termination_model!r}。"
             )
         baseline = CopyLastModel()
         baseline.fit(states, actions, next_states, terminated)
@@ -310,7 +316,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--episodes", type=int, default=200)
     parser.add_argument("--test-episodes", type=int, default=100)
     parser.add_argument("--horizon", type=int, default=HORIZON)
-    parser.add_argument("--termination", choices=("ridge", "dedicated"), default="ridge")
+    parser.add_argument(
+        "--termination", choices=("ridge", "dedicated", "imagined"), default="ridge"
+    )
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
     run(
