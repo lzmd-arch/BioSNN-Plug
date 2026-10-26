@@ -743,6 +743,14 @@
 >    这是阶段四目前最干净的正面机制结果。见
 >    [`sweep_results/working_memory_v0/README.md`](sweep_results/working_memory_v0/README.md)。
 
+> 79. **2026-10-26：多时间尺度工作记忆 v1——阶段四第一个按判据 ready 的组件**。
+>    三线索 A/B/C（t=0–4/15–19/30–34，测试 t=60），τ=2..200：多尺度 R² **0.9936 / 0.9877 /
+>    0.9980**；fast(τ=2) 全丢、mid(τ=20) 漏 A/B、slow(τ=200) 三个都 <0.5。判据（多尺度全
+>    ≥0.5、fast A<0.3、每个单尺度至少漏一个）全过，`w1_ready=true`。**边界**：ridge 是
+>    测量头，不是局部学习规则；v1 证明的是固定 τ 漏积分器的状态表示。v2 需把读出换成
+>    局部规则或把积分器换成 ALIF 脉冲实现。见
+>    [`sweep_results/working_memory_v1/README.md`](sweep_results/working_memory_v1/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
