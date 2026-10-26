@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import tempfile
 import time
 from dataclasses import dataclass, field
@@ -49,6 +50,7 @@ from research.components.cartpole_encoding import (
 )
 from research.rstdp_spiking.actor import SpikingActor
 from research.rstdp_spiking.critic import LinearCritic
+from research.rstdp_spiking.linear_policy import LinearRatePolicy
 from research.rstdp_spiking.pop_critic import PopulationCritic
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -185,6 +187,9 @@ def train(
     entropy_log: bool = False,
     keep_actor: bool = False,
     trace_rule: str = "pair-stdp",
+    policy: str = "spiking",
+    logit_scale_start: float | None = 1.0,
+    logit_scale_end: float | None = 40.0,
 ) -> TrainResult:
     """训练一个种子。返回逐回合回报与评测曲线。"""
     import gymnasium
@@ -195,15 +200,27 @@ def train(
     centers = population_centers(
         n_features, half_widths=CARTPOLE_HALF_WIDTHS, generator=generator, device=device
     )
-    actor = SpikingActor(
-        n_features,
-        n_actions=2,
-        steps=steps,
-        learning_rate=learning_rate,
-        trace_rule=trace_rule,
-        generator=generator,
-        device=device,
-    )
+    if policy == "spiking":
+        actor = SpikingActor(
+            n_features,
+            n_actions=2,
+            steps=steps,
+            learning_rate=learning_rate,
+            trace_rule=trace_rule,
+            generator=generator,
+            device=device,
+        )
+    elif policy == "linear":
+        actor = LinearRatePolicy(
+            n_features,
+            2,
+            learning_rate=learning_rate,
+            logit_scale=1.0,
+            generator=generator,
+            device=device,
+        )
+    else:
+        raise ValueError(f"未知的 policy：{policy!r}；可选 'spiking' 或 'linear'。")
 
     if critic_kind == "td":
         critic = LinearCritic(n_features, gamma=gamma, learning_rate=critic_rate)
@@ -241,6 +258,12 @@ def train(
     best_state: dict[str, torch.Tensor] | None = None
 
     for episode in range(episodes):
+        if policy == "linear" and logit_scale_start is not None and logit_scale_end is not None:
+            progress = episode / episodes
+            actor.logit_scale = math.exp(
+                math.log(logit_scale_start)
+                + progress * (math.log(logit_scale_end) - math.log(logit_scale_start))
+            )
         steps_alive = run_episode(
             env,
             actor,
@@ -274,7 +297,7 @@ def train(
                 best_steps = score
                 selected_episode = episode + 1
                 best_state = {
-                    key: value.detach().clone() for key, value in actor.layer.state_dict().items()
+                    key: value.detach().clone() for key, value in actor.state_dict().items()
                 }
 
     env.close()
@@ -283,7 +306,7 @@ def train(
     noise: list[float] = []
     if eval_noise_seeds > 0:
         if best_state is not None:
-            actor.layer.load_state_dict(best_state)
+            actor.load_state_dict(best_state)
         for index in range(eval_noise_seeds):
             noise.append(
                 evaluate(
@@ -296,7 +319,7 @@ def train(
             )
 
     if keep_actor and best_state is not None:
-        actor.layer.load_state_dict(best_state)
+        actor.load_state_dict(best_state)
 
     return TrainResult(
         seed=seed,
@@ -321,6 +344,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--sigma", type=float, default=1.0)
     parser.add_argument("--steps", type=int, default=25, help="每个决策的脉冲窗口长度")
     parser.add_argument("--learning-rate", type=float, default=1e-2)
+    parser.add_argument(
+        "--policy",
+        choices=("spiking", "linear"),
+        default="spiking",
+        help="动作策略：spiking=脉冲计数（默认）；linear=D2 的线性 Boltzmann 对照",
+    )
+    parser.add_argument("--logit-scale-start", type=float, default=1.0)
+    parser.add_argument("--logit-scale-end", type=float, default=40.0)
     parser.add_argument(
         "--trace-rule",
         choices=("pair-stdp", "sign-consistent", "rate-features"),
@@ -429,6 +460,9 @@ def main(argv: list[str] | None = None) -> int:
             pop_mask_density=args.pop_mask_density,
             device=device,
             trace_rule=args.trace_rule,
+            policy=args.policy,
+            logit_scale_start=args.logit_scale_start,
+            logit_scale_end=args.logit_scale_end,
         )
         results.append(outcome)
         print(
@@ -465,6 +499,9 @@ def main(argv: list[str] | None = None) -> int:
             "gamma": args.gamma,
             "warmup": args.warmup,
             "trace_rule": args.trace_rule,
+            "policy": args.policy,
+            "logit_scale_start": args.logit_scale_start,
+            "logit_scale_end": args.logit_scale_end,
         },
         "per_seed": [
             {
@@ -486,6 +523,7 @@ def main(argv: list[str] | None = None) -> int:
                 "episodic R-STDP，成功信号 = 回报 − EMA 基线（**TD-LTP Critic 尚未接入**）",
                 "评测冻结随机流（环境种子 + 脉冲发生器种子）",
                 f"Actor 痕迹规则：{args.trace_rule}",
+                f"动作策略：{args.policy}",
             ],
             device=device,
         ).render_block(),

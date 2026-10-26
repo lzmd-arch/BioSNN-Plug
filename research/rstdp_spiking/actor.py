@@ -234,6 +234,14 @@ class SpikingActor:
         """本回合采样决策的平均熵（nats）；没有采样决策时为 0。**读完后由 end_episode 清零。**"""
         return self._entropy_sum / self._entropy_count if self._entropy_count else 0.0
 
+    def state_dict(self) -> dict[str, torch.Tensor]:
+        """权重快照；与 :meth:`load_state_dict` 配对，供训练循环选最好一步。"""
+        return self.layer.state_dict()
+
+    @torch.no_grad()
+    def load_state_dict(self, state: dict[str, torch.Tensor]) -> None:
+        self.layer.load_state_dict(state)
+
     @torch.no_grad()
     def end_episode(self) -> None:
         self.trace.reset()

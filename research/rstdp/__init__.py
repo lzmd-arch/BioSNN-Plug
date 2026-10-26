@@ -20,3 +20,7 @@
 * :mod:`~research.rstdp.signal_probe` —— **学习信号的质量**：Critic 准不准、δ 是不是优势
   估计、规则的方向对不对。
 """
+
+from research.rstdp.rstdp import RSTDPActor
+
+__all__ = ["RSTDPActor"]

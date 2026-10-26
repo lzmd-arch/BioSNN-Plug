@@ -212,13 +212,11 @@ class RSTDPActor:
         return (action, explored) if return_explored else action
 
     @torch.no_grad()
-    def update(self, features: torch.Tensor, action: int, success_signal: float) -> None:
-        """累积资格痕迹，并用成功信号调制后写入权重。
+    def accumulate_trace(self, features: torch.Tensor, action: int) -> None:
+        """只累积资格痕迹，不碰权重。
 
-        Args:
-            features: ``(n_features,)`` 当前状态的活动。
-            action: 被选中的动作下标。
-            success_signal: 全局标量 ``S``（见模块 docstring 对两个取法的说明）。
+        与 :meth:`apply_success_signal` 分开，是为了让外部循环（例如脉冲 harness 的
+        D2 对照）能用**同一条**痕迹路径，而不必复制 ``trace_center`` 的数学。
         """
         indicator = torch.zeros(self.n_actions, device=self.weights.device)
         indicator[action] = 1.0
@@ -230,9 +228,25 @@ class RSTDPActor:
             # 结构上缺失的「动作比较」。
             second_factor = indicator - self.action_probabilities(features)
         self.trace.mul_(self.trace_decay).add_(torch.outer(features, second_factor))
-        self.weights.add_(self.learning_rate * success_signal * self.trace)
+
+    @torch.no_grad()
+    def apply_success_signal(self, success_signal: float) -> None:
+        """把成功信号写进权重（``w ← w + η·S·e``），随后按需归一化。"""
+        self.weights.add_(self.learning_rate * float(success_signal) * self.trace)
         if self.normalize:
             self._normalize()
+
+    @torch.no_grad()
+    def update(self, features: torch.Tensor, action: int, success_signal: float) -> None:
+        """累积资格痕迹，并用成功信号调制后写入权重。
+
+        Args:
+            features: ``(n_features,)`` 当前状态的活动。
+            action: 被选中的动作下标。
+            success_signal: 全局标量 ``S``（见模块 docstring 对两个取法的说明）。
+        """
+        self.accumulate_trace(features, action)
+        self.apply_success_signal(success_signal)
 
     @torch.no_grad()
     def reset_trace(self) -> None:
