@@ -1,0 +1,359 @@
+{
+  "experiment": "W3 诊断 A1′：Actor 符号一致化的更新方向",
+  "config": {
+    "features": 64,
+    "steps": 25,
+    "windows": 20,
+    "device": "cpu",
+    "normalize": false,
+    "learning_rate": 1.0
+  },
+  "rows": [
+    {
+      "window": 0,
+      "counts": [
+        0.0,
+        3.0
+      ],
+      "chosen": 1,
+      "tie": false,
+      "positive_selected_sum": 720.830810546875,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -957.6885375976562,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 1,
+      "counts": [
+        9.0,
+        12.0
+      ],
+      "chosen": 1,
+      "tie": false,
+      "positive_selected_sum": 3228.330078125,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -3315.711181640625,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 2,
+      "counts": [
+        2.0,
+        10.0
+      ],
+      "chosen": 1,
+      "tie": false,
+      "positive_selected_sum": 2703.70751953125,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -2526.0439453125,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 3,
+      "counts": [
+        0.0,
+        0.0
+      ],
+      "chosen": 0,
+      "tie": true,
+      "positive_selected_sum": 0.0,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": 0.0,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": false,
+      "negative_ok": true
+    },
+    {
+      "window": 4,
+      "counts": [
+        7.0,
+        11.0
+      ],
+      "chosen": 1,
+      "tie": false,
+      "positive_selected_sum": 2824.37451171875,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -2614.826416015625,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 5,
+      "counts": [
+        5.0,
+        9.0
+      ],
+      "chosen": 1,
+      "tie": false,
+      "positive_selected_sum": 2579.5009765625,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -2655.853515625,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 6,
+      "counts": [
+        9.0,
+        6.0
+      ],
+      "chosen": 0,
+      "tie": false,
+      "positive_selected_sum": 2108.73876953125,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -1953.995361328125,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 7,
+      "counts": [
+        8.0,
+        0.0
+      ],
+      "chosen": 0,
+      "tie": false,
+      "positive_selected_sum": 2119.64453125,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -1747.9989013671875,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 8,
+      "counts": [
+        0.0,
+        2.0
+      ],
+      "chosen": 1,
+      "tie": false,
+      "positive_selected_sum": 530.5408935546875,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -451.76214599609375,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 9,
+      "counts": [
+        10.0,
+        12.0
+      ],
+      "chosen": 1,
+      "tie": false,
+      "positive_selected_sum": 2851.854736328125,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -2942.7177734375,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 10,
+      "counts": [
+        3.0,
+        12.0
+      ],
+      "chosen": 1,
+      "tie": false,
+      "positive_selected_sum": 3147.40380859375,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -3235.275634765625,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 11,
+      "counts": [
+        12.0,
+        0.0
+      ],
+      "chosen": 0,
+      "tie": false,
+      "positive_selected_sum": 3152.241455078125,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -3187.743896484375,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 12,
+      "counts": [
+        2.0,
+        6.0
+      ],
+      "chosen": 1,
+      "tie": false,
+      "positive_selected_sum": 2149.05029296875,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -1531.701416015625,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 13,
+      "counts": [
+        11.0,
+        0.0
+      ],
+      "chosen": 0,
+      "tie": false,
+      "positive_selected_sum": 2878.46630859375,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -2419.115234375,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 14,
+      "counts": [
+        10.0,
+        4.0
+      ],
+      "chosen": 0,
+      "tie": false,
+      "positive_selected_sum": 2310.74462890625,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -2915.249267578125,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 15,
+      "counts": [
+        4.0,
+        8.0
+      ],
+      "chosen": 1,
+      "tie": false,
+      "positive_selected_sum": 2013.14111328125,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -2082.39404296875,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 16,
+      "counts": [
+        7.0,
+        0.0
+      ],
+      "chosen": 0,
+      "tie": false,
+      "positive_selected_sum": 1751.2230224609375,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -1453.1199951171875,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 17,
+      "counts": [
+        0.0,
+        0.0
+      ],
+      "chosen": 0,
+      "tie": true,
+      "positive_selected_sum": 0.0,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": 0.0,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": false,
+      "negative_ok": true
+    },
+    {
+      "window": 18,
+      "counts": [
+        7.0,
+        6.0
+      ],
+      "chosen": 0,
+      "tie": false,
+      "positive_selected_sum": 1849.9813232421875,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -1803.18115234375,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    },
+    {
+      "window": 19,
+      "counts": [
+        2.0,
+        2.0
+      ],
+      "chosen": 0,
+      "tie": true,
+      "positive_selected_sum": 467.5505065917969,
+      "positive_other_abs": 0.0,
+      "positive_all_nonneg": true,
+      "negative_selected_sum": -541.6771850585938,
+      "negative_other_abs": 0.0,
+      "negative_all_nonpos": true,
+      "positive_ok": true,
+      "negative_ok": true
+    }
+  ],
+  "positive_passed": 18,
+  "negative_passed": 20,
+  "negative_strict": 18,
+  "gating_passed": 20,
+  "verdict": "symbol_consistent_failed",
+  "repro": "```text\n实验名称：W3 诊断 A1′：Actor 符号一致化的更新方向\n日期：2026-10-26 08:17:34 中国标准时间\nGit commit：22e99446624bf5158e016373452caac33aef5fb6\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：diagnose.py --experiment actor-symbol --out data/_a1_symbol\n耗时：0.1 s\n备注：诊断，不是验收；预注册见 sweep_results/rstdp_spiking_actor_fix_prereg.md。\n备注：正信号 20/20、负信号 20/20、未选列逐位为 0，才算通过。\n```"
+}

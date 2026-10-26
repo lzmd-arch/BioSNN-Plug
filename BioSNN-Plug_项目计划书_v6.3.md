@@ -481,6 +481,14 @@
 >    阶段 2 用同 10 种子配对比较，机制标记（+20 步、≥7/10）与验收门（中位数 ≥200）分开报。
 >    见 [`sweep_results/rstdp_spiking_actor_fix_prereg.md`](sweep_results/rstdp_spiking_actor_fix_prereg.md)。
 
+> ㊿ **2026-10-26：Actor 修复预注册的修订 1（先于阶段 2 数据）**。A1′ 原始 18/20，
+>    两个失败窗口是两个动作都零发放的**空窗口**（没有资格可写，不是符号反转）；修订为
+>    只在至少一个 post 脉冲的窗口上判 20/20，空窗口计数并剔除（现有数据 18/18 通过）。
+>    阶段 2 的对照臂从"1200 / lr 1e-4"（那是线性 TD）改为**默认的群体 Critic**配置
+>    （800 / lr 1e-3 / critic_rate 0.1），并**同时跑 pair-stdp 与 sign-consistent 两臂**配对；
+>    pair-stdp 必须逐位复现 `pop_gradient_10seeds` 才进入比较。判据不变。见
+>    [`sweep_results/rstdp_spiking_actor_fix_prereg_amend1.md`](sweep_results/rstdp_spiking_actor_fix_prereg_amend1.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
