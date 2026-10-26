@@ -1,0 +1,725 @@
+{
+  "experiment": "情景记忆 v3：state-indexed / attention",
+  "config": {
+    "policy_noise": 0.1,
+    "episodes": 200,
+    "capacities": [
+      100,
+      300,
+      500,
+      1000,
+      2000
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "neighbors": 5,
+    "beta": 10.0
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "capacity": 100,
+      "arm": "knn5",
+      "action_accuracy": 0.62,
+      "termination_balanced": 0.65,
+      "termination_tpr": 0.3,
+      "temporal_order": 0.46629213483146065
+    },
+    {
+      "seed": 0,
+      "capacity": 100,
+      "arm": "attention",
+      "action_accuracy": 0.63,
+      "termination_balanced": 0.65,
+      "termination_tpr": 0.3,
+      "temporal_order": 0.4470588235294118
+    },
+    {
+      "seed": 0,
+      "capacity": 100,
+      "arm": "raw_nn",
+      "action_accuracy": 0.86,
+      "termination_balanced": 0.95,
+      "termination_tpr": 0.9,
+      "temporal_order": 0.6896551724137931
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "arm": "knn5",
+      "action_accuracy": 0.6633333333333333,
+      "termination_balanced": 0.6724137931034483,
+      "termination_tpr": 0.3448275862068966,
+      "temporal_order": 0.510989010989011
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "arm": "attention",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.6896551724137931,
+      "termination_tpr": 0.3793103448275862,
+      "temporal_order": 0.48044692737430167
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "arm": "raw_nn",
+      "action_accuracy": 0.78,
+      "termination_balanced": 0.9655172413793104,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.6685082872928176
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "arm": "knn5",
+      "action_accuracy": 0.674,
+      "termination_balanced": 0.6551724137931034,
+      "termination_tpr": 0.3103448275862069,
+      "temporal_order": 0.42613636363636365
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "arm": "attention",
+      "action_accuracy": 0.67,
+      "termination_balanced": 0.6551724137931034,
+      "termination_tpr": 0.3103448275862069,
+      "temporal_order": 0.46408839779005523
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "arm": "raw_nn",
+      "action_accuracy": 0.73,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.6022099447513812
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "arm": "knn5",
+      "action_accuracy": 0.645,
+      "termination_balanced": 0.5517241379310345,
+      "termination_tpr": 0.10344827586206896,
+      "temporal_order": 0.41081081081081083
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "arm": "attention",
+      "action_accuracy": 0.624,
+      "termination_balanced": 0.5517241379310345,
+      "termination_tpr": 0.10344827586206896,
+      "temporal_order": 0.5027624309392266
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.753,
+      "termination_balanced": 0.9137931034482758,
+      "termination_tpr": 0.8620689655172413,
+      "temporal_order": 0.553072625698324
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "arm": "knn5",
+      "action_accuracy": 0.6485,
+      "termination_balanced": 0.6379310344827587,
+      "termination_tpr": 0.3103448275862069,
+      "temporal_order": 0.4486486486486487
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "arm": "attention",
+      "action_accuracy": 0.6475,
+      "termination_balanced": 0.6551724137931034,
+      "termination_tpr": 0.3103448275862069,
+      "temporal_order": 0.4530386740331492
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7565,
+      "termination_balanced": 0.896551724137931,
+      "termination_tpr": 0.7931034482758621,
+      "temporal_order": 0.5879120879120879
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "arm": "knn5",
+      "action_accuracy": 0.69,
+      "termination_balanced": 0.65,
+      "termination_tpr": 0.3,
+      "temporal_order": 0.6440677966101694
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "arm": "attention",
+      "action_accuracy": 0.71,
+      "termination_balanced": 0.65,
+      "termination_tpr": 0.3,
+      "temporal_order": 0.5549132947976878
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "arm": "raw_nn",
+      "action_accuracy": 0.75,
+      "termination_balanced": 0.95,
+      "termination_tpr": 0.9,
+      "temporal_order": 0.6789473684210526
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "arm": "knn5",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.7241379310344828,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.46368715083798884
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "arm": "attention",
+      "action_accuracy": 0.6633333333333333,
+      "termination_balanced": 0.7241379310344828,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.42857142857142855
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7266666666666667,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.6593406593406593
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "arm": "knn5",
+      "action_accuracy": 0.664,
+      "termination_balanced": 0.5862068965517242,
+      "termination_tpr": 0.1724137931034483,
+      "temporal_order": 0.4540540540540541
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "arm": "attention",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.5689655172413793,
+      "termination_tpr": 0.1724137931034483,
+      "temporal_order": 0.5388888888888889
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "arm": "raw_nn",
+      "action_accuracy": 0.782,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.6888888888888889
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "arm": "knn5",
+      "action_accuracy": 0.709,
+      "termination_balanced": 0.7068965517241379,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.44808743169398907
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "arm": "attention",
+      "action_accuracy": 0.691,
+      "termination_balanced": 0.7241379310344828,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.48677248677248675
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.742,
+      "termination_balanced": 1.0,
+      "termination_tpr": 1.0,
+      "temporal_order": 0.4388888888888889
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "arm": "knn5",
+      "action_accuracy": 0.6565,
+      "termination_balanced": 0.5517241379310345,
+      "termination_tpr": 0.10344827586206896,
+      "temporal_order": 0.42391304347826086
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "arm": "attention",
+      "action_accuracy": 0.6315,
+      "termination_balanced": 0.5689655172413793,
+      "termination_tpr": 0.13793103448275862,
+      "temporal_order": 0.47904191616766467
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7265,
+      "termination_balanced": 0.896551724137931,
+      "termination_tpr": 0.7931034482758621,
+      "temporal_order": 0.4585635359116022
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "arm": "knn5",
+      "action_accuracy": 0.58,
+      "termination_balanced": 0.55,
+      "termination_tpr": 0.1,
+      "temporal_order": 0.4230769230769231
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "arm": "attention",
+      "action_accuracy": 0.58,
+      "termination_balanced": 0.6,
+      "termination_tpr": 0.2,
+      "temporal_order": 0.5172413793103449
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "arm": "raw_nn",
+      "action_accuracy": 0.89,
+      "termination_balanced": 1.0,
+      "termination_tpr": 1.0,
+      "temporal_order": 0.7078651685393258
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "arm": "knn5",
+      "action_accuracy": 0.6533333333333333,
+      "termination_balanced": 0.6724137931034483,
+      "termination_tpr": 0.3448275862068966,
+      "temporal_order": 0.532258064516129
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "arm": "attention",
+      "action_accuracy": 0.6566666666666666,
+      "termination_balanced": 0.7068965517241379,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.47540983606557374
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7933333333333333,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.6120218579234973
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "arm": "knn5",
+      "action_accuracy": 0.678,
+      "termination_balanced": 0.6724137931034483,
+      "termination_tpr": 0.3448275862068966,
+      "temporal_order": 0.5168539325842697
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "arm": "attention",
+      "action_accuracy": 0.666,
+      "termination_balanced": 0.6724137931034483,
+      "termination_tpr": 0.3448275862068966,
+      "temporal_order": 0.5513513513513514
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "arm": "raw_nn",
+      "action_accuracy": 0.772,
+      "termination_balanced": 0.9137931034482758,
+      "termination_tpr": 0.8275862068965517,
+      "temporal_order": 0.5555555555555556
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "arm": "knn5",
+      "action_accuracy": 0.67,
+      "termination_balanced": 0.5862068965517242,
+      "termination_tpr": 0.1724137931034483,
+      "temporal_order": 0.5053191489361702
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "arm": "attention",
+      "action_accuracy": 0.688,
+      "termination_balanced": 0.6206896551724138,
+      "termination_tpr": 0.2413793103448276,
+      "temporal_order": 0.4911242603550296
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.767,
+      "termination_balanced": 0.9310344827586207,
+      "termination_tpr": 0.8620689655172413,
+      "temporal_order": 0.6129032258064516
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "arm": "knn5",
+      "action_accuracy": 0.7045,
+      "termination_balanced": 0.6379310344827587,
+      "termination_tpr": 0.27586206896551724,
+      "temporal_order": 0.43023255813953487
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "arm": "attention",
+      "action_accuracy": 0.7165,
+      "termination_balanced": 0.6379310344827587,
+      "termination_tpr": 0.3103448275862069,
+      "temporal_order": 0.5
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7355,
+      "termination_balanced": 0.9482758620689655,
+      "termination_tpr": 0.896551724137931,
+      "temporal_order": 0.5449438202247191
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "arm": "knn5",
+      "action_accuracy": 0.75,
+      "termination_balanced": 0.6,
+      "termination_tpr": 0.2,
+      "temporal_order": 0.3954802259887006
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "arm": "attention",
+      "action_accuracy": 0.82,
+      "termination_balanced": 0.65,
+      "termination_tpr": 0.3,
+      "temporal_order": 0.42391304347826086
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "arm": "raw_nn",
+      "action_accuracy": 0.84,
+      "termination_balanced": 0.95,
+      "termination_tpr": 0.9,
+      "temporal_order": 0.6759776536312849
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "arm": "knn5",
+      "action_accuracy": 0.7466666666666667,
+      "termination_balanced": 0.6379310344827587,
+      "termination_tpr": 0.27586206896551724,
+      "temporal_order": 0.4067796610169492
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "arm": "attention",
+      "action_accuracy": 0.7,
+      "termination_balanced": 0.6896551724137931,
+      "termination_tpr": 0.3793103448275862,
+      "temporal_order": 0.44571428571428573
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "arm": "raw_nn",
+      "action_accuracy": 0.8,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.6477272727272727
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "arm": "knn5",
+      "action_accuracy": 0.722,
+      "termination_balanced": 0.6724137931034483,
+      "termination_tpr": 0.3793103448275862,
+      "temporal_order": 0.5524861878453039
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "arm": "attention",
+      "action_accuracy": 0.708,
+      "termination_balanced": 0.7241379310344828,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.5054945054945055
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "arm": "raw_nn",
+      "action_accuracy": 0.758,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.6033519553072626
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "arm": "knn5",
+      "action_accuracy": 0.658,
+      "termination_balanced": 0.603448275862069,
+      "termination_tpr": 0.20689655172413793,
+      "temporal_order": 0.47191011235955055
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "arm": "attention",
+      "action_accuracy": 0.648,
+      "termination_balanced": 0.603448275862069,
+      "termination_tpr": 0.20689655172413793,
+      "temporal_order": 0.5174418604651163
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.759,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.5026737967914439
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "arm": "knn5",
+      "action_accuracy": 0.6305,
+      "termination_balanced": 0.5517241379310345,
+      "termination_tpr": 0.10344827586206896,
+      "temporal_order": 0.46703296703296704
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "arm": "attention",
+      "action_accuracy": 0.6295,
+      "termination_balanced": 0.5517241379310345,
+      "termination_tpr": 0.10344827586206896,
+      "temporal_order": 0.4222222222222222
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.731,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.5425531914893617
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "arm": "knn5",
+      "action_accuracy": 0.59,
+      "termination_balanced": 0.75,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.4180790960451977
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "arm": "attention",
+      "action_accuracy": 0.62,
+      "termination_balanced": 0.75,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.3956043956043956
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "arm": "raw_nn",
+      "action_accuracy": 0.81,
+      "termination_balanced": 1.0,
+      "termination_tpr": 1.0,
+      "temporal_order": 0.6961325966850829
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "arm": "knn5",
+      "action_accuracy": 0.7066666666666667,
+      "termination_balanced": 0.6724137931034483,
+      "termination_tpr": 0.3448275862068966,
+      "temporal_order": 0.5333333333333333
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "arm": "attention",
+      "action_accuracy": 0.7033333333333334,
+      "termination_balanced": 0.6896551724137931,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "arm": "raw_nn",
+      "action_accuracy": 0.79,
+      "termination_balanced": 0.9310344827586207,
+      "termination_tpr": 0.8620689655172413,
+      "temporal_order": 0.6338797814207651
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "arm": "knn5",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.6724137931034483,
+      "termination_tpr": 0.3448275862068966,
+      "temporal_order": 0.4659090909090909
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "arm": "attention",
+      "action_accuracy": 0.664,
+      "termination_balanced": 0.7241379310344828,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.4682080924855491
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "arm": "raw_nn",
+      "action_accuracy": 0.77,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.5722222222222222
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "arm": "knn5",
+      "action_accuracy": 0.7,
+      "termination_balanced": 0.5517241379310345,
+      "termination_tpr": 0.10344827586206896,
+      "temporal_order": 0.47513812154696133
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "arm": "attention",
+      "action_accuracy": 0.694,
+      "termination_balanced": 0.5517241379310345,
+      "termination_tpr": 0.10344827586206896,
+      "temporal_order": 0.4972677595628415
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.744,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.5659340659340659
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "arm": "knn5",
+      "action_accuracy": 0.691,
+      "termination_balanced": 0.5862068965517242,
+      "termination_tpr": 0.1724137931034483,
+      "temporal_order": 0.46368715083798884
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "arm": "attention",
+      "action_accuracy": 0.666,
+      "termination_balanced": 0.5862068965517242,
+      "termination_tpr": 0.1724137931034483,
+      "temporal_order": 0.4134078212290503
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7495,
+      "termination_balanced": 0.9137931034482758,
+      "termination_tpr": 0.8275862068965517,
+      "temporal_order": 0.4941860465116279
+    }
+  ],
+  "gate": {
+    "knn5": {
+      "action_500": 0.6796,
+      "termination_balanced_500": 0.6517241379310346,
+      "termination_tpr_500": 0.3103448275862069,
+      "temporal_order_500": 0.48308792580581644,
+      "action_1000": 0.6763999999999999,
+      "ready": false
+    },
+    "attention": {
+      "action_500": 0.6736,
+      "termination_balanced_500": 0.6689655172413793,
+      "termination_tpr_500": 0.3448275862068966,
+      "temporal_order_500": 0.50560624720207,
+      "action_1000": 0.669,
+      "ready": false
+    },
+    "raw_nn_baseline": {
+      "action_500": 0.7624,
+      "termination_balanced_500": 0.9620689655172413,
+      "temporal_order_500": 0.604445713345062
+    },
+    "v3_ready": false
+  },
+  "repro": "```text\n实验名称：情景记忆 v3\n日期：2026-10-27 00:44:24 中国标准时间\nGit commit：036951cacc3e79db517ad1250774d90cb7586a06\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_episodic_memory_v3.py --seeds 0-4 --episodes 200 --out data/_episodic_v3\n耗时：2.8 s\n备注：非局部状态索引：kNN-5 与 softmax attention(β=10)；时间戳取最近邻\n备注：数据/噪声/容量/判据与 v0–v2 相同；raw NN 单列\n```"
+}

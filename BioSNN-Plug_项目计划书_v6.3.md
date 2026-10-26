@@ -791,6 +791,14 @@
 >    推远，要么接受"闭环终止不可评"。见
 >    [`sweep_results/world_model_closed_loop_imagined/README.md`](sweep_results/world_model_closed_loop_imagined/README.md)。
 
+> 85. **2026-10-27：情景记忆 v3（state-indexed/attention）——k=5 平均打不过 k=1，情景轴封存**。
+>    kNN-5 动作 0.680 / 终止平衡 0.652 / TPR 0.310 / 顺序 0.483；attention(β=10) 0.674 /
+>    0.669 / 0.345 / 0.506；raw NN 0.762 / 0.962 / **0.604**。两臂全不过，`v3_ready=false`。
+>    读数：5 邻居平均稀释最近邻；attention 太软；时间顺序即使 top-1 也 <0.61（检索错误）。
+>    v0–v3 一致：**局部联想与状态索引都不如字面最近邻的动作/终止，而字面最近邻的顺序也
+>    只有 0.604**。**情景记忆轴封存**；将来要做得换任务/时间编码/评估口径，不调 k/β。见
+>    [`sweep_results/episodic_memory_v3/README.md`](sweep_results/episodic_memory_v3/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
