@@ -84,7 +84,7 @@ def run(
                 "selective_accuracy_80": selective,
                 "actual_coverage": actual_coverage,
                 "gain": selective - base if not np.isnan(selective) else None,
-                "error_auroc": auroc(confidence, (~correct).astype(int)),
+                "error_auroc": auroc(confidence, correct.astype(int)),
                 "ece_pre": ece(probs_pre, correct),
                 "ece_post": ece(probs_post, correct),
                 "risk_coverage_auc": risk_coverage_auc(confidence, correct),
