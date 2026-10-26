@@ -51,10 +51,30 @@ class DeltaReadout:
         self.seed = int(seed)
         self.weights = np.zeros((n_classes, n_in), dtype=np.float64)
         self.bias = np.zeros(n_classes, dtype=np.float64)
+        # 特征级掩码（预注册 v7）：``(n_classes, n_in)`` 的 0/1 矩阵，按类共享任务掩码。
+        # ``None`` 表示不启用——默认路径逐位不变。
+        self.masks: np.ndarray | None = None
 
     def predict(self, features: np.ndarray) -> np.ndarray:
-        """``(n, n_in)`` → ``(n, n_classes)`` 的 logits。"""
-        return np.asarray(features, dtype=np.float64) @ self.weights.T + self.bias
+        """``(n, n_in)`` → ``(n, n_classes)`` 的 logits；有掩码时按 ``W ⊙ M`` 算。"""
+        x = np.asarray(features, dtype=np.float64)
+        if self.masks is None:
+            return x @ self.weights.T + self.bias
+        return x @ (self.weights * self.masks).T + self.bias
+
+    def set_masks_for_classes(self, classes: np.ndarray, mask: np.ndarray) -> None:
+        """把 ``mask`` 写到这些类的行上；未涉及的类保持原来的掩码（旧掩码冻结）。"""
+        values = np.asarray(mask, dtype=np.float64)
+        if values.shape != (self.n_in,):
+            raise ValueError(f"掩码必须是 ({self.n_in},)，收到 {values.shape}。")
+        index = np.asarray(classes, dtype=int)
+        if index.ndim != 1 or index.size == 0:
+            raise ValueError("classes 必须是非空一维数组。")
+        if index.min() < 0 or index.max() >= self.n_classes:
+            raise ValueError(f"classes 必须在 [0, {self.n_classes}) 内，收到 {index}。")
+        if self.masks is None:
+            self.masks = np.zeros((self.n_classes, self.n_in), dtype=np.float64)
+        self.masks[index] = values
 
     def step(
         self,
@@ -92,7 +112,10 @@ class DeltaReadout:
             error = target - self.predict(x)
             scale = self.learning_rate / x.shape[0]
             if active_classes is None:
-                self.weights += scale * (error.T @ x)
+                update = scale * (error.T @ x)
+                if self.masks is not None:
+                    update = update * self.masks
+                self.weights += update
                 self.bias += scale * error.sum(axis=0)
             else:
                 active = np.asarray(active_classes, dtype=int)
@@ -105,6 +128,9 @@ class DeltaReadout:
                 index = np.unique(active)
                 weight_update = scale * (error.T @ x)
                 bias_update = scale * error.sum(axis=0)
+                if self.masks is not None:
+                    # 特征掩码与行隔离可以叠加：先按掩码屏蔽输入侧，再按 α 缩放非激活行。
+                    weight_update = weight_update * self.masks
                 if inactive_scale == 0.0:
                     # 与 v4 的完全冻结**逐位一致**：只加激活行，不碰其余行。
                     self.weights[index] += weight_update[index]

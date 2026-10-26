@@ -36,6 +36,7 @@ import torch
 from research.common.provenance import collect
 from research.continual.data import CifarSplit, load_cifar100, task_classes
 from research.continual.frontends import image_features
+from research.continual.masks import fisher_task_mask, jaccard, random_task_mask
 from research.continual.metrics import summarise
 from research.continual.ncm import ClassPrototypes
 from research.continual.normalization import build_transform
@@ -392,6 +393,8 @@ def run_with_frozen_frontend_delta(
     normalize_scale: str = "native",
     isolation: str = "none",
     isolation_weight: float | None = None,
+    feature_mask: str = "none",
+    mask_k: int = 256,
 ) -> dict:
     """Route R 的 delta 读出：冻结特征 + 线性读出 + 可选 latent replay / 归一化。
 
@@ -426,7 +429,9 @@ def run_with_frozen_frontend_delta(
         # current-rows 的默认是 P1（α=0，完全冻结）；其余隔离臂只有一个步长。
         isolation_weight = 0.0 if isolation == "current-rows" else 1.0
     isolation_rng = np.random.default_rng(seed + 7919)
+    mask_rng = np.random.default_rng(seed + 104729)
     active_rows: list[list[int]] = []
+    task_masks: list[np.ndarray] = []
 
     for t, classes in enumerate(tasks):
         seen.extend(int(c) for c in classes)
@@ -448,6 +453,18 @@ def run_with_frozen_frontend_delta(
         features = transform.transform(features)
         active = _active_rows_for_task(isolation, classes, isolation_rng)
         active_rows.append([] if active is None else [int(c) for c in active])
+
+        if feature_mask != "none":
+            if feature_mask == "fisher":
+                mask = fisher_task_mask(features, labels, mask_k)
+            elif feature_mask == "random":
+                mask = random_task_mask(int(features.shape[1]), mask_k, mask_rng)
+            else:
+                raise ValueError(
+                    f"未知的 feature_mask：{feature_mask!r}；可选 none / fisher / random。"
+                )
+            readout.set_masks_for_classes(classes, mask)
+            task_masks.append(mask)
 
         before = readout.weights.copy()
         _train_delta_readout(
@@ -499,6 +516,22 @@ def run_with_frozen_frontend_delta(
         "isolation": isolation,
         "isolation_weight": float(isolation_weight),
         "active_rows": active_rows,
+        "feature_mask": feature_mask,
+        "mask_k": mask_k,
+        "mask_indices": [np.flatnonzero(mask).tolist() for mask in task_masks],
+        "mask_jaccard": (
+            float(
+                np.mean(
+                    [
+                        jaccard(task_masks[i], task_masks[j])
+                        for i in range(len(task_masks))
+                        for j in range(i + 1, len(task_masks))
+                    ]
+                )
+            )
+            if len(task_masks) > 1
+            else 0.0
+        ),
         "accuracy_matrix": matrix.tolist(),
         "acc": scores.acc,
         "af": scores.af,
@@ -592,6 +625,13 @@ def main(argv: list[str] | None = None) -> int:
         "random-rows=只更新同样数量的随机行（控制臂）",
     )
     parser.add_argument(
+        "--feature-mask",
+        choices=("none", "fisher", "random"),
+        default="none",
+        help="特征级掩码：none=关；fisher=本任务 Fisher top-k；random=同尺寸随机（控制臂）",
+    )
+    parser.add_argument("--mask-k", type=int, default=256, help="掩码保留的特征维数")
+    parser.add_argument(
         "--isolation-weight",
         type=float,
         default=None,
@@ -668,6 +708,8 @@ def main(argv: list[str] | None = None) -> int:
                         normalize_scale=args.normalize_scale,
                         isolation=args.isolation,
                         isolation_weight=args.isolation_weight,
+                        feature_mask=args.feature_mask,
+                        mask_k=args.mask_k,
                     )
                 )
             continue
@@ -721,6 +763,8 @@ def main(argv: list[str] | None = None) -> int:
             "normalize_scale": args.normalize_scale,
             "isolation": args.isolation,
             "isolation_weight": args.isolation_weight,
+            "feature_mask": args.feature_mask,
+            "mask_k": args.mask_k,
         },
         "per_seed": results,
         "void_seeds": [row["seed"] for row in results if not row.get("valid", True)],
@@ -739,7 +783,10 @@ def main(argv: list[str] | None = None) -> int:
                     if args.isolation == "current-rows"
                     else "；"
                 )
-                + f"回放 ρ：{args.replay_rho}；batching：{args.readout_batch or '全批量'}"
+                + f"回放 ρ：{args.replay_rho}；"
+                + f"特征掩码：{args.feature_mask}"
+                + (f"（k={args.mask_k}）；" if args.feature_mask != "none" else "；")
+                + f"batching：{args.readout_batch or '全批量'}"
             ],
             device=device,
         ).render_block(),
