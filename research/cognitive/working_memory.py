@@ -15,6 +15,8 @@ __all__ = [
     "TAUS",
     "TEST_STEP",
     "LinearDeltaReadout",
+    "LinearNLMSReadout",
+    "LinearRLSReadout",
     "average_r2",
     "encode_episode",
     "encode_timeline",
@@ -126,6 +128,96 @@ class LinearDeltaReadout:
 
     def predict(self, states: np.ndarray) -> np.ndarray:
         return np.asarray(states, dtype=np.float64) @ self.weights.T + self.bias
+
+
+class LinearNLMSReadout:
+    """归一化最小均方：对状态尺度不敏感，局部逐样本更新。"""
+
+    def __init__(self, n_in: int, n_out: int, *, step: float = 0.5, eps: float = 1e-8) -> None:
+        if not 0.0 < step < 2.0:
+            raise ValueError(f"step 应在 (0, 2)，收到 {step}。")
+        if eps <= 0:
+            raise ValueError("eps 必须为正。")
+        self.step = float(step)
+        self.eps = float(eps)
+        self.weights = np.zeros((n_out, n_in), dtype=np.float64)
+        self.bias = np.zeros(n_out, dtype=np.float64)
+
+    def fit(
+        self,
+        states: np.ndarray,
+        targets: np.ndarray,
+        *,
+        epochs: int,
+        rng: np.random.Generator,
+    ) -> None:
+        values = np.asarray(states, dtype=np.float64)
+        truth = np.asarray(targets, dtype=np.float64)
+        for _ in range(epochs):
+            order = rng.permutation(values.shape[0])
+            for index in order:
+                x = values[index]
+                error = truth[index] - (self.weights @ x + self.bias)
+                # 仿射 NLMS 用增广向量 [1, x]；分母至少 1，偏置与权重同一个归一化，
+                # 否则状态很小（||x||² ~1e-5）时偏置更新会把读出炸掉。
+                augmented = np.concatenate([[1.0], x])
+                norm = float(augmented @ augmented) + self.eps
+                self.weights += self.step * np.outer(error, x) / norm
+                self.bias += self.step * error / norm
+        if not (np.all(np.isfinite(self.weights)) and np.all(np.isfinite(self.bias))):
+            raise RuntimeError("NLMS 读出 diverged（inf/NaN）。")
+
+    def predict(self, states: np.ndarray) -> np.ndarray:
+        return np.asarray(states, dtype=np.float64) @ self.weights.T + self.bias
+
+
+class LinearRLSReadout:
+    """递归最小二乘：rank-one 局部更新，闭式解在线等价。"""
+
+    def __init__(
+        self,
+        n_in: int,
+        n_out: int,
+        *,
+        forgetting: float = 1.0,
+        delta: float = 1.0,
+    ) -> None:
+        if not 0.0 < forgetting <= 1.0:
+            raise ValueError(f"forgetting 应在 (0, 1]，收到 {forgetting}。")
+        if delta <= 0:
+            raise ValueError("delta 必须为正。")
+        self.forgetting = float(forgetting)
+        self.theta = np.zeros((n_in + 1, n_out), dtype=np.float64)
+        self.covariance = float(delta) * np.eye(n_in + 1, dtype=np.float64)
+
+    def fit(
+        self,
+        states: np.ndarray,
+        targets: np.ndarray,
+        *,
+        epochs: int,
+        rng: np.random.Generator,
+    ) -> None:
+        values = np.asarray(states, dtype=np.float64)
+        truth = np.asarray(targets, dtype=np.float64)
+        for _ in range(epochs):
+            order = rng.permutation(values.shape[0])
+            for index in order:
+                x = np.concatenate([[1.0], values[index]])
+                projected = self.covariance @ x
+                gain = projected / (self.forgetting + float(x @ projected))
+                error = truth[index] - (x @ self.theta)
+                self.theta += np.outer(gain, error)
+                self.covariance = (
+                    self.covariance - np.outer(gain, x @ self.covariance)
+                ) / self.forgetting
+        if not np.all(np.isfinite(self.theta)):
+            raise RuntimeError("RLS 读出 diverged（inf/NaN）。")
+
+    def predict(self, states: np.ndarray) -> np.ndarray:
+        values = np.asarray(states, dtype=np.float64)
+        augmented = np.hstack([np.ones((values.shape[0], 1)), values])
+        return augmented @ self.theta
 
 
 def fit_ridge(states: np.ndarray, targets: np.ndarray, *, l2: float = 1e-3) -> np.ndarray:
