@@ -25,7 +25,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "D:\Projects\BioSNN-Plug-neu
 
 库不足 50k 时会打印 `not_ready: N < 50000` 并退出 0。当前真库 193 条。
 
-## 注册每日任务（需要你自己执行）
+## 计划任务（已注册）
+
+已注册为 `AxoReal50kBenchmark`：每日 **09:37**，任务操作就是下面的包装器。
+2026-10-26 手动触发过一次，`LastTaskResult=0`，日志为 `not_ready: 193 < 50000`。
+如果换了项目路径或要重建，用下面的命令覆盖：
 
 ```powershell
 schtasks /Create /SC DAILY /ST 09:37 /TN "AxoReal50kBenchmark" /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"D:\Projects\BioSNN-Plug-neuron\scripts\run_real_50k_trigger.ps1\"" /F
