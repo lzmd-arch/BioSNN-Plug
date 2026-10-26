@@ -498,7 +498,7 @@ def main(argv: list[str] | None = None) -> int:
             "pop_mask_density": args.pop_mask_density,
             "gamma": args.gamma,
             "warmup": args.warmup,
-            "trace_rule": args.trace_rule,
+            "trace_rule": "rate-centered" if args.policy == "linear" else args.trace_rule,
             "policy": args.policy,
             "logit_scale_start": args.logit_scale_start,
             "logit_scale_end": args.logit_scale_end,
@@ -522,7 +522,8 @@ def main(argv: list[str] | None = None) -> int:
             notes=[
                 "episodic R-STDP，成功信号 = 回报 − EMA 基线（**TD-LTP Critic 尚未接入**）",
                 "评测冻结随机流（环境种子 + 脉冲发生器种子）",
-                f"Actor 痕迹规则：{args.trace_rule}",
+                "Actor 痕迹规则："
+                + ("rate-centered（线性策略自带）" if args.policy == "linear" else args.trace_rule),
                 f"动作策略：{args.policy}",
             ],
             device=device,
