@@ -735,6 +735,14 @@
 >    （state-indexed/attention、modern Hopfield，非局部需标注），或接受字面索引作为 v0 基线。
 >    见 [`sweep_results/episodic_memory_v2/README.md`](sweep_results/episodic_memory_v2/README.md)。
 
+> 78. **2026-10-26：多时间尺度工作记忆 v0——机制近乎完美，但对照判据写错**。
+>    线索 A t=0–4、B t=20–24、测试 t=50；多尺度（τ=2..200）A/B R² **0.9998 / 0.9997**；
+>    快 τ=2 的 A R² −0.005；慢 τ=200 的 B R² **0.549**——单看 B 过了 0.45 的线，但它对 A 只有
+>    0.439，**不能同时做好两个**。按写死的判据 `w0_ready=false`；这是对照 operationalization
+>    的问题，不是机制失败。**不事后改判据**；v1 用三线索或"单尺度必须同时失败"重测。
+>    这是阶段四目前最干净的正面机制结果。见
+>    [`sweep_results/working_memory_v0/README.md`](sweep_results/working_memory_v0/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
