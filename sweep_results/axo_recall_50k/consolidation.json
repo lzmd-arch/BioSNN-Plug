@@ -1,0 +1,17 @@
+{
+  "n": 50000,
+  "encode_s": 38.22092910000356,
+  "graph_s": 193.63704489998054,
+  "nodes": 50000,
+  "edges": 400000,
+  "partition_s": 2.474901100009447,
+  "clusters": 731,
+  "largest_cluster": 200,
+  "median_cluster": 21,
+  "consolidate_s": 12.688489399995888,
+  "recognition_rate": 0.01904084185103722,
+  "replayed": 46374,
+  "reinforced": 883,
+  "missing_from_store": 0,
+  "total_s": 244.54646339997998
+}
