@@ -751,6 +751,14 @@
 >    局部规则或把积分器换成 ALIF 脉冲实现。见
 >    [`sweep_results/working_memory_v1/README.md`](sweep_results/working_memory_v1/README.md)。
 
+> 80. **2026-10-27：工作记忆 v2——局部 delta 读出严重欠拟合**。
+>    状态/任务与 v1 相同，读出换局部 delta（η=0.01、20 epoch、B=128）：多尺度 A/B/C 的 R²
+>    只有 **0.031 / 0.022 / 0.040**，ridge 对照 0.994/0.988/0.998；`w2_ready=false`。
+>    这不是"局部规则不可能"，是步长/更新次数与状态尺度不匹配；按预注册不调 η/epoch/B。
+>    **"局部学习的工作记忆"尚未证明**；v3 应换局部且尺度无关的读出（NLMS/RLS），而不是
+>    调 η。见
+>    [`sweep_results/working_memory_v2/README.md`](sweep_results/working_memory_v2/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
