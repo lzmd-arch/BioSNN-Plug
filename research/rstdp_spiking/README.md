@@ -287,6 +287,11 @@ A2（oracle EMA）补跑也没过；D1（`rate-features`，把资格换回速率
 转向**脉冲编码／策略参数化**（动作仍由脉冲计数决定）。见
 [`sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md`](../../sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md)。
 
+D2（线性策略配方，sanity control）在同一 harness 下中位数 **179.80**（相对 D1 配对
+**+124.40**，10/10 变好，4/10 过 200）——**harness 能学**，瓶颈在**脉冲计数选动作**这条
+策略路径。下一步设计与计数策略同向的局部资格，不改用线性策略。见
+[`sweep_results/rstdp_spiking_policy_control/linear_rate/README.md`](../../sweep_results/rstdp_spiking_policy_control/linear_rate/README.md)。
+
 ## 已知边界
 
 1. **默认 Critic 是线性 TD(0)。** TD-LTP 群体 Critic 已实现（`pop_critic.py`，`--critic pop`），

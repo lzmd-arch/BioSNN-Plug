@@ -330,6 +330,12 @@ A2 (oracle EMA) also failed; D1 (`rate-features`, replacing the eligibility with
 parameterisation** (the action is still chosen by spike counts). See
 [`sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md`](../../sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md).
 
+D2 (the linear-policy recipe, a sanity control) reaches a median of **179.80** in the same
+harness (paired **+124.40** vs D1, better in 10/10, 4/10 over 200): **the harness can learn**;
+the bottleneck is the **spike-count action path**. The next step is a local eligibility aligned
+with the count-based policy, not switching to the linear policy. See
+[`sweep_results/rstdp_spiking_policy_control/linear_rate/README.md`](../../sweep_results/rstdp_spiking_policy_control/linear_rate/README.md).
+
 ## Known boundaries
 
 1. **The default critic is a linear TD(0) one.** The TD-LTP population critic is implemented

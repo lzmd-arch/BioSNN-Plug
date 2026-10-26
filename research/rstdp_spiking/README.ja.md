@@ -310,6 +310,12 @@ A2（oracle EMA）の追試も未達。D1（`rate-features`、資格を速率版
 方策のパラメータ化**（行動は依然としてスパイク数で決まる）です。詳細：
 [`sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md`](../../sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md)。
 
+D2（線形方策レシピ、sanity control）は同じ harness で中央値 **179.80**（D1 とのペア比較で
+**+124.40**、10/10 で改善、4/10 が 200 超）に達し、**harness は学習できる**ことが分かりました。
+ボトルネックは**スパイク数による行動選択**の経路です。次は線形方策に切り替えるのではなく、
+カウント方策と同じ向きの局所資格を設計します。詳細：
+[`sweep_results/rstdp_spiking_policy_control/linear_rate/README.md`](../../sweep_results/rstdp_spiking_policy_control/linear_rate/README.md)。
+
 ## 既知の境界
 
 1. **既定の Critic は線形 TD(0)。** TD-LTP 集団 Critic は実装済み（`pop_critic.py`、`--critic pop`）

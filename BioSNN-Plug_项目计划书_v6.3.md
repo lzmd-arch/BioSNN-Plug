@@ -511,6 +511,14 @@
 >    `x·a` 是线性 logits 的梯度形状）。下一嫌疑转向**脉冲编码／策略参数化**，需新预注册。
 >    见 [`sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md`](sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md)。
 
+> 54. **2026-10-26：D2（线性策略配方）——harness 能学，瓶颈在脉冲计数策略路径**。
+>    同一套环境、群体 Critic、种子与循环，只换速率版的线性 Boltzmann 配方（线性 logits、
+>    居中痕迹、log 空间 1→40 退火）：10 种子中位数 **179.80**，相对 D1 配对 **+124.40**、
+>    **10/10** 变好（CI +74.45…+196.30），4/10 过 200；中位数未到 200，不标"验收量级"。
+>    这说明环境/Critic/循环不是集体失效；D1 的 `x·a` 与脉冲计数策略不同向也得到了解释。
+>    下一步设计与**计数策略同向**的局部资格，不是改用线性策略。见
+>    [`sweep_results/rstdp_spiking_policy_control/linear_rate/README.md`](sweep_results/rstdp_spiking_policy_control/linear_rate/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

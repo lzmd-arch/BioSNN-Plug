@@ -120,6 +120,12 @@ Plan B 的两条候选在 ③②① 之后剩下"Actor 的信用分配"与"固�
   **脉冲编码／策略参数化**。见
   [`sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md`](../../sweep_results/rstdp_spiking_credit_diagnosis/rate_features/README.md)。
 
+- **D2（线性策略配方，sanity control）**：同一 harness 只换速率版的线性 Boltzmann 配方，
+  10 种子中位数 **179.80**，相对 D1 配对 **+124.40**、**10/10** 变好（CI +74.45…+196.30），
+  4/10 过 200。**harness 能学**；瓶颈在**脉冲计数选动作**这条策略路径。下一步设计与计数
+  策略同向的局部资格，不改用线性策略。见
+  [`sweep_results/rstdp_spiking_policy_control/linear_rate/README.md`](../../sweep_results/rstdp_spiking_policy_control/linear_rate/README.md)。
+
 下一项需要新预注册；不回头调 lr / 宽度 / 回合数。
 
 ## 与阶段四的关系
