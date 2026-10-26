@@ -105,9 +105,15 @@ Plan B 的两条候选在 ③②① 之后剩下"Actor 的信用分配"与"固�
 - **阶段 2**（默认群体 Critic、10 种子、CPU）：配对中位数 **+17.95 步**（门槛 +20，不过；
   95% CI −0.30 … +29.20），**8/10** 变好，中位数 75.65（验收 200，不过）。
 
-结论：**痕迹的符号问题是真的，修掉后方向为正但不稳，且远未到验收**。按判读表，
-下一嫌疑是 **Critic／信用时域**，需要新预注册；不回头调 lr / 宽度 / 回合数。
-见 [`sweep_results/rstdp_spiking_actor_fix/README.md`](../../sweep_results/rstdp_spiking_actor_fix/README.md)。
+结论：**痕迹的符号问题是真的，修掉后方向为正但不稳，且远未到验收**。
+
+- **A2（补跑）**：oracle EMA 在 seeds 0/1 上都没过两条判据（EMA 38.6/10.0 vs
+  TD 29.7/39.5；`ema ≥ td + 20` 与 `ema ≥ 30` 都不成立）。换更干净的信号也没让
+  Actor 学起来，所以瓶颈更可能在**信用时域**（回合级 S 摊到所有决策）或策略参数化，
+  而不是 Critic 的精度。见
+  [`sweep_results/rstdp_spiking_actor_diagnosis/a2_oracle_ema/README.md`](../../sweep_results/rstdp_spiking_actor_diagnosis/a2_oracle_ema/README.md)。
+
+下一项需要新预注册；不回头调 lr / 宽度 / 回合数。
 
 ## 与阶段四的关系
 

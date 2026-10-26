@@ -497,6 +497,13 @@
 >    **Critic／信用时域**，需新预注册。见
 >    [`sweep_results/rstdp_spiking_actor_fix/README.md`](sweep_results/rstdp_spiking_actor_fix/README.md)。
 
+> 52. **2026-10-26：A2（oracle EMA）补跑——Actor 路径仍可疑**。A1′ 通过后按修订 1
+>    补跑，两臂均用 sign-consistent。300 回合、lr 1e-4、seeds 0/1、CPU：
+>    EMA **38.6 / 10.0**，TD **29.7 / 39.5**；`ema ≥ td + 20` 两条都不成立，
+>    `ema ≥ 30` 也只有 seed 0 成立。换更干净的信号没让 Actor 学起来，seed 1 上 EMA
+>    甚至低于 TD。下一嫌疑从 Critic 转向**信用时域／策略参数化**，需新预注册。见
+>    [`sweep_results/rstdp_spiking_actor_diagnosis/a2_oracle_ema/README.md`](sweep_results/rstdp_spiking_actor_diagnosis/a2_oracle_ema/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

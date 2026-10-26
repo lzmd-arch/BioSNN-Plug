@@ -77,6 +77,22 @@ weight += learning_rate * S * trace.value
   必须和动作选择的判据同向**；
 - 不覆盖多步窗口之间的相互作用：本检验只看单窗口的资格增量，不模拟回合级累积。
 
+## A2：oracle EMA（补跑，2026-10-26）
+
+A1 失败时按预注册跳过；A1′ 通过后按
+[修订 1](../rstdp_spiking_actor_diagnosis_prereg_amend1.md) 补跑，两臂都用
+sign-consistent 痕迹。300 回合、Actor lr 1e-4、seeds 0/1、CPU。
+
+| 种子 | EMA `best_steps` | TD `best_steps` | EMA − TD | EMA ≥ 30 |
+| ---: | ---: | ---: | ---: | :--- |
+| 0 | 38.6 | 29.7 | +8.9 | 是 |
+| 1 | **10.0** | 39.5 | **−29.5** | 否 |
+
+两条判据（两个种子都 `ema ≥ td + 20`，且 `ema ≥ 30`）**都没过**。
+把 Critic 换成更简单的因果信号后 Actor 仍没学起来；seed 1 上 EMA 甚至低于 TD。
+**Actor 路径本身仍可疑**，下一嫌疑是信用时域（回合级 S 摊到所有决策）或策略参数化。
+详见 [`a2_oracle_ema/README.md`](a2_oracle_ema/README.md)。
+
 ## 下一步：已写好符号一致化的预注册
 
 三条候选里，**动作门控 + 拆开 LTP/LTD** 被选为唯一机制（另外两条中，"优势化第二因子"
@@ -90,7 +106,8 @@ weight += learning_rate * S * trace.value
 
 **已执行：** A1′ 按修订口径 18/18（两个空窗口剔除）、负 20/20、门控 20/20；
 阶段 2 的配对中位数 **+17.95 步**（门槛 +20，不过；8/10 变好），验收 0/10。
-结论是"痕迹修好了，但不是唯一瓶颈"，下一步查 Critic／信用时域。见
+A2 也已补跑：oracle EMA 两条判据都不过（详见上节）。结论是"痕迹修好了，但不是唯一
+瓶颈"；下一嫌疑从 Critic 转向**信用时域／策略参数化**。见
 [`../rstdp_spiking_actor_fix/README.md`](../rstdp_spiking_actor_fix/README.md)。
 
 ## 方法记录
