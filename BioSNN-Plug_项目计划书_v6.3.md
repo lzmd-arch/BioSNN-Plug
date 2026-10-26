@@ -672,6 +672,16 @@
 >    **元认知门控 v0**；情景记忆 v1 作为并行开放项。见
 >    [`sweep_results/episodic_memory_v0/README.md`](sweep_results/episodic_memory_v0/README.md)。
 
+> 71. **2026-10-26：元认知门控 v0——选择性增益过，AUROC/ECE 不过**。
+>    冻结 ResNet18 + 100 类 joint delta 读出；80% 覆盖下选择性准确率 **0.5579**（base 0.4925，
+>    **+6.54 pp**，过）；正确性 AUROC **0.716**（门槛 0.75，不过）；温度缩放后 ECE **0.481**
+>    （门槛 0.10，不过）。T 搜索的预注册网格 [0.5,5] 下界仍太钝（最大概率 ~0.01）；v1 需
+>    更宽 T 网格或 margin/ensemble 置信度。**修正记录**：首次 AUROC 把"错误"当正类（0.284），
+>    正确口径为"预测正确"（0.716），首次 AUROC 作废，其余数字不变。`v0_ready=false`。
+>    至此阶段四顺序里的三件 v0（世界模型 P3 / 情景记忆 / 元认知）都已跑过，均有明确 v1
+>    方向但未 ready。见
+>    [`sweep_results/metacognitive_gate_v0/README.md`](sweep_results/metacognitive_gate_v0/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

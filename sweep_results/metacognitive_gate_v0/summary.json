@@ -1,0 +1,97 @@
+{
+  "experiment": "元认知门控 v0：选择性预测",
+  "config": {
+    "epochs": 20,
+    "batch": 128,
+    "train_limit": null,
+    "coverage": 0.8,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "temperature": 0.5,
+      "base_accuracy": 0.4952,
+      "selective_accuracy_80": 0.56275,
+      "actual_coverage": 0.8,
+      "gain": 0.06755,
+      "error_auroc": 0.718540620703604,
+      "ece_pre": 0.4846594521314664,
+      "ece_post": 0.4840864869692168,
+      "risk_coverage_auc": 0.6713094825302378,
+      "threshold": 0.010701768115812357
+    },
+    {
+      "seed": 1,
+      "temperature": 0.5,
+      "base_accuracy": 0.4926,
+      "selective_accuracy_80": 0.55875,
+      "actual_coverage": 0.8,
+      "gain": 0.06614999999999999,
+      "error_auroc": 0.7204744527241247,
+      "ece_pre": 0.48206044811799903,
+      "ece_post": 0.4814885508641214,
+      "risk_coverage_auc": 0.6720277679201169,
+      "threshold": 0.010692548160112402
+    },
+    {
+      "seed": 2,
+      "temperature": 0.5,
+      "base_accuracy": 0.4878,
+      "selective_accuracy_80": 0.55275,
+      "actual_coverage": 0.8,
+      "gain": 0.06494999999999995,
+      "error_auroc": 0.715912145454918,
+      "ece_pre": 0.47725966974376527,
+      "ece_post": 0.4766867323144507,
+      "risk_coverage_auc": 0.6643189433525613,
+      "threshold": 0.010689530760323805
+    },
+    {
+      "seed": 3,
+      "temperature": 0.5,
+      "base_accuracy": 0.4938,
+      "selective_accuracy_80": 0.559,
+      "actual_coverage": 0.8,
+      "gain": 0.06520000000000004,
+      "error_auroc": 0.711306010412161,
+      "ece_pre": 0.4832583570327139,
+      "ece_post": 0.482684184436186,
+      "risk_coverage_auc": 0.6640473778681215,
+      "threshold": 0.010697195496050206
+    },
+    {
+      "seed": 4,
+      "temperature": 0.5,
+      "base_accuracy": 0.493,
+      "selective_accuracy_80": 0.55625,
+      "actual_coverage": 0.8,
+      "gain": 0.06325000000000003,
+      "error_auroc": 0.7147949798160439,
+      "ece_pre": 0.48245958880399015,
+      "ece_post": 0.4818867698447789,
+      "risk_coverage_auc": 0.667078363748671,
+      "threshold": 0.01070292764117492
+    }
+  ],
+  "gate": {
+    "base_accuracy": 0.49248000000000003,
+    "selective_accuracy_80": 0.5579,
+    "gain": 0.06542,
+    "gain_ok": true,
+    "error_auroc": 0.7162056418221703,
+    "error_auroc_ok": false,
+    "ece_pre": 0.48193950316598694,
+    "ece_post": 0.4813665448857508,
+    "ece_ok": false,
+    "risk_coverage_auc": 0.6677563870839418,
+    "v0_ready": false
+  },
+  "repro": "```text\n实验名称：元认知门控 v0\n日期：2026-10-26 14:27:29 中国标准时间\nGit commit：6d81a5f4a3c9a06a5dc0bd5613c2d99e1dfeb342\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：CPU（Intel64 Family 6 Model 183 Stepping 1, GenuineIntel，无 GPU 参与）\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_metacognitive_gate.py --seeds 0-4 --epochs 20 --out data/_metacog_v0_fix\n耗时：24.8 s\n备注：冻结 ResNet18 特征 + 100 类 delta 读出\n备注：温度与阈值只在校准半集上选；评估半集不参与选择\n备注：选择性准确率在 80% 覆盖率下报告\n```"
+}
