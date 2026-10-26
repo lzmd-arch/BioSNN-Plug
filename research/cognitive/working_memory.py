@@ -16,6 +16,7 @@ __all__ = [
     "TEST_STEP",
     "average_r2",
     "encode_episode",
+    "encode_timeline",
     "fit_ridge",
     "predict",
 ]
@@ -51,6 +52,33 @@ def encode_episode(
             inputs = inputs + cue_a
         if CUE_B[0] <= step <= CUE_B[1]:
             inputs = inputs + cue_b
+        state = alphas[:, None] * state + (1.0 - alphas)[:, None] * inputs[None, :]
+    return state.reshape(-1)
+
+
+def encode_timeline(
+    cues: list[tuple[int, int, np.ndarray]],
+    *,
+    rng: np.random.Generator,
+    taus: tuple[int, ...] = TAUS,
+    n_dims: int = N_DIMS,
+    noise: float = NOISE,
+    test_step: int = TEST_STEP,
+) -> np.ndarray:
+    """通用时间线：``cues`` 是 ``(start, end, vector)`` 列表（含端点）。"""
+    alphas = np.exp(-1.0 / np.asarray(taus, dtype=np.float64))
+    vectors = [
+        (int(start), int(end), np.asarray(vector, dtype=np.float64)) for start, end, vector in cues
+    ]
+    for _, _, vector in vectors:
+        if vector.shape != (n_dims,):
+            raise ValueError(f"线索必须是 ({n_dims},)，收到 {vector.shape}。")
+    state = np.zeros((len(taus), n_dims), dtype=np.float64)
+    for step in range(test_step):
+        inputs = rng.normal(scale=noise, size=n_dims)
+        for start, end, vector in vectors:
+            if start <= step <= end:
+                inputs = inputs + vector
         state = alphas[:, None] * state + (1.0 - alphas)[:, None] * inputs[None, :]
     return state.reshape(-1)
 
