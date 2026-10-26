@@ -489,6 +489,14 @@
 >    pair-stdp 必须逐位复现 `pop_gradient_10seeds` 才进入比较。判据不变。见
 >    [`sweep_results/rstdp_spiking_actor_fix_prereg_amend1.md`](sweep_results/rstdp_spiking_actor_fix_prereg_amend1.md)。
 
+> 51. **2026-10-26：Actor 符号一致化的阶段 2——方向为正，没过预注册的机制标记**。
+>    默认群体 Critic、10 种子、CPU；pair-stdp 臂逐位复现记录臂。配对差值中位数
+>    **+17.95 步**（门槛 +20，不过；95% CI −0.30 … +29.20），**8/10** 个种子变好；
+>    中位数 **75.65** 步，0/10 过 200（验收门不过）。A1′ 已按修订口径 18/18 通过。
+>    结论：**痕迹的符号问题真实存在且已修好，但它不是唯一瓶颈**；按判读表下一嫌疑是
+>    **Critic／信用时域**，需新预注册。见
+>    [`sweep_results/rstdp_spiking_actor_fix/README.md`](sweep_results/rstdp_spiking_actor_fix/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

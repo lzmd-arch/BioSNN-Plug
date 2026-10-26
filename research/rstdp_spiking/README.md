@@ -264,6 +264,24 @@ uv run python -m research.rstdp_spiking.diagnose_critic
 **这个 harness** 上没学起来。已知的三条线索（归一化、梯度的尺度、读出符号）都排除之后，
 剩下的嫌疑是「群体的容量/初始化与这套 64 维群体编码不匹配」——那需要另一轮预注册来查。
 
+## Actor 痕迹规则：新增 `sign-consistent`（2026-10-26）
+
+默认规则**没有变**（`pair-stdp`，与所有记录在案的数字逐位一致）。新增一个显式开关
+`--trace-rule sign-consistent`：保留真实 Δt 的 LTP/LTD，但只给被选动作列累计两条非负
+痕迹，回合末按成功信号的符号选相位（预注册见
+[`sweep_results/rstdp_spiking_actor_fix_prereg.md`](../../sweep_results/rstdp_spiking_actor_fix_prereg.md)，
+修订见 [`..._amend1.md`](../../sweep_results/rstdp_spiking_actor_fix_prereg_amend1.md)）。
+
+A1 量到的问题（被选动作的资格列和在 20 个窗口里只有 7 个更大、3 个为负）在 A1′ 里
+变成 **18/18**（两个空窗口剔除）、负 20/20、门控 20/20。但阶段 2 的 10 种子配对：
+
+- 配对中位数 **+17.95 步**（门槛 +20，不过；bootstrap 95% CI −0.30 … +29.20）；
+- **8/10** 个种子变好（这一条过）；
+- 中位数 **75.65** 步，0/10 过 200（验收门不过）。
+
+结论：**符号一致性修好了痕迹，但不是（唯一的）瓶颈**；下一嫌疑是 Critic／信用时域。
+完整表格与自证见 [`sweep_results/rstdp_spiking_actor_fix/README.md`](../../sweep_results/rstdp_spiking_actor_fix/README.md)。
+
 ## 已知边界
 
 1. **默认 Critic 是线性 TD(0)。** TD-LTP 群体 Critic 已实现（`pop_critic.py`，`--critic pop`），

@@ -97,9 +97,17 @@ Plan B 的两条候选在 ③②① 之后剩下"Actor 的信用分配"与"固�
 动作门控的非负量，脉冲版丢掉了"哪个动作"这个信息。详见
 [`sweep_results/rstdp_spiking_actor_diagnosis/README.md`](../../sweep_results/rstdp_spiking_actor_diagnosis/README.md)。
 
-**下一步**：已选定"动作门控 + 拆开 LTP/LTD + 按 S 的符号选相位"作为唯一机制，预注册见
+**下一步（已执行）**：符号一致化（动作门控 + 拆开 LTP/LTD + 按 S 的符号选相位）的预注册见
 [`sweep_results/rstdp_spiking_actor_fix_prereg.md`](../../sweep_results/rstdp_spiking_actor_fix_prereg.md)。
-**代码与数据都还没有**；落地时 A1′ 必须先达到 20/20（正/负/未选列三条），否则不采信。
+
+- **A1′**：原始 18/20，两个失败窗口是两个动作都零发放的**空窗口**（无资格可写）；
+  按修订口径（只判有 post 脉冲的窗口）**18/18**，负 20/20，门控 20/20；
+- **阶段 2**（默认群体 Critic、10 种子、CPU）：配对中位数 **+17.95 步**（门槛 +20，不过；
+  95% CI −0.30 … +29.20），**8/10** 变好，中位数 75.65（验收 200，不过）。
+
+结论：**痕迹的符号问题是真的，修掉后方向为正但不稳，且远未到验收**。按判读表，
+下一嫌疑是 **Critic／信用时域**，需要新预注册；不回头调 lr / 宽度 / 回合数。
+见 [`sweep_results/rstdp_spiking_actor_fix/README.md`](../../sweep_results/rstdp_spiking_actor_fix/README.md)。
 
 ## 与阶段四的关系
 
