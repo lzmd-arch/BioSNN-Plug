@@ -709,6 +709,14 @@
 >    `p3_ready=false`。见
 >    [`sweep_results/termination_head_v1/README.md`](sweep_results/termination_head_v1/README.md)。
 
+> 75. **2026-10-26：P3 闭环接入专用终止头——离线 0.999，闭环 0.665，仍是分布偏移**。
+>    H=500、5 种子：闭环 H=10 NMSE 仍 ~2e-8（vs copy 120），首发散步中位 115.5；终止回合率
+>    100%，但闭环终止 AUROC **0.665** <0.75 → `p3_ready=false`。离线头在真实测试状态上
+>    0.9986，接回闭环只剩 0.665：闭环预测状态约 115 步后发散，头看到的是训练分布外状态。
+>    不调头/阈值；P3 v2 的候选：想象状态增广训练终止头、改进闭环状态模型，或接受
+>    "闭环终止不可评"。见
+>    [`sweep_results/world_model_closed_loop_head/README.md`](sweep_results/world_model_closed_loop_head/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
