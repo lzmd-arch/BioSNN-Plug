@@ -84,9 +84,7 @@ def run(
             n_terminal = min(len(terminal_indices), math.ceil(0.1 * capacity))
             chosen_terminals = rng.choice(terminal_indices, size=n_terminal, replace=False)
             nonterminal = np.setdiff1d(np.arange(states.shape[0]), terminal_indices)
-            chosen_nonterminals = rng.choice(
-                nonterminal, size=capacity - n_terminal, replace=False
-            )
+            chosen_nonterminals = rng.choice(nonterminal, size=capacity - n_terminal, replace=False)
             index = np.concatenate([chosen_terminals, chosen_nonterminals])
             rng.shuffle(index)
             clean_states = states[index]
@@ -124,9 +122,7 @@ def run(
             )
             pseudo_values = pseudo.recall(e0.encode(noisy_states))
             nearest = RawNearestNeighbor()
-            nearest.store(
-                clean_states, build_values(actions[index], terminated[index], times)
-            )
+            nearest.store(clean_states, build_values(actions[index], terminated[index], times))
             raw_values = nearest.recall(noisy_states)
             for arm, decoded in (
                 (
@@ -151,9 +147,7 @@ def run(
                         "seed": seed,
                         "capacity": capacity,
                         "arm": arm,
-                        **_row(
-                            actions[index], terminated[index], times, decoded, rng
-                        ),
+                        **_row(actions[index], terminated[index], times, decoded, rng),
                     }
                 )
             print(f"seed {seed} N={capacity} done", flush=True)
