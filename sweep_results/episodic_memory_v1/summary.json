@@ -1,0 +1,1055 @@
+{
+  "experiment": "情景记忆 v1：局部吸引子 + 独立时间戳",
+  "config": {
+    "policy_noise": 0.1,
+    "episodes": 200,
+    "capacities": [
+      100,
+      300,
+      500,
+      1000,
+      2000
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "attractor_steps": 3
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "one_shot",
+      "action_accuracy": 0.59,
+      "termination_balanced": 0.6,
+      "termination_tpr": 0.7,
+      "temporal_order": 0.5730337078651685
+    },
+    {
+      "seed": 0,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "attractor",
+      "action_accuracy": 0.54,
+      "termination_balanced": 0.7,
+      "termination_tpr": 0.7,
+      "temporal_order": 0.43529411764705883
+    },
+    {
+      "seed": 0,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.48,
+      "termination_balanced": 0.7,
+      "termination_tpr": 0.8,
+      "temporal_order": 0.5287356321839081
+    },
+    {
+      "seed": 0,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "raw_nn",
+      "action_accuracy": 0.86,
+      "termination_balanced": 0.95,
+      "termination_tpr": 0.9,
+      "temporal_order": 0.6179775280898876
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.554945054945055
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.5666666666666667,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4860335195530726
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.56,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.4827586206896552,
+      "temporal_order": 0.5027624309392266
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.78,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.654054054054054
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.632,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.48295454545454547
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.622,
+      "termination_balanced": 0.5517241379310345,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.39779005524861877
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.584,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.6298342541436464
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.73,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.553072625698324
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.624,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.3793103448275862,
+      "temporal_order": 0.518918918918919
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.563,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4696132596685083
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.653,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.4827586206896552,
+      "temporal_order": 0.4972067039106145
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.753,
+      "termination_balanced": 0.9310344827586207,
+      "termination_tpr": 0.8620689655172413,
+      "temporal_order": 0.5111111111111111
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.6435,
+      "termination_balanced": 0.4655172413793104,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.518918918918919
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.6745,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5027624309392266
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.6835,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.521978021978022
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7565,
+      "termination_balanced": 0.896551724137931,
+      "termination_tpr": 0.7931034482758621,
+      "temporal_order": 0.5597826086956522
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "one_shot",
+      "action_accuracy": 0.61,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.4350282485875706
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "attractor",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.4046242774566474
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.54,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.4,
+      "temporal_order": 0.531578947368421
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "raw_nn",
+      "action_accuracy": 0.75,
+      "termination_balanced": 0.95,
+      "termination_tpr": 0.9,
+      "temporal_order": 0.6927374301675978
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.5172413793103448,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.5418994413407822
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.6666666666666666,
+      "termination_balanced": 0.603448275862069,
+      "termination_tpr": 0.6206896551724138,
+      "temporal_order": 0.5054945054945055
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.5333333333333333,
+      "termination_balanced": 0.603448275862069,
+      "termination_tpr": 0.7241379310344828,
+      "temporal_order": 0.47802197802197804
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7266666666666667,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.6304347826086957
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.67,
+      "termination_balanced": 0.5344827586206896,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.4864864864864865
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.604,
+      "termination_balanced": 0.5689655172413792,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.4888888888888889
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.65,
+      "termination_balanced": 0.603448275862069,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.4722222222222222
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.782,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.592391304347826
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.684,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.453551912568306
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.631,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.3793103448275862,
+      "temporal_order": 0.455026455026455
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.689,
+      "termination_balanced": 0.5344827586206897,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.4388888888888889
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.742,
+      "termination_balanced": 1.0,
+      "termination_tpr": 1.0,
+      "temporal_order": 0.5977011494252874
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.682,
+      "termination_balanced": 0.6206896551724137,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.5108695652173914
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.619,
+      "termination_balanced": 0.4827586206896552,
+      "termination_tpr": 0.5172413793103449,
+      "temporal_order": 0.562874251497006
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.6645,
+      "termination_balanced": 0.5172413793103448,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.4972375690607735
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7265,
+      "termination_balanced": 0.896551724137931,
+      "termination_tpr": 0.7931034482758621,
+      "temporal_order": 0.4835164835164835
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "one_shot",
+      "action_accuracy": 0.7,
+      "termination_balanced": 0.6499999999999999,
+      "termination_tpr": 0.6,
+      "temporal_order": 0.5769230769230769
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "attractor",
+      "action_accuracy": 0.73,
+      "termination_balanced": 0.6499999999999999,
+      "termination_tpr": 0.6,
+      "temporal_order": 0.45977011494252873
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.62,
+      "termination_balanced": 0.55,
+      "termination_tpr": 0.6,
+      "temporal_order": 0.48314606741573035
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "raw_nn",
+      "action_accuracy": 0.89,
+      "termination_balanced": 1.0,
+      "termination_tpr": 1.0,
+      "temporal_order": 0.7218934911242604
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.7266666666666667,
+      "termination_balanced": 0.3793103448275862,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.478494623655914
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.67,
+      "termination_balanced": 0.5344827586206897,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.45901639344262296
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.6266666666666667,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.3793103448275862,
+      "temporal_order": 0.5355191256830601
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7933333333333333,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.6304347826086957
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.68,
+      "termination_balanced": 0.5344827586206896,
+      "termination_tpr": 0.4827586206896552,
+      "temporal_order": 0.5449438202247191
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.668,
+      "termination_balanced": 0.41379310344827586,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4918918918918919
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.678,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.5222222222222223
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.772,
+      "termination_balanced": 0.9137931034482758,
+      "termination_tpr": 0.8275862068965517,
+      "temporal_order": 0.5898876404494382
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.705,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5212765957446809
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.708,
+      "termination_balanced": 0.5689655172413793,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5088757396449705
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.639,
+      "termination_balanced": 0.5344827586206897,
+      "termination_tpr": 0.6206896551724138,
+      "temporal_order": 0.5161290322580645
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.767,
+      "termination_balanced": 0.9137931034482758,
+      "termination_tpr": 0.8620689655172413,
+      "temporal_order": 0.5652173913043478
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.6585,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5232558139534884
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.694,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5054945054945055
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.6715,
+      "termination_balanced": 0.5344827586206897,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.4550561797752809
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7355,
+      "termination_balanced": 0.9482758620689655,
+      "termination_tpr": 0.896551724137931,
+      "temporal_order": 0.585635359116022
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "one_shot",
+      "action_accuracy": 0.69,
+      "termination_balanced": 0.4,
+      "termination_tpr": 0.3,
+      "temporal_order": 0.4689265536723164
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "attractor",
+      "action_accuracy": 0.59,
+      "termination_balanced": 0.55,
+      "termination_tpr": 0.3,
+      "temporal_order": 0.45652173913043476
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.61,
+      "termination_balanced": 0.6,
+      "termination_tpr": 0.7,
+      "temporal_order": 0.5027932960893855
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "raw_nn",
+      "action_accuracy": 0.84,
+      "termination_balanced": 0.95,
+      "termination_tpr": 0.9,
+      "temporal_order": 0.7085714285714285
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.6733333333333333,
+      "termination_balanced": 0.5344827586206896,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4463276836158192
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.6633333333333333,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4857142857142857
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.5566666666666666,
+      "termination_balanced": 0.5344827586206897,
+      "termination_tpr": 0.5172413793103449,
+      "temporal_order": 0.5738636363636364
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.8,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.6022099447513812
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.64,
+      "termination_balanced": 0.5862068965517241,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.574585635359116
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.536,
+      "termination_balanced": 0.5862068965517241,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.46703296703296704
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.61,
+      "termination_balanced": 0.6379310344827587,
+      "termination_tpr": 0.6206896551724138,
+      "temporal_order": 0.5139664804469274
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.758,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.5409836065573771
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.632,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.48314606741573035
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.545,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4186046511627907
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.642,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.4827586206896552,
+      "temporal_order": 0.46524064171123
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.759,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.6195652173913043
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.6495,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.4827586206896552,
+      "temporal_order": 0.6318681318681318
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.526,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5277777777777778
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.6665,
+      "termination_balanced": 0.6206896551724137,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.4946808510638298
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.731,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.519774011299435
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "one_shot",
+      "action_accuracy": 0.58,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.5028248587570622
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "attractor",
+      "action_accuracy": 0.59,
+      "termination_balanced": 0.4,
+      "termination_tpr": 0.4,
+      "temporal_order": 0.5439560439560439
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.49,
+      "termination_balanced": 0.39999999999999997,
+      "termination_tpr": 0.7,
+      "temporal_order": 0.5193370165745856
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "terminals_stored": 10,
+      "arm": "raw_nn",
+      "action_accuracy": 0.81,
+      "termination_balanced": 1.0,
+      "termination_tpr": 1.0,
+      "temporal_order": 0.6685714285714286
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.6266666666666667,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5111111111111111
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.6666666666666666,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.42696629213483145
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.5766666666666667,
+      "termination_balanced": 0.4827586206896552,
+      "termination_tpr": 0.5172413793103449,
+      "temporal_order": 0.4808743169398907
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.79,
+      "termination_balanced": 0.9310344827586207,
+      "termination_tpr": 0.8620689655172413,
+      "temporal_order": 0.5483870967741935
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.61,
+      "termination_balanced": 0.41379310344827586,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5227272727272727
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.666,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4682080924855491
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.622,
+      "termination_balanced": 0.5862068965517242,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.5166666666666667
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.77,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.6312849162011173
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.64,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.48066298342541436
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.678,
+      "termination_balanced": 0.41379310344827586,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.47540983606557374
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.659,
+      "termination_balanced": 0.4827586206896552,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.5054945054945055
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.744,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.585635359116022
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "one_shot",
+      "action_accuracy": 0.6375,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.46368715083798884
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "attractor",
+      "action_accuracy": 0.615,
+      "termination_balanced": 0.3793103448275862,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.45251396648044695
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.679,
+      "termination_balanced": 0.5517241379310345,
+      "termination_tpr": 0.6206896551724138,
+      "temporal_order": 0.5813953488372093
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "terminals_stored": 29,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7495,
+      "termination_balanced": 0.9137931034482758,
+      "termination_tpr": 0.8275862068965517,
+      "temporal_order": 0.5170454545454546
+    }
+  ],
+  "gate": {
+    "one_shot": {
+      "action_500": 0.6464000000000001,
+      "termination_balanced_500": 0.5,
+      "termination_tpr_500": 0.496551724137931,
+      "temporal_order_500": 0.5223395520504279,
+      "action_1000": 0.657,
+      "ready": false
+    },
+    "attractor": {
+      "action_500": 0.6192,
+      "termination_balanced_500": 0.5103448275862068,
+      "termination_tpr_500": 0.48275862068965514,
+      "temporal_order_500": 0.4627623791095831,
+      "action_1000": 0.625,
+      "ready": false
+    },
+    "pseudo_inverse_ceiling": {
+      "action_500": 0.6287999999999999,
+      "termination_balanced_500": 0.5586206896551724,
+      "temporal_order_500": 0.530982369140337,
+      "action_1000": 0.6564
+    },
+    "raw_nn_baseline": {
+      "action_500": 0.7624,
+      "termination_balanced_500": 0.9620689655172413,
+      "temporal_order_500": 0.5815240186508166
+    },
+    "v1_ready": false
+  },
+  "repro": "```text\n实验名称：情景记忆 v1\n日期：2026-10-26 20:54:55 中国标准时间\nGit commit：947714abad4c43d9c911287cd910c18e665b766a\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_episodic_memory_v1.py --seeds 0-4 --episodes 200 --out data/_episodic_v1\n耗时：5.3 s\n备注：动作/终止 4 维值 + 独立时间标量记忆；吸引子 3 步 top-k\n备注：伪逆是上限对照，不是局部候选；原始 NN 单列\n备注：数据/编码器/噪声/容量与 v0 相同\n```"
+}
