@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 from .eprop import EPropLearner
+from .neurons import ALIFCell, ALIFState
 from .tasks import load_shd, load_smnist
 
-__all__ = ["EPropLearner", "load_shd", "load_smnist"]
+__all__ = ["ALIFCell", "ALIFState", "EPropLearner", "load_shd", "load_smnist"]

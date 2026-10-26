@@ -90,3 +90,22 @@ def test_v4_runner_smoke(tmp_path):
     summary = run_v4([0], train_episodes=50, test_episodes=20, out=tmp_path, epochs=5)
     assert "w4_ready" in summary["gate"]
     assert (tmp_path / "summary.json").exists()
+
+
+def test_spiking_memory_returns_one_count_per_unit():
+    import torch
+
+    from research.cognitive.spiking_working_memory import TAUS, SpikingMultiTimescale
+
+    network = SpikingMultiTimescale(seed=0)
+    counts = network.run(np.ones(4), -np.ones(4), generator=torch.Generator().manual_seed(0))
+    assert counts.shape == (len(TAUS) * 4,)
+    assert np.all(counts >= 0)
+
+
+def test_v5_runner_smoke(tmp_path):
+    from research.cognitive.run_working_memory_v5 import run as run_v5
+
+    summary = run_v5([0], train_episodes=50, test_episodes=20, out=tmp_path, epochs=5)
+    assert "v5_ready" in summary["gate"]
+    assert (tmp_path / "summary.json").exists()
