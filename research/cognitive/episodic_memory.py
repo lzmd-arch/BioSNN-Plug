@@ -36,12 +36,18 @@ class SparseEncoder:
         k: int = 32,
         seed: int = 0,
         scale: np.ndarray | None = None,
+        mode: str = "sparse",
     ) -> None:
+        if mode not in ("sparse", "dense_sign", "dense"):
+            raise ValueError(f"mode 只能是 sparse/dense_sign/dense，收到 {mode!r}。")
+        if mode != "sparse":
+            k = dim
         if not 1 <= k <= dim:
             raise ValueError(f"k 必须在 [1, {dim}]，收到 {k}。")
         self.n_in = int(n_in)
         self.dim = int(dim)
         self.k = int(k)
+        self.mode = mode
         self.scale = np.asarray(scale if scale is not None else CARTPOLE_SCALE[:n_in])
         if self.scale.shape != (self.n_in,):
             raise ValueError(f"scale 必须是 ({self.n_in},)，收到 {self.scale.shape}。")
@@ -53,6 +59,10 @@ class SparseEncoder:
         if values.ndim != 2 or values.shape[1] != self.n_in:
             raise ValueError(f"状态必须是 (n, {self.n_in})，收到 {values.shape}。")
         projected = (values / self.scale) @ self.projection.T
+        if self.mode == "dense":
+            return projected
+        if self.mode == "dense_sign":
+            return np.where(projected >= 0.0, 1.0, -1.0)
         keys = np.zeros_like(projected)
         index = np.argpartition(-np.abs(projected), self.k - 1, axis=1)[:, : self.k]
         rows = np.arange(values.shape[0])[:, None]

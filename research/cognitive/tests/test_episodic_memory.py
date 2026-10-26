@@ -89,3 +89,24 @@ def test_v1_runner_smoke(tmp_path):
     summary = run_v1([0], episodes=10, out=tmp_path, capacities=(20,))
     assert summary["gate"]["v1_ready"] is False
     assert len(summary["per_seed"]) == 4
+
+
+def test_dense_encoders_have_expected_forms():
+    from research.cognitive.episodic_memory import SparseEncoder
+
+    states = np.random.default_rng(0).normal(size=(5, 4))
+    dense_sign = SparseEncoder(dim=16, k=16, seed=0, mode="dense_sign").encode(states)
+    dense_cont = SparseEncoder(dim=16, k=16, seed=0, mode="dense").encode(states)
+
+    assert dense_sign.shape == (5, 16)
+    assert set(np.unique(dense_sign)) <= {-1.0, 1.0}
+    assert dense_cont.shape == (5, 16)
+    assert np.all(np.isfinite(dense_cont))
+
+
+def test_v2_runner_smoke(tmp_path):
+    from research.cognitive.run_episodic_memory_v2 import run as run_v2
+
+    summary = run_v2([0], episodes=10, out=tmp_path, capacities=(20,))
+    assert summary["gate"]["v2_ready"] is False
+    assert len(summary["per_seed"]) == 4 + 2
