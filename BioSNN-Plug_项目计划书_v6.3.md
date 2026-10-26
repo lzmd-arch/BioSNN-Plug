@@ -590,6 +590,19 @@
 >    新预注册。见
 >    [`sweep_results/continual_v2/task_inference_mahalanobis/README.md`](sweep_results/continual_v2/task_inference_mahalanobis/README.md)。
 
+> 63. **2026-10-26：任务推断最后一轮失败，边界结论封存；路由指标更正**。先更正指标：
+>    路由准确率的主指标是**最终一步**对全部已见任务的均值；此前 61/62 里的 0.489 / 0.524
+>    是**逐步对角线均值**，最终一步分别为 **0.301 / 0.351**——结论不变（更差）。
+>    最后一轮两臂：无偏置 delta 任务分类器 **ACC 0.2421 / AF 0.8077**，最终路由 **0.100**
+>    （逐步 1.0 是假象：旧任务行被后续任务负目标压低，最终全路由到最后任务）；
+>    全协方差 Mahalanobis **ACC 0.5855 / AF 0.1285**，最终路由 **0.528**——局部路由里最好，
+>    但仍不过阶段门（65% / 8%）。**两臂都不过 → 1 失败 → 2 成立**：在本征特征空间里，
+>    CIFAR-100 的十个任务不是简单局部判别器可分；不提供任务 id 时，纯 CIL 的
+>    ACC≥65 / AF<8 达不到。**不再在这根轴上加码**；阶段三 CL 门记为未达，W3 / 世界模型
+>    回后台队列。见
+>    [`sweep_results/continual_v2/task_inference_classifier/README.md`](sweep_results/continual_v2/task_inference_classifier/README.md)
+>    与 [`task_inference_mahalanobis_full/README.md`](sweep_results/continual_v2/task_inference_mahalanobis_full/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
