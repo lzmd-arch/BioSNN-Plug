@@ -544,6 +544,14 @@
 >    （旧行 α·η，α=0.1/0.3），需新预注册。见
 >    [`sweep_results/continual_v2/isolation_replay/README.md`](sweep_results/continual_v2/isolation_replay/README.md)。
 
+> 58. **2026-10-26：CL 部分隔离没有中间态——输出行轴走到头**。旧行用 α·η：
+>    α=0.1 得 ACC **0.2610 / AF 0.7951**、α=0.3 得 **0.2512 / 0.8017**，
+>    对角线都回到 **0.808**。相对参考，机制信号（AF −1.0 / −0.3 pp）不过；
+>    相对 P1 的获取恢复也不过；"不是少学"过，但那是因为行为已回到全量更新。
+>    α 从 0 到 0.1 是**相变**，不是剂量反应：旧行动一点，保持就没了。按预注册判读表，
+>    **输出行轴走到头**，不调第三档；下一机制转向**特征级隔离或任务推断**。见
+>    [`sweep_results/continual_v2/partial_isolation_alpha010/README.md`](sweep_results/continual_v2/partial_isolation_alpha010/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
