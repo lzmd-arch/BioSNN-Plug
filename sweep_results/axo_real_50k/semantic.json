@@ -1,0 +1,23 @@
+{
+  "source": "D:\\Projects\\_scratch_ui\\aishell3_full.jsonl",
+  "source_sha256": "05ab53f08daff822d8dc966f0a557df8bafaa67abbfa7f612caabe088a4fa693",
+  "n": 50000,
+  "embedding_model": "nomic-embed-text@768",
+  "load_s": 0.20378889999119565,
+  "encode_s": 22.182250399986515,
+  "embedding_s": 399.14923449998605,
+  "embedding_ms_per_text": 7.9829846899997206,
+  "insert_s": 0.2825015000125859,
+  "queries": 100,
+  "hit1": 0.85,
+  "hit8": 0.92,
+  "mrr": 0.8721821132299072,
+  "recall_ms": 170.43624799902318,
+  "recall_warm_ms": 166.3498555544077,
+  "scanned": 1766.06,
+  "full_scan_queries": 10,
+  "full_scan_ms": 2116.3638900005026,
+  "full_scan_scanned": 50000.0,
+  "top1_same": 1.0,
+  "top8_same": 1.0
+}
