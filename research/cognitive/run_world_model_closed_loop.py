@@ -17,6 +17,7 @@ from typing import Any
 import gymnasium
 import numpy as np
 
+from research.cognitive.termination_head import TerminationHead
 from research.cognitive.world_model import CopyLastModel, RidgeActionModel, auroc
 from research.common.provenance import collect
 from research.common.seeding import parse_seeds
@@ -114,6 +115,7 @@ def closed_loop(
     scale: np.ndarray,
     horizon: int,
     policy_seed: int,
+    termination_head: TerminationHead | None = None,
 ) -> ClosedLoop:
     """从测试回合的初始状态开始；策略在**模型预测的状态**上选动作，动作同时喂给两边。"""
     env = gymnasium.make("CartPole-v1")
@@ -131,7 +133,12 @@ def closed_loop(
             prediction = model.predict(predicted[None, :], np.array([action]))
             predicted_next = predicted + prediction.delta[0]
             nmse.append(_step_nmse(predicted_next, true_next, scale))
-            scores.append(float(prediction.termination[0]))
+            if termination_head is None:
+                scores.append(float(prediction.termination[0]))
+            else:
+                scores.append(
+                    float(termination_head.predict_proba(predicted[None, :], np.array([action]))[0])
+                )
             labels.append(bool(term))
             if term or trunc:
                 break
@@ -158,7 +165,15 @@ def _at(values: list[float], index: int) -> float | None:
     return values[index] if len(values) > index else None
 
 
-def run(seeds: list[int], *, episodes: int, test_episodes: int, horizon: int, out: Path) -> dict:
+def run(
+    seeds: list[int],
+    *,
+    episodes: int,
+    test_episodes: int,
+    horizon: int,
+    out: Path,
+    termination_model: str = "ridge",
+) -> dict:
     started = time.perf_counter()
     rows: list[dict[str, Any]] = []
     for seed in seeds:
@@ -169,11 +184,26 @@ def run(seeds: list[int], *, episodes: int, test_episodes: int, horizon: int, ou
 
         model = RidgeActionModel(quadratic=True)
         model.fit(states, actions, next_states, terminated)
+        termination_head = None
+        if termination_model == "dedicated":
+            termination_head = TerminationHead()
+            termination_head.fit(states, actions, terminated)
+        elif termination_model != "ridge":
+            raise ValueError(
+                f"termination_model 只能是 'ridge' 或 'dedicated'，收到 {termination_model!r}。"
+            )
         baseline = CopyLastModel()
         baseline.fit(states, actions, next_states, terminated)
 
         loops = [
-            closed_loop(model, ep, scale=scale, horizon=horizon, policy_seed=seed * 1000 + i)
+            closed_loop(
+                model,
+                ep,
+                scale=scale,
+                horizon=horizon,
+                policy_seed=seed * 1000 + i,
+                termination_head=termination_head,
+            )
             for i, ep in enumerate(test)
         ]
         base_loops = [
@@ -250,6 +280,7 @@ def run(seeds: list[int], *, episodes: int, test_episodes: int, horizon: int, ou
             "train_episodes": episodes,
             "test_episodes": test_episodes,
             "seeds": seeds,
+            "termination_model": termination_model,
         },
         "per_seed": rows,
         "gate": gate,
@@ -279,6 +310,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--episodes", type=int, default=200)
     parser.add_argument("--test-episodes", type=int, default=100)
     parser.add_argument("--horizon", type=int, default=HORIZON)
+    parser.add_argument("--termination", choices=("ridge", "dedicated"), default="ridge")
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
     run(
@@ -287,6 +319,7 @@ def main(argv: list[str] | None = None) -> int:
         test_episodes=args.test_episodes,
         horizon=args.horizon,
         out=args.out,
+        termination_model=args.termination,
     )
     return 0
 

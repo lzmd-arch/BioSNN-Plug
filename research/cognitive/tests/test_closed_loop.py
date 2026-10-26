@@ -42,3 +42,25 @@ def test_closed_loop_runs_and_metrics_are_finite():
     assert len(open_loop(model, test[0], scale=scale, horizon=10)) == min(
         10, test[0].states.shape[0]
     )
+
+
+def test_closed_loop_with_dedicated_termination_head():
+    from research.cognitive.termination_head import TerminationHead
+
+    train = collect_episodes(20, seed=0, noise=0.3)
+    test = collect_episodes(5, seed=1, noise=0.3)
+    states = np.concatenate([episode.states for episode in train])
+    actions = np.concatenate([episode.actions for episode in train])
+    next_states = np.concatenate([episode.next_states for episode in train])
+    terminated = np.concatenate([episode.terminated for episode in train])
+    scale = np.var(np.concatenate([states, next_states]), axis=0)
+    model = RidgeActionModel(quadratic=True)
+    model.fit(states, actions, next_states, terminated)
+    head = TerminationHead()
+    head.fit(states, actions, terminated)
+
+    loop = closed_loop(
+        model, test[0], scale=scale, horizon=20, policy_seed=0, termination_head=head
+    )
+    assert len(loop.termination_scores) == len(loop.nmse)
+    assert np.all(np.isfinite(loop.termination_scores))
