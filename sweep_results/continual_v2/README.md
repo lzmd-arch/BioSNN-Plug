@@ -128,6 +128,28 @@ R-NCM 与探索期的 0.658 / 0.127 一致——**旧数字不是累计矩阵造
 结果：[`partial_isolation_alpha010/`](partial_isolation_alpha010/README.md)、
 [`partial_isolation_alpha030/`](partial_isolation_alpha030/README.md)。
 
+## 特征级掩码（F1 Fisher / 随机控制）
+
+预注册：[`../continual_v2_feature_isolation_prereg.md`](../continual_v2_feature_isolation_prereg.md)。
+每任务在训练特征上取 top-k（k=256）掩码并冻结；每个类只看 `m_t ⊙ x`；无任务 id。5 种子。
+
+| 臂 | ACC | AF | 掩码 Jaccard |
+| :--- | ---: | ---: | ---: |
+| R-delta-mini | 0.2466 | 0.8047 | — |
+| **F1 Fisher** | **0.2343** | **0.7727** | **0.425** |
+| **F1-control random** | **0.2342** | **0.7788** | **0.333** |
+
+两条都几乎等于参考，Fisher 与随机掩码也几乎一样（AF 差 0.61 pp）：
+- 机制信号（vs P1：ACC ≥59.3、AF ≤7.4）**不过**；
+- 学到的掩码检验（AF 低 ≥5 pp）**不过**；
+- "不是少学"过（对角线 0.775 / 0.778 ≥0.758），但阶段门远不过（ACC 23.4%）。
+
+任务掩码之间的 Jaccard 是 0.33–0.43——**特征子空间重叠很高**，限制 50% 的特征既没
+恢复获取，也没保住旧知识。按预注册判读表：**特征轴不是杠杆** → 启动**任务推断保底臂**
+（新预注册），测量"任务边界信息是否必须以某种形式进入推理"。结果：
+[`feature_mask_fisher/`](feature_mask_fisher/README.md)、
+[`feature_mask_random/`](feature_mask_random/README.md)。
+
 ## 跑门
 
 每个任务 `‖ΔW‖/‖W‖`（t=0 从零初始化，分母不存在，不参与判定）：

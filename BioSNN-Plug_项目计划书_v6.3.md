@@ -562,6 +562,14 @@
 >    任务推断保底臂（新预注册）。见
 >    [`sweep_results/continual_v2_feature_isolation_prereg.md`](sweep_results/continual_v2_feature_isolation_prereg.md)。
 
+> 60. **2026-10-26：CL 特征级掩码——不是杠杆，特征轴封**。每任务 Fisher top-k（k=256）
+>    掩码、冻结、无任务 id，5 种子：**F1 0.2343 / 0.7727**，随机控制 **0.2342 / 0.7788**，
+>    两者几乎相同；掩码 Jaccard **0.425 / 0.333**。机制信号（vs P1）与"学到的掩码优于
+>    随机"都不过；"不是少学"过（对角线 0.775/0.778），但阶段门远不过。结论：限制 50%
+>    的特征既不恢复获取也不保住旧知识，特征子空间重叠太高。按预注册启动**任务推断
+>    保底臂**（新预注册），测量任务边界信息是否必须以某种形式进入推理。见
+>    [`sweep_results/continual_v2/feature_mask_fisher/README.md`](sweep_results/continual_v2/feature_mask_fisher/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
