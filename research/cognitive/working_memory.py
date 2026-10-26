@@ -1,0 +1,79 @@
+"""多时间尺度工作记忆 v0：固定 τ 的漏积分器 + 线性读出。
+
+预注册见 ``sweep_results/working_memory_v0_prereg.md``。两个线索 A（早）与 B（晚）在
+延迟后同时回忆；快 τ 记 B、慢 τ 记 A，单 4 维状态在秩上无法同时重建两者。
+"""
+
+from __future__ import annotations
+
+import numpy as np
+
+__all__ = [
+    "CUE_A",
+    "CUE_B",
+    "N_DIMS",
+    "TAUS",
+    "TEST_STEP",
+    "average_r2",
+    "encode_episode",
+    "fit_ridge",
+    "predict",
+]
+
+TAUS = (2, 5, 10, 20, 50, 100, 200)
+N_DIMS = 4
+CUE_A = (0, 4)
+CUE_B = (20, 24)
+TEST_STEP = 50
+NOISE = 0.01
+
+
+def encode_episode(
+    cue_a: np.ndarray,
+    cue_b: np.ndarray,
+    *,
+    rng: np.random.Generator,
+    taus: tuple[int, ...] = TAUS,
+    n_dims: int = N_DIMS,
+    noise: float = NOISE,
+    test_step: int = TEST_STEP,
+) -> np.ndarray:
+    """跑一条时间线，返回 ``(len(taus)·n_dims,)`` 的测试时刻状态。"""
+    cue_a = np.asarray(cue_a, dtype=np.float64)
+    cue_b = np.asarray(cue_b, dtype=np.float64)
+    if cue_a.shape != (n_dims,) or cue_b.shape != (n_dims,):
+        raise ValueError(f"线索必须是 ({n_dims},)。")
+    alphas = np.exp(-1.0 / np.asarray(taus, dtype=np.float64))
+    state = np.zeros((len(taus), n_dims), dtype=np.float64)
+    for step in range(test_step):
+        inputs = rng.normal(scale=noise, size=n_dims)
+        if CUE_A[0] <= step <= CUE_A[1]:
+            inputs = inputs + cue_a
+        if CUE_B[0] <= step <= CUE_B[1]:
+            inputs = inputs + cue_b
+        state = alphas[:, None] * state + (1.0 - alphas)[:, None] * inputs[None, :]
+    return state.reshape(-1)
+
+
+def fit_ridge(states: np.ndarray, targets: np.ndarray, *, l2: float = 1e-3) -> np.ndarray:
+    """闭式 ridge（带截距）；测量头，不是局部学习规则。"""
+    design = np.asarray(states, dtype=np.float64)
+    values = np.asarray(targets, dtype=np.float64)
+    augmented = np.hstack([np.ones((design.shape[0], 1)), design])
+    penalty = l2 * np.eye(augmented.shape[1])
+    penalty[0, 0] = 0.0
+    return np.linalg.solve(augmented.T @ augmented + penalty, augmented.T @ values)
+
+
+def predict(states: np.ndarray, coefficients: np.ndarray) -> np.ndarray:
+    design = np.asarray(states, dtype=np.float64)
+    augmented = np.hstack([np.ones((design.shape[0], 1)), design])
+    return augmented @ coefficients
+
+
+def average_r2(predicted: np.ndarray, target: np.ndarray) -> float:
+    predicted = np.asarray(predicted, dtype=np.float64)
+    target = np.asarray(target, dtype=np.float64)
+    residual = np.sum((predicted - target) ** 2, axis=0)
+    total = np.sum((target - target.mean(axis=0)) ** 2, axis=0)
+    return float(np.mean(1.0 - residual / np.maximum(total, 1e-12)))
