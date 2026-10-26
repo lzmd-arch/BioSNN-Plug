@@ -282,6 +282,28 @@ uv run python -m research.rstdp_spiking.diagnose_critic
 符号）を除外した結果、残るのは「集団の容量と初期化がこの 64 次元の集団符号化に合っていない」で
 あり、それには別の事前登録が要る。
 
+## Actor 痕跡規則：`sign-consistent` を追加（2026-10-26）
+
+既定の規則は**変えていません**（`pair-stdp`、記録済みのすべての数値とビット単位で同一）。
+新しい明示スイッチ `--trace-rule sign-consistent` は、実 Δt の LTP/LTD を保ちながら、
+**選択された行動の列だけ**に 2 本の非負の痕跡を積み、エピソード終了時に成功信号の符号で
+位相を選びます（事前登録：
+[`sweep_results/rstdp_spiking_actor_fix_prereg.md`](../../sweep_results/rstdp_spiking_actor_fix_prereg.md)、
+修正：
+[`..._amend1.md`](../../sweep_results/rstdp_spiking_actor_fix_prereg_amend1.md)）。
+
+A1 が測った問題（選択行動の資格列和が 20 窗口中 7 窓でしか大きくなく、3 窓では負）は、
+A1′ では **18/18**（無発火の 2 窓を除外）、負 20/20、ゲーティング 20/20 になります。
+しかし 10 シードのペア比較（段階 2）は：
+
+- ペア差の中央値 **+17.95 歩**（基準 +20、未達；bootstrap 95% CI −0.30 … +29.20）；
+- **8/10** シードで改善（この条件は通過）；
+- 中央値 **75.65** 歩、200 歩到達は 0/10（受け入れ基準は未達）。
+
+結論：**符号の一致性は痕跡を直したが、（唯一の）ボトルネックではない**。次の疑いは
+Critic／信用の時間軸です。表と自証：
+[`sweep_results/rstdp_spiking_actor_fix/README.md`](../../sweep_results/rstdp_spiking_actor_fix/README.md)。
+
 ## 既知の境界
 
 1. **既定の Critic は線形 TD(0)。** TD-LTP 集団 Critic は実装済み（`pop_critic.py`、`--critic pop`）

@@ -302,6 +302,28 @@ implementation**, on **this harness**, does not learn. With the three known susp
 and initialisation do not match this 64-dimensional population code" — which needs its own
 pre-registered round.
 
+## Actor trace rule: new `sign-consistent` option (2026-10-26)
+
+The default rule is **unchanged** (`pair-stdp`, bit-for-bit identical to every recorded number).
+A new explicit switch, `--trace-rule sign-consistent`, keeps the real-Δt LTP/LTD but accumulates
+two non-negative traces only for the selected action's column, then picks the phase by the sign
+of the success signal at episode end (pre-registration:
+[`sweep_results/rstdp_spiking_actor_fix_prereg.md`](../../sweep_results/rstdp_spiking_actor_fix_prereg.md);
+amendment:
+[`..._amend1.md`](../../sweep_results/rstdp_spiking_actor_fix_prereg_amend1.md)).
+
+The problem A1 measured (the selected action's eligibility column sum was larger in only 7 of
+20 windows, and negative in 3) becomes **18/18** in A1′ (two silent windows excluded), negative
+20/20, gating 20/20. But the 10-seed paired Stage 2:
+
+- paired median **+17.95 steps** (bar +20, not met; bootstrap 95% CI −0.30 … +29.20);
+- **8/10** seeds improve (this one passes);
+- median **75.65** steps, 0/10 at 200 (acceptance fails).
+
+Conclusion: **sign consistency fixed the trace, but it is not the (only) bottleneck**; the next
+suspect is the critic / credit horizon. Full table and provenance:
+[`sweep_results/rstdp_spiking_actor_fix/README.md`](../../sweep_results/rstdp_spiking_actor_fix/README.md).
+
 ## Known boundaries
 
 1. **The default critic is a linear TD(0) one.** The TD-LTP population critic is implemented
