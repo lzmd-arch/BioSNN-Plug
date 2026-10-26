@@ -425,7 +425,9 @@
 >    - **机制顺序**：回放 → 归一化 → 参数隔离，**一次只上一个**（归因链可分离）。
 >    - ⚠️ **Route R 的旧数字 0.658 / 0.127 不作基线**：它们算在旧的累计类集矩阵上；
 >      先按 Step 0 重测，门槛数字从重测结果推导并注明日期。
->    - **阶段四入口改写**：**Route R + 回放 → AF < 8% 且 ACC ≥ 65%**（CIL 口径）。
+>    - **阶段四入口改写**：**Route R + 回放 → AF < 8% 且 ACC ≥ 65%**（CIL 口径；
+>      🔄 2026-10-26 由 [ADR-0018](docs/adr/ADR-0018-task-aware-cl-gate.md) 改为**任务感知 CIL**，
+>      允许推理时提供任务 id；纯 CIL 的阴性结果保留）。
 >      🔄 本条取代 ㊶ 里以 Route W 表述的门禁；㊶ 原文保留。
 >    - **阶段三不会因为时间过去而自动关闭**：门是测量的函数，不是日历的函数。
 
@@ -602,6 +604,14 @@
 >    回后台队列。见
 >    [`sweep_results/continual_v2/task_inference_classifier/README.md`](sweep_results/continual_v2/task_inference_classifier/README.md)
 >    与 [`task_inference_mahalanobis_full/README.md`](sweep_results/continual_v2/task_inference_mahalanobis_full/README.md)。
+
+> 64. **2026-10-26：阶段三 CL 门口径改为任务感知 CIL（[ADR-0018](docs/adr/ADR-0018-task-aware-cl-gate.md)）**。
+>    纯 CIL 已被输出行/特征/任务推断三根轴判死；按裁决改为**任务感知 CIL**——允许推理时
+>    提供任务 id，ACC≥65 / AF<8 的定义不变，argmax 在真实任务头内。oracle per-task 头
+>    **0.8195 / 0.0** 达标，阶段三 CL 门**仅在该口径下**记为通过。**不声称任务推断 CIL**
+>    （四条局部路由最终 0.10–0.53，未过）；**AF=0 是构造性的**（头冻结 + 任务 id），
+>    不是抗遗忘算法。纯 CIL 的所有数字与阴性结论原样保留。阶段四仍受「重学快 3×」门控，
+>    该项未跑。见 [`docs/adr/ADR-0018-task-aware-cl-gate.md`](docs/adr/ADR-0018-task-aware-cl-gate.md)。
 
 ## 一、项目定位
 
@@ -1072,7 +1082,9 @@ class NeurogenesisController:
 >   三规则仲裁（推迟）——**原样封存，不再追加投入**；
 > - **3b（今日开启）**：① Route R 回放臂（预注册 v2）；② 「重学快 3×」标准设计（排在回放结果之后）；
 >   ③ 脉冲 W3 判别实验（阈值先写死，才占 GPU）；
-> - **阶段四入口**：**Route R + 回放 → AF < 8% 且 ACC ≥ 65%**（CIL 口径）。
+> - **阶段四入口**：**Route R + 回放 → AF < 8% 且 ACC ≥ 65%**（CIL 口径；
+>   🔄 2026-10-26 由 [ADR-0018](docs/adr/ADR-0018-task-aware-cl-gate.md) 改为**任务感知 CIL**，
+>   允许推理时提供任务 id；纯 CIL 阴性结果保留）。
 
 **任务**：音频插件接入；R-STDP + TD-LTP Critic [Frémaux et al., 2013]；仲裁器扩展至三规则冲突维度（第 1–3 类）[Confavreux et al., 2025]；持续学习基准（CIFAR-100-B0 10 步增量，参考 PS-SNN 的 76.42%）[Hu et al., 2026]；**执行层脉冲化**——把 `research/rstdp/` 的速率型 actor-critic 换成脉冲实现（LIF + **带真实 Δt 窗口的 STDP 资格痕迹** + TD-LTP 群体 Critic），使 §3.2 的 `STDP(Δt_ij)` 公式与「仅计 pre-before-post」那处结构差别**第一次可验**。
 
@@ -1095,6 +1107,7 @@ class NeurogenesisController:
 >   `sweep_results/continual_cifar100/formal_cil/README.md`。
 > - **未开始**：仲裁器**三方混合**（阶段五）。
 **成功标准**：三模态接入，跨模态检索可用；平均增量准确率 65%+，AF < 8%；规则改变后重新学习速度比从头训练快 3 倍以上。
+（🔄 2026-10-26：CL 的 ACC/AF 口径按 [ADR-0018](docs/adr/ADR-0018-task-aware-cl-gate.md) 改为**任务感知 CIL**。）
 
 ### 第四阶段：神经发生 + 规模扩展 + 认知增强（16-24 个月）
 

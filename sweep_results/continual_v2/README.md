@@ -1,5 +1,10 @@
 # CL v2：Route R 基线重测、回放与归一化臂（2026-10-25 起）
 
+> **门口径变更（2026-10-26，[ADR-0018](../../docs/adr/ADR-0018-task-aware-cl-gate.md)）**：
+> 阶段三 CL 门已改为**任务感知 CIL（task-incremental，允许推理时提供任务 id）**；
+> 本文件的所有数字仍是**纯 CIL / 推断 CIL** 的原始结果，**不改写**。纯 CIL 未达、
+> 推断路由未达，两者都作为阴性结论保留。
+
 **预注册见 [`../continual_v2_replay_prereg.md`](../continual_v2_replay_prereg.md) 与
 [`../continual_v2_replay_prereg_amend1.md`](../continual_v2_replay_prereg_amend1.md)（均先于数据）。**
 路线切换的正式记录见 [ADR-0017](../../docs/adr/ADR-0017-cl-main-route-switch-and-replay-first.md)。
