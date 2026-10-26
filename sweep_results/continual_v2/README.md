@@ -171,10 +171,25 @@ per-task 10 类 delta 头 + 最近任务原型路由；推理不提供任务 id�
 - oracle 0.82 说明**头/特征能到 0.82**，瓶颈是**路由**；
 - 这只支持"任务边界信息必须以某种形式进入推理"的**方向**，不是确认性结论。
 
-下一份预注册：修正跑门（权重非零 + 任务内训练准确率 ≥0.5），加更强的**局部**任务
-判别器（per-task 对角 Mahalanobis 或 delta 任务分类器），再跑确认性一次。结果：
-[`task_inference_routed/`](task_inference_routed/README.md)、
-[`task_inference_oracle/`](task_inference_oracle/README.md)。
+### 确认性重跑（修正跑门 + 对角 Mahalanobis）
+
+预注册：[`../continual_v2_task_inference_confirm_prereg.md`](../continual_v2_task_inference_confirm_prereg.md)。
+跑门改为"头权重非零 + 任务内训练准确率 ≥0.5"；**`void_seeds = []`**，本轮结论有效。
+
+| 臂 | ACC | AF | 路由准确率 |
+| :--- | ---: | ---: | ---: |
+| **Mahalanobis routed** | **0.4610** | 0.1568 | **0.524** |
+| **oracle** | **0.8195** | 0.0（构造性） | 1.0 |
+
+- 阶段门不过（46.1% / 15.7%）；路由 **52.4%** <90（原型 48.9%，只多 3.5 pp）；
+- oracle 0.82 说明头/特征够用，**瓶颈是任务边界本身**：任务均值/方差在 ResNet 特征上
+  高度重叠（任务 9 正确路由 10%，任务 7 吸走大量样本）；
+- 按预注册判读表：**简单局部路由仍分不开任务边界；边界结论成立**——在这个配置下，
+  纯 CIL 需要任务边界信息；不给任务 id、只靠简单局部判别器，阶段门达不到。
+
+结果：[`task_inference_mahalanobis/`](task_inference_mahalanobis/README.md)、
+[`task_inference_oracle_confirm/`](task_inference_oracle_confirm/README.md)。
+更强的任务判别器（全协方差、delta 任务分类器、监督任务头）各自需要新预注册。
 
 ## 跑门
 

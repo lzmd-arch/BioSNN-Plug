@@ -580,6 +580,16 @@
 >    （对角 Mahalanobis 或 delta 分类器）再确认。见
 >    [`sweep_results/continual_v2/task_inference_routed/README.md`](sweep_results/continual_v2/task_inference_routed/README.md)。
 
+> 62. **2026-10-26：任务推断确认性重跑——边界结论成立**。修正跑门（头权重非零 +
+>    训练准确率 ≥0.5，`void_seeds=[]`）+ 对角 Mahalanobis 路由：routed **ACC 0.4610 /
+>    AF 0.1568**、路由准确率 **0.524**（原型 0.489，只多 3.5 pp）；oracle **0.8195 / 0.0**
+>    （构造性）。阶段门不过、路由 <90%、oracle 过 → **头/特征够用，瓶颈是任务边界本身**；
+>    任务均值/方差在 ResNet 特征上高度重叠（任务 9 正确路由 10%，任务 7 吸走大量样本）。
+>    结论：在这个配置下，**纯 CIL 需要任务边界信息**；不给任务 id、只靠简单局部判别器，
+>    阶段门达不到。更强的任务判别器（全协方差、delta 任务分类器、监督任务头）各自需
+>    新预注册。见
+>    [`sweep_results/continual_v2/task_inference_mahalanobis/README.md`](sweep_results/continual_v2/task_inference_mahalanobis/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
