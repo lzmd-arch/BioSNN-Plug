@@ -759,6 +759,14 @@
 >    调 η。见
 >    [`sweep_results/working_memory_v2/README.md`](sweep_results/working_memory_v2/README.md)。
 
+> 81. **2026-10-27：工作记忆 v3——RLS 最接近，但仍未达"不退化"线**。
+>    NLMS（仿射 step=0.5）多尺度 A/B/C **0.508 / 0.302 / 0.947**；RLS（λ=1,δ=1）
+>    **0.754 / 0.649 / 0.972**（均值 0.792 vs ridge 0.993）。RLS 三线索都过 0.5、单尺度对照
+>    全漏，但**不退化线（≥ridge−0.10）不过**（gap 0.201）；`v3_ready=false`。局部化不是
+>    学不动，是在固定 20 epoch/逐样本下比闭式解少一截；v4 要改训练协议（更多 epoch/批量
+>    RLS/正则），不是放宽退化线。**"局部学习的工作记忆"仍未证明**。见
+>    [`sweep_results/working_memory_v3/README.md`](sweep_results/working_memory_v3/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
