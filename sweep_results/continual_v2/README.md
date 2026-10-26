@@ -64,6 +64,31 @@ R-NCM 与探索期的 0.658 / 0.127 一致——**旧数字不是累计矩阵造
 需要新预注册（未开始）。结果目录：[`normalize_diag/`](normalize_diag/README.md)、
 [`normalize_diag_scaled/`](normalize_diag_scaled/README.md)。
 
+## 参数隔离臂 P1（对照 = R-delta-mini）
+
+预注册：[`../continual_v2_isolation_prereg.md`](../continual_v2_isolation_prereg.md)（先于数据）。
+只更新当前任务 10 个类的输出行，其余 90 行逐位冻结；无回放、无归一化。
+
+| 臂 | ACC | AF | 相对参考 |
+| :--- | ---: | ---: | :--- |
+| R-delta-mini | 0.2466 | 0.8047 | — |
+| **P1 current-rows** | **0.5426** | **0.1739** | ACC **+29.60 pp**，AF **−63.08 pp** |
+
+**但不能宣称"输出行隔离有效"**：
+
+- **"不是少学"不过**：逐任务对角线均值 **0.534**，参考臂 0.808，门槛是 0.758——
+  隔离保住了旧行，却让当前行要在冻结旧行之上重新争 argmax，新任务越往后越难学；
+- **对齐检验无法判定**：随机行控制臂 5 个种子**全部作废**——随机行大多不是当前类、
+  目标为 0 且权重为 0，误差恒为 0，跑门出现 0.0/NaN（见
+  [`isolation_random_rows/`](isolation_random_rows/README.md)）。这是控制设计的问题，
+  不是 P1 的代码问题。
+
+所以准确读数是：**只更新当前行大幅压低遗忘，但同时显著降低获取能力**——用获取换保持，
+不是免费的隔离。下一步若继续，必须与回放叠加（回放把获取拉回来），按新预注册重跑；
+在叠加结果之前，不把参数隔离写成 AF 的杠杆。结果：
+[`isolation_current_rows/`](isolation_current_rows/README.md)、
+[`isolation_random_rows/`](isolation_random_rows/README.md)。
+
 ## 跑门
 
 每个任务 `‖ΔW‖/‖W‖`（t=0 从零初始化，分母不存在，不参与判定）：

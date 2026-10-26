@@ -527,6 +527,14 @@
 >    同时换），只声称"同向 > 不同向"，不声称哪一件单独起作用；200 验收线不在本轮。
 >    见 [`sweep_results/rstdp_spiking_count_aligned_prereg.md`](sweep_results/rstdp_spiking_count_aligned_prereg.md)。
 
+> 56. **2026-10-26：CL 输出行参数隔离 P1——遗忘大降，但获取也降**。只更新当前 10 个类
+>    的输出行（其余 90 行冻结），5 种子、无回放/归一化：**ACC 0.5426 / AF 0.1739**
+>    （参考 0.2466 / 0.8047；AF −63.1 pp、ACC +29.6 pp）。机制信号过，但
+>    **"不是少学"不过**（对角线 0.534 < 0.758 门槛），且**随机行控制臂 5 个种子全部作废**
+>    （随机行没有正目标、误差恒 0，跑门 0/NaN）——对齐检验无法判定。结论：**不能宣称
+>    "输出行隔离有效"**；这是"用获取换保持"，下一步必须与回放叠加并按新预注册重跑。
+>    见 [`sweep_results/continual_v2/isolation_current_rows/README.md`](sweep_results/continual_v2/isolation_current_rows/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
