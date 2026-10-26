@@ -1,0 +1,62 @@
+{
+  "experiment": "世界模型 P3 终止头 v1",
+  "config": {
+    "policy_noise": 0.1,
+    "episodes": 200,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "auroc": 0.9996046334598113,
+      "test_termination_rate": 0.0002890650809382227,
+      "test_positives": 7,
+      "test_steps": 24216,
+      "train_positives": 22
+    },
+    {
+      "seed": 1,
+      "auroc": 0.9962244558896827,
+      "test_termination_rate": 0.00041517894212405546,
+      "test_positives": 10,
+      "test_steps": 24086,
+      "train_positives": 19
+    },
+    {
+      "seed": 2,
+      "auroc": 0.9975087486884294,
+      "test_termination_rate": 0.0002871441463614735,
+      "test_positives": 7,
+      "test_steps": 24378,
+      "train_positives": 22
+    },
+    {
+      "seed": 3,
+      "auroc": 0.9996504590984975,
+      "test_termination_rate": 0.0003337783711615487,
+      "test_positives": 8,
+      "test_steps": 23968,
+      "train_positives": 21
+    },
+    {
+      "seed": 4,
+      "auroc": 1.0,
+      "test_termination_rate": 0.00012236906510034264,
+      "test_positives": 3,
+      "test_steps": 24516,
+      "train_positives": 26
+    }
+  ],
+  "gate": {
+    "auroc_mean": 0.9985976594272842,
+    "valid_splits": 5,
+    "ready": true
+  },
+  "repro": "```text\n实验名称：世界模型 P3 终止头 v1\n日期：2026-10-26 20:58:12 中国标准时间\nGit commit：6bca45ad2eb06c7c0539c26ce4b79f0390f0cb4c\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_termination_head.py --seeds 0-4 --episodes 200 --out data/_term_head\n耗时：3.8 s\n备注：类平衡 L2 逻辑回归（IRLS），特征图与 ridge quadratic 相同\n备注：按回合 75/25 切分；测试回合不参与拟合\n```"
+}

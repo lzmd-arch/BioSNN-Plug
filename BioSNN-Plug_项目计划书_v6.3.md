@@ -701,6 +701,14 @@
 >    情景记忆 v2 作为并行开放项。见
 >    [`sweep_results/episodic_memory_v1/README.md`](sweep_results/episodic_memory_v1/README.md)。
 
+> 74. **2026-10-26：P3 终止头 v1——专用类平衡逻辑回归把 AUROC 从 0.616 抬到 0.999**。
+>    200 回合、按回合 75/25 切分、5 种子；测试集终止正例只有 3–10 个 / 2.4 万步，AUROC
+>    均值 **0.9986**（5 个 split 均 ≥0.996）。说明终止卡点是**联合 ridge 的共享系数**，
+>    不是特征/数据；但这是**测量头**（IRLS），不是局部学习规则，且正例极少、方差大。
+>    下一步（新预注册）：接回 P3 闭环重测；再考虑局部规则实现同等能力。集成前 P3 仍
+>    `p3_ready=false`。见
+>    [`sweep_results/termination_head_v1/README.md`](sweep_results/termination_head_v1/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
