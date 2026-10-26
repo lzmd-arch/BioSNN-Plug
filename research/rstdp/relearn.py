@@ -57,9 +57,9 @@ def _first_reaching(curve: list[float], threshold: float, every: int) -> int | N
     return None
 
 
-def _initial_score(context, seed: int) -> float:
-    """warm 臂在**训练前**的 R1 评测；独立环境，不推进训练环境的 RNG。"""
-    env = make_cartpole(GRAVITY_NEW)
+def _initial_score(context, seed: int, gravity: float) -> float:
+    """warm 臂在**训练前**的新规则上评测；独立环境，不推进训练环境的 RNG。"""
+    env = make_cartpole(gravity)
     env.reset(seed=seed * 1000 + 7)
     try:
         return _greedy_score(
@@ -74,7 +74,9 @@ def _initial_score(context, seed: int) -> float:
         env.close()
 
 
-def run(seeds: list[int], *, episodes: int, out: Path) -> dict[str, Any]:
+def run(
+    seeds: list[int], *, episodes: int, out: Path, gravity: float = GRAVITY_NEW
+) -> dict[str, Any]:
     started = time.perf_counter()
     rows: list[dict[str, Any]] = []
     for seed in seeds:
@@ -88,7 +90,7 @@ def run(seeds: list[int], *, episodes: int, out: Path) -> dict[str, Any]:
             return_context=True,
         )
         # Phase B warm：保留完整 agent 状态，在 R1 上重学。
-        warm_initial = _initial_score(context, seed)
+        warm_initial = _initial_score(context, seed, gravity)
         result_warm = run_trial(
             seed,
             episodes=episodes,
@@ -174,7 +176,7 @@ def run(seeds: list[int], *, episodes: int, out: Path) -> dict[str, Any]:
     summary = {
         "experiment": "规则改变后重学快 3×（角标：CartPole 重力 9.8 → 14.0）",
         "config": {
-            "gravity_new": GRAVITY_NEW,
+            "gravity_new": gravity,
             "threshold": THRESHOLD,
             "eval_every": EVAL_EVERY,
             "eval_episodes": EVAL_EPISODES,
@@ -209,9 +211,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="规则改变后重学快 3×")
     parser.add_argument("--seeds", default="65-74")
     parser.add_argument("--episodes", type=int, default=800)
+    parser.add_argument("--gravity", type=float, default=GRAVITY_NEW)
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
-    run(_parse_seeds(args.seeds), episodes=args.episodes, out=args.out)
+    run(_parse_seeds(args.seeds), episodes=args.episodes, out=args.out, gravity=args.gravity)
     return 0
 
 
