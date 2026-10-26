@@ -1,0 +1,1438 @@
+{
+  "experiment": "情景记忆 v2：编码器对照",
+  "config": {
+    "policy_noise": 0.1,
+    "episodes": 200,
+    "capacities": [
+      100,
+      300,
+      500,
+      1000,
+      2000
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "encoders": {
+      "E0_sparse": {
+        "dim": 512,
+        "k": 32,
+        "mode": "sparse"
+      },
+      "E1_dense_sign": {
+        "dim": 512,
+        "k": 512,
+        "mode": "dense_sign"
+      },
+      "E2_wide_sparse": {
+        "dim": 2048,
+        "k": 128,
+        "mode": "sparse"
+      },
+      "E3_dense_cont": {
+        "dim": 512,
+        "k": 512,
+        "mode": "dense"
+      }
+    }
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "capacity": 100,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.59,
+      "termination_balanced": 0.6,
+      "termination_tpr": 0.7,
+      "temporal_order": 0.5730337078651685
+    },
+    {
+      "seed": 0,
+      "capacity": 100,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.71,
+      "termination_balanced": 0.55,
+      "termination_tpr": 0.7,
+      "temporal_order": 0.49411764705882355
+    },
+    {
+      "seed": 0,
+      "capacity": 100,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.64,
+      "termination_balanced": 0.75,
+      "termination_tpr": 0.7,
+      "temporal_order": 0.5804597701149425
+    },
+    {
+      "seed": 0,
+      "capacity": 100,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.63,
+      "termination_balanced": 0.55,
+      "termination_tpr": 0.7,
+      "temporal_order": 0.5337078651685393
+    },
+    {
+      "seed": 0,
+      "capacity": 100,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.48,
+      "termination_balanced": 0.65,
+      "termination_tpr": 0.8,
+      "temporal_order": 0.627906976744186
+    },
+    {
+      "seed": 0,
+      "capacity": 100,
+      "arm": "raw_nn",
+      "action_accuracy": 0.86,
+      "termination_balanced": 0.95,
+      "termination_tpr": 0.9,
+      "temporal_order": 0.6091954022988506
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.554945054945055
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.7,
+      "termination_balanced": 0.41379310344827586,
+      "termination_tpr": 0.3793103448275862,
+      "temporal_order": 0.5642458100558659
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.6966666666666667,
+      "termination_balanced": 0.4655172413793104,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.5469613259668509
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.603448275862069,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.6324324324324324
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.56,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.4827586206896552,
+      "temporal_order": 0.5207100591715976
+    },
+    {
+      "seed": 0,
+      "capacity": 300,
+      "arm": "raw_nn",
+      "action_accuracy": 0.78,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.6201117318435754
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.632,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.48295454545454547
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.672,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.46408839779005523
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.68,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4972375690607735
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.39655172413793105,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4301675977653631
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.584,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.5722543352601156
+    },
+    {
+      "seed": 0,
+      "capacity": 500,
+      "arm": "raw_nn",
+      "action_accuracy": 0.73,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.5819209039548022
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.624,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.3793103448275862,
+      "temporal_order": 0.518918918918919
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.659,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.3793103448275862,
+      "temporal_order": 0.5469613259668509
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.641,
+      "termination_balanced": 0.46551724137931033,
+      "termination_tpr": 0.3793103448275862,
+      "temporal_order": 0.5139664804469274
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.76,
+      "termination_balanced": 0.39655172413793105,
+      "termination_tpr": 0.3103448275862069,
+      "temporal_order": 0.48333333333333334
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.653,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.4827586206896552,
+      "temporal_order": 0.48633879781420764
+    },
+    {
+      "seed": 0,
+      "capacity": 1000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.753,
+      "termination_balanced": 0.9310344827586207,
+      "termination_tpr": 0.8620689655172413,
+      "temporal_order": 0.5439560439560439
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.6435,
+      "termination_balanced": 0.4655172413793104,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.518918918918919
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.681,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5193370165745856
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.665,
+      "termination_balanced": 0.41379310344827586,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5164835164835165
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.722,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4673913043478261
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.6835,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.49162011173184356
+    },
+    {
+      "seed": 0,
+      "capacity": 2000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7565,
+      "termination_balanced": 0.896551724137931,
+      "termination_tpr": 0.7931034482758621,
+      "temporal_order": 0.5573770491803278
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.61,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.4350282485875706
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.61,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.3988439306358382
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.6,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.4052631578947368
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.62,
+      "termination_balanced": 0.65,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.3854748603351955
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.54,
+      "termination_balanced": 0.35,
+      "termination_tpr": 0.4,
+      "temporal_order": 0.5113636363636364
+    },
+    {
+      "seed": 1,
+      "capacity": 100,
+      "arm": "raw_nn",
+      "action_accuracy": 0.75,
+      "termination_balanced": 0.95,
+      "termination_tpr": 0.9,
+      "temporal_order": 0.650887573964497
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.5172413793103448,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.5418994413407822
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.67,
+      "termination_balanced": 0.5517241379310345,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.4945054945054945
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.6733333333333333,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.5054945054945055
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.6533333333333333,
+      "termination_balanced": 0.5517241379310345,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.5054347826086957
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.5333333333333333,
+      "termination_balanced": 0.6379310344827587,
+      "termination_tpr": 0.7241379310344828,
+      "temporal_order": 0.4918032786885246
+    },
+    {
+      "seed": 1,
+      "capacity": 300,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7266666666666667,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.6502732240437158
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.67,
+      "termination_balanced": 0.5344827586206896,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.4864864864864865
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.688,
+      "termination_balanced": 0.5344827586206896,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.5333333333333333
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.662,
+      "termination_balanced": 0.5172413793103448,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.5166666666666667
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.678,
+      "termination_balanced": 0.41379310344827586,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.65,
+      "termination_balanced": 0.5689655172413792,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.5268817204301075
+    },
+    {
+      "seed": 1,
+      "capacity": 500,
+      "arm": "raw_nn",
+      "action_accuracy": 0.782,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.6101694915254238
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.684,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.453551912568306
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.712,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4656084656084656
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.674,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4444444444444444
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.686,
+      "termination_balanced": 0.4655172413793104,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.46551724137931033
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.689,
+      "termination_balanced": 0.5344827586206897,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.4603174603174603
+    },
+    {
+      "seed": 1,
+      "capacity": 1000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.742,
+      "termination_balanced": 1.0,
+      "termination_tpr": 1.0,
+      "temporal_order": 0.6114285714285714
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.682,
+      "termination_balanced": 0.6206896551724137,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.5108695652173914
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.713,
+      "termination_balanced": 0.5862068965517241,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.562874251497006
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.657,
+      "termination_balanced": 0.46551724137931033,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.4861878453038674
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.7095,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.45604395604395603
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.6645,
+      "termination_balanced": 0.41379310344827586,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.5319148936170213
+    },
+    {
+      "seed": 1,
+      "capacity": 2000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7265,
+      "termination_balanced": 0.8793103448275863,
+      "termination_tpr": 0.7931034482758621,
+      "temporal_order": 0.45108695652173914
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.7,
+      "termination_balanced": 0.6499999999999999,
+      "termination_tpr": 0.6,
+      "temporal_order": 0.5769230769230769
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.71,
+      "termination_balanced": 0.6499999999999999,
+      "termination_tpr": 0.6,
+      "temporal_order": 0.4885057471264368
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.72,
+      "termination_balanced": 0.4,
+      "termination_tpr": 0.6,
+      "temporal_order": 0.651685393258427
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.65,
+      "termination_balanced": 0.55,
+      "termination_tpr": 0.6,
+      "temporal_order": 0.5621301775147929
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.62,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.6,
+      "temporal_order": 0.4972067039106145
+    },
+    {
+      "seed": 2,
+      "capacity": 100,
+      "arm": "raw_nn",
+      "action_accuracy": 0.89,
+      "termination_balanced": 1.0,
+      "termination_tpr": 1.0,
+      "temporal_order": 0.6878612716763006
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.7266666666666667,
+      "termination_balanced": 0.3793103448275862,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.478494623655914
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.7566666666666667,
+      "termination_balanced": 0.5344827586206896,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5027322404371585
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.7566666666666667,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4808743169398907
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.6533333333333333,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.46195652173913043
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.6266666666666667,
+      "termination_balanced": 0.46551724137931033,
+      "termination_tpr": 0.3793103448275862,
+      "temporal_order": 0.5133689839572193
+    },
+    {
+      "seed": 2,
+      "capacity": 300,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7933333333333333,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.5808383233532934
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.68,
+      "termination_balanced": 0.5344827586206896,
+      "termination_tpr": 0.4827586206896552,
+      "temporal_order": 0.5449438202247191
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.666,
+      "termination_balanced": 0.5517241379310345,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.4864864864864865
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.654,
+      "termination_balanced": 0.6379310344827587,
+      "termination_tpr": 0.4827586206896552,
+      "temporal_order": 0.5388888888888889
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.69,
+      "termination_balanced": 0.5344827586206896,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.5449438202247191
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.678,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.5444444444444444
+    },
+    {
+      "seed": 2,
+      "capacity": 500,
+      "arm": "raw_nn",
+      "action_accuracy": 0.772,
+      "termination_balanced": 0.9137931034482758,
+      "termination_tpr": 0.8275862068965517,
+      "temporal_order": 0.639344262295082
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.705,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5212765957446809
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.663,
+      "termination_balanced": 0.5344827586206896,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.47928994082840237
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.656,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.45161290322580644
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.693,
+      "termination_balanced": 0.5689655172413793,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4782608695652174
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.639,
+      "termination_balanced": 0.5862068965517242,
+      "termination_tpr": 0.6206896551724138,
+      "temporal_order": 0.48295454545454547
+    },
+    {
+      "seed": 2,
+      "capacity": 1000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.767,
+      "termination_balanced": 0.9310344827586207,
+      "termination_tpr": 0.8620689655172413,
+      "temporal_order": 0.5414364640883977
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.6585,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5232558139534884
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.645,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.639,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5674157303370787
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.699,
+      "termination_balanced": 0.41379310344827586,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4972375690607735
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.6715,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.4972067039106145
+    },
+    {
+      "seed": 2,
+      "capacity": 2000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7355,
+      "termination_balanced": 0.9482758620689655,
+      "termination_tpr": 0.896551724137931,
+      "temporal_order": 0.547486033519553
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.69,
+      "termination_balanced": 0.4,
+      "termination_tpr": 0.3,
+      "temporal_order": 0.4689265536723164
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.78,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.3,
+      "temporal_order": 0.483695652173913
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.74,
+      "termination_balanced": 0.4,
+      "termination_tpr": 0.3,
+      "temporal_order": 0.5363128491620112
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.75,
+      "termination_balanced": 0.55,
+      "termination_tpr": 0.3,
+      "temporal_order": 0.5371428571428571
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.61,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.7,
+      "temporal_order": 0.5489130434782609
+    },
+    {
+      "seed": 3,
+      "capacity": 100,
+      "arm": "raw_nn",
+      "action_accuracy": 0.84,
+      "termination_balanced": 0.95,
+      "termination_tpr": 0.9,
+      "temporal_order": 0.7325581395348837
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.6733333333333333,
+      "termination_balanced": 0.5344827586206896,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4463276836158192
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.7166666666666667,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4228571428571429
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.6833333333333333,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4602272727272727
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.68,
+      "termination_balanced": 0.603448275862069,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.48066298342541436
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.5566666666666666,
+      "termination_balanced": 0.4137931034482759,
+      "termination_tpr": 0.5172413793103449,
+      "temporal_order": 0.5028571428571429
+    },
+    {
+      "seed": 3,
+      "capacity": 300,
+      "arm": "raw_nn",
+      "action_accuracy": 0.8,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.601063829787234
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.64,
+      "termination_balanced": 0.5862068965517241,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.574585635359116
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.682,
+      "termination_balanced": 0.5689655172413792,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.5274725274725275
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.5862068965517241,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.5139664804469274
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.5689655172413792,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.5081967213114754
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.61,
+      "termination_balanced": 0.5344827586206897,
+      "termination_tpr": 0.6206896551724138,
+      "temporal_order": 0.47513812154696133
+    },
+    {
+      "seed": 3,
+      "capacity": 500,
+      "arm": "raw_nn",
+      "action_accuracy": 0.758,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.6141304347826086
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.632,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.48314606741573035
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.678,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.47674418604651164
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.649,
+      "termination_balanced": 0.4655172413793104,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4385026737967914
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.663,
+      "termination_balanced": 0.5344827586206896,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.47282608695652173
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.642,
+      "termination_balanced": 0.4655172413793104,
+      "termination_tpr": 0.4827586206896552,
+      "temporal_order": 0.5567567567567567
+    },
+    {
+      "seed": 3,
+      "capacity": 1000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.759,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.5574712643678161
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.6495,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.4827586206896552,
+      "temporal_order": 0.6318681318681318
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.6915,
+      "termination_balanced": 0.43103448275862066,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5944444444444444
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.669,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.48936170212765956
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.737,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5084745762711864
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.6665,
+      "termination_balanced": 0.5344827586206896,
+      "termination_tpr": 0.5862068965517241,
+      "temporal_order": 0.48295454545454547
+    },
+    {
+      "seed": 3,
+      "capacity": 2000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.731,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.6032608695652174
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.58,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.5028248587570622
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.55,
+      "termination_balanced": 0.55,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.5439560439560439
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.55,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.5524861878453039
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.58,
+      "termination_balanced": 0.45,
+      "termination_tpr": 0.5,
+      "temporal_order": 0.5714285714285714
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.49,
+      "termination_balanced": 0.6,
+      "termination_tpr": 0.7,
+      "temporal_order": 0.569060773480663
+    },
+    {
+      "seed": 4,
+      "capacity": 100,
+      "arm": "raw_nn",
+      "action_accuracy": 0.81,
+      "termination_balanced": 1.0,
+      "termination_tpr": 1.0,
+      "temporal_order": 0.6363636363636364
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.6266666666666667,
+      "termination_balanced": 0.5,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5111111111111111
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.64,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4438202247191011
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.6733333333333333,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.39344262295081966
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.6433333333333333,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.45698924731182794
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.5766666666666667,
+      "termination_balanced": 0.5344827586206897,
+      "termination_tpr": 0.5172413793103449,
+      "temporal_order": 0.5146198830409356
+    },
+    {
+      "seed": 4,
+      "capacity": 300,
+      "arm": "raw_nn",
+      "action_accuracy": 0.79,
+      "termination_balanced": 0.9310344827586207,
+      "termination_tpr": 0.8620689655172413,
+      "temporal_order": 0.6032608695652174
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.61,
+      "termination_balanced": 0.41379310344827586,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5227272727272727
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.65,
+      "termination_balanced": 0.4655172413793104,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.47398843930635837
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.65,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.49444444444444446
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.612,
+      "termination_balanced": 0.4655172413793104,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5251396648044693
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.622,
+      "termination_balanced": 0.5689655172413792,
+      "termination_tpr": 0.5517241379310345,
+      "temporal_order": 0.49714285714285716
+    },
+    {
+      "seed": 4,
+      "capacity": 500,
+      "arm": "raw_nn",
+      "action_accuracy": 0.77,
+      "termination_balanced": 0.9827586206896552,
+      "termination_tpr": 0.9655172413793104,
+      "temporal_order": 0.5300546448087432
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.64,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.48066298342541436
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.649,
+      "termination_balanced": 0.41379310344827586,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4972677595628415
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.652,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.47802197802197804
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.622,
+      "termination_balanced": 0.39655172413793105,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.5580110497237569
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.659,
+      "termination_balanced": 0.3793103448275862,
+      "termination_tpr": 0.4482758620689655,
+      "temporal_order": 0.48936170212765956
+    },
+    {
+      "seed": 4,
+      "capacity": 1000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.744,
+      "termination_balanced": 0.9655172413793103,
+      "termination_tpr": 0.9310344827586207,
+      "temporal_order": 0.5919540229885057
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "arm": "E0_sparse",
+      "action_accuracy": 0.6375,
+      "termination_balanced": 0.5172413793103449,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.46368715083798884
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "arm": "E1_dense_sign",
+      "action_accuracy": 0.66,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4972067039106145
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "arm": "E2_wide_sparse",
+      "action_accuracy": 0.666,
+      "termination_balanced": 0.4482758620689655,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.45348837209302323
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "arm": "E3_dense_cont",
+      "action_accuracy": 0.6975,
+      "termination_balanced": 0.48275862068965514,
+      "termination_tpr": 0.41379310344827586,
+      "temporal_order": 0.4715909090909091
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "arm": "pseudo_inverse",
+      "action_accuracy": 0.679,
+      "termination_balanced": 0.4827586206896552,
+      "termination_tpr": 0.6206896551724138,
+      "temporal_order": 0.49444444444444446
+    },
+    {
+      "seed": 4,
+      "capacity": 2000,
+      "arm": "raw_nn",
+      "action_accuracy": 0.7495,
+      "termination_balanced": 0.9137931034482758,
+      "termination_tpr": 0.8275862068965517,
+      "temporal_order": 0.5363128491620112
+    }
+  ],
+  "gate": {
+    "E1_dense_sign": {
+      "action_500": 0.6716,
+      "termination_balanced_500": 0.5241379310344827,
+      "termination_tpr_500": 0.4896551724137931,
+      "temporal_order_500": 0.49707383687775214,
+      "action_1000": 0.6721999999999999,
+      "ready": false
+    },
+    "E2_wide_sparse": {
+      "action_500": 0.6612,
+      "termination_balanced_500": 0.5482758620689655,
+      "termination_tpr_500": 0.496551724137931,
+      "temporal_order_500": 0.5122408099015402,
+      "action_1000": 0.6544000000000001,
+      "ready": false
+    },
+    "E3_dense_cont": {
+      "action_500": 0.66,
+      "termination_balanced_500": 0.4758620689655172,
+      "termination_tpr_500": 0.48275862068965514,
+      "temporal_order_500": 0.5016895608212053,
+      "action_1000": 0.6848000000000001,
+      "ready": false
+    },
+    "reference_E0": {
+      "action_500": 0.6464000000000001,
+      "termination_balanced_500": 0.5,
+      "temporal_order_500": 0.5223395520504279
+    },
+    "pseudo_inverse_ceiling": {
+      "action_500": 0.6287999999999999,
+      "termination_balanced_500": 0.5379310344827586,
+      "temporal_order_500": 0.5231722957648972
+    },
+    "raw_nn_baseline": {
+      "action_500": 0.7624,
+      "termination_balanced_500": 0.9620689655172413,
+      "temporal_order_500": 0.595123947473332
+    },
+    "v2_ready": false
+  },
+  "repro": "```text\n实验名称：情景记忆 v2\n日期：2026-10-26 23:03:04 中国标准时间\nGit commit：b1e14100fefaf1790f2d26bf11e62e97b98e2389\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_episodic_memory_v2.py --seeds 0-4 --episodes 200 --out data/_episodic_v2\n耗时：6.2 s\n备注：四编码：E0 参考、E1 dense-sign、E2 wide-sparse、E3 dense-cont\n备注：读出固定 one-shot；伪逆/字面 NN 单列，不参与 ready\n备注：数据/噪声/容量/判据与 v0/v1 相同\n```"
+}

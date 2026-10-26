@@ -726,6 +726,15 @@
 >    元认知 v3 并行开放。见
 >    [`sweep_results/metacognitive_gate_v2/README.md`](sweep_results/metacognitive_gate_v2/README.md)。
 
+> 77. **2026-10-26：情景记忆 v2——换编码只抬了动作，终止/时间仍随机**。
+>    四编码（E0 top-k 参考、E1 dense-sign、E2 D=2048/k=128、E3 连续投影）同一 one-shot 读出：
+>    动作最多 **0.672**（E1，门槛 0.70）；终止平衡 **0.48–0.55**、时间顺序 **0.48–0.55**，
+>    连非局部伪逆上限也一样；字面 NN 仍最好（0.762 / 0.962 / 0.595），但**时间顺序也 <0.75**。
+>    `v2_ready=false`。边界：**"局部 Hebbian/伪逆 + 稀疏码"这条联想记忆路线在当前规模/噪声下
+>    不可用**，瓶颈不只是编码，还有值/时间的读出方式。v3 若继续必须换记忆机制
+>    （state-indexed/attention、modern Hopfield，非局部需标注），或接受字面索引作为 v0 基线。
+>    见 [`sweep_results/episodic_memory_v2/README.md`](sweep_results/episodic_memory_v2/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
