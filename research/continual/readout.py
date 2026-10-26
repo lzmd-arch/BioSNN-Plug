@@ -62,11 +62,13 @@ class DeltaReadout:
         labels: np.ndarray,
         *,
         active_classes: np.ndarray | None = None,
+        inactive_scale: float | None = None,
     ) -> None:
         """一次批量 delta 更新（按样本数的均值，避免步长随批量大小漂移）。
 
-        ``active_classes`` 给出时**只更新这些输出行和对应偏置**，其余行逐位冻结——
-        这是预注册 v4 的输出级参数隔离。``None`` 走原路径（全行更新），逐位不变。
+        ``active_classes`` 给出时，激活行按全步长更新，其余行按 ``inactive_scale``
+        缩放更新——``0`` 就是预注册 v4 的完全冻结，``1`` 等于全行更新。``None`` 走原路径
+        （全行更新），逐位不变。
         """
         x = np.asarray(features, dtype=np.float64)
         y = np.asarray(labels, dtype=int)
@@ -74,6 +76,15 @@ class DeltaReadout:
             raise ValueError(f"特征必须是 (n, {self.n_in})，收到 {x.shape}。")
         if y.shape[0] != x.shape[0]:
             raise ValueError(f"标签数 {y.shape[0]} 与样本数 {x.shape[0]} 不一致。")
+
+        # 默认语义：给了 active_classes 就**冻结**其余行（P1）；没给就全行同一步长。
+        # 显式传 0/1 时按显式值走。这样 v4 的调用方不必改，α 又是一个独立的旋钮。
+        if inactive_scale is None:
+            inactive_scale = 0.0 if active_classes is not None else 1.0
+        if not 0.0 <= inactive_scale <= 1.0:
+            raise ValueError(f"inactive_scale 应在 [0, 1]，收到 {inactive_scale}。")
+        if active_classes is None and inactive_scale != 1.0:
+            raise ValueError("没有 active_classes 时 inactive_scale 必须为 1（全行同一步长）。")
 
         target = np.zeros((x.shape[0], self.n_classes), dtype=np.float64)
         target[np.arange(x.shape[0]), y] = 1.0
@@ -92,8 +103,17 @@ class DeltaReadout:
                         f"active_classes 必须在 [0, {self.n_classes}) 内，收到 {active}。"
                     )
                 index = np.unique(active)
-                self.weights[index] += scale * (error.T @ x)[index]
-                self.bias[index] += scale * error.sum(axis=0)[index]
+                weight_update = scale * (error.T @ x)
+                bias_update = scale * error.sum(axis=0)
+                if inactive_scale == 0.0:
+                    # 与 v4 的完全冻结**逐位一致**：只加激活行，不碰其余行。
+                    self.weights[index] += weight_update[index]
+                    self.bias[index] += bias_update[index]
+                else:
+                    mask = np.full(self.n_classes, inactive_scale, dtype=np.float64)
+                    mask[index] = 1.0
+                    self.weights += weight_update * mask[:, None]
+                    self.bias += bias_update * mask
         if not (np.all(np.isfinite(self.weights)) and np.all(np.isfinite(self.bias))):
             raise RuntimeError(
                 "delta 读出发散（权重出现 inf/NaN）。检查步长与特征尺度："

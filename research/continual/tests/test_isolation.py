@@ -58,6 +58,58 @@ class TestReadoutMask:
         assert np.any(readout.weights != before)
         assert np.all(np.any(readout.weights != before, axis=1))
 
+    def test_inactive_scale_zero_matches_the_frozen_path(self):
+        first = _readout()
+        second = _readout()
+        features = np.random.default_rng(4).normal(size=(8, 4))
+        labels = np.array([0, 1, 2, 3, 4, 5, 0, 5])
+
+        first.step(features, labels, active_classes=np.array([1, 3]))
+        second.step(features, labels, active_classes=np.array([1, 3]), inactive_scale=0.0)
+
+        assert np.array_equal(first.weights, second.weights)
+        assert np.array_equal(first.bias, second.bias)
+
+    def test_inactive_scale_one_matches_the_full_update(self):
+        first = _readout()
+        second = _readout()
+        features = np.random.default_rng(5).normal(size=(8, 4))
+        labels = np.array([0, 1, 2, 3, 4, 5, 0, 5])
+
+        first.step(features, labels)
+        second.step(features, labels, active_classes=np.array([1, 3]), inactive_scale=1.0)
+
+        assert np.array_equal(first.weights, second.weights)
+        assert np.array_equal(first.bias, second.bias)
+
+    def test_inactive_rows_move_by_the_scaled_amount(self):
+        full = _readout()
+        partial = _readout()
+        features = np.random.default_rng(6).normal(size=(8, 4))
+        labels = np.array([0, 1, 2, 3, 4, 5, 0, 5])
+        before = full.weights.copy()
+
+        full.step(features, labels)
+        partial.step(features, labels, active_classes=np.array([1, 3]), inactive_scale=0.25)
+
+        full_delta = full.weights - before
+        partial_delta = partial.weights - before
+        assert np.allclose(partial_delta[1], full_delta[1])
+        assert np.allclose(partial_delta[3], full_delta[3])
+        assert np.allclose(partial_delta[[0, 2, 4, 5]], 0.25 * full_delta[[0, 2, 4, 5]])
+
+    def test_inactive_scale_needs_active_classes(self):
+        readout = _readout()
+        with pytest.raises(ValueError):
+            readout.step(np.zeros((2, 4)), np.array([0, 1]), inactive_scale=0.5)
+
+    def test_inactive_scale_must_be_in_range(self):
+        readout = _readout()
+        with pytest.raises(ValueError):
+            readout.step(
+                np.zeros((2, 4)), np.array([0, 1]), active_classes=np.array([0]), inactive_scale=1.5
+            )
+
     def test_invalid_active_classes_are_rejected(self):
         readout = _readout()
         features = np.zeros((2, 4))

@@ -339,13 +339,19 @@ def _train_delta_readout(
     rho: float,
     rng: np.random.Generator,
     active_classes: np.ndarray | None = None,
+    inactive_scale: float = 1.0,
 ) -> None:
     """训练 delta 读出；``batch <= 0`` 走 v1 的全批量，否则按 ρ 混入回放。"""
     if rho > 0 and batch <= 0:
         raise ValueError("replay 需要 --readout-batch > 0（预注册 v2 的 minibatch 混合）。")
     if batch <= 0:
         for _ in range(epochs):
-            readout.step(features, labels, active_classes=active_classes)
+            readout.step(
+                features,
+                labels,
+                active_classes=active_classes,
+                inactive_scale=inactive_scale,
+            )
         return
     n_replay = round(rho * batch) if replay_features.shape[0] else 0
     n_current = batch - n_replay
@@ -361,7 +367,12 @@ def _train_delta_readout(
                 replay_index = rng.integers(0, replay_features.shape[0], size=n_replay)
                 x = np.concatenate([x, replay_features[replay_index]], axis=0)
                 y = np.concatenate([y, replay_labels[replay_index]], axis=0)
-            readout.step(x, y, active_classes=active_classes)
+            readout.step(
+                x,
+                y,
+                active_classes=active_classes,
+                inactive_scale=inactive_scale,
+            )
 
 
 def run_with_frozen_frontend_delta(
@@ -380,6 +391,7 @@ def run_with_frozen_frontend_delta(
     normalize: str = "none",
     normalize_scale: str = "native",
     isolation: str = "none",
+    isolation_weight: float | None = None,
 ) -> dict:
     """Route R 的 delta 读出：冻结特征 + 线性读出 + 可选 latent replay / 归一化。
 
@@ -410,6 +422,9 @@ def run_with_frozen_frontend_delta(
     rng = np.random.default_rng(seed)
     ratios: list[float] = []
     transform = build_transform(normalize, scale=normalize_scale)
+    if isolation_weight is None:
+        # current-rows 的默认是 P1（α=0，完全冻结）；其余隔离臂只有一个步长。
+        isolation_weight = 0.0 if isolation == "current-rows" else 1.0
     isolation_rng = np.random.default_rng(seed + 7919)
     active_rows: list[list[int]] = []
 
@@ -446,6 +461,7 @@ def run_with_frozen_frontend_delta(
             rho=replay_rho,
             rng=rng,
             active_classes=active,
+            inactive_scale=isolation_weight,
         )
         denominator = float(np.linalg.norm(before))
         if t == 0 or denominator < 1e-12:
@@ -481,6 +497,7 @@ def run_with_frozen_frontend_delta(
         "normalize_scale": normalize_scale,
         "normalizer": transform.digest(),
         "isolation": isolation,
+        "isolation_weight": float(isolation_weight),
         "active_rows": active_rows,
         "accuracy_matrix": matrix.tolist(),
         "acc": scores.acc,
@@ -575,6 +592,12 @@ def main(argv: list[str] | None = None) -> int:
         "random-rows=只更新同样数量的随机行（控制臂）",
     )
     parser.add_argument(
+        "--isolation-weight",
+        type=float,
+        default=None,
+        help="current-rows 隔离下非激活行的步长缩放 α；不给=0（完全冻结）、1=全行更新",
+    )
+    parser.add_argument(
         "--normalize",
         choices=("none", "task1-standardize"),
         default="none",
@@ -596,6 +619,11 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("归一化臂只接 delta 读出；NCM 的白化是另一条路径。")
     if args.readout == "ncm" and args.isolation != "none":
         parser.error("参数隔离臂只接 delta 读出；NCM 没有可冻结的输出行。")
+    if args.isolation_weight is not None:
+        if not 0.0 <= args.isolation_weight <= 1.0:
+            parser.error("--isolation-weight 必须在 [0, 1]。")
+        if args.isolation != "current-rows":
+            parser.error("--isolation-weight 只在 --isolation current-rows 下有意义。")
 
     if args.smoke:
         args.tasks = 2
@@ -639,6 +667,7 @@ def main(argv: list[str] | None = None) -> int:
                         normalize=args.normalize,
                         normalize_scale=args.normalize_scale,
                         isolation=args.isolation,
+                        isolation_weight=args.isolation_weight,
                     )
                 )
             continue
@@ -691,6 +720,7 @@ def main(argv: list[str] | None = None) -> int:
             "normalize": args.normalize,
             "normalize_scale": args.normalize_scale,
             "isolation": args.isolation,
+            "isolation_weight": args.isolation_weight,
         },
         "per_seed": results,
         "void_seeds": [row["seed"] for row in results if not row.get("valid", True)],
@@ -703,8 +733,13 @@ def main(argv: list[str] | None = None) -> int:
             notes=[
                 f"特征：{args.features}/{args.backbone}；读出：{args.readout}；"
                 f"归一化：{args.normalize}（{args.normalize_scale}）；"
-                f"隔离：{args.isolation}；"
-                f"回放 ρ：{args.replay_rho}；batching：{args.readout_batch or '全批量'}"
+                f"隔离：{args.isolation}"
+                + (
+                    f"（α={0.0 if args.isolation_weight is None else args.isolation_weight}）；"
+                    if args.isolation == "current-rows"
+                    else "；"
+                )
+                + f"回放 ρ：{args.replay_rho}；batching：{args.readout_batch or '全批量'}"
             ],
             device=device,
         ).render_block(),
