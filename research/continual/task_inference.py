@@ -290,7 +290,11 @@ def run_with_task_inference(
         "af": scores.af,
         "per_task_final": list(scores.per_task_final),
         "routing_accuracy_matrix": routing_matrix.tolist(),
-        "routing_accuracy": float(np.nanmean(np.diag(routing_matrix))),
+        # 主指标：**最终一步**（全部已见任务）的平均路由准确率。逐步对角线均值会把
+        # "每个任务在自己那一步被正确路由"误读成最终路由能力；分类器臂就是反例
+        # （逐步 1.0、最终 0.1）。
+        "routing_accuracy": float(np.nanmean(routing_matrix[-1])),
+        "routing_accuracy_stepwise": float(np.nanmean(np.diag(routing_matrix))),
         "confusion_matrix": confusion.tolist(),
         "head_train_accuracy": head_train_accuracy,
         "head_weight_norm": head_weight_norm,
