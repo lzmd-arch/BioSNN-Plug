@@ -1,0 +1,181 @@
+{
+  "experiment": "元认知门控 v1：宽温度网格 + margin 置信度",
+  "config": {
+    "epochs": 20,
+    "batch": 128,
+    "train_limit": null,
+    "coverage": 0.8,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "per_seed": [
+    {
+      "arm": "temperature_wide",
+      "temperature": 0.01,
+      "selective_accuracy_80": 0.5634605850272683,
+      "actual_coverage": 0.8068,
+      "gain": 0.06826058502726828,
+      "auroc": 0.7496527679990987,
+      "ece": 0.13246258425934612,
+      "risk_coverage_auc": 0.698545903206929,
+      "threshold": 0.122323254320574,
+      "seed": 0,
+      "base_accuracy": 0.4952,
+      "ready": false
+    },
+    {
+      "arm": "margin",
+      "temperature": 0.024244620170823284,
+      "selective_accuracy_80": 0.5585133098945254,
+      "actual_coverage": 0.7964,
+      "gain": 0.06331330989452544,
+      "auroc": 0.7491299998207834,
+      "ece": 0.1363122349182629,
+      "risk_coverage_auc": 0.7020617942293993,
+      "threshold": 0.0020583058046573094,
+      "seed": 0,
+      "base_accuracy": 0.4952,
+      "ready": false
+    },
+    {
+      "arm": "temperature_wide",
+      "temperature": 0.01,
+      "selective_accuracy_80": 0.5651515151515152,
+      "actual_coverage": 0.792,
+      "gain": 0.0725515151515152,
+      "auroc": 0.7491492136437565,
+      "ece": 0.13213038700455815,
+      "risk_coverage_auc": 0.6966561960034414,
+      "threshold": 0.12507024776318598,
+      "seed": 1,
+      "base_accuracy": 0.4926,
+      "ready": false
+    },
+    {
+      "arm": "margin",
+      "temperature": 0.024244620170823284,
+      "selective_accuracy_80": 0.5521303258145364,
+      "actual_coverage": 0.798,
+      "gain": 0.05953032581453638,
+      "auroc": 0.7488702725444981,
+      "ece": 0.13468694783418528,
+      "risk_coverage_auc": 0.6989711407552635,
+      "threshold": 0.002039563607703298,
+      "seed": 1,
+      "base_accuracy": 0.4926,
+      "ready": false
+    },
+    {
+      "arm": "temperature_wide",
+      "temperature": 0.01,
+      "selective_accuracy_80": 0.5610191082802548,
+      "actual_coverage": 0.785,
+      "gain": 0.0732191082802548,
+      "auroc": 0.74450789021752,
+      "ece": 0.13103746489686718,
+      "risk_coverage_auc": 0.6891598594421182,
+      "threshold": 0.12638937495119917,
+      "seed": 2,
+      "base_accuracy": 0.4878,
+      "ready": false
+    },
+    {
+      "arm": "margin",
+      "temperature": 0.024244620170823284,
+      "selective_accuracy_80": 0.5488476953907816,
+      "actual_coverage": 0.7984,
+      "gain": 0.06104769539078159,
+      "auroc": 0.7474771780127016,
+      "ece": 0.13942872721203828,
+      "risk_coverage_auc": 0.6937382360468077,
+      "threshold": 0.002038034216661387,
+      "seed": 2,
+      "base_accuracy": 0.4878,
+      "ready": false
+    },
+    {
+      "arm": "temperature_wide",
+      "temperature": 0.01,
+      "selective_accuracy_80": 0.5631433592769269,
+      "actual_coverage": 0.7966,
+      "gain": 0.06934335927692692,
+      "auroc": 0.7407926242739084,
+      "ece": 0.13061943015404323,
+      "risk_coverage_auc": 0.6909050636485224,
+      "threshold": 0.12407891123855673,
+      "seed": 3,
+      "base_accuracy": 0.4938,
+      "ready": false
+    },
+    {
+      "arm": "margin",
+      "temperature": 0.024244620170823284,
+      "selective_accuracy_80": 0.5510766149223836,
+      "actual_coverage": 0.7988,
+      "gain": 0.05727661492238356,
+      "auroc": 0.7395071466188641,
+      "ece": 0.13252113347273733,
+      "risk_coverage_auc": 0.6938955411658485,
+      "threshold": 0.0020356463206603185,
+      "seed": 3,
+      "base_accuracy": 0.4938,
+      "ready": false
+    },
+    {
+      "arm": "temperature_wide",
+      "temperature": 0.01,
+      "selective_accuracy_80": 0.5575352635486266,
+      "actual_coverage": 0.8082,
+      "gain": 0.0645352635486266,
+      "auroc": 0.7409253813747495,
+      "ece": 0.13483453233592677,
+      "risk_coverage_auc": 0.6911479001834558,
+      "threshold": 0.12202002651364197,
+      "seed": 4,
+      "base_accuracy": 0.493,
+      "ready": false
+    },
+    {
+      "arm": "margin",
+      "temperature": 0.024244620170823284,
+      "selective_accuracy_80": 0.5556952476741263,
+      "actual_coverage": 0.7954,
+      "gain": 0.06269524767412626,
+      "auroc": 0.7402054002584506,
+      "ece": 0.13461153105045454,
+      "risk_coverage_auc": 0.6939849049061385,
+      "threshold": 0.0020638285400784847,
+      "seed": 4,
+      "base_accuracy": 0.493,
+      "ready": false
+    }
+  ],
+  "gate": {
+    "base_accuracy": 0.49248000000000003,
+    "arms": {
+      "temperature_wide": {
+        "selective_accuracy_80": 0.5620619662569184,
+        "gain": 0.06958196625691836,
+        "auroc": 0.7450055755018066,
+        "ece": 0.13221687973014828,
+        "risk_coverage_auc": 0.6932829844968933,
+        "ready": false
+      },
+      "margin": {
+        "selective_accuracy_80": 0.5532526387392707,
+        "gain": 0.06077263873927065,
+        "auroc": 0.7450379994510596,
+        "ece": 0.13551211489753565,
+        "risk_coverage_auc": 0.6965303234206914,
+        "ready": false
+      }
+    },
+    "v1_ready": false
+  },
+  "repro": "```text\n实验名称：元认知门控 v1\n日期：2026-10-26 15:45:28 中国标准时间\nGit commit：5b84475ea45e1b0cbd97654d61aeacc7810e745e\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：CPU（Intel64 Family 6 Model 183 Stepping 1, GenuineIntel，无 GPU 参与）\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_metacognitive_gate_v1.py --seeds 0-4 --epochs 20 --out data/_metacog_v1\n耗时：22.7 s\n备注：两臂：T-wide（T∈[0.01,5]）与 margin（sigmoid 标定，T∈[0.01,10]）\n备注：阈值只在校准集上取 80% 覆盖；评估集不参与选择\n备注：读出/切分/CIFAR-100 与 v0 相同\n```"
+}

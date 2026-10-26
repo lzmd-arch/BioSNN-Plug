@@ -682,6 +682,15 @@
 >    方向但未 ready。见
 >    [`sweep_results/metacognitive_gate_v0/README.md`](sweep_results/metacognitive_gate_v0/README.md)。
 
+> 72. **2026-10-26：元认知 v1——宽 T 与 margin 都差一点，v1 不 ready**。
+>    两臂同一读出/切分：T-wide 选择性 **0.5621**（+6.96 pp）、AUROC **0.7450**、ECE **0.132**；
+>    margin 0.5533（+6.08）、AUROC **0.7450**、ECE **0.136**。增益两臂都过，AUROC 差 0.005、
+>    ECE 差 0.032/0.036——排序与校准仍不够，margin 没有额外收益。按预注册不扩网格/不改判据；
+>    v2 的方向是 **ensemble/多读出方差**或更强特征。另修正 v0 的选择性阈值泄漏（原先用
+>    评估集分位；改为校准集后 v0 选择性 0.5579→**0.5570**，结论不变）。按 v1 顺序，下一项
+>    是**情景记忆 v1**（局部吸引子迭代）；元认知 v2 并行开放。见
+>    [`sweep_results/metacognitive_gate_v1/README.md`](sweep_results/metacognitive_gate_v1/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
