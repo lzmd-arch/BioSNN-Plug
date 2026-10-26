@@ -41,6 +41,7 @@ from research.continual.metrics import summarise
 from research.continual.ncm import ClassPrototypes
 from research.continual.normalization import build_transform
 from research.continual.readout import DeltaReadout, evaluate
+from research.continual.task_inference import run_with_task_inference
 from research.ib_hebbian import IBHebbianPerceptron
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -625,6 +626,12 @@ def main(argv: list[str] | None = None) -> int:
         "random-rows=只更新同样数量的随机行（控制臂）",
     )
     parser.add_argument(
+        "--task-inference",
+        choices=("none", "routed", "oracle"),
+        default="none",
+        help="任务推断保底臂：none=关；routed=最近任务原型；oracle=真实任务 id（上界）",
+    )
+    parser.add_argument(
         "--feature-mask",
         choices=("none", "fisher", "random"),
         default="none",
@@ -664,6 +671,20 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("--isolation-weight 必须在 [0, 1]。")
         if args.isolation != "current-rows":
             parser.error("--isolation-weight 只在 --isolation current-rows 下有意义。")
+    if args.readout == "ncm" and args.feature_mask != "none":
+        parser.error("特征级掩码只接 delta 读出；NCM 没有可掩码的输入权重。")
+    if args.mask_k <= 0:
+        parser.error("--mask-k 必须为正。")
+    if args.task_inference != "none":
+        if args.features != "resnet18" or args.readout != "delta":
+            parser.error("任务推断臂只接 resnet18 + delta 读出。")
+        if (
+            args.replay_rho != 0.0
+            or args.normalize != "none"
+            or args.isolation != "none"
+            or args.feature_mask != "none"
+        ):
+            parser.error("任务推断臂不与回放/归一化/隔离/特征掩码叠加。")
 
     if args.smoke:
         args.tasks = 2
@@ -671,11 +692,30 @@ def main(argv: list[str] | None = None) -> int:
         args.readout_epochs = 5
         args.out = Path(__file__).resolve().parents[2] / "data" / "_smoke_continual"
 
+    if args.task_inference != "none" and args.out == OUT:
+        args.out = OUT.parent / "continual_v2" / f"task_inference_{args.task_inference}"
+
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
     device = torch.device(args.device)
     started = time.perf_counter()
     results = []
     for seed in seeds:
+        if args.task_inference != "none":
+            results.append(
+                run_with_task_inference(
+                    seed=seed,
+                    n_tasks=args.tasks,
+                    limit_per_class=args.limit_per_class,
+                    data_root=args.data_root,
+                    device=device,
+                    backbone=args.backbone,
+                    readout_epochs=args.readout_epochs,
+                    learning_rate=0.01,
+                    readout_batch=args.readout_batch or 128,
+                    routing=args.task_inference,
+                )
+            )
+            continue
         if args.features == "resnet18":
             if args.readout == "ncm":
                 results.append(
@@ -765,6 +805,7 @@ def main(argv: list[str] | None = None) -> int:
             "isolation_weight": args.isolation_weight,
             "feature_mask": args.feature_mask,
             "mask_k": args.mask_k,
+            "task_inference": args.task_inference,
         },
         "per_seed": results,
         "void_seeds": [row["seed"] for row in results if not row.get("valid", True)],
@@ -787,6 +828,7 @@ def main(argv: list[str] | None = None) -> int:
                 + f"特征掩码：{args.feature_mask}"
                 + (f"（k={args.mask_k}）；" if args.feature_mask != "none" else "；")
                 + f"batching：{args.readout_batch or '全批量'}"
+                + (f"；任务推断：{args.task_inference}" if args.task_inference != "none" else "")
             ],
             device=device,
         ).render_block(),
