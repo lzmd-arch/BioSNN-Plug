@@ -775,6 +775,14 @@
 >    测量头已被取代。v5 若要脉冲 ALIF 是后续，不是本轮。见
 >    [`sweep_results/working_memory_v4/README.md`](sweep_results/working_memory_v4/README.md)。
 
+> 83. **2026-10-27：元认知 v3 ready——ensemble 分歧把 AUROC 推过线**。
+>    K=5 bootstrap 读出，置信度特征 `[M, S, G]` + 校准集逻辑标定头：选择性 **0.5423**
+>    （+6.33 pp）、AUROC **0.7530**、ECE **0.0296**，三条全过，`v3_ready=true`。
+>    M-only Platt 对照 AUROC 0.709——**关键不是更多成员，是把成员分歧 S 作为第二路信号**。
+>    边界：标定头是 IRLS 测量头，不是局部学习规则；成员读出是局部 delta。阶段四现在有
+>    两个 ready 组件：工作记忆 v4（局部 RLS）与元认知 v3（测量置信度）。见
+>    [`sweep_results/metacognitive_gate_v3/README.md`](sweep_results/metacognitive_gate_v3/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

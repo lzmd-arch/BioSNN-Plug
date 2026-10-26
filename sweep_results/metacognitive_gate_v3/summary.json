@@ -1,0 +1,104 @@
+{
+  "experiment": "元认知门控 v3：ensemble 不确定性组合",
+  "config": {
+    "epochs": 20,
+    "batch": 128,
+    "train_limit": null,
+    "coverage": 0.8,
+    "members": 5,
+    "bootstrap": 0.8,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "base_accuracy": 0.4816,
+      "combo_selective_80": 0.544733581164808,
+      "combo_coverage": 0.807,
+      "combo_gain": 0.063133581164808,
+      "combo_auroc": 0.7587262173926418,
+      "combo_ece": 0.033946025109784665,
+      "m_selective_80": 0.54243999010146,
+      "m_gain": 0.06083999010146007,
+      "m_auroc": 0.7114947346294246,
+      "m_ece": 0.027305828478518306
+    },
+    {
+      "seed": 1,
+      "base_accuracy": 0.4772,
+      "combo_selective_80": 0.5398077397091446,
+      "combo_coverage": 0.8114,
+      "combo_gain": 0.06260773970914463,
+      "combo_auroc": 0.7609586269304942,
+      "combo_ece": 0.037787773098973215,
+      "m_selective_80": 0.5417295123177476,
+      "m_gain": 0.06452951231774756,
+      "m_auroc": 0.7152313835296562,
+      "m_ece": 0.02989719191081501
+    },
+    {
+      "seed": 2,
+      "base_accuracy": 0.4762,
+      "combo_selective_80": 0.5463760770400405,
+      "combo_coverage": 0.7892,
+      "combo_gain": 0.07017607704004053,
+      "combo_auroc": 0.753267363060528,
+      "combo_ece": 0.02809015129475836,
+      "m_selective_80": 0.5464313123561013,
+      "m_gain": 0.0702313123561013,
+      "m_auroc": 0.7115161247748699,
+      "m_ece": 0.02486806024538035
+    },
+    {
+      "seed": 3,
+      "base_accuracy": 0.4784,
+      "combo_selective_80": 0.5371655104063429,
+      "combo_coverage": 0.8072,
+      "combo_gain": 0.05876551040634287,
+      "combo_auroc": 0.74728853976445,
+      "combo_ece": 0.027899490287722303,
+      "m_selective_80": 0.5396904643035447,
+      "m_gain": 0.061290464303544734,
+      "m_auroc": 0.7016943300264686,
+      "m_ece": 0.024671741767704328
+    },
+    {
+      "seed": 4,
+      "base_accuracy": 0.4814,
+      "combo_selective_80": 0.5434236947791165,
+      "combo_coverage": 0.7968,
+      "combo_gain": 0.062023694779116456,
+      "combo_auroc": 0.7445950404007081,
+      "combo_ece": 0.020502211766993746,
+      "m_selective_80": 0.5393120393120393,
+      "m_gain": 0.05791203931203931,
+      "m_auroc": 0.7057563338450281,
+      "m_ece": 0.018234321443169565
+    }
+  ],
+  "gate": {
+    "base_accuracy": 0.47896,
+    "combo": {
+      "selective_accuracy_80": 0.5423013206198904,
+      "gain": 0.06334132061989049,
+      "auroc": 0.7529671575097645,
+      "ece": 0.02964513031164646,
+      "risk_coverage_auc": null,
+      "ready": true
+    },
+    "m_only": {
+      "selective_accuracy_80": 0.5419206636781786,
+      "gain": 0.0629606636781786,
+      "auroc": 0.7091385813610895,
+      "ece": 0.024995428769117513
+    },
+    "v3_ready": true
+  },
+  "repro": "```text\n实验名称：元认知门控 v3\n日期：2026-10-27 00:26:00 中国标准时间\nGit commit：f4b04719a0595e7b7ba77c62542a2ed1dea9e689\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：CPU（Intel64 Family 6 Model 183 Stepping 1, GenuineIntel，无 GPU 参与）\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_metacognitive_gate_v3.py --seeds 0-4 --epochs 20 --members 5 --out data/_metacog_v3\n耗时：109.1 s\n备注：K=5 bootstrap 读出；置信度特征 M/S/G，标定头只在校准半集拟合\n备注：M-only Platt 对照同表\n```"
+}
