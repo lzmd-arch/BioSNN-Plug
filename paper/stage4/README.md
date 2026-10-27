@@ -1,12 +1,12 @@
 # Stage Four of BioSNN-Plug: What the Cognitive Components Actually Support
 
-**Technical report · v1.0 · 2026-10-28**
+**Technical report - v1.0 - 2026-10-28**
 
-**Author:** lzmd-arch (independent researcher) · <https://github.com/lzmd-arch/BioSNN-Plug>
+**Author:** lzmd-arch (independent researcher) - <https://github.com/lzmd-arch/BioSNN-Plug>
 
 **Scope:** working memory, episodic memory, metacognition, world models, and end-to-end
 composition in the phase-four research programme. This report records what passed, what failed,
-and—most importantly—the exact protocol under which each statement holds.
+and--most importantly--the exact protocol under which each statement holds.
 
 ---
 
@@ -18,7 +18,7 @@ recall task. Two results survive their preregistered criteria. A **sequential co
 working memory and delayed paired-associate recall reaches 6/6 criteria (`e2e_v5`). A **shared-state
 dual-bank** design with an explicit scale gate reaches 6/6 on its primary condition (`e2e_v8`), but a
 follow-up sweep shows that this result covers only OOD scales of 3x or more and DPAR set sizes of
-four or fewer; at 2x the abstention rate falls to 0.720, and at K=8 working-memory R² is 0.89975
+four or fewer; at 2x the abstention rate falls to 0.720, and at K=8 working-memory R^2 is 0.89975
 against a 0.90 floor.
 
 The negative results are equally specific. Pure class-incremental learning does not pass; the
@@ -75,8 +75,8 @@ constructive AF=0 (frozen heads plus task id) is not an anti-forgetting algorith
 
 | Arm | Status | Result |
 | :--- | :--- | :--- |
-| Multi-timescale leaky integrators + local RLS (`v4`) | **ready** | three-cue R² 0.9994 / 0.9982 / 0.9994; mean 0.9990 above ridge 0.9931 |
-| LIF / ALIF spike-count representation (`v5`) | **not ready** | multi-cue R² about 0.21 / 0.19; 60-step counts remain single-digit |
+| Multi-timescale leaky integrators + local RLS (`v4`) | **ready** | three-cue R^2 0.9994 / 0.9982 / 0.9994; mean 0.9990 above ridge 0.9931 |
+| LIF / ALIF spike-count representation (`v5`) | **not ready** | multi-cue R^2 about 0.21 / 0.19; 60-step counts remain single-digit |
 
 The v5 failure is representational, not a readout failure: a ridge probe on the same spike counts
 is no better than the local RLS readout. The practical phase-four representation remains the
@@ -86,7 +86,7 @@ rate-based leaky integrator with a local, rank-one readout.
 
 The state model is essentially exact in closed loop (H=10 NMSE around 2e-8, ten orders below
 `copy_last`), and the closed-loop first-step drift is 115.5. The termination head does not survive
-the closed-loop distribution shift: AUROC 0.632–0.665 against a 0.75 criterion. `p3_ready=false`.
+the closed-loop distribution shift: AUROC 0.632-0.665 against a 0.75 criterion. `p3_ready=false`.
 A dedicated termination head and a one-step imagined head were tried (0.999 offline, 0.665 closed
 loop, 0.632 imagined); the problem is the distribution, not the classifier alone.
 
@@ -135,21 +135,21 @@ OOD labels in fitting. The table is the complete sequence.
 
 | Version | Structure | Key result | Verdict |
 | :--- | :--- | :--- | :--- |
-| v1 | A/B/Q + continuous episodic target | R² 0.9994; selective MSE 0.00053; OOD 0.927 / 0.887; episodic MSE 0.822 | 4/5 |
-| v2 | A/B/Q/E (2 classes) | R² 0.9983; MSE 0.00172; OOD 0.8895 / 0.824; E top-1 1.000 | 5/5, but E is a pipe |
-| v3 | K=8, σ=0.3, t=100 stress | R² 0.9092; MSE 0.0675; OOD 0.8350 / 0.7056; E 0.9040 | 4/5 |
-| v4 | DPAR and WM share one final state | WM R² 0.6558; MSE 0.3507; OOD 0.8612 / 0.7648; DPAR 0.9628 | 4/6; criteria inconsistent |
-| v5 | WM at t=35, DPAR at t=85 | R² 0.99995; MSE 6.16e-05; OOD 0.9572 / 0.9492; DPAR 0.9584 | **6/6** |
-| v6 | single bank vs routed dual bank | single R² 0.527; dual R² 0.994; dual abstain 0.622 | neither ready |
-| v7 | dual bank, bank-W-only confidence | R² 0.9938; MSE 0.0045; OOD 0.8822 / 0.7860 | 5/6, 1.4 pp short |
-| v8 | v7 + bank-W state_norm | R² 0.9938; MSE 0.00448; OOD 0.9562 / 0.9368 | **6/6** |
-| v9 | v8 robustness sweep | s=2 abstain 0.720; K=8 R² 0.89975 | main ready, robust false |
+| v1 | A/B/Q + continuous episodic target | R^2 0.9994; selective MSE 0.00053; OOD 0.927 / 0.887; episodic MSE 0.822 | 4/5 |
+| v2 | A/B/Q/E (2 classes) | R^2 0.9983; MSE 0.00172; OOD 0.8895 / 0.824; E top-1 1.000 | 5/5, but E is a pipe |
+| v3 | K=8, sigma=0.3, t=100 stress | R^2 0.9092; MSE 0.0675; OOD 0.8350 / 0.7056; E 0.9040 | 4/5 |
+| v4 | DPAR and WM share one final state | WM R^2 0.6558; MSE 0.3507; OOD 0.8612 / 0.7648; DPAR 0.9628 | 4/6; criteria inconsistent |
+| v5 | WM at t=35, DPAR at t=85 | R^2 0.99995; MSE 6.16e-05; OOD 0.9572 / 0.9492; DPAR 0.9584 | **6/6** |
+| v6 | single bank vs routed dual bank | single R^2 0.527; dual R^2 0.994; dual abstain 0.622 | neither ready |
+| v7 | dual bank, bank-W-only confidence | R^2 0.9938; MSE 0.0045; OOD 0.8822 / 0.7860 | 5/6, 1.4 pp short |
+| v8 | v7 + bank-W state_norm | R^2 0.9938; MSE 0.00448; OOD 0.9562 / 0.9368 | **6/6** |
+| v9 | v8 robustness sweep | s=2 abstain 0.720; K=8 R^2 0.89975 | main ready, robust false |
 
 ### 4.1 What v4 exposed
 
 v4 placed the DPAR pairs and the A/B/Q cues into the same 28-dimensional state. Working memory
-collapsed (B cue R² 0.513; selective MSE 0.351), while DPAR remained strong (0.9628). The run also
-exposed a preregistration error: R² ≥0.50 and selective MSE ≤0.10 cannot both hold for
+collapsed (B cue R^2 0.513; selective MSE 0.351), while DPAR remained strong (0.9628). The run also
+exposed a preregistration error: R^2 >=0.50 and selective MSE <=0.10 cannot both hold for
 unit-variance targets; the criteria were impossible, not merely hard. The run is preserved as a
 negative result and as a lesson about criterion consistency.
 
@@ -163,7 +163,7 @@ check, and scale gate can coexist in one episode pipeline when their probes are 
 ### 4.3 What v6 and v7 established
 
 v6 routed the two input families into two 28-dimensional banks and concatenated them. The routing
-fixed WM (R² 0.527 → 0.994, MSE 0.339 → 0.0046) but broke OOD confidence: the 56-dimensional
+fixed WM (R^2 0.527 -> 0.994, MSE 0.339 -> 0.0046) but broke OOD confidence: the 56-dimensional
 readout diluted the scale signal, and abstention fell from 0.793 to 0.622. v7 restricted readout,
 members, world model, and confidence to bank W; abstention recovered to 0.786 and AUROC to 0.882,
 but remained 1.4 points below 0.80. The remaining gap came from the t=85 decay of A/B/Q in bank W,
@@ -172,7 +172,7 @@ not from a threshold position.
 ### 4.4 What v8 and v9 established
 
 v8 added `state_norm` to the bank-W confidence (gauss3). All six criteria pass: abstention 0.9368,
-AUROC 0.9562, WM R² 0.9938, DPAR 0.9620, state control 0.2352. The gain is a scale feature:
+AUROC 0.9562, WM R^2 0.9938, DPAR 0.9620, state control 0.2352. The gain is a scale feature:
 gauss2 alone is 0.823 and norm-only is 0.898.
 
 v9 swept one axis at a time:
@@ -181,9 +181,9 @@ v9 swept one axis at a time:
 | :--- | :--- | :--- |
 | scale s | 1.5 / 2 / 3 / 5 | 0.456 / 0.720 / 0.937 / 0.996 |
 | K | 2 / 4 / 8 | 0.928 / 0.937 / 0.926 |
-| noise σ | 0.1 / 0.3 / 0.5 | 0.945 / 0.937 / 0.919 |
+| noise sigma | 0.1 / 0.3 / 0.5 | 0.945 / 0.937 / 0.919 |
 
-Working-memory R² at K=2/4/8 is 0.9983 / 0.9938 / **0.89975**; the K=8 value is 0.00025 below the
+Working-memory R^2 at K=2/4/8 is 0.9983 / 0.9938 / **0.89975**; the K=8 value is 0.00025 below the
 0.90 floor. The state-control criterion was corrected before the formal run from a fixed 0.35 to
 `1/K + 0.10`, because K=2 has chance 0.5; this correction is recorded in the preregistration's
 revision 1 and does not affect the K=4 primary result.
@@ -200,7 +200,7 @@ already fails (0.720), and K=8 is a capacity boundary.
 
 - Local RLS working memory with three cues (v4; 0.9990 mean, above ridge).
 - Non-local associative recall on DPAR (pseudo-inverse 0.828; literal NN 0.938 at K=8).
-- A sequential WM → DPAR composition with all six e2e criteria (v5).
+- A sequential WM -> DPAR composition with all six e2e criteria (v5).
 - A shared-state dual-bank composition with a bank-W scale gate under the v9 envelope (v8).
 - Task-aware CIL as a phase-three gate (0.8195 / AF 0.0, constructive).
 - The negative result that the current metacognitive gate is scale-specific, not general.
@@ -211,10 +211,10 @@ already fails (0.720), and K=8 is a capacity boundary.
 - Relearn 3x (0.957 paired median; open under ADR-0019).
 - Spiking working memory (v5; around 0.21 / 0.19).
 - Local Hebbian episodic binding (0.311 at K=8).
-- World-model termination in closed loop (0.632–0.665).
+- World-model termination in closed loop (0.632-0.665).
 - General OOD detection: sign quantization passes the validity gate (6.38x error) but the gate
   reaches AUROC 0.4876; higher moments reach 0.5024.
-- Single-bank shared-state coexistence (v4/v6 single) and DPAR K=8 capacity (R² 0.89975).
+- Single-bank shared-state coexistence (v4/v6 single) and DPAR K=8 capacity (R^2 0.89975).
 - Scale OOD at 2x (abstention 0.720).
 
 ---
@@ -262,7 +262,7 @@ numbers in this report are copied from those blocks, not re-derived.
    linear readout does not rule out nonlinear readouts.
 5. **No bus integration.** Phase-four components are research scripts; they are not wired into
    `biosnn-bus` or the plugin stack. Component readiness is not system integration.
-6. **Capacity.** K=8 is a boundary; the 0.89975 R² is below the preregistered 0.90 floor.
+6. **Capacity.** K=8 is a boundary; the 0.89975 R^2 is below the preregistered 0.90 floor.
 7. **Hardware and budget.** Five seeds per condition; the v9 sweep took 617.1 s. Longer seeds,
    larger K, and larger state banks are untested.
 
@@ -273,7 +273,7 @@ numbers in this report are copied from those blocks, not re-derived.
 1. **General information-loss OOD.** Replace low-dimensional state statistics with a generative
    state model, cycle consistency, or an input-level detector; first pass the "OOD error at least
    2x in-dist" validity gate, then interpret abstention.
-2. **K=8 capacity.** Change the state/readout capacity or accept K≤4; do not tune the 0.90 floor.
+2. **K=8 capacity.** Change the state/readout capacity or accept K<=4; do not tune the 0.90 floor.
 3. **Scale 2x.** A stronger scale/covariance feature is needed; current gate fails at 0.720.
 4. **Spiking working memory v6.** Fix the count representation (membrane/subthreshold state,
    longer window, or rate input).
@@ -290,9 +290,9 @@ numbers in this report are copied from those blocks, not re-derived.
 Phase four produced two defensible end-to-end results and a large set of explicit boundaries. The
 sequential composition (v5) is the cleanest: it passes all six criteria and does not pretend that
 the shared state is solved. The shared-state result (v8) passes all six on its primary condition,
-but v9 shows that it is a **scale-gated, K≤4** result, not a general one. The components that
-remain open—spiking working memory, local episodic binding, world-model termination, and general
-OOD—are open for specific, measured reasons, not for lack of trying.
+but v9 shows that it is a **scale-gated, K<=4** result, not a general one. The components that
+remain open--spiking working memory, local episodic binding, world-model termination, and general
+OOD--are open for specific, measured reasons, not for lack of trying.
 
 The value of the phase-four record is therefore not a single headline number. It is the mapping
 between a claim and the protocol under which the claim is true. That mapping is what the
