@@ -861,6 +861,16 @@
 >    记忆。见
 >    [`sweep_results/episodic_paired_associate/README.md`](sweep_results/episodic_paired_associate/README.md)。
 
+> 93. **2026-10-27：元认知 v4——独立校准 + 三维密度门把 e2e v3 弃权修到 0.8456，但依赖尺度特征**。
+>    复用 e2e v3 主档，阈值只在 500 幕校准集取（test/OOD 不参与）；主门 gauss3
+>    （disagreement / surprise / state_norm 高斯密度）5 种子：覆盖 **0.8028**、选择性 MSE
+>    **0.06745**、弃权 **0.8456**、AUROC **0.9003**，`metacognitive_v4_ready=true`。
+>    **边界**：gauss2 反而更差（0.6984）、zsum 0.7208，增益来自 `state_norm` 对 A/B×3
+>    尺度偏移的检测；不是通用 OOD，也不改变 `e2e_v3_ready=false`。kNN 对照首版把校准点
+>    自身算入近邻（覆盖 0.6888），改 leave-one-out 后 0.7972；gauss3/gauss2/zsum 数值
+>    逐位不变。见
+>    [`sweep_results/metacognitive_gate_v4/README.md`](sweep_results/metacognitive_gate_v4/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
