@@ -999,6 +999,13 @@
 >    下一步 v15 只针对这 4 格（K8 s2 用 snapshot85、K4-σ0.5 用 longtau），不调阈值/门。
 >    见 [`sweep_results/stage4_e2e_v14/README.md`](sweep_results/stage4_e2e_v14/README.md)。
 
+> 109. **2026-10-28：阶段四端到端 v15——补 v14 的 s=2 四格，换臂仍 0/4**。
+>    K4-σ0.5 主臂 longtau+shrunk **0.7868**；K8-s2 主臂 snapshot85+diag
+>    **0.7700/0.7416/0.7044**；对照 longtau 0.7656/0.7448/0.7024。四格的 WM/DPAR/状态/
+>    AUROC 都过，失败项只有弃权。`v15_ready=false`。s=2 的弱尺度信号不是读出时间/慢 τ
+>    能补的；下一步用输入级尺度门（v16）或更强尺度特征。见
+>    [`sweep_results/stage4_e2e_v15/README.md`](sweep_results/stage4_e2e_v15/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

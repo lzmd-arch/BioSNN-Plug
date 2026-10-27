@@ -1,0 +1,207 @@
+{
+  "experiment": "阶段四端到端 v15：补 v14 的 s=2 四格",
+  "config": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "test_episodes": 500,
+    "conditions": [
+      "K4-s2-n0.5",
+      "K8-s2-n0.1",
+      "K8-s2-n0.3",
+      "K8-s2-n0.5"
+    ]
+  },
+  "conditions": {
+    "K4-s2-n0.5": {
+      "baseline": {
+        "mean": {
+          "r2_mean": 0.9944529641087876,
+          "selective_mse": 0.004424780164685125,
+          "test_coverage": 0.7872000000000001,
+          "ood_auroc": 0.8626232,
+          "ood_abstain": 0.7756000000000001,
+          "dpar_best": 0.9624,
+          "state_control_top1": 0.25
+        },
+        "checks": {
+          "r2_ok": true,
+          "selective_ok": true,
+          "dpar_ok": true,
+          "state_control_ok": true,
+          "ood_auroc_ok": true,
+          "ood_abstain_ok": false,
+          "coverage_ok": true
+        },
+        "ready": false
+      },
+      "longtau": {
+        "mean": {
+          "r2_mean": 0.9950350569897297,
+          "selective_mse": 0.0038213347378745844,
+          "test_coverage": 0.7832000000000001,
+          "ood_auroc": 0.8683224,
+          "ood_abstain": 0.7867999999999999,
+          "dpar_best": 0.9624,
+          "state_control_top1": 0.25
+        },
+        "checks": {
+          "r2_ok": true,
+          "selective_ok": true,
+          "dpar_ok": true,
+          "state_control_ok": true,
+          "ood_auroc_ok": true,
+          "ood_abstain_ok": false,
+          "coverage_ok": true
+        },
+        "ready": false
+      },
+      "primary": "longtau",
+      "primary_ready": false
+    },
+    "K8-s2-n0.1": {
+      "snapshot85": {
+        "mean": {
+          "r2_mean": 0.9937362950571351,
+          "selective_mse": 0.004534788842153867,
+          "test_coverage": 0.7964,
+          "ood_auroc": 0.8616656,
+          "ood_abstain": 0.77,
+          "dpar_best": 0.9344000000000001,
+          "state_control_top1": 0.1288
+        },
+        "checks": {
+          "r2_ok": true,
+          "selective_ok": true,
+          "dpar_ok": true,
+          "state_control_ok": true,
+          "ood_auroc_ok": true,
+          "ood_abstain_ok": false,
+          "coverage_ok": true
+        },
+        "ready": false
+      },
+      "longtau": {
+        "mean": {
+          "r2_mean": 0.9015747705763356,
+          "selective_mse": 0.0678045388050049,
+          "test_coverage": 0.7976,
+          "ood_auroc": 0.8623111999999999,
+          "ood_abstain": 0.7656000000000001,
+          "dpar_best": 0.9388,
+          "state_control_top1": 0.12079999999999999
+        },
+        "checks": {
+          "r2_ok": true,
+          "selective_ok": true,
+          "dpar_ok": true,
+          "state_control_ok": true,
+          "ood_auroc_ok": true,
+          "ood_abstain_ok": false,
+          "coverage_ok": true
+        },
+        "ready": false
+      },
+      "primary": "snapshot85",
+      "primary_ready": false
+    },
+    "K8-s2-n0.3": {
+      "snapshot85": {
+        "mean": {
+          "r2_mean": 0.9939773496110277,
+          "selective_mse": 0.004478408862757894,
+          "test_coverage": 0.798,
+          "ood_auroc": 0.8480679999999999,
+          "ood_abstain": 0.7415999999999999,
+          "dpar_best": 0.9344000000000001,
+          "state_control_top1": 0.1296
+        },
+        "checks": {
+          "r2_ok": true,
+          "selective_ok": true,
+          "dpar_ok": true,
+          "state_control_ok": true,
+          "ood_auroc_ok": true,
+          "ood_abstain_ok": false,
+          "coverage_ok": true
+        },
+        "ready": false
+      },
+      "longtau": {
+        "mean": {
+          "r2_mean": 0.9022467921194682,
+          "selective_mse": 0.06911845523486979,
+          "test_coverage": 0.7868,
+          "ood_auroc": 0.8484592000000001,
+          "ood_abstain": 0.7447999999999999,
+          "dpar_best": 0.9388,
+          "state_control_top1": 0.1204
+        },
+        "checks": {
+          "r2_ok": true,
+          "selective_ok": true,
+          "dpar_ok": true,
+          "state_control_ok": true,
+          "ood_auroc_ok": true,
+          "ood_abstain_ok": false,
+          "coverage_ok": true
+        },
+        "ready": false
+      },
+      "primary": "snapshot85",
+      "primary_ready": false
+    },
+    "K8-s2-n0.5": {
+      "snapshot85": {
+        "mean": {
+          "r2_mean": 0.9943831981777255,
+          "selective_mse": 0.004406621897608859,
+          "test_coverage": 0.7968,
+          "ood_auroc": 0.8221192,
+          "ood_abstain": 0.7044,
+          "dpar_best": 0.9344000000000001,
+          "state_control_top1": 0.1316
+        },
+        "checks": {
+          "r2_ok": true,
+          "selective_ok": true,
+          "dpar_ok": true,
+          "state_control_ok": true,
+          "ood_auroc_ok": true,
+          "ood_abstain_ok": false,
+          "coverage_ok": true
+        },
+        "ready": false
+      },
+      "longtau": {
+        "mean": {
+          "r2_mean": 0.9029752335506366,
+          "selective_mse": 0.07310687546309534,
+          "test_coverage": 0.7827999999999999,
+          "ood_auroc": 0.8218463999999999,
+          "ood_abstain": 0.7024000000000001,
+          "dpar_best": 0.9388,
+          "state_control_top1": 0.1216
+        },
+        "checks": {
+          "r2_ok": true,
+          "selective_ok": true,
+          "dpar_ok": true,
+          "state_control_ok": true,
+          "ood_auroc_ok": true,
+          "ood_abstain_ok": false,
+          "coverage_ok": true
+        },
+        "ready": false
+      },
+      "primary": "snapshot85",
+      "primary_ready": false
+    }
+  },
+  "v15_ready": false,
+  "repro": "```text\n实验名称：阶段四端到端 v15\n日期：2026-10-28 03:23:39 中国标准时间\nGit commit：893367835b523968447e0b65bab526a82fabf6b0\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_e2e_delayed_recall_v15.py --seeds 0-4\n耗时：649.3 s\n备注：只跑 v14 的 4 个 s=2 失败格；K4-σ0.5 主臂 longtau，K8-s2 主臂 snapshot85\n备注：门：K4 shrunk / K8 diag；覆盖率 0.78-0.82\n```"
+}

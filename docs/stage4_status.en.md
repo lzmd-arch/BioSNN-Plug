@@ -31,6 +31,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
 | End-to-end v11 (K=8 three arms) | **no arm ready** | baseline R² **0.8926**/coverage **0.7740**; snapshot85 R² **0.9936**/coverage **0.7552**; longtau R² **0.90145**/coverage **0.7776**; DPAR 0.934, state 0.12 | The only miss is K=8 test coverage (<0.78); snapshot85/longtau fix WM capacity, leaving gate calibration/coverage |
 | End-to-end v12 (K=8 diag gate) | **two arms ready** | snapshot85+diag: R² **0.9936**, coverage **0.7820**, abstain **0.9292**; longtau+diag: R² **0.90145**, coverage **0.8052**, abstain **0.9244**; shrunk still **0.7552 / 0.7776** | `v12_ready=true`: K8's boundary is covariance estimation, not WM; both arms pass, but snapshot coverage is only 0.002 above 0.78 |
 | End-to-end v14 (18-cell matrix) | **14/18 ready** | s3/s5 all pass; K4-s2 σ0.1/0.3 pass; failures **K4-s2-σ0.5 abstain 0.7756**, **K8-s2 three noise levels 0.7656/0.7448/0.7024** | `v14_ready=false`; the only failing criterion is s=2 OOD abstention; WM/DPAR/state/AUROC pass |
+| End-to-end v15 (fill s=2 four cells) | **0/4** | K4-σ0.5 longtau **0.7868**; K8-s2 snapshot **0.7700/0.7416/0.7044** | Swapping arms (longtau/snapshot85) still misses 0.80; s=2 boundary not closed |
 
 ## 2. What "ready" means
 
@@ -40,7 +41,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   - integration with the bus/plugins;
   - spiking (working memory) or full locality (metacognitive calibration head);
 - All negative results/boundaries are kept as-is; no criteria were changed after the fact. Ledger
-  entries ㊽–108 in the project plan are the complete index.
+  entries ㊽–109 in the project plan are the complete index.
 
 ## 3. Open research items (in suggested order)
 
@@ -71,6 +72,8 @@ not turn "component ready" into "phase-4 end-to-end holds".
    longtau 0.8052, both arms pass all seven; shrunk still fails. K8's boundary is the 28x28
    covariance estimate, not WM or DPAR. **v14's 18-cell matrix is 14/18**: s3/s5 all pass;
    the remaining failures are s=2 abstention (K4-σ0.5 0.7756; K8 0.766/0.745/0.702).
+   **v15's arm swap is still 0/4** (longtau 0.7868; snapshot 0.770/0.742/0.704); s=2 needs
+   a stronger scale feature.
 2. **Working memory v6 (spiking)**: v5's failure is in the **representation** (60-step counts
    only single digits), not the readout; v6 needs membrane/subthreshold state, a longer
    integration window, or rate input. Note v5 took 2598.7 s; the next round should cut
@@ -140,6 +143,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   [v10 shrunk covariance gate](../sweep_results/stage4_e2e_v10/README.md),
   [v11 K8 three arms](../sweep_results/stage4_e2e_v11/README.md),
   [v12 K8 diag gate](../sweep_results/stage4_e2e_v12/README.md),
-  [v14 18-cell matrix](../sweep_results/stage4_e2e_v14/README.md)
+  [v14 18-cell matrix](../sweep_results/stage4_e2e_v14/README.md),
+  [v15 s=2 four cells](../sweep_results/stage4_e2e_v15/README.md)
 - Technical report: [paper/stage4/README.md](../paper/stage4/README.md) · Zenodo
   [10.5281/zenodo.23696829](https://doi.org/10.5281/zenodo.23696829) (v1.0, 2026-10-28)
