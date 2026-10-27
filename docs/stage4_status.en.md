@@ -20,6 +20,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
 | Phase-4 integration demo | **runnable** | WM/world model bit-identical; metacognitive regression AUROC **0.562**; episodic recall MSE 1.194 | Composition/equivalence holds; end-to-end metacognition not inherited, not a capability conclusion |
 | End-to-end task (delayed QA + OOD abstention) | **4/5 criteria** | R² **0.9994**, selective MSE **0.00053**, OOD AUROC **0.927**, abstain **0.887**; episodic MSE **0.822** | WM + metacognition + world-model surprise cooperate; **episodic recall is the only miss**, `e2e_ready=false` |
 | End-to-end v2 (four cues + discrete episodic) | **5/5 ready** | R² **0.9983**, selective MSE **0.00172**, OOD AUROC **0.8895**, abstain **0.824**, E recall **1.000** | All five pass; but E recall is "pipeline works", not hard memory; seed 2 abstains only 0.746 |
+| End-to-end v3 (capacity/noise/delay stress) | **4/5 criteria** | Primary K=8/σ=0.3/t=100: R² **0.9092**, selective MSE **0.0675**, OOD AUROC **0.8350**, abstain **0.7056**, E recall **0.9040** | Abstention misses (all five seeds <0.80); capacity boundary K=8–16 (K=16 only 0.7736); v2's abstention margin was already thin |
 
 ## 2. What "ready" means
 
@@ -33,10 +34,13 @@ not turn "component ready" into "phase-4 end-to-end holds".
 
 ## 3. Open research items (in suggested order)
 
-1. **End-to-end v3 (stress test)**: v2 passes all five, but the episodic target is a
-   well-separated discrete E (top-1 1.000, pipeline rather than hard memory). The next step
-   should add **capacity/noise/more events** stress, or switch to a task that truly requires
-   memory; do not treat 1.000 as general memory ability.
+1. **End-to-end v3 (stress test) is done, 4/5**: the primary K=8/σ=0.3/t=100 misses only OOD
+   abstention (0.7056 < 0.80), with all five seeds below the line; OOD ranking itself still works
+   (AUROC 0.835). The capacity boundary lies between K=8 and K=16 (K=16 E top-1 0.7736). v2's
+   0.824 was only 2.4 pp above the threshold and already thin. The next step should switch to a
+   task that **truly requires memory**, or replace the fixed-coverage abstention threshold with
+   calibration/risk control; do not keep adding the same family of stress, and do not treat K=8's
+   0.904 as general memory ability.
 2. **Working memory v6 (spiking)**: v5's failure is in the **representation** (60-step counts
    only single digits), not the readout; v6 needs membrane/subthreshold state, a longer
    integration window, or rate input. Note v5 took 2598.7 s; the next round should cut
@@ -74,3 +78,5 @@ not turn "component ready" into "phase-4 end-to-end holds".
   [imagined-state head](../sweep_results/world_model_closed_loop_imagined/README.md)
 - Episodic memory: [v3 result](../sweep_results/episodic_memory_v3/README.md)
 - Integration demo: [result](../sweep_results/stage4_integration_demo/README.md)
+- End-to-end: [v2 result](../sweep_results/stage4_e2e_v2/README.md),
+  [v3 stress test](../sweep_results/stage4_e2e_v3/README.md)
