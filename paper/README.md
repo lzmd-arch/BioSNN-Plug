@@ -15,6 +15,14 @@ blocked from this environment, and it is the single most likely candidate to fal
 --- which is exactly why it is recorded with its DOI for a reader who can reach it. `grep -c
 '\todo{' main.tex` returns **1**, and that one is a comment documenting the macro itself.
 
+## Stage-4 technical report (2026-10-28)
+
+[`stage4/README.md`](stage4/README.md) is the phase-four technical report: component scorecard,
+the v1–v9 end-to-end sequence, the v8 scale-only result and its v9 boundaries, and the open items.
+It is a Markdown report; the PDF attached to the Zenodo record is built from it outside the
+repository (PDFs are not committed, per the rule above). The report cites the result READMEs and
+preregistrations rather than duplicating their Repro blocks.
+
 **Figures.** Two of the repository's generated figures are in the paper —
 `f2-w2-epoch-accuracy.png` (§5.2.3) and `f3-w3-greedy-curves.png` (§5.3). Both are regenerated
 from ingested records by `scripts/make_figures.py`, which now writes each one **twice**: to
