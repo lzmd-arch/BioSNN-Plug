@@ -26,6 +26,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
 | End-to-end v6 (single vs dual bank coexistence) | **neither ready** | single: R² **0.527**, MSE **0.339**, OOD abstain **0.793**; dual: R² **0.994**, MSE **0.0046**, OOD abstain **0.622**; DPAR 0.962, state control 0.235 | Routing fixes WM but breaks OOD (AUROC 0.874→0.782); coexistence and abstention are not satisfied together |
 | End-to-end v7 (dual bank + bank-W confidence) | **5/6** | WM R² **0.9938**, MSE **0.0045**, DPAR **0.962**, state control **0.235**, OOD AUROC **0.882**, abstain **0.786** misses | Removing bank D from confidence raises abstain 0.622→0.786 and AUROC 0.782→0.882; still 1.4 pp short; t=85 bank-W decay is the remaining boundary |
 | End-to-end v8 (shared state + bank-W scale gate) | **6/6 ready** | WM R² **0.9938**, MSE **0.0045**, DPAR **0.962**, state control **0.235**, OOD AUROC **0.9562**, abstain **0.9368** | Shared final state; the gain is closed by `state_norm` on bank W (gauss2 0.823→gauss3 0.937); scale-OOD only; not general abstention or overall phase-4 acceptance |
+| End-to-end v9 (v8 robustness) | **main ready, robust false** | scale 1.5/2/3/5 abstain **0.456 / 0.720 / 0.937 / 0.996**; K2/4/8 WM R² **0.998 / 0.994 / 0.89975** (K8 misses by 0.00025); σ0.1/0.3/0.5 abstain **0.945 / 0.937 / 0.919** | `v9_main_ready=true`, `v9_robust=false`, `v9_ready=false`; v8 covers only **s≥3, K≤4, σ≤0.5**; s=2 already drops to 0.720 |
 
 ## 2. What "ready" means
 
@@ -35,7 +36,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   - integration with the bus/plugins;
   - spiking (working memory) or full locality (metacognitive calibration head);
 - All negative results/boundaries are kept as-is; no criteria were changed after the fact. Ledger
-  entries ㊽–101 in the project plan are the complete index.
+  entries ㊽–102 in the project plan are the complete index.
 
 ## 3. Open research items (in suggested order)
 
@@ -56,7 +57,9 @@ not turn "component ready" into "phase-4 end-to-end holds".
    0.782→0.882, still 1.4 pp short of 0.80; the gap comes from A/B/Q decay at t=85, not the
    threshold position. **v8 adds bank-W `state_norm`** and reaches abstain 0.9368 / AUROC
    0.9562 with all six criteria passing; this is **scale-OOD only**, not general abstention,
-   and does not change the v6/v7 information-loss OOD boundary.
+   and does not change the v6/v7 information-loss OOD boundary. **v9 robustness**: s=2 abstains
+   0.720 and K=8 WM R² is 0.89975, so `v9_robust=false`; v8's ready must be written as
+   s≥3, K≤4.
 2. **Working memory v6 (spiking)**: v5's failure is in the **representation** (60-step counts
    only single digits), not the readout; v6 needs membrane/subthreshold state, a longer
    integration window, or rate input. Note v5 took 2598.7 s; the next round should cut
@@ -118,4 +121,5 @@ not turn "component ready" into "phase-4 end-to-end holds".
   [v5 two-stage](../sweep_results/stage4_e2e_v5/README.md),
   [v6 single/dual bank](../sweep_results/stage4_e2e_v6/README.md),
   [v7 bank-W confidence](../sweep_results/stage4_e2e_v7/README.md),
-  [v8 bank-W scale gate](../sweep_results/stage4_e2e_v8/README.md)
+  [v8 bank-W scale gate](../sweep_results/stage4_e2e_v8/README.md),
+  [v9 robustness sweep](../sweep_results/stage4_e2e_v9/README.md)
