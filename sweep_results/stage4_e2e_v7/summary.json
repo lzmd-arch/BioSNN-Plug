@@ -1,0 +1,109 @@
+{
+  "experiment": "阶段四端到端 v7：双 bank + bank W 单独置信度",
+  "config": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "pairs": 4,
+    "test_episodes": 500,
+    "coverage": 0.8,
+    "bank": 28
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "r2_a": 0.9977236256269746,
+      "r2_b": 0.9945878008053599,
+      "r2_q": 0.9909983861361642,
+      "r2_mean": 0.9944366041894996,
+      "selective_mse": 0.004281867340610357,
+      "ood_auroc": 0.887796,
+      "ood_abstain": 0.796,
+      "dpar_pseudo": 0.928,
+      "dpar_rawnn": 0.962,
+      "dpar_hebbian": 0.556,
+      "dpar_best": 0.962,
+      "state_control_top1": 0.218
+    },
+    {
+      "seed": 1,
+      "r2_a": 0.9975864253817256,
+      "r2_b": 0.9937235105148348,
+      "r2_q": 0.9894938791495722,
+      "r2_mean": 0.9936012716820443,
+      "selective_mse": 0.004669247005254908,
+      "ood_auroc": 0.867204,
+      "ood_abstain": 0.764,
+      "dpar_pseudo": 0.922,
+      "dpar_rawnn": 0.956,
+      "dpar_hebbian": 0.564,
+      "dpar_best": 0.956,
+      "state_control_top1": 0.272
+    },
+    {
+      "seed": 2,
+      "r2_a": 0.9975190268450356,
+      "r2_b": 0.9935527879761984,
+      "r2_q": 0.9901392311284654,
+      "r2_mean": 0.9937370153165664,
+      "selective_mse": 0.0039598866499668435,
+      "ood_auroc": 0.902652,
+      "ood_abstain": 0.818,
+      "dpar_pseudo": 0.934,
+      "dpar_rawnn": 0.98,
+      "dpar_hebbian": 0.546,
+      "dpar_best": 0.98,
+      "state_control_top1": 0.224
+    },
+    {
+      "seed": 3,
+      "r2_a": 0.9973259040082885,
+      "r2_b": 0.9935391114833237,
+      "r2_q": 0.9895849356089688,
+      "r2_mean": 0.993483317033527,
+      "selective_mse": 0.004657719860632029,
+      "ood_auroc": 0.883184,
+      "ood_abstain": 0.8,
+      "dpar_pseudo": 0.924,
+      "dpar_rawnn": 0.954,
+      "dpar_hebbian": 0.55,
+      "dpar_best": 0.954,
+      "state_control_top1": 0.206
+    },
+    {
+      "seed": 4,
+      "r2_a": 0.9974872043100416,
+      "r2_b": 0.9943510848665792,
+      "r2_q": 0.9898541081368697,
+      "r2_mean": 0.9938974657711634,
+      "selective_mse": 0.00477505778388551,
+      "ood_auroc": 0.870248,
+      "ood_abstain": 0.752,
+      "dpar_pseudo": 0.93,
+      "dpar_rawnn": 0.958,
+      "dpar_hebbian": 0.56,
+      "dpar_best": 0.958,
+      "state_control_top1": 0.256
+    }
+  ],
+  "gate": {
+    "r2_mean": 0.9938311347985602,
+    "selective_mse": 0.00446875572806993,
+    "ood_auroc": 0.8822167999999999,
+    "ood_abstain": 0.7859999999999999,
+    "dpar_best": 0.962,
+    "state_control_top1": 0.2352,
+    "r2_ok": true,
+    "selective_ok": true,
+    "ood_auroc_ok": true,
+    "ood_abstain_ok": false,
+    "dpar_ok": true,
+    "state_control_ok": true,
+    "e2e_v7_ready": false
+  },
+  "repro": "```text\n实验名称：阶段四端到端 v7\n日期：2026-10-27 21:16:28 中国标准时间\nGit commit：76185abb72938b261f7dc8b9253e56e7b00071ad\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_e2e_delayed_recall_v7.py --seeds 0-4\n耗时：96.6 s\n备注：dual：bank W 只收 A/B/Q，bank D 只收键值/查询；拼接 56 维\n备注：WM 读出/成员/世界模型/OOD 置信度只读 bank W；状态控制用 56 维\n备注：OOD 为 A/B ×3；阈值只在 calibration（seed+30000）上取\n```"
+}

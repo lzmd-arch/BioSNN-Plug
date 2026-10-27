@@ -24,6 +24,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
 | End-to-end v4 (DPAR + WM coexistence) | **4/6 criteria** | WM R² **0.6558**, DPAR **0.9628**, state control **0.2652**, OOD AUROC **0.8612**; selective MSE **0.3507** and abstain **0.7648** miss | DPAR and WM interfere; the prereg's R²≥0.50 and MSE≤0.10 are mutually inconsistent, so this round's criteria are unreachable; `e2e_v4_ready=false` |
 | End-to-end v5 (two-stage WM → DPAR) | **6/6 ready** | WM R² **0.99995**, selective MSE **6.16e-05**, DPAR **0.9584**, state control **0.2472**, OOD AUROC **0.9572**, abstain **0.9492** | Sequential composition: WM is probed at t=35, DPAR at t=85; they do not share the final state. v4's coexistence interference is preserved; not an overall phase-4 acceptance |
 | End-to-end v6 (single vs dual bank coexistence) | **neither ready** | single: R² **0.527**, MSE **0.339**, OOD abstain **0.793**; dual: R² **0.994**, MSE **0.0046**, OOD abstain **0.622**; DPAR 0.962, state control 0.235 | Routing fixes WM but breaks OOD (AUROC 0.874→0.782); coexistence and abstention are not satisfied together |
+| End-to-end v7 (dual bank + bank-W confidence) | **5/6** | WM R² **0.9938**, MSE **0.0045**, DPAR **0.962**, state control **0.235**, OOD AUROC **0.882**, abstain **0.786** misses | Removing bank D from confidence raises abstain 0.622→0.786 and AUROC 0.782→0.882; still 1.4 pp short; t=85 bank-W decay is the remaining boundary |
 
 ## 2. What "ready" means
 
@@ -33,7 +34,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   - integration with the bus/plugins;
   - spiking (working memory) or full locality (metacognitive calibration head);
 - All negative results/boundaries are kept as-is; no criteria were changed after the fact. Ledger
-  entries ㊽–99 in the project plan are the complete index.
+  entries ㊽–100 in the project plan are the complete index.
 
 ## 3. Open research items (in suggested order)
 
@@ -50,7 +51,9 @@ not turn "component ready" into "phase-4 end-to-end holds".
    only a sequential composition bound and does not overturn v4's coexistence interference.
    **v6's dual-bank routing** raises WM R² from 0.527 to 0.994 but drops OOD abstention from
    0.793 to 0.622; neither arm is ready, so coexistence and abstention are still not satisfied
-   together.
+   together. **v7 computes confidence on bank W only**: abstain 0.622→0.786 and AUROC
+   0.782→0.882, still 1.4 pp short of 0.80; the gap comes from A/B/Q decay at t=85, not the
+   threshold position.
 2. **Working memory v6 (spiking)**: v5's failure is in the **representation** (60-step counts
    only single digits), not the readout; v6 needs membrane/subthreshold state, a longer
    integration window, or rate input. Note v5 took 2598.7 s; the next round should cut
@@ -110,4 +113,5 @@ not turn "component ready" into "phase-4 end-to-end holds".
   [v3 stress test](../sweep_results/stage4_e2e_v3/README.md),
   [v4 DPAR coexistence](../sweep_results/stage4_e2e_v4/README.md),
   [v5 two-stage](../sweep_results/stage4_e2e_v5/README.md),
-  [v6 single/dual bank](../sweep_results/stage4_e2e_v6/README.md)
+  [v6 single/dual bank](../sweep_results/stage4_e2e_v6/README.md),
+  [v7 bank-W confidence](../sweep_results/stage4_e2e_v7/README.md)

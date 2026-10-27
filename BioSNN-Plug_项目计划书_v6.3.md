@@ -923,6 +923,15 @@
 >    需在 bank W 单独算 OOD 置信度（世界模型也分块），而不是在 56 维联合置信度上调阈值。
 >    见 [`sweep_results/stage4_e2e_v6/README.md`](sweep_results/stage4_e2e_v6/README.md)。
 
+> 100. **2026-10-27：阶段四端到端 v7——bank W 单独置信度，5/6，弃权仍差 1.4 pp**。
+>    同 v6 dual 的 56 维状态，但 WM 读出/成员/世界模型/OOD 置信度只读 bank W；5 种子：
+>    WM R² **0.9938**、MSE **0.0045**、DPAR **0.962**、状态控制 **0.2352**、OOD AUROC
+>    **0.8822**、弃权 **0.7860**（未过 0.80），`e2e_v7_ready=false`。**对照 v6 dual**：
+>    弃权 0.622→0.786、AUROC 0.782→0.882，说明联合置信度的稀释是主因；剩余 1.4 pp
+>    来自 t=85 的 bank W 衰减（v5 在 t=35 是 0.949），不是阈值位置。下一步要么换更好的
+>    OOD 特征，要么接受 v5 的顺序组合路径。见
+>    [`sweep_results/stage4_e2e_v7/README.md`](sweep_results/stage4_e2e_v7/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
