@@ -966,6 +966,15 @@
 >    v8/v9 的边界收紧为 **s≥2、K≤4、σ≤0.5**；s=1.5 与 K=8 仍是边界，通用 OOD 不变。
 >    见 [`sweep_results/stage4_e2e_v10/README.md`](sweep_results/stage4_e2e_v10/README.md)。
 
+> 105. **2026-10-28：阶段四端到端 v11——K=8 三臂，WM 修好但覆盖率仍卡在 0.78 下**。
+>    baseline（bank W t=125）、snapshot85（t=85）、longtau（t=125 + τ=400），5 种子：
+>    R² **0.8926 / 0.9936 / 0.90145**，coverage **0.7740 / 0.7552 / 0.7776**；三臂的
+>    弃权、AUROC、DPAR 0.934、状态 0.12 都过，唯一失败项是 K=8 的 test coverage。
+>    `v11_ready=false`。**边界**：snapshot85/longtau 证明 K8 的 WM 退化主要来自读出时间/
+>    慢 τ，不是不可修的容量；剩余边界转移到**门校准/覆盖率**，不能靠加 τ 或调 R² 门槛
+>    解决。v10 的 s≥2/K≤4 结论不变。见
+>    [`sweep_results/stage4_e2e_v11/README.md`](sweep_results/stage4_e2e_v11/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
