@@ -1,0 +1,97 @@
+{
+  "experiment": "阶段四端到端 v2：四线索 + OOD + 离散情景",
+  "config": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "coverage": 0.8,
+    "members": 5,
+    "epochs": 20,
+    "ood_scale": 3.0
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "r2_a": 0.9989837421330461,
+      "r2_b": 0.9973065577662406,
+      "r2_q": 0.9967844564948203,
+      "r2_e": 0.9997564579817612,
+      "r2_mean": 0.998207803593967,
+      "selective_mse": 0.0017422372999757619,
+      "ood_auroc": 0.893352,
+      "ood_abstain": 0.84,
+      "ood_answer_mse": 0.0026933763928387723,
+      "episodic_accuracy": 1.0
+    },
+    {
+      "seed": 1,
+      "r2_a": 0.9990879750497456,
+      "r2_b": 0.9975786065762073,
+      "r2_q": 0.9970504743206251,
+      "r2_e": 0.9997343895551967,
+      "r2_mean": 0.9983628613754437,
+      "selective_mse": 0.0016620608644803822,
+      "ood_auroc": 0.901648,
+      "ood_abstain": 0.852,
+      "ood_answer_mse": 0.0021779698891161454,
+      "episodic_accuracy": 1.0
+    },
+    {
+      "seed": 2,
+      "r2_a": 0.9990238217356612,
+      "r2_b": 0.9973247052616127,
+      "r2_q": 0.9970170842016283,
+      "r2_e": 0.9997485050795718,
+      "r2_mean": 0.9982785290696184,
+      "selective_mse": 0.001833334706238084,
+      "ood_auroc": 0.85134,
+      "ood_abstain": 0.746,
+      "ood_answer_mse": 0.0026885868486451314,
+      "episodic_accuracy": 1.0
+    },
+    {
+      "seed": 3,
+      "r2_a": 0.9991345891377899,
+      "r2_b": 0.9974935324751337,
+      "r2_q": 0.9971667615263694,
+      "r2_e": 0.9997494024363578,
+      "r2_mean": 0.9983860713939128,
+      "selective_mse": 0.0017012097387164892,
+      "ood_auroc": 0.925952,
+      "ood_abstain": 0.87,
+      "ood_answer_mse": 0.002212047023388637,
+      "episodic_accuracy": 1.0
+    },
+    {
+      "seed": 4,
+      "r2_a": 0.9990127306452318,
+      "r2_b": 0.9972682187766153,
+      "r2_q": 0.9969367716918396,
+      "r2_e": 0.9997461023399274,
+      "r2_mean": 0.9982409558634036,
+      "selective_mse": 0.0016793560189370376,
+      "ood_auroc": 0.875408,
+      "ood_abstain": 0.812,
+      "ood_answer_mse": 0.0021166435534555493,
+      "episodic_accuracy": 1.0
+    }
+  ],
+  "gate": {
+    "r2_mean": 0.9982952442592691,
+    "selective_mse": 0.0017236397256695508,
+    "ood_auroc": 0.88954,
+    "ood_abstain": 0.8240000000000001,
+    "episodic_accuracy": 1.0,
+    "r2_ok": true,
+    "selective_ok": true,
+    "ood_auroc_ok": true,
+    "ood_abstain_ok": true,
+    "episodic_ok": true,
+    "e2e_v2_ready": true
+  },
+  "repro": "```text\n实验名称：阶段四端到端 v2\n日期：2026-10-27 09:29:43 中国标准时间\nGit commit：c04172cbedbec8490e9f1325f0be0b46259ced07\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_e2e_delayed_recall_v2.py --seeds 0-4 --out data/_e2e_v2\n耗时：45.0 s\n备注：A/B/Q/E 四线索；OOD 为 A/B ×3；训练只用 in-dist\n备注：情景检索目标改为离散 E 的 top-1 准确率；其余判据与 v1 相同\n```"
+}
