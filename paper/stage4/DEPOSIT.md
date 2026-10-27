@@ -13,7 +13,10 @@
 | Files | `BioSNN-Plug_Stage4_Technical_Report_v1.0.pdf` (199,443 B, md5 `28176c08...`) and `stage4_technical_report.md` (16,063 B, md5 `17c4023d...`) |
 
 The attached Markdown is the pre-deposit snapshot of [`README.md`](README.md); the repository copy
-is the source of truth for later edits. The PDF was rendered from that Markdown outside the
+is the source of truth for later edits. **Post-publication (2026-10-28):** e2e v10 adds a
+shrunk-covariance gate that lifts the s=2 abstention from 0.720 to 0.828 (coverage 0.790,
+AUROC 0.894); K=8 remains a capacity/coverage boundary. This v1.0 record is the pre-v10 snapshot;
+a v1.1 deposit, if made, should carry that update. The PDF was rendered from that Markdown outside the
 repository (PDFs are not committed), with an ASCII-normalized text layer so extraction is clean.
 
 The record was verified from Zenodo's **public** API after publishing: DOI, concept DOI, title,

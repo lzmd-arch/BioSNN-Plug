@@ -958,6 +958,14 @@
 >    `publication/report`、CC-BY-4.0；PDF 199,443 B（md5 `28176c08…`）与 Markdown
 >    16,063 B（md5 `17c4023d…`）均已从公共 API 核验。记录为 `paper/stage4/DEPOSIT.md`。
 
+> 104. **2026-10-28：阶段四端到端 v10——收缩协方差门把 s=2 拉到 0.8276，`v10_ready=true`**。
+>    bank W 28 维状态标准化 + lambda=0.1 收缩 Mahalanobis；5 种子：s2 覆盖 **0.7900**、
+>    弃权 **0.8276**、AUROC **0.8937**（v9 gauss3 是 0.7196/0.8174）；s3/s5 弃权
+>    **0.9764 / 0.9984**。K8 WM R² **0.89975**、覆盖 **0.7532**，仍不 ready。预注册
+>    在正式数据前加 coverage 0.78–0.82 防“全弃权”（修订 1）；主档覆盖 0.7900 过线。
+>    v8/v9 的边界收紧为 **s≥2、K≤4、σ≤0.5**；s=1.5 与 K=8 仍是边界，通用 OOD 不变。
+>    见 [`sweep_results/stage4_e2e_v10/README.md`](sweep_results/stage4_e2e_v10/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
