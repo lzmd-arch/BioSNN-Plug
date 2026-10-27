@@ -165,7 +165,13 @@ def run(seeds: list[int], *, out: Path, test_episodes: int = 500) -> dict[str, A
         gate: {
             split: {
                 key: mean(gate, split, key)
-                for key in ("test_coverage", "selective_mse", "ood_abstain", "ood_auroc")
+                for key in (
+                    "test_coverage",
+                    "selective_mse",
+                    "ood_abstain",
+                    "ood_auroc",
+                    "ood_mse_all",
+                )
             }
             for split in ("scale", "rotation")
         }

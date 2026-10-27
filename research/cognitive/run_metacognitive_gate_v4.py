@@ -165,6 +165,7 @@ def _evaluate(
         "ood_answer_mse": float(np.mean(ood["errors"][ood_answered]))
         if np.any(ood_answered)
         else float("nan"),
+        "ood_mse_all": float(np.mean(ood["errors"])),
     }
 
 
