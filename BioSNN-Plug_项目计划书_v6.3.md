@@ -896,6 +896,15 @@
 >    与 v4 的尺度限定不变。见
 >    [`sweep_results/metacognitive_gate_v7/README.md`](sweep_results/metacognitive_gate_v7/README.md)。
 
+> 97. **2026-10-27：阶段四端到端 v4——DPAR 与 WM 共存，4/6，且预注册判据本身不一致**。
+>    A/B/Q + K=4 对键值 + 查询键（test_step=85），5 种子：WM R² **0.6558**、DPAR 最好臂
+>    **0.9628**（Raw NN；pseudo 0.9324、局部 Hebbian **0.5544**）、状态控制 **0.2652**
+>    （chance 0.25）、OOD AUROC **0.8612**、弃权 **0.7648**、选择性 MSE **0.3507**，
+>    `e2e_v4_ready=false`。**边界**：DPAR 与 WM 共存互相干扰（B 线索 R² 0.5126）；预注册
+>    同时要求 R²≥0.50 与 MSE≤0.10，目标方差约 1 时二者不可能同时成立，本轮判据不可达。
+>    按纪律不改判据、不追认；下一版先修判据或拆分目标。见
+>    [`sweep_results/stage4_e2e_v4/README.md`](sweep_results/stage4_e2e_v4/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
