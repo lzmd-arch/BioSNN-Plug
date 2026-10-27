@@ -950,6 +950,14 @@
 >    状态控制判据按 `1/K+0.10` 修正（K=2 chance 0.5），已写入预注册修订 1。见
 >    [`sweep_results/stage4_e2e_v9/README.md`](sweep_results/stage4_e2e_v9/README.md)。
 
+> 103. **2026-10-28：阶段四技术报告发布到 Zenodo（v1.0）**。
+>    `paper/stage4/README.md` 汇总组件记分卡与 v1–v9 端到端边界：v5 顺序组合 6/6、
+>    v8 共享状态 + bank W 尺度门 6/6、v9 证明其只覆盖 s≥3/K≤4，以及纯 CIL、重学 3×、
+>    脉冲 WM、局部情景、P3 终止、通用 OOD 的边界。Zenodo 版本 DOI
+>    **`10.5281/zenodo.23696829`**（概念 DOI `10.5281/zenodo.23696828`），
+>    `publication/report`、CC-BY-4.0；PDF 199,443 B（md5 `28176c08…`）与 Markdown
+>    16,063 B（md5 `17c4023d…`）均已从公共 API 核验。记录为 `paper/stage4/DEPOSIT.md`。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

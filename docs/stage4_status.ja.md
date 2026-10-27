@@ -35,7 +35,7 @@
   - フェーズ4エンドツーエンド課題；
   - バス／プラグインとの統合；
   - スパイク化（作業記憶）や完全局所化（メタ認知校正ヘッド）。
-- 負の結果・境界はそのまま残す。事後に基準を変えていない。計画書の台帳 ㊽–102 が完全な
+- 負の結果・境界はそのまま残す。事後に基準を変えていない。計画書の台帳 ㊽–103 が完全な
   索引である。
 
 ## 3. 未解決の研究項目（推奨順）
@@ -115,3 +115,5 @@
   [v7 bank W 信頼度](../sweep_results/stage4_e2e_v7/README.md)、
   [v8 bank W 尺度ゲート](../sweep_results/stage4_e2e_v8/README.md)、
   [v9 頑健性スキャン](../sweep_results/stage4_e2e_v9/README.md)
+- 技術レポート：[paper/stage4/README.md](../paper/stage4/README.md) · Zenodo
+  [10.5281/zenodo.23696829](https://doi.org/10.5281/zenodo.23696829)（v1.0、2026-10-28）

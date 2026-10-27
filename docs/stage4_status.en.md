@@ -36,7 +36,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   - integration with the bus/plugins;
   - spiking (working memory) or full locality (metacognitive calibration head);
 - All negative results/boundaries are kept as-is; no criteria were changed after the fact. Ledger
-  entries ㊽–102 in the project plan are the complete index.
+  entries ㊽–103 in the project plan are the complete index.
 
 ## 3. Open research items (in suggested order)
 
@@ -123,3 +123,5 @@ not turn "component ready" into "phase-4 end-to-end holds".
   [v7 bank-W confidence](../sweep_results/stage4_e2e_v7/README.md),
   [v8 bank-W scale gate](../sweep_results/stage4_e2e_v8/README.md),
   [v9 robustness sweep](../sweep_results/stage4_e2e_v9/README.md)
+- Technical report: [paper/stage4/README.md](../paper/stage4/README.md) · Zenodo
+  [10.5281/zenodo.23696829](https://doi.org/10.5281/zenodo.23696829) (v1.0, 2026-10-28)

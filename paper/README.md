@@ -23,6 +23,10 @@ It is a Markdown report; the PDF attached to the Zenodo record is built from it 
 repository (PDFs are not committed, per the rule above). The report cites the result READMEs and
 preregistrations rather than duplicating their Repro blocks.
 
+**Published 2026-10-28:** version DOI [`10.5281/zenodo.23696829`](https://doi.org/10.5281/zenodo.23696829),
+concept DOI `10.5281/zenodo.23696828`; the PDF and Markdown attachments were md5-verified from the
+public API. Deposit details: [`stage4/DEPOSIT.md`](stage4/DEPOSIT.md).
+
 **Figures.** Two of the repository's generated figures are in the paper —
 `f2-w2-epoch-accuracy.png` (§5.2.3) and `f3-w3-greedy-curves.png` (§5.3). Both are regenerated
 from ingested records by `scripts/make_figures.py`, which now writes each one **twice**: to

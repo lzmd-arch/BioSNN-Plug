@@ -30,7 +30,7 @@
   - 阶段四端到端任务；
   - 与总线/插件的集成；
   - 脉冲化（工作记忆）或全局部化（元认知标定头）；
-- 所有“负结果/边界”原样保留，没有事后改判据；计划书台账 ㊽–102 是完整索引。
+- 所有“负结果/边界”原样保留，没有事后改判据；计划书台账 ㊽–103 是完整索引。
 
 ## 3. 开放研究项（按建议顺序）
 
@@ -99,3 +99,5 @@
   [v7 bank W 置信度](../sweep_results/stage4_e2e_v7/README.md)、
   [v8 bank W 尺度门](../sweep_results/stage4_e2e_v8/README.md)、
   [v9 稳健性扫描](../sweep_results/stage4_e2e_v9/README.md)
+- 技术报告：[paper/stage4/README.md](../paper/stage4/README.md) · Zenodo
+  [10.5281/zenodo.23696829](https://doi.org/10.5281/zenodo.23696829)（v1.0，2026-10-28）
