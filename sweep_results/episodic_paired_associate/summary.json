@@ -1,0 +1,550 @@
+{
+  "experiment": "情景记忆 v4：延迟配对联想回忆（DPAR）",
+  "config": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "capacities": [
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    "noises": [
+      0.0,
+      0.1,
+      0.3
+    ],
+    "primary_k": 8,
+    "primary_noise": 0.1,
+    "train_episodes": 2000,
+    "test_episodes": 500,
+    "dim": 512,
+    "sparsity": 32,
+    "epochs": 20
+  },
+  "conditions": [
+    {
+      "kind": "capacity",
+      "k": 2,
+      "sigma": 0.1,
+      "per_seed": [
+        {
+          "seed": 0,
+          "hebbian_top1": 0.812,
+          "pseudo_top1": 0.976,
+          "rawnn_top1": 0.98,
+          "hebbian_mse": 1283.2445935213393,
+          "pseudo_mse": 0.08265028486609675,
+          "rawnn_mse": 0.04418828263048599
+        },
+        {
+          "seed": 1,
+          "hebbian_top1": 0.834,
+          "pseudo_top1": 0.962,
+          "rawnn_top1": 0.982,
+          "hebbian_mse": 1236.6662561433366,
+          "pseudo_mse": 0.08863401429191231,
+          "rawnn_mse": 0.03894086598419068
+        },
+        {
+          "seed": 2,
+          "hebbian_top1": 0.804,
+          "pseudo_top1": 0.968,
+          "rawnn_top1": 0.98,
+          "hebbian_mse": 1198.3305876545387,
+          "pseudo_mse": 0.06077881362841056,
+          "rawnn_mse": 0.036996085903222155
+        },
+        {
+          "seed": 3,
+          "hebbian_top1": 0.822,
+          "pseudo_top1": 0.972,
+          "rawnn_top1": 0.978,
+          "hebbian_mse": 1230.5623933926831,
+          "pseudo_mse": 0.06931305056198936,
+          "rawnn_mse": 0.030489990194426102
+        },
+        {
+          "seed": 4,
+          "hebbian_top1": 0.828,
+          "pseudo_top1": 0.974,
+          "rawnn_top1": 0.98,
+          "hebbian_mse": 1264.313250450803,
+          "pseudo_mse": 0.06170185421847912,
+          "rawnn_mse": 0.030945283688125515
+        }
+      ],
+      "mean": {
+        "hebbian_top1": 0.8200000000000001,
+        "pseudo_top1": 0.9703999999999999,
+        "rawnn_top1": 0.9800000000000001,
+        "hebbian_mse": 1242.6234162325402,
+        "pseudo_mse": 0.07261560351337762,
+        "rawnn_mse": 0.036312101680090095
+      }
+    },
+    {
+      "kind": "capacity",
+      "k": 4,
+      "sigma": 0.1,
+      "per_seed": [
+        {
+          "seed": 0,
+          "hebbian_top1": 0.534,
+          "pseudo_top1": 0.93,
+          "rawnn_top1": 0.954,
+          "hebbian_mse": 2241.8682043275217,
+          "pseudo_mse": 0.1108811358330343,
+          "rawnn_mse": 0.06508013654077446
+        },
+        {
+          "seed": 1,
+          "hebbian_top1": 0.548,
+          "pseudo_top1": 0.946,
+          "rawnn_top1": 0.972,
+          "hebbian_mse": 2176.144393619144,
+          "pseudo_mse": 0.11663802592817397,
+          "rawnn_mse": 0.07449707524776317
+        },
+        {
+          "seed": 2,
+          "hebbian_top1": 0.568,
+          "pseudo_top1": 0.918,
+          "rawnn_top1": 0.97,
+          "hebbian_mse": 2109.679143045301,
+          "pseudo_mse": 0.11572011695485115,
+          "rawnn_mse": 0.07268438449962733
+        },
+        {
+          "seed": 3,
+          "hebbian_top1": 0.582,
+          "pseudo_top1": 0.916,
+          "rawnn_top1": 0.95,
+          "hebbian_mse": 2229.747972985059,
+          "pseudo_mse": 0.11679786393225498,
+          "rawnn_mse": 0.07284236098909647
+        },
+        {
+          "seed": 4,
+          "hebbian_top1": 0.554,
+          "pseudo_top1": 0.922,
+          "rawnn_top1": 0.96,
+          "hebbian_mse": 2142.938142453353,
+          "pseudo_mse": 0.12225688213554216,
+          "rawnn_mse": 0.06627327552023558
+        }
+      ],
+      "mean": {
+        "hebbian_top1": 0.5571999999999999,
+        "pseudo_top1": 0.9263999999999999,
+        "rawnn_top1": 0.9612,
+        "hebbian_mse": 2180.0755712860755,
+        "pseudo_mse": 0.11645880495677133,
+        "rawnn_mse": 0.07027544655949941
+      }
+    },
+    {
+      "kind": "noise",
+      "k": 8,
+      "sigma": 0.0,
+      "per_seed": [
+        {
+          "seed": 0,
+          "hebbian_top1": 0.324,
+          "pseudo_top1": 0.99,
+          "rawnn_top1": 1.0,
+          "hebbian_mse": 4335.088639999051,
+          "pseudo_mse": 0.00867408313329483,
+          "rawnn_mse": 0.0
+        },
+        {
+          "seed": 1,
+          "hebbian_top1": 0.32,
+          "pseudo_top1": 0.98,
+          "rawnn_top1": 0.994,
+          "hebbian_mse": 4302.289713058372,
+          "pseudo_mse": 0.009416585670251375,
+          "rawnn_mse": 0.0057689582744061595
+        },
+        {
+          "seed": 2,
+          "hebbian_top1": 0.302,
+          "pseudo_top1": 0.986,
+          "rawnn_top1": 0.998,
+          "hebbian_mse": 4128.867458376887,
+          "pseudo_mse": 0.00586487215299188,
+          "rawnn_mse": 0.00411091870532465
+        },
+        {
+          "seed": 3,
+          "hebbian_top1": 0.332,
+          "pseudo_top1": 0.988,
+          "rawnn_top1": 0.994,
+          "hebbian_mse": 4206.166513541364,
+          "pseudo_mse": 0.014266563774584762,
+          "rawnn_mse": 0.023697994014723046
+        },
+        {
+          "seed": 4,
+          "hebbian_top1": 0.372,
+          "pseudo_top1": 0.984,
+          "rawnn_top1": 0.994,
+          "hebbian_mse": 4171.924821856765,
+          "pseudo_mse": 0.014265289759149428,
+          "rawnn_mse": 0.022337857432693238
+        }
+      ],
+      "mean": {
+        "hebbian_top1": 0.32999999999999996,
+        "pseudo_top1": 0.9856,
+        "rawnn_top1": 0.9959999999999999,
+        "hebbian_mse": 4228.867429366488,
+        "pseudo_mse": 0.010497478898054455,
+        "rawnn_mse": 0.011183145685429418
+      }
+    },
+    {
+      "kind": "capacity",
+      "k": 8,
+      "sigma": 0.1,
+      "per_seed": [
+        {
+          "seed": 0,
+          "hebbian_top1": 0.298,
+          "pseudo_top1": 0.834,
+          "rawnn_top1": 0.946,
+          "hebbian_mse": 4183.069380149032,
+          "pseudo_mse": 0.1987585018977941,
+          "rawnn_mse": 0.12077642460043235
+        },
+        {
+          "seed": 1,
+          "hebbian_top1": 0.308,
+          "pseudo_top1": 0.852,
+          "rawnn_top1": 0.952,
+          "hebbian_mse": 4174.1557805945895,
+          "pseudo_mse": 0.17426212991940654,
+          "rawnn_mse": 0.08519969920535278
+        },
+        {
+          "seed": 2,
+          "hebbian_top1": 0.298,
+          "pseudo_top1": 0.836,
+          "rawnn_top1": 0.942,
+          "hebbian_mse": 4025.9963152981277,
+          "pseudo_mse": 0.163071092641953,
+          "rawnn_mse": 0.11473546938535636
+        },
+        {
+          "seed": 3,
+          "hebbian_top1": 0.318,
+          "pseudo_top1": 0.814,
+          "rawnn_top1": 0.93,
+          "hebbian_mse": 4036.78065022877,
+          "pseudo_mse": 0.22687560334303583,
+          "rawnn_mse": 0.14516142615639807
+        },
+        {
+          "seed": 4,
+          "hebbian_top1": 0.334,
+          "pseudo_top1": 0.804,
+          "rawnn_top1": 0.922,
+          "hebbian_mse": 4028.9702684149347,
+          "pseudo_mse": 0.2380236555668373,
+          "rawnn_mse": 0.1553753752982612
+        }
+      ],
+      "mean": {
+        "hebbian_top1": 0.31120000000000003,
+        "pseudo_top1": 0.828,
+        "rawnn_top1": 0.9384,
+        "hebbian_mse": 4089.794478937091,
+        "pseudo_mse": 0.20019819667380534,
+        "rawnn_mse": 0.12424967892916014
+      },
+      "state_control": {
+        "per_seed": [
+          {
+            "seed": 0,
+            "top1": 0.128,
+            "mse": 0.9194123223366154
+          },
+          {
+            "seed": 1,
+            "top1": 0.124,
+            "mse": 0.9288693408940611
+          },
+          {
+            "seed": 2,
+            "top1": 0.122,
+            "mse": 0.8747538382014182
+          },
+          {
+            "seed": 3,
+            "top1": 0.13,
+            "mse": 0.9640082062577654
+          },
+          {
+            "seed": 4,
+            "top1": 0.102,
+            "mse": 1.0124886638738566
+          }
+        ],
+        "top1": 0.1212,
+        "mse": 0.9399064743127432
+      }
+    },
+    {
+      "kind": "noise",
+      "k": 8,
+      "sigma": 0.3,
+      "per_seed": [
+        {
+          "seed": 0,
+          "hebbian_top1": 0.268,
+          "pseudo_top1": 0.58,
+          "rawnn_top1": 0.78,
+          "hebbian_mse": 4049.7874409163164,
+          "pseudo_mse": 0.5017378473622929,
+          "rawnn_mse": 0.40951653744854616
+        },
+        {
+          "seed": 1,
+          "hebbian_top1": 0.262,
+          "pseudo_top1": 0.616,
+          "rawnn_top1": 0.76,
+          "hebbian_mse": 3987.8584651170095,
+          "pseudo_mse": 0.5263169959046761,
+          "rawnn_mse": 0.5059429082086703
+        },
+        {
+          "seed": 2,
+          "hebbian_top1": 0.236,
+          "pseudo_top1": 0.572,
+          "rawnn_top1": 0.742,
+          "hebbian_mse": 3819.2789464661587,
+          "pseudo_mse": 0.5122804942799282,
+          "rawnn_mse": 0.44632036780420853
+        },
+        {
+          "seed": 3,
+          "hebbian_top1": 0.262,
+          "pseudo_top1": 0.578,
+          "rawnn_top1": 0.748,
+          "hebbian_mse": 3954.5019934034567,
+          "pseudo_mse": 0.5594135985329051,
+          "rawnn_mse": 0.5426701109021522
+        },
+        {
+          "seed": 4,
+          "hebbian_top1": 0.296,
+          "pseudo_top1": 0.582,
+          "rawnn_top1": 0.778,
+          "hebbian_mse": 3876.217546464782,
+          "pseudo_mse": 0.5696256719830418,
+          "rawnn_mse": 0.47264923159062006
+        }
+      ],
+      "mean": {
+        "hebbian_top1": 0.26480000000000004,
+        "pseudo_top1": 0.5855999999999999,
+        "rawnn_top1": 0.7616,
+        "hebbian_mse": 3937.5288784735444,
+        "pseudo_mse": 0.5338749216125688,
+        "rawnn_mse": 0.47541983119083947
+      }
+    },
+    {
+      "kind": "capacity",
+      "k": 16,
+      "sigma": 0.1,
+      "per_seed": [
+        {
+          "seed": 0,
+          "hebbian_top1": 0.134,
+          "pseudo_top1": 0.648,
+          "rawnn_top1": 0.896,
+          "hebbian_mse": 7889.252614301788,
+          "pseudo_mse": 0.3692204203596815,
+          "rawnn_mse": 0.20746106467304887
+        },
+        {
+          "seed": 1,
+          "hebbian_top1": 0.158,
+          "pseudo_top1": 0.624,
+          "rawnn_top1": 0.892,
+          "hebbian_mse": 8952.303698721194,
+          "pseudo_mse": 0.41275119697952817,
+          "rawnn_mse": 0.2171270397592295
+        },
+        {
+          "seed": 2,
+          "hebbian_top1": 0.16,
+          "pseudo_top1": 0.62,
+          "rawnn_top1": 0.888,
+          "hebbian_mse": 7811.771294473616,
+          "pseudo_mse": 0.4139621538597854,
+          "rawnn_mse": 0.2154705133478348
+        },
+        {
+          "seed": 3,
+          "hebbian_top1": 0.156,
+          "pseudo_top1": 0.634,
+          "rawnn_top1": 0.892,
+          "hebbian_mse": 7586.254206834527,
+          "pseudo_mse": 0.39676115673171003,
+          "rawnn_mse": 0.2152154091961896
+        },
+        {
+          "seed": 4,
+          "hebbian_top1": 0.154,
+          "pseudo_top1": 0.642,
+          "rawnn_top1": 0.888,
+          "hebbian_mse": 7679.94145775835,
+          "pseudo_mse": 0.4233407500199883,
+          "rawnn_mse": 0.2232393396123113
+        }
+      ],
+      "mean": {
+        "hebbian_top1": 0.15240000000000004,
+        "pseudo_top1": 0.6335999999999999,
+        "rawnn_top1": 0.8912000000000001,
+        "hebbian_mse": 7983.9046544178955,
+        "pseudo_mse": 0.40320713559013865,
+        "rawnn_mse": 0.2157026733177228
+      }
+    },
+    {
+      "kind": "capacity",
+      "k": 32,
+      "sigma": 0.1,
+      "per_seed": [
+        {
+          "seed": 0,
+          "hebbian_top1": 0.06,
+          "pseudo_top1": 0.426,
+          "rawnn_top1": 0.846,
+          "hebbian_mse": 15053.518235855645,
+          "pseudo_mse": 1.1715471998768163,
+          "rawnn_mse": 0.3250321834101533
+        },
+        {
+          "seed": 1,
+          "hebbian_top1": 0.064,
+          "pseudo_top1": 0.442,
+          "rawnn_top1": 0.838,
+          "hebbian_mse": 15489.513045600237,
+          "pseudo_mse": 1.2294817245765095,
+          "rawnn_mse": 0.2944166962086016
+        },
+        {
+          "seed": 2,
+          "hebbian_top1": 0.062,
+          "pseudo_top1": 0.442,
+          "rawnn_top1": 0.862,
+          "hebbian_mse": 15062.21528988032,
+          "pseudo_mse": 1.1144026423547881,
+          "rawnn_mse": 0.2665843312063945
+        },
+        {
+          "seed": 3,
+          "hebbian_top1": 0.09,
+          "pseudo_top1": 0.432,
+          "rawnn_top1": 0.832,
+          "hebbian_mse": 14938.80933027111,
+          "pseudo_mse": 1.0554969772492937,
+          "rawnn_mse": 0.28851924557287445
+        },
+        {
+          "seed": 4,
+          "hebbian_top1": 0.064,
+          "pseudo_top1": 0.462,
+          "rawnn_top1": 0.858,
+          "hebbian_mse": 15537.383853842011,
+          "pseudo_mse": 1.0619657665377817,
+          "rawnn_mse": 0.2759851479842513
+        }
+      ],
+      "mean": {
+        "hebbian_top1": 0.068,
+        "pseudo_top1": 0.4408,
+        "rawnn_top1": 0.8472,
+        "hebbian_mse": 15216.287951089864,
+        "pseudo_mse": 1.1265788621190378,
+        "rawnn_mse": 0.290107520876455
+      }
+    }
+  ],
+  "capacity_curve": {
+    "2": {
+      "hebbian_top1": 0.8200000000000001,
+      "pseudo_top1": 0.9703999999999999,
+      "rawnn_top1": 0.9800000000000001,
+      "best_top1": 0.9703999999999999
+    },
+    "4": {
+      "hebbian_top1": 0.5571999999999999,
+      "pseudo_top1": 0.9263999999999999,
+      "rawnn_top1": 0.9612,
+      "best_top1": 0.9263999999999999
+    },
+    "8": {
+      "hebbian_top1": 0.31120000000000003,
+      "pseudo_top1": 0.828,
+      "rawnn_top1": 0.9384,
+      "best_top1": 0.828
+    },
+    "16": {
+      "hebbian_top1": 0.15240000000000004,
+      "pseudo_top1": 0.6335999999999999,
+      "rawnn_top1": 0.8912000000000001,
+      "best_top1": 0.6335999999999999
+    },
+    "32": {
+      "hebbian_top1": 0.068,
+      "pseudo_top1": 0.4408,
+      "rawnn_top1": 0.8472,
+      "best_top1": 0.4408
+    }
+  },
+  "noise_curve": {
+    "0.0": {
+      "hebbian_top1": 0.32999999999999996,
+      "pseudo_top1": 0.9856,
+      "rawnn_top1": 0.9959999999999999,
+      "best_top1": 0.9856
+    },
+    "0.1": {
+      "hebbian_top1": 0.31120000000000003,
+      "pseudo_top1": 0.828,
+      "rawnn_top1": 0.9384,
+      "best_top1": 0.828
+    },
+    "0.3": {
+      "hebbian_top1": 0.26480000000000004,
+      "pseudo_top1": 0.5855999999999999,
+      "rawnn_top1": 0.7616,
+      "best_top1": 0.5855999999999999
+    }
+  },
+  "gate": {
+    "best_arm": "pseudo",
+    "best_top1": 0.828,
+    "k4_best_top1": 0.9263999999999999,
+    "state_control_top1": 0.1212,
+    "hebbian_top1": 0.31120000000000003,
+    "pseudo_top1": 0.828,
+    "rawnn_top1": 0.9384,
+    "best_ok": true,
+    "k4_ok": true,
+    "state_control_ok": true,
+    "paired_associate_ready": true
+  },
+  "repro": "```text\n实验名称：情景记忆 v4：延迟配对联想回忆（DPAR）\n日期：2026-10-27 13:51:30 中国标准时间\nGit commit：d16c128665ba5870931f1b08c8e6455053684920\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_paired_associate_recall.py --seeds 0-4\n耗时：15.8 s\n备注：K 对键值按时间线写入；查询键在延迟后给出，回忆配对值\n备注：Hebbian / Pseudo-inverse / RawNN 每幕独立建库；状态控制为最终状态 RLS 读出\n备注：主档 K=8、σ=0.1；容量曲线 K=2/4/8/16/32；噪声曲线 0/0.1/0.3\n```"
+}

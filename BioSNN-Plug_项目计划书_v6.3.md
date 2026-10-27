@@ -851,6 +851,16 @@
 >    0.824 只比门槛高 2.4 pp，余量本就薄；v2 在自身预注册下仍成立，v3 只说明不能外推。
 >    见 [`sweep_results/stage4_e2e_v3/README.md`](sweep_results/stage4_e2e_v3/README.md)。
 
+> 92. **2026-10-27：情景记忆 v4（DPAR）——非局部配置过线，局部 Hebbian 仍不可用**。
+>    延迟配对联想回忆：每幕 K 对键值，延迟后给查询键回忆配对值；主档 K=8、σ=0.1，5 种子：
+>    最好联想臂 **0.828**（pseudo-inverse）、K=4 **0.926**、状态控制 **0.121**（chance
+>    0.125），`paired_associate_ready=true`。**边界**：只有非局部伪逆过线；局部 Hebbian
+>    **0.311**，字面 NN **0.938** 更高；容量曲线 0.970/0.926/0.828/**0.634**/0.441，边界
+>    K=8–16；噪声 0.986/0.828/0.586。状态控制证明最终状态线性读出不能解（任务确实需要
+>    绑定），但不证明非线性读出不行。原 CartPole 情景边界保留；不把本任务说成自然情景
+>    记忆。见
+>    [`sweep_results/episodic_paired_associate/README.md`](sweep_results/episodic_paired_associate/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

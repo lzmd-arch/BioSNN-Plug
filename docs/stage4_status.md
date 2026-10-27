@@ -12,7 +12,7 @@
 | 多时间尺度工作记忆 | **v4 ready** | 三线索 R² **0.9994 / 0.9982 / 0.9994**，均值 0.9990 > ridge 0.9931 | 局部 RLS 读出（rank-one，无反向传播）；脉冲 v5 不 ready |
 | 元认知门控 | **v3 ready** | 选择性 80% **0.5423**（+6.33 pp）、AUROC **0.7530**、ECE **0.0296** | 置信度堆叠是 IRLS 测量头；CIFAR 分类任务，未迁移到回归 |
 | 世界模型 P3 | **部分** | 闭环 H=10 NMSE ~2e-8；首发散步 **115.5**；终止闭环 AUROC **0.632–0.665** | 状态/闭环稳定过；终止在闭环下受分布偏移，`p3_ready=false` |
-| 情景记忆 | **封存边界** | 字面 NN：动作 0.762、终止平衡 0.962、时间顺序 **0.595** | 局部联想（Hebbian/伪逆）与 kNN/attention 都不如字面 NN；时间顺序全 <0.75 |
+| 情景记忆 | **DPAR 非局部可用** | DPAR（K=8、σ=0.1）：字面 NN **0.938**、pseudo **0.828**、Hebbian **0.311**；状态控制 **0.121**（chance 0.125） | 只有非局部伪逆过线；局部 Hebbian 仍不可用；容量边界 K=8–16；原 CartPole 任务边界保留 |
 | 阶段四集成 demo | **可运行** | WM/世界模型逐位等价；元认知回归 AUROC **0.562**；情景检索 MSE 1.194 | 组合/等价性成立；端到端元认知未继承，不能当能力结论 |
 | 端到端任务（延迟问答 + OOD 弃权） | **4/5 判据过** | R² **0.9994**、选择性 MSE **0.00053**、OOD AUROC **0.927**、弃权 **0.887**；情景 MSE **0.822** | WM + 元认知 + 世界模型惊喜能协同；**情景检索是唯一未过项**，`e2e_ready=false` |
 | 端到端 v2（四线索 + 离散情景） | **5/5 ready** | R² **0.9983**、选择性 MSE **0.00172**、OOD AUROC **0.8895**、弃权 **0.824**、E 检索 **1.000** | 五条全过；但 E 检索是“管道通”不是难记忆，seed 2 弃权仅 0.746 |
@@ -41,8 +41,10 @@
 4. **世界模型 P3 后续**：终止闭环的分布偏移（离线 0.999 → 闭环 0.665）没有解决；
    方向是更强状态模型（把发散步从 115 推远）或与想象分布匹配的终止头；一步想象增广
    已试，0.632，不够。
-5. **情景记忆**：现有任务/噪声/评估口径下没有可用配置；若重启，应换任务/时间编码/
-   评估口径，而不是继续调 k/β 或编码维度。
+5. **情景记忆**：DPAR（v4）证明任务确实需要绑定（状态控制 0.121 ≈ chance）；**非局部
+   伪逆**在 K=8/σ=0.1 过线（0.828），字面 NN 0.938 更高，**局部 Hebbian 仍只有 0.311**，
+   容量边界 K=8–16。原 CartPole 任务/噪声/时间顺序边界保留。下一步应试局部或低维键，
+   或接受查表基线；不要继续调 k/β/编码维度。
 6. **工作记忆 v5 的替代**：如果项目坚持“纯脉冲计数”，需要先解决低计数表示问题；
    否则接受 v4 的速率漏积分器作为阶段四的可用局部表示。
 
@@ -60,7 +62,8 @@
 - 世界模型：[P3 闭环](../sweep_results/world_model_closed_loop_h500/README.md)、
   [终止头集成](../sweep_results/world_model_closed_loop_head/README.md)、
   [想象状态头](../sweep_results/world_model_closed_loop_imagined/README.md)
-- 情景记忆：[v3 结果](../sweep_results/episodic_memory_v3/README.md)
+- 情景记忆：[v3 结果](../sweep_results/episodic_memory_v3/README.md)、
+  [DPAR 结果](../sweep_results/episodic_paired_associate/README.md)
 - 集成 demo：[结果](../sweep_results/stage4_integration_demo/README.md)
 - 端到端：[v2 结果](../sweep_results/stage4_e2e_v2/README.md)、
   [v3 压力测试](../sweep_results/stage4_e2e_v3/README.md)
