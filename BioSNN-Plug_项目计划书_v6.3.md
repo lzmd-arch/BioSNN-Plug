@@ -992,6 +992,13 @@
 >    下一步需要时间/风险特征或更强状态模型。见
 >    [`sweep_results/world_model_termination_v2/README.md`](sweep_results/world_model_termination_v2/README.md)。
 
+> 108. **2026-10-28：阶段四端到端 v14——按 K 选门的 18 格矩阵，14/18 ready**。
+>    K4 shrunk / K8 diag；5 种子：s3/s5 全部九格过；K4-s2 σ0.1/0.3 过；失败
+>    **K4-s2-σ0.5 弃权 0.7756**、**K8-s2 三档 0.7656/0.7448/0.7024**。所有格 WM/
+>    DPAR/状态控制/AUROC 都过，失败项只有 s=2 的 OOD 弃权。`v14_ready=false`。
+>    下一步 v15 只针对这 4 格（K8 s2 用 snapshot85、K4-σ0.5 用 longtau），不调阈值/门。
+>    见 [`sweep_results/stage4_e2e_v14/README.md`](sweep_results/stage4_e2e_v14/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
