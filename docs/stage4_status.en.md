@@ -22,6 +22,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
 | End-to-end v2 (four cues + discrete episodic) | **5/5 ready** | R² **0.9983**, selective MSE **0.00172**, OOD AUROC **0.8895**, abstain **0.824**, E recall **1.000** | All five pass; but E recall is "pipeline works", not hard memory; seed 2 abstains only 0.746 |
 | End-to-end v3 (capacity/noise/delay stress) | **4/5 criteria** | Primary K=8/σ=0.3/t=100: R² **0.9092**, selective MSE **0.0675**, OOD AUROC **0.8350**, abstain **0.7056**, E recall **0.9040** | Abstention misses (all five seeds <0.80); capacity boundary K=8–16 (K=16 only 0.7736); v2's abstention margin was already thin. Metacognitive v4's density gate reaches 0.8456 on the same data, but relies on a scale feature and does not change this row's verdict |
 | End-to-end v4 (DPAR + WM coexistence) | **4/6 criteria** | WM R² **0.6558**, DPAR **0.9628**, state control **0.2652**, OOD AUROC **0.8612**; selective MSE **0.3507** and abstain **0.7648** miss | DPAR and WM interfere; the prereg's R²≥0.50 and MSE≤0.10 are mutually inconsistent, so this round's criteria are unreachable; `e2e_v4_ready=false` |
+| End-to-end v5 (two-stage WM → DPAR) | **6/6 ready** | WM R² **0.99995**, selective MSE **6.16e-05**, DPAR **0.9584**, state control **0.2472**, OOD AUROC **0.9572**, abstain **0.9492** | Sequential composition: WM is probed at t=35, DPAR at t=85; they do not share the final state. v4's coexistence interference is preserved; not an overall phase-4 acceptance |
 
 ## 2. What "ready" means
 
@@ -31,7 +32,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   - integration with the bus/plugins;
   - spiking (working memory) or full locality (metacognitive calibration head);
 - All negative results/boundaries are kept as-is; no criteria were changed after the fact. Ledger
-  entries ㊽–97 in the project plan are the complete index.
+  entries ㊽–98 in the project plan are the complete index.
 
 ## 3. Open research items (in suggested order)
 
@@ -43,7 +44,9 @@ not turn "component ready" into "phase-4 end-to-end holds".
    calibration/risk control; do not keep adding the same family of stress, and do not treat K=8's
    0.904 as general memory ability. **v4 has now integrated DPAR**: DPAR 0.9628 passes, but WM
    is interfered with (R² 0.6558, MSE 0.3507), and the prereg's R²≥0.50 vs MSE≤0.10 are
-   inconsistent; fix the criteria or split the targets before calling v4 ready.
+   inconsistent; fix the criteria or split the targets before calling v4 ready. **v5 now reaches
+   6/6 with the two-stage design** (WM at t=35, DPAR at t=85, no shared final state), but that is
+   only a sequential composition bound and does not overturn v4's coexistence interference.
 2. **Working memory v6 (spiking)**: v5's failure is in the **representation** (60-step counts
    only single digits), not the readout; v6 needs membrane/subthreshold state, a longer
    integration window, or rate input. Note v5 took 2598.7 s; the next round should cut
@@ -101,4 +104,5 @@ not turn "component ready" into "phase-4 end-to-end holds".
 - Integration demo: [result](../sweep_results/stage4_integration_demo/README.md)
 - End-to-end: [v2 result](../sweep_results/stage4_e2e_v2/README.md),
   [v3 stress test](../sweep_results/stage4_e2e_v3/README.md),
-  [v4 DPAR coexistence](../sweep_results/stage4_e2e_v4/README.md)
+  [v4 DPAR coexistence](../sweep_results/stage4_e2e_v4/README.md),
+  [v5 two-stage](../sweep_results/stage4_e2e_v5/README.md)

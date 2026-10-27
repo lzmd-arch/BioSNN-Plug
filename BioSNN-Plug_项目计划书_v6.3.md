@@ -905,6 +905,15 @@
 >    按纪律不改判据、不追认；下一版先修判据或拆分目标。见
 >    [`sweep_results/stage4_e2e_v4/README.md`](sweep_results/stage4_e2e_v4/README.md)。
 
+> 98. **2026-10-27：阶段四端到端 v5——两段式 WM → DPAR，6/6，`e2e_v5_ready=true`**。
+>    WM 在 t=35 读，DPAR 在 t=85 读，不共享最终状态；5 种子：WM R² **0.99995**、选择性
+>    MSE **6.16e-05**、DPAR 最好臂 **0.9584**（Raw NN；pseudo 0.9256、局部 Hebbian
+>    **0.5504**）、状态控制 **0.2472**（chance 0.25）、OOD AUROC **0.9572**、弃权
+>    **0.9492**，六条全过。**边界**：这是顺序组合的 ready，不覆盖 v4 的共享最终状态
+>    共存干扰（v4 的 B R² 0.5126/MSE 0.3507 原样保留）；DPAR 仍是每幕独立建库，OOD
+>    仍是 A/B×3 尺度偏移；不写成阶段四整体验收。见
+>    [`sweep_results/stage4_e2e_v5/README.md`](sweep_results/stage4_e2e_v5/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
