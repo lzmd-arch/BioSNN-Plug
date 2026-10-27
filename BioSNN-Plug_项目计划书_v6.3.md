@@ -1006,6 +1006,15 @@
 >    能补的；下一步用输入级尺度门（v16）或更强尺度特征。见
 >    [`sweep_results/stage4_e2e_v15/README.md`](sweep_results/stage4_e2e_v15/README.md)。
 
+> 110. **2026-10-28：阶段四端到端 v16——输入尺度门，18/18 全过，但只是输入级**。
+>    门固定为 `input_norm=max(||A||,||B||)`，calibration 20% 分位；18 格 ×5 种子：覆盖
+>    **0.796–0.810**、弃权 **0.882–1.000**、AUROC **0.928–1.000**；WM R² 0.902–0.995、
+>    MSE 0.004–0.065、DPAR 0.939–0.962、状态控制 0.121–0.251 全过，`v16_ready=true`。
+>    **边界**：这是输入级尺度门，不是状态级元认知；v14 的状态级 14/18 原样保留；只对
+>    A/B 尺度 OOD 成立，不改变 v6/v7 信息丢失型 OOD 边界。v16 还修复了状态控制的 pairs
+>    索引（先前 test[7] 误用 input_norm，state=0.0；修复后 0.12–0.25）。见
+>    [`sweep_results/stage4_e2e_v16/README.md`](sweep_results/stage4_e2e_v16/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

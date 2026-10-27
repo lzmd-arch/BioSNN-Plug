@@ -32,6 +32,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
 | End-to-end v12 (K=8 diag gate) | **two arms ready** | snapshot85+diag: R² **0.9936**, coverage **0.7820**, abstain **0.9292**; longtau+diag: R² **0.90145**, coverage **0.8052**, abstain **0.9244**; shrunk still **0.7552 / 0.7776** | `v12_ready=true`: K8's boundary is covariance estimation, not WM; both arms pass, but snapshot coverage is only 0.002 above 0.78 |
 | End-to-end v14 (18-cell matrix) | **14/18 ready** | s3/s5 all pass; K4-s2 σ0.1/0.3 pass; failures **K4-s2-σ0.5 abstain 0.7756**, **K8-s2 three noise levels 0.7656/0.7448/0.7024** | `v14_ready=false`; the only failing criterion is s=2 OOD abstention; WM/DPAR/state/AUROC pass |
 | End-to-end v15 (fill s=2 four cells) | **0/4** | K4-σ0.5 longtau **0.7868**; K8-s2 snapshot **0.7700/0.7416/0.7044** | Swapping arms (longtau/snapshot85) still misses 0.80; s=2 boundary not closed |
+| End-to-end v16 (input-scale gate) | **18/18 ready** | K4/K8 × s2/3/5 × σ.1/.3/.5: coverage **0.796–0.810**, abstain **0.882–1.000**, AUROC **0.928–1.000**; WM/DPAR/state pass | **Input-level** input_norm gate, not state-level metacognition; v14 state-level remains 14/18; scale OOD only |
 
 ## 2. What "ready" means
 
@@ -41,7 +42,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   - integration with the bus/plugins;
   - spiking (working memory) or full locality (metacognitive calibration head);
 - All negative results/boundaries are kept as-is; no criteria were changed after the fact. Ledger
-  entries ㊽–109 in the project plan are the complete index.
+  entries ㊽–110 in the project plan are the complete index.
 
 ## 3. Open research items (in suggested order)
 
@@ -73,7 +74,9 @@ not turn "component ready" into "phase-4 end-to-end holds".
    covariance estimate, not WM or DPAR. **v14's 18-cell matrix is 14/18**: s3/s5 all pass;
    the remaining failures are s=2 abstention (K4-σ0.5 0.7756; K8 0.766/0.745/0.702).
    **v15's arm swap is still 0/4** (longtau 0.7868; snapshot 0.770/0.742/0.704); s=2 needs
-   a stronger scale feature.
+   a stronger scale feature. **v16 switches to an input-scale gate `max(||A||,||B||)` and passes
+   18/18**; but it is an input-level gate, not state-level metacognition, and v14's 14/18 remains
+   the state-level result.
 2. **Working memory v6 (spiking)**: v5's failure is in the **representation** (60-step counts
    only single digits), not the readout; v6 needs membrane/subthreshold state, a longer
    integration window, or rate input. Note v5 took 2598.7 s; the next round should cut
@@ -144,6 +147,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   [v11 K8 three arms](../sweep_results/stage4_e2e_v11/README.md),
   [v12 K8 diag gate](../sweep_results/stage4_e2e_v12/README.md),
   [v14 18-cell matrix](../sweep_results/stage4_e2e_v14/README.md),
-  [v15 s=2 four cells](../sweep_results/stage4_e2e_v15/README.md)
+  [v15 s=2 four cells](../sweep_results/stage4_e2e_v15/README.md),
+  [v16 input-scale gate](../sweep_results/stage4_e2e_v16/README.md)
 - Technical report: [paper/stage4/README.md](../paper/stage4/README.md) · Zenodo
   [10.5281/zenodo.23696829](https://doi.org/10.5281/zenodo.23696829) (v1.0, 2026-10-28)

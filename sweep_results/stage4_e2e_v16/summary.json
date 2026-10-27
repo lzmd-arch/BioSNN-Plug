@@ -1,0 +1,1408 @@
+{
+  "experiment": "阶段四端到端 v16：输入尺度门 18 格",
+  "config": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "test_episodes": 500,
+    "coverage": 0.8,
+    "conditions": [
+      "K4-s2-n0.1",
+      "K4-s2-n0.3",
+      "K4-s2-n0.5",
+      "K4-s3-n0.1",
+      "K4-s3-n0.3",
+      "K4-s3-n0.5",
+      "K4-s5-n0.1",
+      "K4-s5-n0.3",
+      "K4-s5-n0.5",
+      "K8-s2-n0.1",
+      "K8-s2-n0.3",
+      "K8-s2-n0.5",
+      "K8-s3-n0.1",
+      "K8-s3-n0.3",
+      "K8-s3-n0.5",
+      "K8-s5-n0.1",
+      "K8-s5-n0.3",
+      "K8-s5-n0.5"
+    ],
+    "gate": "input_norm",
+    "k8_arm": "longtau"
+  },
+  "conditions": {
+    "K4-s2-n0.1": {
+      "pairs": 4,
+      "scale": 2.0,
+      "cue_noise": 0.1,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9937867268807522,
+          "selective_mse": 0.004277940088478228,
+          "test_coverage": 0.822,
+          "ood_auroc": 0.957516,
+          "ood_abstain": 0.928,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.258
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.9932097206652633,
+          "selective_mse": 0.005018885993713609,
+          "test_coverage": 0.802,
+          "ood_auroc": 0.964468,
+          "ood_abstain": 0.952,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.264
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9934320945313506,
+          "selective_mse": 0.004241965481096137,
+          "test_coverage": 0.776,
+          "ood_auroc": 0.960948,
+          "ood_abstain": 0.946,
+          "dpar_best": 0.962,
+          "state_control_top1": 0.264
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9942723957774543,
+          "selective_mse": 0.003760621184424242,
+          "test_coverage": 0.802,
+          "ood_auroc": 0.958464,
+          "ood_abstain": 0.922,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.232
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9940811235295591,
+          "selective_mse": 0.004038386153335052,
+          "test_coverage": 0.78,
+          "ood_auroc": 0.943108,
+          "ood_abstain": 0.894,
+          "dpar_best": 0.952,
+          "state_control_top1": 0.238
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9937564122768758,
+        "selective_mse": 0.004267559780209454,
+        "test_coverage": 0.7964,
+        "ood_auroc": 0.9569008,
+        "ood_abstain": 0.9283999999999999,
+        "dpar_best": 0.9624,
+        "state_control_top1": 0.2512
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K4-s2-n0.3": {
+      "pairs": 4,
+      "scale": 2.0,
+      "cue_noise": 0.3,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.993984701835946,
+          "selective_mse": 0.004258635928848445,
+          "test_coverage": 0.842,
+          "ood_auroc": 0.948224,
+          "ood_abstain": 0.904,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.258
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.993475114192473,
+          "selective_mse": 0.004988965760573916,
+          "test_coverage": 0.812,
+          "ood_auroc": 0.956368,
+          "ood_abstain": 0.932,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.266
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9937386332943104,
+          "selective_mse": 0.004300946216771062,
+          "test_coverage": 0.78,
+          "ood_auroc": 0.953244,
+          "ood_abstain": 0.94,
+          "dpar_best": 0.962,
+          "state_control_top1": 0.266
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9946216624589704,
+          "selective_mse": 0.0036642121547152467,
+          "test_coverage": 0.814,
+          "ood_auroc": 0.948936,
+          "ood_abstain": 0.91,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.23
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.994335367528937,
+          "selective_mse": 0.0038849244921599305,
+          "test_coverage": 0.8,
+          "ood_auroc": 0.932888,
+          "ood_abstain": 0.876,
+          "dpar_best": 0.952,
+          "state_control_top1": 0.234
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9940310958621273,
+        "selective_mse": 0.004219536910613721,
+        "test_coverage": 0.8096,
+        "ood_auroc": 0.947932,
+        "ood_abstain": 0.9124000000000001,
+        "dpar_best": 0.9624,
+        "state_control_top1": 0.2508
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K4-s2-n0.5": {
+      "pairs": 4,
+      "scale": 2.0,
+      "cue_noise": 0.5,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9943491659643672,
+          "selective_mse": 0.004191687947079504,
+          "test_coverage": 0.834,
+          "ood_auroc": 0.927436,
+          "ood_abstain": 0.862,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.254
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.9939125258900736,
+          "selective_mse": 0.004813382904408287,
+          "test_coverage": 0.796,
+          "ood_auroc": 0.937908,
+          "ood_abstain": 0.902,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.262
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9942034256125324,
+          "selective_mse": 0.004279459961176545,
+          "test_coverage": 0.78,
+          "ood_auroc": 0.934668,
+          "ood_abstain": 0.906,
+          "dpar_best": 0.962,
+          "state_control_top1": 0.272
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9950565417403124,
+          "selective_mse": 0.0036633949577731494,
+          "test_coverage": 0.806,
+          "ood_auroc": 0.927892,
+          "ood_abstain": 0.88,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.226
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9947431613366514,
+          "selective_mse": 0.00391511916882534,
+          "test_coverage": 0.79,
+          "ood_auroc": 0.910436,
+          "ood_abstain": 0.862,
+          "dpar_best": 0.952,
+          "state_control_top1": 0.236
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9944529641087876,
+        "selective_mse": 0.004172608987852565,
+        "test_coverage": 0.8012,
+        "ood_auroc": 0.9276679999999999,
+        "ood_abstain": 0.8824,
+        "dpar_best": 0.9624,
+        "state_control_top1": 0.25
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K4-s3-n0.1": {
+      "pairs": 4,
+      "scale": 3.0,
+      "cue_noise": 0.1,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9937867268807522,
+          "selective_mse": 0.004277940088478228,
+          "test_coverage": 0.822,
+          "ood_auroc": 0.995456,
+          "ood_abstain": 0.992,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.258
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.9932097206652633,
+          "selective_mse": 0.005018885993713609,
+          "test_coverage": 0.802,
+          "ood_auroc": 0.996476,
+          "ood_abstain": 0.994,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.264
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9934320945313506,
+          "selective_mse": 0.004241965481096137,
+          "test_coverage": 0.776,
+          "ood_auroc": 0.995688,
+          "ood_abstain": 0.99,
+          "dpar_best": 0.962,
+          "state_control_top1": 0.264
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9942723957774543,
+          "selective_mse": 0.003760621184424242,
+          "test_coverage": 0.802,
+          "ood_auroc": 0.996144,
+          "ood_abstain": 0.992,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.232
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9940811235295591,
+          "selective_mse": 0.004038386153335052,
+          "test_coverage": 0.78,
+          "ood_auroc": 0.994568,
+          "ood_abstain": 0.992,
+          "dpar_best": 0.952,
+          "state_control_top1": 0.238
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9937564122768758,
+        "selective_mse": 0.004267559780209454,
+        "test_coverage": 0.7964,
+        "ood_auroc": 0.9956664,
+        "ood_abstain": 0.992,
+        "dpar_best": 0.9624,
+        "state_control_top1": 0.2512
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K4-s3-n0.3": {
+      "pairs": 4,
+      "scale": 3.0,
+      "cue_noise": 0.3,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.993984701835946,
+          "selective_mse": 0.004258635928848445,
+          "test_coverage": 0.842,
+          "ood_auroc": 0.994296,
+          "ood_abstain": 0.988,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.258
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.993475114192473,
+          "selective_mse": 0.004988965760573916,
+          "test_coverage": 0.812,
+          "ood_auroc": 0.995428,
+          "ood_abstain": 0.994,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.266
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9937386332943104,
+          "selective_mse": 0.004300946216771062,
+          "test_coverage": 0.78,
+          "ood_auroc": 0.994452,
+          "ood_abstain": 0.99,
+          "dpar_best": 0.962,
+          "state_control_top1": 0.266
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9946216624589704,
+          "selective_mse": 0.0036642121547152467,
+          "test_coverage": 0.814,
+          "ood_auroc": 0.994976,
+          "ood_abstain": 0.992,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.23
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.994335367528937,
+          "selective_mse": 0.0038849244921599305,
+          "test_coverage": 0.8,
+          "ood_auroc": 0.993008,
+          "ood_abstain": 0.992,
+          "dpar_best": 0.952,
+          "state_control_top1": 0.234
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9940310958621273,
+        "selective_mse": 0.004219536910613721,
+        "test_coverage": 0.8096,
+        "ood_auroc": 0.994432,
+        "ood_abstain": 0.9911999999999999,
+        "dpar_best": 0.9624,
+        "state_control_top1": 0.2508
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K4-s3-n0.5": {
+      "pairs": 4,
+      "scale": 3.0,
+      "cue_noise": 0.5,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9943491659643672,
+          "selective_mse": 0.004191687947079504,
+          "test_coverage": 0.834,
+          "ood_auroc": 0.991532,
+          "ood_abstain": 0.984,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.254
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.9939125258900736,
+          "selective_mse": 0.004813382904408287,
+          "test_coverage": 0.796,
+          "ood_auroc": 0.992952,
+          "ood_abstain": 0.99,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.262
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9942034256125324,
+          "selective_mse": 0.004279459961176545,
+          "test_coverage": 0.78,
+          "ood_auroc": 0.991664,
+          "ood_abstain": 0.984,
+          "dpar_best": 0.962,
+          "state_control_top1": 0.272
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9950565417403124,
+          "selective_mse": 0.0036633949577731494,
+          "test_coverage": 0.806,
+          "ood_auroc": 0.99246,
+          "ood_abstain": 0.99,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.226
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9947431613366514,
+          "selective_mse": 0.00391511916882534,
+          "test_coverage": 0.79,
+          "ood_auroc": 0.988916,
+          "ood_abstain": 0.992,
+          "dpar_best": 0.952,
+          "state_control_top1": 0.236
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9944529641087876,
+        "selective_mse": 0.004172608987852565,
+        "test_coverage": 0.8012,
+        "ood_auroc": 0.9915047999999999,
+        "ood_abstain": 0.9880000000000001,
+        "dpar_best": 0.9624,
+        "state_control_top1": 0.25
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K4-s5-n0.1": {
+      "pairs": 4,
+      "scale": 5.0,
+      "cue_noise": 0.1,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9937867268807522,
+          "selective_mse": 0.004277940088478228,
+          "test_coverage": 0.822,
+          "ood_auroc": 0.999948,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.258
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.9932097206652633,
+          "selective_mse": 0.005018885993713609,
+          "test_coverage": 0.802,
+          "ood_auroc": 0.999956,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.264
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9934320945313506,
+          "selective_mse": 0.004241965481096137,
+          "test_coverage": 0.776,
+          "ood_auroc": 0.999992,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.962,
+          "state_control_top1": 0.264
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9942723957774543,
+          "selective_mse": 0.003760621184424242,
+          "test_coverage": 0.802,
+          "ood_auroc": 0.99998,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.232
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9940811235295591,
+          "selective_mse": 0.004038386153335052,
+          "test_coverage": 0.78,
+          "ood_auroc": 0.999956,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.952,
+          "state_control_top1": 0.238
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9937564122768758,
+        "selective_mse": 0.004267559780209454,
+        "test_coverage": 0.7964,
+        "ood_auroc": 0.9999663999999999,
+        "ood_abstain": 1.0,
+        "dpar_best": 0.9624,
+        "state_control_top1": 0.2512
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K4-s5-n0.3": {
+      "pairs": 4,
+      "scale": 5.0,
+      "cue_noise": 0.3,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.993984701835946,
+          "selective_mse": 0.004258635928848445,
+          "test_coverage": 0.842,
+          "ood_auroc": 0.999916,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.258
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.993475114192473,
+          "selective_mse": 0.004988965760573916,
+          "test_coverage": 0.812,
+          "ood_auroc": 0.999932,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.266
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9937386332943104,
+          "selective_mse": 0.004300946216771062,
+          "test_coverage": 0.78,
+          "ood_auroc": 0.99998,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.962,
+          "state_control_top1": 0.266
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9946216624589704,
+          "selective_mse": 0.0036642121547152467,
+          "test_coverage": 0.814,
+          "ood_auroc": 0.99994,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.23
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.994335367528937,
+          "selective_mse": 0.0038849244921599305,
+          "test_coverage": 0.8,
+          "ood_auroc": 0.999936,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.952,
+          "state_control_top1": 0.234
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9940310958621273,
+        "selective_mse": 0.004219536910613721,
+        "test_coverage": 0.8096,
+        "ood_auroc": 0.9999408000000001,
+        "ood_abstain": 1.0,
+        "dpar_best": 0.9624,
+        "state_control_top1": 0.2508
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K4-s5-n0.5": {
+      "pairs": 4,
+      "scale": 5.0,
+      "cue_noise": 0.5,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9943491659643672,
+          "selective_mse": 0.004191687947079504,
+          "test_coverage": 0.834,
+          "ood_auroc": 0.999828,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.254
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.9939125258900736,
+          "selective_mse": 0.004813382904408287,
+          "test_coverage": 0.796,
+          "ood_auroc": 0.999888,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.262
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9942034256125324,
+          "selective_mse": 0.004279459961176545,
+          "test_coverage": 0.78,
+          "ood_auroc": 0.999948,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.962,
+          "state_control_top1": 0.272
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9950565417403124,
+          "selective_mse": 0.0036633949577731494,
+          "test_coverage": 0.806,
+          "ood_auroc": 0.999852,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.966,
+          "state_control_top1": 0.226
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9947431613366514,
+          "selective_mse": 0.00391511916882534,
+          "test_coverage": 0.79,
+          "ood_auroc": 0.999844,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.952,
+          "state_control_top1": 0.236
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9944529641087876,
+        "selective_mse": 0.004172608987852565,
+        "test_coverage": 0.8012,
+        "ood_auroc": 0.9998719999999999,
+        "ood_abstain": 1.0,
+        "dpar_best": 0.9624,
+        "state_control_top1": 0.25
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K8-s2-n0.1": {
+      "pairs": 8,
+      "scale": 2.0,
+      "cue_noise": 0.1,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9056990013169258,
+          "selective_mse": 0.05945590462914412,
+          "test_coverage": 0.802,
+          "ood_auroc": 0.959732,
+          "ood_abstain": 0.934,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.1
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.8947011111310244,
+          "selective_mse": 0.06378299990305339,
+          "test_coverage": 0.778,
+          "ood_auroc": 0.9647,
+          "ood_abstain": 0.942,
+          "dpar_best": 0.936,
+          "state_control_top1": 0.138
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9002859519859273,
+          "selective_mse": 0.05824009143244596,
+          "test_coverage": 0.814,
+          "ood_auroc": 0.951824,
+          "ood_abstain": 0.92,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.132
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9054155888666188,
+          "selective_mse": 0.06115048823266778,
+          "test_coverage": 0.808,
+          "ood_auroc": 0.9553,
+          "ood_abstain": 0.936,
+          "dpar_best": 0.946,
+          "state_control_top1": 0.12
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9017721995811816,
+          "selective_mse": 0.05704297290009756,
+          "test_coverage": 0.818,
+          "ood_auroc": 0.96496,
+          "ood_abstain": 0.944,
+          "dpar_best": 0.944,
+          "state_control_top1": 0.114
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9015747705763356,
+        "selective_mse": 0.05993449141948176,
+        "test_coverage": 0.8039999999999999,
+        "ood_auroc": 0.9593032000000001,
+        "ood_abstain": 0.9352,
+        "dpar_best": 0.9388,
+        "state_control_top1": 0.12079999999999999
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K8-s2-n0.3": {
+      "pairs": 8,
+      "scale": 2.0,
+      "cue_noise": 0.3,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9048236180112624,
+          "selective_mse": 0.06315232225999219,
+          "test_coverage": 0.812,
+          "ood_auroc": 0.950708,
+          "ood_abstain": 0.916,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.098
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.8977287972727118,
+          "selective_mse": 0.0643127322341256,
+          "test_coverage": 0.806,
+          "ood_auroc": 0.956828,
+          "ood_abstain": 0.93,
+          "dpar_best": 0.936,
+          "state_control_top1": 0.142
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9009929118905694,
+          "selective_mse": 0.05781633814343289,
+          "test_coverage": 0.812,
+          "ood_auroc": 0.94218,
+          "ood_abstain": 0.902,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.13
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9066663113271222,
+          "selective_mse": 0.06559038995014901,
+          "test_coverage": 0.806,
+          "ood_auroc": 0.94566,
+          "ood_abstain": 0.912,
+          "dpar_best": 0.946,
+          "state_control_top1": 0.118
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9010223220956748,
+          "selective_mse": 0.059719030630721134,
+          "test_coverage": 0.81,
+          "ood_auroc": 0.95776,
+          "ood_abstain": 0.938,
+          "dpar_best": 0.944,
+          "state_control_top1": 0.114
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9022467921194682,
+        "selective_mse": 0.06211816264368417,
+        "test_coverage": 0.8092,
+        "ood_auroc": 0.9506271999999999,
+        "ood_abstain": 0.9196,
+        "dpar_best": 0.9388,
+        "state_control_top1": 0.1204
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K8-s2-n0.5": {
+      "pairs": 8,
+      "scale": 2.0,
+      "cue_noise": 0.5,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9042579554765705,
+          "selective_mse": 0.07018620173596771,
+          "test_coverage": 0.816,
+          "ood_auroc": 0.930476,
+          "ood_abstain": 0.886,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.098
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.9004535328243642,
+          "selective_mse": 0.06496191838015779,
+          "test_coverage": 0.816,
+          "ood_auroc": 0.939436,
+          "ood_abstain": 0.888,
+          "dpar_best": 0.936,
+          "state_control_top1": 0.144
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9023349382947673,
+          "selective_mse": 0.06205599711050766,
+          "test_coverage": 0.814,
+          "ood_auroc": 0.921616,
+          "ood_abstain": 0.866,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.128
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9074116940974365,
+          "selective_mse": 0.06614916125180986,
+          "test_coverage": 0.786,
+          "ood_auroc": 0.924836,
+          "ood_abstain": 0.886,
+          "dpar_best": 0.946,
+          "state_control_top1": 0.118
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9004180470600444,
+          "selective_mse": 0.061614259937300235,
+          "test_coverage": 0.806,
+          "ood_auroc": 0.939268,
+          "ood_abstain": 0.91,
+          "dpar_best": 0.944,
+          "state_control_top1": 0.12
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9029752335506366,
+        "selective_mse": 0.06499350768314865,
+        "test_coverage": 0.8076000000000001,
+        "ood_auroc": 0.9311263999999999,
+        "ood_abstain": 0.8872,
+        "dpar_best": 0.9388,
+        "state_control_top1": 0.1216
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K8-s3-n0.1": {
+      "pairs": 8,
+      "scale": 3.0,
+      "cue_noise": 0.1,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9056990013169258,
+          "selective_mse": 0.05945590462914412,
+          "test_coverage": 0.802,
+          "ood_auroc": 0.9976,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.1
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.8947011111310244,
+          "selective_mse": 0.06378299990305339,
+          "test_coverage": 0.778,
+          "ood_auroc": 0.997888,
+          "ood_abstain": 0.998,
+          "dpar_best": 0.936,
+          "state_control_top1": 0.138
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9002859519859273,
+          "selective_mse": 0.05824009143244596,
+          "test_coverage": 0.814,
+          "ood_auroc": 0.995492,
+          "ood_abstain": 0.994,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.132
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9054155888666188,
+          "selective_mse": 0.06115048823266778,
+          "test_coverage": 0.808,
+          "ood_auroc": 0.99454,
+          "ood_abstain": 0.994,
+          "dpar_best": 0.946,
+          "state_control_top1": 0.12
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9017721995811816,
+          "selective_mse": 0.05704297290009756,
+          "test_coverage": 0.818,
+          "ood_auroc": 0.996668,
+          "ood_abstain": 0.996,
+          "dpar_best": 0.944,
+          "state_control_top1": 0.114
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9015747705763356,
+        "selective_mse": 0.05993449141948176,
+        "test_coverage": 0.8039999999999999,
+        "ood_auroc": 0.9964375999999999,
+        "ood_abstain": 0.9963999999999998,
+        "dpar_best": 0.9388,
+        "state_control_top1": 0.12079999999999999
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K8-s3-n0.3": {
+      "pairs": 8,
+      "scale": 3.0,
+      "cue_noise": 0.3,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9048236180112624,
+          "selective_mse": 0.06315232225999219,
+          "test_coverage": 0.812,
+          "ood_auroc": 0.996812,
+          "ood_abstain": 0.996,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.098
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.8977287972727118,
+          "selective_mse": 0.0643127322341256,
+          "test_coverage": 0.806,
+          "ood_auroc": 0.997036,
+          "ood_abstain": 0.998,
+          "dpar_best": 0.936,
+          "state_control_top1": 0.142
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9009929118905694,
+          "selective_mse": 0.05781633814343289,
+          "test_coverage": 0.812,
+          "ood_auroc": 0.993912,
+          "ood_abstain": 0.992,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.13
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9066663113271222,
+          "selective_mse": 0.06559038995014901,
+          "test_coverage": 0.806,
+          "ood_auroc": 0.992908,
+          "ood_abstain": 0.992,
+          "dpar_best": 0.946,
+          "state_control_top1": 0.118
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9010223220956748,
+          "selective_mse": 0.059719030630721134,
+          "test_coverage": 0.81,
+          "ood_auroc": 0.995852,
+          "ood_abstain": 0.996,
+          "dpar_best": 0.944,
+          "state_control_top1": 0.114
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9022467921194682,
+        "selective_mse": 0.06211816264368417,
+        "test_coverage": 0.8092,
+        "ood_auroc": 0.995304,
+        "ood_abstain": 0.9948,
+        "dpar_best": 0.9388,
+        "state_control_top1": 0.1204
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K8-s3-n0.5": {
+      "pairs": 8,
+      "scale": 3.0,
+      "cue_noise": 0.5,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9042579554765705,
+          "selective_mse": 0.07018620173596771,
+          "test_coverage": 0.816,
+          "ood_auroc": 0.994492,
+          "ood_abstain": 0.992,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.098
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.9004535328243642,
+          "selective_mse": 0.06496191838015779,
+          "test_coverage": 0.816,
+          "ood_auroc": 0.995096,
+          "ood_abstain": 0.994,
+          "dpar_best": 0.936,
+          "state_control_top1": 0.144
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9023349382947673,
+          "selective_mse": 0.06205599711050766,
+          "test_coverage": 0.814,
+          "ood_auroc": 0.990444,
+          "ood_abstain": 0.982,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.128
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9074116940974365,
+          "selective_mse": 0.06614916125180986,
+          "test_coverage": 0.786,
+          "ood_auroc": 0.989304,
+          "ood_abstain": 0.984,
+          "dpar_best": 0.946,
+          "state_control_top1": 0.118
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9004180470600444,
+          "selective_mse": 0.061614259937300235,
+          "test_coverage": 0.806,
+          "ood_auroc": 0.993524,
+          "ood_abstain": 0.994,
+          "dpar_best": 0.944,
+          "state_control_top1": 0.12
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9029752335506366,
+        "selective_mse": 0.06499350768314865,
+        "test_coverage": 0.8076000000000001,
+        "ood_auroc": 0.992572,
+        "ood_abstain": 0.9892,
+        "dpar_best": 0.9388,
+        "state_control_top1": 0.1216
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K8-s5-n0.1": {
+      "pairs": 8,
+      "scale": 5.0,
+      "cue_noise": 0.1,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9056990013169258,
+          "selective_mse": 0.05945590462914412,
+          "test_coverage": 0.802,
+          "ood_auroc": 1.0,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.1
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.8947011111310244,
+          "selective_mse": 0.06378299990305339,
+          "test_coverage": 0.778,
+          "ood_auroc": 1.0,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.936,
+          "state_control_top1": 0.138
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9002859519859273,
+          "selective_mse": 0.05824009143244596,
+          "test_coverage": 0.814,
+          "ood_auroc": 1.0,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.132
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9054155888666188,
+          "selective_mse": 0.06115048823266778,
+          "test_coverage": 0.808,
+          "ood_auroc": 0.999872,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.946,
+          "state_control_top1": 0.12
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9017721995811816,
+          "selective_mse": 0.05704297290009756,
+          "test_coverage": 0.818,
+          "ood_auroc": 0.999944,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.944,
+          "state_control_top1": 0.114
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9015747705763356,
+        "selective_mse": 0.05993449141948176,
+        "test_coverage": 0.8039999999999999,
+        "ood_auroc": 0.9999632,
+        "ood_abstain": 1.0,
+        "dpar_best": 0.9388,
+        "state_control_top1": 0.12079999999999999
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K8-s5-n0.3": {
+      "pairs": 8,
+      "scale": 5.0,
+      "cue_noise": 0.3,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9048236180112624,
+          "selective_mse": 0.06315232225999219,
+          "test_coverage": 0.812,
+          "ood_auroc": 0.999996,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.098
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.8977287972727118,
+          "selective_mse": 0.0643127322341256,
+          "test_coverage": 0.806,
+          "ood_auroc": 0.999996,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.936,
+          "state_control_top1": 0.142
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9009929118905694,
+          "selective_mse": 0.05781633814343289,
+          "test_coverage": 0.812,
+          "ood_auroc": 0.999988,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.13
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9066663113271222,
+          "selective_mse": 0.06559038995014901,
+          "test_coverage": 0.806,
+          "ood_auroc": 0.999832,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.946,
+          "state_control_top1": 0.118
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9010223220956748,
+          "selective_mse": 0.059719030630721134,
+          "test_coverage": 0.81,
+          "ood_auroc": 0.99992,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.944,
+          "state_control_top1": 0.114
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9022467921194682,
+        "selective_mse": 0.06211816264368417,
+        "test_coverage": 0.8092,
+        "ood_auroc": 0.9999464,
+        "ood_abstain": 1.0,
+        "dpar_best": 0.9388,
+        "state_control_top1": 0.1204
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    },
+    "K8-s5-n0.5": {
+      "pairs": 8,
+      "scale": 5.0,
+      "cue_noise": 0.5,
+      "per_seed": [
+        {
+          "seed": 0,
+          "r2_mean": 0.9042579554765705,
+          "selective_mse": 0.07018620173596771,
+          "test_coverage": 0.816,
+          "ood_auroc": 0.999976,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.098
+        },
+        {
+          "seed": 1,
+          "r2_mean": 0.9004535328243642,
+          "selective_mse": 0.06496191838015779,
+          "test_coverage": 0.816,
+          "ood_auroc": 0.999984,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.936,
+          "state_control_top1": 0.144
+        },
+        {
+          "seed": 2,
+          "r2_mean": 0.9023349382947673,
+          "selective_mse": 0.06205599711050766,
+          "test_coverage": 0.814,
+          "ood_auroc": 0.999952,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.934,
+          "state_control_top1": 0.128
+        },
+        {
+          "seed": 3,
+          "r2_mean": 0.9074116940974365,
+          "selective_mse": 0.06614916125180986,
+          "test_coverage": 0.786,
+          "ood_auroc": 0.999644,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.946,
+          "state_control_top1": 0.118
+        },
+        {
+          "seed": 4,
+          "r2_mean": 0.9004180470600444,
+          "selective_mse": 0.061614259937300235,
+          "test_coverage": 0.806,
+          "ood_auroc": 0.999828,
+          "ood_abstain": 1.0,
+          "dpar_best": 0.944,
+          "state_control_top1": 0.12
+        }
+      ],
+      "mean": {
+        "r2_mean": 0.9029752335506366,
+        "selective_mse": 0.06499350768314865,
+        "test_coverage": 0.8076000000000001,
+        "ood_auroc": 0.9998768,
+        "ood_abstain": 1.0,
+        "dpar_best": 0.9388,
+        "state_control_top1": 0.1216
+      },
+      "checks": {
+        "r2_ok": true,
+        "selective_ok": true,
+        "dpar_ok": true,
+        "state_control_ok": true,
+        "ood_auroc_ok": true,
+        "ood_abstain_ok": true,
+        "coverage_ok": true
+      },
+      "ready": true
+    }
+  },
+  "v16_ready": true,
+  "repro": "```text\n实验名称：阶段四端到端 v16\n日期：2026-10-28 04:09:52 中国标准时间\nGit commit：bb84479f575bc20cae60ee2d220f81dc58841c2e\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_e2e_delayed_recall_v16.py --seeds 0-4\n耗时：1169.1 s\n备注：K=4/8 × s=2/3/5 × sigma=0.1/0.3/0.5；input_norm 门\n备注：K=4 bank W 28 维；K=8 longtau 32 维（tau=400）\n备注：OOD 尺度 s、in-dist 噪声 sigma；阈值只在 calibration 上取\n```"
+}
