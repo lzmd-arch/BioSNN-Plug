@@ -914,6 +914,15 @@
 >    仍是 A/B×3 尺度偏移；不写成阶段四整体验收。见
 >    [`sweep_results/stage4_e2e_v5/README.md`](sweep_results/stage4_e2e_v5/README.md)。
 
+> 99. **2026-10-27：阶段四端到端 v6——单 bank vs 路由双 bank，两臂均未 ready**。
+>    同一 t=85 最终状态；single 28 维、dual 56 维（A/B/Q 与键值/查询分 bank）。5 种子：
+>    single R² **0.5274**、MSE **0.3387**、OOD AUROC **0.8736**、弃权 **0.7932**；
+>    dual R² **0.9937**、MSE **0.0046**、OOD AUROC **0.7823**、弃权 **0.6220**；
+>    两臂 DPAR 0.962、状态控制 0.237/0.235。**路由修好 WM 但打坏 OOD**；共存与弃权
+>    未同时满足，`e2e_v6_single_ready=false`、`e2e_v6_dual_ready=false`。下一步若继续，
+>    需在 bank W 单独算 OOD 置信度（世界模型也分块），而不是在 56 维联合置信度上调阈值。
+>    见 [`sweep_results/stage4_e2e_v6/README.md`](sweep_results/stage4_e2e_v6/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
