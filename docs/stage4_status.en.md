@@ -29,6 +29,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
 | End-to-end v9 (v8 robustness) | **main ready, robust false** | scale 1.5/2/3/5 abstain **0.456 / 0.720 / 0.937 / 0.996**; K2/4/8 WM R² **0.998 / 0.994 / 0.89975** (K8 misses by 0.00025); σ0.1/0.3/0.5 abstain **0.945 / 0.937 / 0.919** | `v9_main_ready=true`, `v9_robust=false`, `v9_ready=false`; v8 covers only **s≥3, K≤4, σ≤0.5**; s=2 already drops to 0.720 |
 | End-to-end v10 (shrunk covariance gate) | **s2/s3/s5 ready** | s2 coverage **0.7900**, abstain **0.8276**, AUROC **0.8937**; s3/s5 abstain **0.9764 / 0.9984**; K8 WM R² **0.89975**, coverage **0.7532** | `v10_ready=true`: s2 rises 0.720→0.828; K8 remains a capacity/coverage boundary; s=1.5 untested |
 | End-to-end v11 (K=8 three arms) | **no arm ready** | baseline R² **0.8926**/coverage **0.7740**; snapshot85 R² **0.9936**/coverage **0.7552**; longtau R² **0.90145**/coverage **0.7776**; DPAR 0.934, state 0.12 | The only miss is K=8 test coverage (<0.78); snapshot85/longtau fix WM capacity, leaving gate calibration/coverage |
+| End-to-end v12 (K=8 diag gate) | **two arms ready** | snapshot85+diag: R² **0.9936**, coverage **0.7820**, abstain **0.9292**; longtau+diag: R² **0.90145**, coverage **0.8052**, abstain **0.9244**; shrunk still **0.7552 / 0.7776** | `v12_ready=true`: K8's boundary is covariance estimation, not WM; both arms pass, but snapshot coverage is only 0.002 above 0.78 |
 
 ## 2. What "ready" means
 
@@ -38,7 +39,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   - integration with the bus/plugins;
   - spiking (working memory) or full locality (metacognitive calibration head);
 - All negative results/boundaries are kept as-is; no criteria were changed after the fact. Ledger
-  entries ㊽–105 in the project plan are the complete index.
+  entries ㊽–106 in the project plan are the complete index.
 
 ## 3. Open research items (in suggested order)
 
@@ -65,7 +66,9 @@ not turn "component ready" into "phase-4 end-to-end holds".
    (coverage 0.7900, AUROC 0.8937); s3/s5 also pass. K=8 remains a capacity/coverage boundary
    (0.89975 / 0.7532). **v11 splits K=8 into three arms**: snapshot85 R² 0.9936 and longtau
    0.90145, but coverage 0.7552/0.7776 both below 0.78; the remaining K8 boundary is gate
-   calibration, not WM capacity.
+   calibration, not WM capacity. **v12 switches to a diag gate**: snapshot85 0.7820 and
+   longtau 0.8052, both arms pass all seven; shrunk still fails. K8's boundary is the 28x28
+   covariance estimate, not WM or DPAR.
 2. **Working memory v6 (spiking)**: v5's failure is in the **representation** (60-step counts
    only single digits), not the readout; v6 needs membrane/subthreshold state, a longer
    integration window, or rate input. Note v5 took 2598.7 s; the next round should cut
@@ -130,6 +133,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   [v8 bank-W scale gate](../sweep_results/stage4_e2e_v8/README.md),
   [v9 robustness sweep](../sweep_results/stage4_e2e_v9/README.md),
   [v10 shrunk covariance gate](../sweep_results/stage4_e2e_v10/README.md),
-  [v11 K8 three arms](../sweep_results/stage4_e2e_v11/README.md)
+  [v11 K8 three arms](../sweep_results/stage4_e2e_v11/README.md),
+  [v12 K8 diag gate](../sweep_results/stage4_e2e_v12/README.md)
 - Technical report: [paper/stage4/README.md](../paper/stage4/README.md) · Zenodo
   [10.5281/zenodo.23696829](https://doi.org/10.5281/zenodo.23696829) (v1.0, 2026-10-28)

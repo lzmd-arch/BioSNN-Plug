@@ -975,6 +975,15 @@
 >    解决。v10 的 s≥2/K≤4 结论不变。见
 >    [`sweep_results/stage4_e2e_v11/README.md`](sweep_results/stage4_e2e_v11/README.md)。
 
+> 106. **2026-10-28：阶段四端到端 v12——K=8 换 diag 门，两臂 ready，`v12_ready=true`**。
+>    snapshot85+diag：R² **0.9936**、覆盖 **0.7820**、弃权 0.9292、AUROC 0.9535；
+>    longtau+diag：R² **0.90145**、覆盖 **0.8052**、弃权 0.9244、AUROC 0.9559；
+>    shrunk 仍是 0.7552/0.7776 不过。两臂 DPAR 0.934、状态控制 0.126/0.122。
+>    **边界**：K8 的 coverage 失败来自 28×28 协方差估计，不是 WM/DPAR；diag 修好它，
+>    但 snapshot 覆盖只高 0.002（seed4 0.750），longtau R² 只高 0.00145，都是薄边界；
+>    K>8 未测，通用 OOD 边界不变。v10 的 s≥2/K≤4 结论不变。见
+>    [`sweep_results/stage4_e2e_v12/README.md`](sweep_results/stage4_e2e_v12/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

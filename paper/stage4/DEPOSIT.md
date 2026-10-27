@@ -15,9 +15,10 @@
 The attached Markdown is the pre-deposit snapshot of [`README.md`](README.md); the repository copy
 is the source of truth for later edits. **Post-publication (2026-10-28):** e2e v10 adds a
 shrunk-covariance gate that lifts the s=2 abstention from 0.720 to 0.828 (coverage 0.790,
-AUROC 0.894); v11 then shows K=8 WM can be fixed (snapshot85 R² 0.9936, longtau 0.90145) but its
-coverage remains below 0.78. This v1.0 record is the pre-v10/v11 snapshot; a v1.1 deposit, if
-made, should carry that update. The PDF was rendered from that Markdown outside the
+AUROC 0.894); v11 then shows K=8 WM can be fixed (snapshot85 R² 0.9936, longtau 0.90145) but shrunk-gate
+coverage remains below 0.78; v12 switches K=8 to a diag gate and both arms pass (coverage
+0.782/0.805). This v1.0 record is the pre-v10/v11/v12 snapshot; a v1.1 deposit, if made, should
+carry that update. The PDF was rendered from that Markdown outside the
 repository (PDFs are not committed), with an ASCII-normalized text layer so extraction is clean.
 
 The record was verified from Zenodo's **public** API after publishing: DOI, concept DOI, title,
