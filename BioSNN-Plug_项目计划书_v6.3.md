@@ -932,6 +932,15 @@
 >    OOD 特征，要么接受 v5 的顺序组合路径。见
 >    [`sweep_results/stage4_e2e_v7/README.md`](sweep_results/stage4_e2e_v7/README.md)。
 
+> 101. **2026-10-27：阶段四端到端 v8——共享状态 + bank W 尺度门，6/6，`e2e_v8_ready=true`**。
+>    v7 结构不变，只把 OOD 置信度换成 bank W 的 `[disagreement, surprise, state_norm]`
+>    三维高斯；5 种子：WM R² **0.9938**、MSE **0.00448**、DPAR **0.962**、状态控制
+>    **0.2352**、OOD AUROC **0.9562**、弃权 **0.9368**，六条全过。**边界**：增益由
+>    `state_norm` 闭合（gauss2 0.823→gauss3 0.937；norm-only 0.898），只对 A/B×3
+>    尺度 OOD 成立；不是通用弃权，也不改变 v6/v7 的信息丢失型 OOD 边界与 v6 的单 bank
+>    共存干扰。见
+>    [`sweep_results/stage4_e2e_v8/README.md`](sweep_results/stage4_e2e_v8/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
