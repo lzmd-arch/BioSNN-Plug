@@ -62,14 +62,15 @@ project may enter a dependency, which may not be copied at all), are in
 | **EMBER** | ◐ STDP + eligibility traces x dopamine gating | ✗ (text only) | ◐ observational, **N=1** | ✗ | ✗ no public repo |
 | **MEMBRAIN** | ◐ Voja + PES | ✗ | ✗ | ◐ claims disagree with implementation | ✅ Nengo (MIT) |
 | **eprop-PyTorch / ESPP** | ✅ e-prop; ESPP is a separate parallel rule | ✗ | ✗ | ✗ | ◐ code fragments, not a framework |
-| **BioSNN-Plug** (this project) | ✅ all three lines accepted | ✅ four plugins (image / MNIST / text / audio) | ○ phase 5 | ○ phase 3 | ✅ `biosnn-bus` is on PyPI |
+| **BioSNN-Plug** (this project) | ✅ all three lines accepted | ✅ four plugins (image / MNIST / text / audio) | ○ phase 5 | ◐ phase 3 (task-aware CIL passes; 3x unmet) | ✅ `biosnn-bus` is on PyPI |
 
 Legend: **✅ implemented, with acceptance data** · **◐ partial** (mechanism or evidence incomplete) ·
 **○ roadmap only (task exists in the plan, not started)** · **✗ none**
 
-⚠️ **Two cells in the last row are ○ rather than ✅** -- "autonomous triggering" sits in phase 5 and
-"continual learning" in phase 3, and **neither is implemented yet**. The marks are kept separate
-precisely so this table cannot be read as "we have already done it".
+⚠️ **Two cells in the last row are not ✅** -- "autonomous triggering" is still phase 5 and
+**not started**; "continual learning" reaches only **◐** in phase 3: task-aware CIL passes
+(ADR-0018), but "relearn 3x" is unmet (ADR-0019). The marks are kept separate precisely so this
+table cannot be read as "we have already done it".
 
 ## Research positioning
 
@@ -96,8 +97,10 @@ Measurement discipline is not a slogan: preregistrations, trivial-solution check
 | **Network scale** | **256 spiking neurons** (W2); W1 adds 3,072 **rate-based** units (not spiking neurons). The plan's §2.2 cognitive core targets roughly 50,000 — **about 195x away**; see [research/README](research/README.en.md) | 2026-10-18 |
 | Arbiter | **P4 final conclusion** (`research/arbiter/`): a static 50/50 mixture beats either rule alone, synergy margin **+0.179**; **adaptive arbitration is not measurable in this benchmark** — ruled out by the pre-registered protocol, a full probe costs about seven hours per fit. See [Paper II](paper/p4/) (Zenodo `10.5281/zenodo.23613539`); the historical wording stays in that directory's README | 2026-10-24 |
 | Spiking execution layer (phase three) | **Entry point, linear TD critic and the TD-LTP population critic are all in place, but none of them clears 200.** ⚠️ **Every number before 2026-10-18 is void**: training episodes were missing an environment seed, so one seed produced different trajectories. After the fix, a **10-seed comparison**: linear TD median 50.4, population default 55.0, operating point 37.1 — **all intervals overlap, all 0/10**; the three main arms are indistinguishable. The rate-based version's median of 237.8 remains the only implementation that passes. See [research/rstdp_spiking](research/rstdp_spiking/README.en.md) | 2026-10-18 |
+| Phase 3: continual learning / relearning | **Partially accepted** — the CL gate passes after [ADR-0018](docs/adr/ADR-0018-task-aware-cl-gate.en.md) changes it to task-aware CIL (oracle per-task **0.8195 / AF 0.0**, constructive); pure CIL **0.0876 / AF 0.290** and the best task-inference route **0.5855 / 0.1285** both fail. **"Relearn 3x" is unmet in v1-v3** (formal paired median **0.957**, calibration about **1.06**), recorded as open by [ADR-0019](docs/adr/ADR-0019-stage-four-entry-decoupled-from-relearn.en.md). | 2026-10-27 |
+| Phase 4: cognitive enhancement | **Several components ready; end-to-end not accepted** — WM v4 **0.9990** (local RLS); episodic DPAR literal NN **0.938**, pseudo **0.828**, local Hebbian **0.311**; metacognition v3 CIFAR AUROC **0.753**, v4 scale-only OOD **0.9003** (quantization OOD fails at 0.4876); world-model P3 termination **0.63-0.67**; e2e v2 5/5 (too easy), e2e v3 4/5 (abstain **0.7056**). Full boundaries: [stage 4 status](docs/stage4_status.en.md) | 2026-10-27 |
 | Cross-modal retrieval | **Ten rounds of retrieval experiments**: the original criterion (absolute R@1 50%) cannot separate "local learning works" on either dataset, and was restated as **recovery rate** (synthetic 75.2%, Flickr8k **78.7%**, full grid); Flickr8k's **front end** has its own criterion — caption content-word linear probe median AUC **0.790** (text-side self-check 1.000) | 2026-10-17 |
-| Cognitive core / LLM orchestration | **Not started** — see the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §七 | — |
+| Phase 5: LLM orchestration | **Not started** — see the [project plan](BioSNN-Plug_项目计划书_v6.2.md) §七 | — |
 
 **Phase-two success criteria, as things actually stand**:
 
@@ -134,13 +137,13 @@ its activation condition; until that condition holds, it does not start. They ar
 
 | Item | Home | Activation condition |
 | :--- | :--- | :--- |
-| **World-model component** ([ADR-0015](docs/adr/ADR-0015-world-model-as-phase-four-component.en.md)) | Phase-four component (inherits Predictive E-prop) | Phase-three acceptance passes and the component ADR exists |
+| **World-model component** ([ADR-0015](docs/adr/ADR-0015-world-model-as-phase-four-component.en.md)) | Phase-four component (inherits Predictive E-prop) | **Started** (phase 3 partially accepted under ADR-0019 + ADR-0015 exists): P3 closed loop is stable (NMSE ~2e-8), termination head AUROC 0.63-0.67, not passing |
 | **Arousal channel** ([ADR-0016](docs/adr/ADR-0016-arousal-channel-and-consolidation-experiment.en.md)) | Componentising the dynamics axis | Its ADR is accepted |
 | **PINN physical prior** ([v7.0 candidate](docs/roadmap_v7_candidates.en.md)) | Roadmap v7.0 candidate (exploration note) | Phase-three acceptance + the CL probe lands; review in summer 2027 |
 
 ## Architecture
 
-Data flows bottom-up. ✅ marks what already runs in this repository; ◐ marks a layer whose **single learning rule has been verified in phase 1** while the module as a whole (multi-layer network, modality decoders, working-memory circuit) is still unimplemented; ⬜ marks what the project plan describes but has not been started. All are on the same diagram because it doubles as the roadmap.
+Data flows bottom-up. ✅ marks what already runs and is ready/passing under its preregistered criteria; ◐ marks what is implemented but ready only under a restricted protocol or still bounded; ⬜ marks what has not been started. All are on the same diagram because it doubles as the roadmap; phase-4 end-to-end criteria are marked separately below.
 
 ```mermaid
 flowchart TB
@@ -153,9 +156,10 @@ flowchart TB
     end
 
     subgraph L3["Cognitive layer (cognitive core)"]
-        WM["Working memory<br/>RSNN + LIF (default; ALIF under re-evaluation) + e-prop<br/>◐ phase 1: learning rule verified (W2)<br/>⬜ multi-layer RSNN and working-memory circuit"]
-        EM["Episodic memory<br/>pattern separation + neurogenesis<br/>⬜ phase 4"]
-        MG["Metacognitive gating<br/>uncertainty monitoring<br/>⬜ phase 4"]
+        WM["Multi-timescale working memory<br/>leaky integrators + local RLS (no backprop)<br/>✅ v4: three-cue R² 0.9990<br/>◐ spiking v5: count representation loses information"]
+        EM["Episodic memory<br/>DPAR delayed paired association<br/>◐ non-local pseudo 0.828; literal NN 0.938<br/>⚠️ local Hebbian 0.311; capacity K=8-16"]
+        MG["Metacognitive gating<br/>member disagreement + world-model surprise + density gate<br/>◐ v3 CIFAR AUROC 0.753<br/>◐ v4 scale OOD only 0.9003; quantization OOD fails"]
+        WMODEL["World model P3<br/>ridge state dynamics + termination head<br/>◐ closed-loop NMSE ~2e-8; termination AUROC 0.63-0.67"]
     end
 
     subgraph ARB["Cross-rule arbitration research/arbiter"]
@@ -185,12 +189,21 @@ flowchart TB
     BUS -.->|wire the perception layer| HEB
     HEB -.->|features| WM
     WM --> EM
+    WM --> WMODEL
     EM --> MG
+    WMODEL --> MG
     MG --> ACT
     MG -.->|trigger a call| MCP
     MCP -.->|result encoded back| EM
     ARB -.->|arbitrate inter-layer conflicts| WM
     ARB -.->|arbitrate inter-layer conflicts| ACT
+
+    subgraph S4["Phase-4 end-to-end validation (not component ready)"]
+        E2E["e2e v3 stress: R² 0.909 / abstain 0.706 / E 0.904<br/>⚠️ 4/5, e2e_v3_ready=false"]
+    end
+    WM -.-> E2E
+    EM -.-> E2E
+    MG -.-> E2E
 ```
 
 Conflicts between layers are arbitrated by an **ES meta-learning arbiter**. P4's final conclusion:

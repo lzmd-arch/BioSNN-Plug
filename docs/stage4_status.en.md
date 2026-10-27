@@ -30,7 +30,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   - integration with the bus/plugins;
   - spiking (working memory) or full locality (metacognitive calibration head);
 - All negative results/boundaries are kept as-is; no criteria were changed after the fact. Ledger
-  entries ㊽–87 in the project plan are the complete index.
+  entries ㊽–95 in the project plan are the complete index.
 
 ## 3. Open research items (in suggested order)
 
