@@ -1,0 +1,76 @@
+# Phase-4 component status and route (2026-10-27)
+
+[中文](stage4_status.md) · [日本語](stage4_status.ja.md)
+
+**Nature: a status close-out, not a passed acceptance.** The phase-4 entry was opened under
+[ADR-0018](adr/ADR-0018-task-aware-cl-gate.en.md) (task-aware CIL) and
+[ADR-0019](adr/ADR-0019-stage-four-entry-decoupled-from-relearn.en.md)
+(decoupled from relearn 3×). This document records component status, boundaries, and open
+research items as of 2026-10-27 for phase-4 scheduling; it replaces no preregistration and does
+not turn "component ready" into "phase-4 end-to-end holds".
+
+## 1. Scorecard
+
+| Component | Status | Key numbers | Boundary/caveat |
+| :--- | :--- | :--- | :--- |
+| Multi-timescale working memory | **v4 ready** | Three-cue R² **0.9994 / 0.9982 / 0.9994**, mean 0.9990 > ridge 0.9931 | Local RLS readout (rank-one, no backprop); spiking v5 not ready |
+| Metacognitive gate | **v3 ready** | Selective 80% **0.5423** (+6.33 pp), AUROC **0.7530**, ECE **0.0296** | Confidence stack is an IRLS measurement head; CIFAR classification, not transferred to regression |
+| World model P3 | **partial** | Closed-loop H=10 NMSE ~2e-8; first-step drift **115.5**; closed-loop termination AUROC **0.632–0.665** | State/closed loop stable; termination suffers distribution shift in closed loop, `p3_ready=false` |
+| Episodic memory | **sealed boundary** | Literal NN: action 0.762, termination balanced 0.962, temporal order **0.595** | Local associative (Hebbian/pseudo-inverse) and kNN/attention all trail literal NN; temporal order all <0.75 |
+| Phase-4 integration demo | **runnable** | WM/world model bit-identical; metacognitive regression AUROC **0.562**; episodic recall MSE 1.194 | Composition/equivalence holds; end-to-end metacognition not inherited, not a capability conclusion |
+| End-to-end task (delayed QA + OOD abstention) | **4/5 criteria** | R² **0.9994**, selective MSE **0.00053**, OOD AUROC **0.927**, abstain **0.887**; episodic MSE **0.822** | WM + metacognition + world-model surprise cooperate; **episodic recall is the only miss**, `e2e_ready=false` |
+| End-to-end v2 (four cues + discrete episodic) | **5/5 ready** | R² **0.9983**, selective MSE **0.00172**, OOD AUROC **0.8895**, abstain **0.824**, E recall **1.000** | All five pass; but E recall is "pipeline works", not hard memory; seed 2 abstains only 0.746 |
+
+## 2. What "ready" means
+
+- It only means **passing that component's preregistered criteria** (see each result README); it
+  does not include:
+  - the phase-4 end-to-end task;
+  - integration with the bus/plugins;
+  - spiking (working memory) or full locality (metacognitive calibration head);
+- All negative results/boundaries are kept as-is; no criteria were changed after the fact. Ledger
+  entries ㊽–87 in the project plan are the complete index.
+
+## 3. Open research items (in suggested order)
+
+1. **End-to-end v3 (stress test)**: v2 passes all five, but the episodic target is a
+   well-separated discrete E (top-1 1.000, pipeline rather than hard memory). The next step
+   should add **capacity/noise/more events** stress, or switch to a task that truly requires
+   memory; do not treat 1.000 as general memory ability.
+2. **Working memory v6 (spiking)**: v5's failure is in the **representation** (60-step counts
+   only single digits), not the readout; v6 needs membrane/subthreshold state, a longer
+   integration window, or rate input. Note v5 took 2598.7 s; the next round should cut
+   seeds/windows or parallelize.
+3. **Metacognition v4 (fully local calibration + cross-task)**: v3's calibration head is an IRLS
+   measurement head; its classification confidence gives AUROC 0.562 on the WM regression task
+   and does not transfer automatically. v4 needs local calibration and re-validation on the
+   target end-to-end task.
+4. **World model P3 follow-up**: the closed-loop termination distribution shift (offline 0.999 →
+   closed loop 0.665) is unresolved; directions are a stronger state model (push the first-step
+   drift well beyond 115) or a termination head matched to the imagined distribution;
+   one-step imagination augmentation was tried, 0.632, not enough.
+5. **Episodic memory**: under the current task/noise/evaluation protocol no usable configuration
+   exists; if restarted, change the task/time encoding/evaluation protocol rather than continuing
+   to tune k/β or encoding dimension.
+6. **Working-memory v5 alternative**: if the project insists on "pure spike counts", first solve
+   the low-count representation problem; otherwise accept v4's rate leaky integrator as the
+   usable local representation for phase 4.
+
+## 4. Relation to phase 3
+
+- The phase-3 CL gate passed as task-aware CIL under ADR-0018 (constructive AF=0, not an
+  anti-forgetting algorithm);
+- **relearn 3× is unmet**, decoupled from the phase-4 entry under ADR-0019, and remains open;
+- This document **does not change** either statement, nor does it turn phase-4 component ready
+  into full phase-3 acceptance.
+
+## 5. Index
+
+- Working memory: [v4 result](../sweep_results/working_memory_v4/README.md),
+  [v5 result](../sweep_results/working_memory_v5/README.md)
+- Metacognition: [v3 result](../sweep_results/metacognitive_gate_v3/README.md)
+- World model: [P3 closed loop](../sweep_results/world_model_closed_loop_h500/README.md),
+  [termination-head integration](../sweep_results/world_model_closed_loop_head/README.md),
+  [imagined-state head](../sweep_results/world_model_closed_loop_imagined/README.md)
+- Episodic memory: [v3 result](../sweep_results/episodic_memory_v3/README.md)
+- Integration demo: [result](../sweep_results/stage4_integration_demo/README.md)
