@@ -879,6 +879,14 @@
 >    下一步先设“OOD 误差 ≥2× in-dist”的有效性门，再谈弃权。见
 >    [`sweep_results/metacognitive_gate_v5/README.md`](sweep_results/metacognitive_gate_v5/README.md)。
 
+> 95. **2026-10-27：元认知 v6——量化 OOD 有效但门失效，v4 只能限定在尺度偏移**。
+>    对 A/B 输入取 `sign`、目标保留原始幅度；5 种子：OOD 全量 MSE **0.4344** vs in-dist
+>    **0.0681**（**6.38×**，有效性门过），gauss3 弃权 **0.1716**、AUROC **0.4876**；
+>    zsum/gauss2/knn3 也都 0.49–0.50。尺度 sanity 仍 0.8456/0.9003。结论：v4 的 ready
+>    只覆盖尺度 OOD；信息丢失型 OOD 上四个门同时失效，AUROC<0.5 表示“更像 in-dist”。
+>    不改变 `e2e_v3_ready=false`。见
+>    [`sweep_results/metacognitive_gate_v6/README.md`](sweep_results/metacognitive_gate_v6/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
