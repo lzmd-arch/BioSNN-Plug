@@ -10,7 +10,7 @@
 | 组件 | 状态 | 关键数字 | 边界/口径 |
 | :--- | :--- | :--- | :--- |
 | 多时间尺度工作记忆 | **v4 ready** | 三线索 R² **0.9994 / 0.9982 / 0.9994**，均值 0.9990 > ridge 0.9931 | 局部 RLS 读出（rank-one，无反向传播）；脉冲 v5 不 ready |
-| 元认知门控 | **v3 + v4 ready** | v3 CIFAR：选择性 80% **0.5423**、AUROC **0.7530**、ECE **0.0296**；v4 e2e v3：弃权 **0.8456**、AUROC **0.9003**、覆盖 **0.8028** | v4 增益来自 `state_norm` 对 A/B×3 尺度 OOD 的检测；不是通用 OOD；e2e v3 原判据仍 false |
+| 元认知门控 | **v3 + v4 ready** | v3 CIFAR：选择性 80% **0.5423**、AUROC **0.7530**、ECE **0.0296**；v4 e2e v3：弃权 **0.8456**、AUROC **0.9003**、覆盖 **0.8028** | v4 增益来自 `state_norm` 对 A/B×3 尺度 OOD 的检测；不是通用 OOD；e2e v3 原判据仍 false。v5 的正交旋转不构成 OOD（误差 0.0679 ≈ in-dist 0.0681），无泛化结论 |
 | 世界模型 P3 | **部分** | 闭环 H=10 NMSE ~2e-8；首发散步 **115.5**；终止闭环 AUROC **0.632–0.665** | 状态/闭环稳定过；终止在闭环下受分布偏移，`p3_ready=false` |
 | 情景记忆 | **DPAR 非局部可用** | DPAR（K=8、σ=0.1）：字面 NN **0.938**、pseudo **0.828**、Hebbian **0.311**；状态控制 **0.121**（chance 0.125） | 只有非局部伪逆过线；局部 Hebbian 仍不可用；容量边界 K=8–16；原 CartPole 任务边界保留 |
 | 阶段四集成 demo | **可运行** | WM/世界模型逐位等价；元认知回归 AUROC **0.562**；情景检索 MSE 1.194 | 组合/等价性成立；端到端元认知未继承，不能当能力结论 |
@@ -40,7 +40,9 @@
    state_norm）把 e2e v3 的弃权从 0.7056 提到 **0.8456**、AUROC 0.8350→**0.9003**，
    选择性 MSE 基本不变。但 **gauss2 反而更差**（0.6984），增益来自 `state_norm` 对
    A/B×3 尺度偏移的检测；需要**与尺度无关的 OOD**（协方差/频率/相位偏移）再验，
-   不能把这条当通用弃权能力。v3 的分类标定头仍未迁移到回归。
+   不能把这条当通用弃权能力。v3 的分类标定头仍未迁移到回归。**v5 的保范正交旋转经
+   全量误差检查不是 OOD**（0.0679 vs in-dist 0.0681），所以 v5 无泛化结论；下一步必须
+   先过“OOD 误差 ≥2× in-dist”的有效性门，再谈弃权。
 4. **世界模型 P3 后续**：终止闭环的分布偏移（离线 0.999 → 闭环 0.665）没有解决；
    方向是更强状态模型（把发散步从 115 推远）或与想象分布匹配的终止头；一步想象增广
    已试，0.632，不够。
@@ -62,7 +64,8 @@
 - 工作记忆：[v4 结果](../sweep_results/working_memory_v4/README.md)、
   [v5 结果](../sweep_results/working_memory_v5/README.md)
 - 元认知：[v3 结果](../sweep_results/metacognitive_gate_v3/README.md)、
-  [v4 风险控制](../sweep_results/metacognitive_gate_v4/README.md)
+  [v4 风险控制](../sweep_results/metacognitive_gate_v4/README.md)、
+  [v5 旋转有效性检查](../sweep_results/metacognitive_gate_v5/README.md)
 - 世界模型：[P3 闭环](../sweep_results/world_model_closed_loop_h500/README.md)、
   [终止头集成](../sweep_results/world_model_closed_loop_head/README.md)、
   [想象状态头](../sweep_results/world_model_closed_loop_imagined/README.md)

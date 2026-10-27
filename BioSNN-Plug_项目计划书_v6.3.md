@@ -871,6 +871,14 @@
 >    逐位不变。见
 >    [`sweep_results/metacognitive_gate_v4/README.md`](sweep_results/metacognitive_gate_v4/README.md)。
 
+> 94. **2026-10-27：元认知 v5——正交旋转有效性检查失败，旋转不是 OOD，无泛化结论**。
+>    保范正交 `Q` 作用 A/B；5 种子：rotation 全量 MSE **0.06794** ≈ in-dist **0.06806**，
+>    弃权 0.1864、AUROC 0.4995；scale sanity 复现 v4（0.8456/0.9003、全量 MSE 0.3312）。
+>    原因：A/B 各向同性高斯，正交旋转同分布；线性读出近恒等，任务关系不变。故
+>    `scale_independent_ready=false` 是**操作化失败**，不能写成“v4 漏检保范 OOD”。
+>    下一步先设“OOD 误差 ≥2× in-dist”的有效性门，再谈弃权。见
+>    [`sweep_results/metacognitive_gate_v5/README.md`](sweep_results/metacognitive_gate_v5/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

@@ -14,7 +14,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
 | Component | Status | Key numbers | Boundary/caveat |
 | :--- | :--- | :--- | :--- |
 | Multi-timescale working memory | **v4 ready** | Three-cue R² **0.9994 / 0.9982 / 0.9994**, mean 0.9990 > ridge 0.9931 | Local RLS readout (rank-one, no backprop); spiking v5 not ready |
-| Metacognitive gate | **v3 + v4 ready** | v3 CIFAR: selective 80% **0.5423**, AUROC **0.7530**, ECE **0.0296**; v4 e2e v3: abstain **0.8456**, AUROC **0.9003**, coverage **0.8028** | v4's gain comes from `state_norm` detecting the A/B×3 scale OOD; not general OOD; the original e2e v3 criteria remain false |
+| Metacognitive gate | **v3 + v4 ready** | v3 CIFAR: selective 80% **0.5423**, AUROC **0.7530**, ECE **0.0296**; v4 e2e v3: abstain **0.8456**, AUROC **0.9003**, coverage **0.8028** | v4's gain comes from `state_norm` detecting the A/B×3 scale OOD; not general OOD; the original e2e v3 criteria remain false. v5's orthogonal rotation is not OOD (error 0.0679 ≈ in-dist 0.0681), so it gives no generalization conclusion |
 | World model P3 | **partial** | Closed-loop H=10 NMSE ~2e-8; first-step drift **115.5**; closed-loop termination AUROC **0.632–0.665** | State/closed loop stable; termination suffers distribution shift in closed loop, `p3_ready=false` |
 | Episodic memory | **DPAR non-local usable** | DPAR (K=8, σ=0.1): literal NN **0.938**, pseudo **0.828**, Hebbian **0.311**; state control **0.121** (chance 0.125) | Only non-local pseudo-inverse passes; local Hebbian still unusable; capacity boundary K=8–16; the original CartPole task boundary is preserved |
 | Phase-4 integration demo | **runnable** | WM/world model bit-identical; metacognitive regression AUROC **0.562**; episodic recall MSE 1.194 | Composition/equivalence holds; end-to-end metacognition not inherited, not a capability conclusion |
@@ -51,7 +51,10 @@ not turn "component ready" into "phase-4 end-to-end holds".
    unchanged. But **gauss2 is actually worse** (0.6984), so the gain comes from `state_norm`
    detecting the A/B×3 scale shift; it must be re-tested on **scale-independent OOD**
    (covariance/frequency/phase shifts), and cannot be treated as general abstention ability. v3's
-   classification calibration head is still not transferred to regression.
+   classification calibration head is still not transferred to regression. **v5's norm-preserving
+   orthogonal rotation is not OOD** (error 0.0679 vs in-dist 0.0681), so v5 gives no generalization
+   conclusion; the next attempt must first pass an "OOD error ≥2× in-dist" validity gate before
+   interpreting abstention.
 4. **World model P3 follow-up**: the closed-loop termination distribution shift (offline 0.999 →
    closed loop 0.665) is unresolved; directions are a stronger state model (push the first-step
    drift well beyond 115) or a termination head matched to the imagined distribution;
@@ -79,7 +82,8 @@ not turn "component ready" into "phase-4 end-to-end holds".
 - Working memory: [v4 result](../sweep_results/working_memory_v4/README.md),
   [v5 result](../sweep_results/working_memory_v5/README.md)
 - Metacognition: [v3 result](../sweep_results/metacognitive_gate_v3/README.md),
-  [v4 risk control](../sweep_results/metacognitive_gate_v4/README.md)
+  [v4 risk control](../sweep_results/metacognitive_gate_v4/README.md),
+  [v5 rotation validity check](../sweep_results/metacognitive_gate_v5/README.md)
 - World model: [P3 closed loop](../sweep_results/world_model_closed_loop_h500/README.md),
   [termination-head integration](../sweep_results/world_model_closed_loop_head/README.md),
   [imagined-state head](../sweep_results/world_model_closed_loop_imagined/README.md)
