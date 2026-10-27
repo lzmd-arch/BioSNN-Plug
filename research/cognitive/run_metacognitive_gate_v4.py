@@ -121,17 +121,24 @@ def _knn_gate(
     scale = np.maximum(reference.std(axis=0), 1e-8)
     normalized = (reference - mean) / scale
 
-    def confidence(split: dict[str, np.ndarray]) -> np.ndarray:
+    def confidence(split: dict[str, np.ndarray], *, exclude_self: bool = False) -> np.ndarray:
         values = (np.column_stack([split[name] for name in columns]) - mean) / scale
         distances = (
             (values**2).sum(axis=1)[:, None]
             + (normalized**2).sum(axis=1)[None, :]
             - 2.0 * values @ normalized.T
         )
+        if exclude_self:
+            # 校准点自己的距离为 0；不排除就会把自身算进 5 近邻，阈值系统性偏高。
+            np.fill_diagonal(distances, np.inf)
         nearest = np.partition(distances, neighbors - 1, axis=1)[:, :neighbors]
         return -nearest.mean(axis=1)
 
-    return confidence(calibration), confidence(test), confidence(ood)
+    return (
+        confidence(calibration, exclude_self=True),
+        confidence(test),
+        confidence(ood),
+    )
 
 
 def _evaluate(
