@@ -168,6 +168,7 @@ def run(seeds: list[int], *, out: Path, test_episodes: int = 500) -> dict[str, A
                 for key in (
                     "test_coverage",
                     "selective_mse",
+                    "test_mse_all",
                     "ood_abstain",
                     "ood_auroc",
                     "ood_mse_all",

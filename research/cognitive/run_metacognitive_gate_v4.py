@@ -157,6 +157,7 @@ def _evaluate(
         "threshold": threshold,
         "test_coverage": float(np.mean(answered)),
         "selective_mse": selective_mse,
+        "test_mse_all": float(np.mean(test["errors"])),
         "ood_abstain": float(np.mean(~ood_answered)),
         "ood_auroc": auroc(
             np.concatenate([test_confidence, ood_confidence]),
