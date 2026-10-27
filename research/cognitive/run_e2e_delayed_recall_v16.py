@@ -224,7 +224,7 @@ def run(
                     [
                         _top1(prediction, values) == pair
                         for prediction, values, pair in zip(
-                            state_predictions, test[6], test[7], strict=True
+                            state_predictions, test[6], test[8], strict=True
                         )
                     ]
                 )
