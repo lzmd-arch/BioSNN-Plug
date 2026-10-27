@@ -887,6 +887,15 @@
 >    不改变 `e2e_v3_ready=false`。见
 >    [`sweep_results/metacognitive_gate_v6/README.md`](sweep_results/metacognitive_gate_v6/README.md)。
 
+> 96. **2026-10-27：元认知 v7——高阶矩门仍检测不到信息丢失 OOD，特征族判负**。
+>    同一量化 OOD，主门换成状态标准化后的 `mean z² / mean |z| / mean z⁴ / 尾比例` 四维
+>    矩密度；5 种子：有效性 6.38× 过，但量化 OOD 弃权 **0.2048**、AUROC **0.5024**，
+>    尺度 sanity 弃权 **0.7544**（比 v4 的 0.8456 更低）。moment2 更差（0.4656）。
+>    结论：一、二阶矩相同、高阶矩偏移也不足以分开；继续换低维矩/距离/阈值不会改变
+>    AUROC≈0.50。需要生成式状态模型、循环一致性或输入级特征；`e2e_v3_ready=false`
+>    与 v4 的尺度限定不变。见
+>    [`sweep_results/metacognitive_gate_v7/README.md`](sweep_results/metacognitive_gate_v7/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
