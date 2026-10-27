@@ -984,6 +984,14 @@
 >    K>8 未测，通用 OOD 边界不变。v10 的 s≥2/K≤4 结论不变。见
 >    [`sweep_results/stage4_e2e_v12/README.md`](sweep_results/stage4_e2e_v12/README.md)。
 
+> 107. **2026-10-28：P3 终止头 v2——多步想象 + 真实标签，AUROC 0.6469，仍不 ready**。
+>    200 训练回合、模型 rollout H=200；头训练于预测状态，标签为真实环境在同一动作序列上的
+>    `terminated`（预注册修订 1：边界标签无正样本，40000 条全 0）。5 种子：闭环 NMSE
+>    1.8e-10、终止回合率 1.0、首发散步 114.8 都过；**AUROC 0.6469**（逐种子 0.694/0.647/
+>    0.619/0.635/0.639）不过 0.75。`p3_v2_ready=false`。边界：失败在终止头，不在状态模型；
+>    下一步需要时间/风险特征或更强状态模型。见
+>    [`sweep_results/world_model_termination_v2/README.md`](sweep_results/world_model_termination_v2/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

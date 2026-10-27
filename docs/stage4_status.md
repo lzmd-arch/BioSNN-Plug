@@ -11,7 +11,7 @@
 | :--- | :--- | :--- | :--- |
 | 多时间尺度工作记忆 | **v4 ready** | 三线索 R² **0.9994 / 0.9982 / 0.9994**，均值 0.9990 > ridge 0.9931 | 局部 RLS 读出（rank-one，无反向传播）；脉冲 v5 不 ready |
 | 元认知门控 | **v3 + v4 ready（仅尺度）** | v3 CIFAR：选择性 80% **0.5423**、AUROC **0.7530**、ECE **0.0296**；v4 e2e v3：弃权 **0.8456**、AUROC **0.9003**、覆盖 **0.8028** | v4 增益来自 `state_norm` 对 A/B×3 尺度 OOD 的检测。v5 旋转不构成 OOD；v6 量化 OOD 有效（误差 6.38×）但弃权 0.1716/AUROC 0.4876，门失效。不是通用 OOD；v7 高阶矩 0.2048/0.5024，仍失效 |
-| 世界模型 P3 | **部分** | 闭环 H=10 NMSE ~2e-8；首发散步 **115.5**；终止闭环 AUROC **0.632–0.665** | 状态/闭环稳定过；终止在闭环下受分布偏移，`p3_ready=false` |
+| 世界模型 P3 | **部分** | 闭环 H=10 NMSE ~2e-8；首发散步 **115.5**；终止闭环 AUROC **0.632–0.665**；v2 多步想象 **0.6469** | 状态/闭环稳定过；终止头仍不过 0.75，`p3_ready=false`；v2 标签修订与结果见 README |
 | 情景记忆 | **DPAR 非局部可用** | DPAR（K=8、σ=0.1）：字面 NN **0.938**、pseudo **0.828**、Hebbian **0.311**；状态控制 **0.121**（chance 0.125） | 只有非局部伪逆过线；局部 Hebbian 仍不可用；容量边界 K=8–16；原 CartPole 任务边界保留 |
 | 阶段四集成 demo | **可运行** | WM/世界模型逐位等价；元认知回归 AUROC **0.562**；情景检索 MSE 1.194 | 组合/等价性成立；端到端元认知未继承，不能当能力结论 |
 | 端到端任务（延迟问答 + OOD 弃权） | **4/5 判据过** | R² **0.9994**、选择性 MSE **0.00053**、OOD AUROC **0.927**、弃权 **0.887**；情景 MSE **0.822** | WM + 元认知 + 世界模型惊喜能协同；**情景检索是唯一未过项**，`e2e_ready=false` |
@@ -33,7 +33,7 @@
   - 阶段四端到端任务；
   - 与总线/插件的集成；
   - 脉冲化（工作记忆）或全局部化（元认知标定头）；
-- 所有“负结果/边界”原样保留，没有事后改判据；计划书台账 ㊽–106 是完整索引。
+- 所有“负结果/边界”原样保留，没有事后改判据；计划书台账 ㊽–107 是完整索引。
 
 ## 3. 开放研究项（按建议顺序）
 
@@ -71,7 +71,8 @@
    只能限定在尺度偏移，不能写成通用弃权能力。
 4. **世界模型 P3 后续**：终止闭环的分布偏移（离线 0.999 → 闭环 0.665）没有解决；
    方向是更强状态模型（把发散步从 115 推远）或与想象分布匹配的终止头；一步想象增广
-   已试，0.632，不够。
+   已试，0.632；**v2 多步想象 + 真实标签 0.6469**，仍不够；下一步需要时间/风险特征或
+   更强状态模型。
 5. **情景记忆**：DPAR（v4）证明任务确实需要绑定（状态控制 0.121 ≈ chance）；**非局部
    伪逆**在 K=8/σ=0.1 过线（0.828），字面 NN 0.938 更高，**局部 Hebbian 仍只有 0.311**，
    容量边界 K=8–16。原 CartPole 任务/噪声/时间顺序边界保留。下一步应试局部或低维键，
@@ -96,7 +97,8 @@
   [v7 高阶矩门](../sweep_results/metacognitive_gate_v7/README.md)
 - 世界模型：[P3 闭环](../sweep_results/world_model_closed_loop_h500/README.md)、
   [终止头集成](../sweep_results/world_model_closed_loop_head/README.md)、
-  [想象状态头](../sweep_results/world_model_closed_loop_imagined/README.md)
+  [想象状态头](../sweep_results/world_model_closed_loop_imagined/README.md)、
+  [终止头 v2](../sweep_results/world_model_termination_v2/README.md)
 - 情景记忆：[v3 结果](../sweep_results/episodic_memory_v3/README.md)、
   [DPAR 结果](../sweep_results/episodic_paired_associate/README.md)
 - 集成 demo：[结果](../sweep_results/stage4_integration_demo/README.md)

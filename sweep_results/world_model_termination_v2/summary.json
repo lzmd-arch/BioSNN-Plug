@@ -1,0 +1,95 @@
+{
+  "experiment": "P3 终止头 v2：多步想象状态训练",
+  "config": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "episodes": 200,
+    "test_episodes": 100,
+    "horizon": 500,
+    "imagined_horizon": 200,
+    "bounds": [
+      2.4,
+      3.0,
+      0.2095,
+      3.0
+    ]
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "nmse_h10": 1.910752028771143e-08,
+      "copy_last_h10": 132.22758831986621,
+      "ratio": 1.4450479306549274e-10,
+      "termination_episode_rate": 1.0,
+      "termination_step_rate": 0.0067226890756302525,
+      "termination_auroc": 0.6937489001692048,
+      "divergence_step": 114.0,
+      "imagined_states": 29819,
+      "imagined_positives": 199
+    },
+    {
+      "seed": 1,
+      "nmse_h10": 2.0697307411762924e-08,
+      "copy_last_h10": 117.89097164725091,
+      "ratio": 1.7556312517037062e-10,
+      "termination_episode_rate": 1.0,
+      "termination_step_rate": 0.006652474720596061,
+      "termination_auroc": 0.6472903830699169,
+      "divergence_step": 114.0,
+      "imagined_states": 30072,
+      "imagined_positives": 199
+    },
+    {
+      "seed": 2,
+      "nmse_h10": 3.257030091557805e-08,
+      "copy_last_h10": 118.25107520435088,
+      "ratio": 2.754334441297298e-10,
+      "termination_episode_rate": 1.0,
+      "termination_step_rate": 0.006770022341073725,
+      "termination_auroc": 0.619496285188467,
+      "divergence_step": 114.5,
+      "imagined_states": 29804,
+      "imagined_positives": 200
+    },
+    {
+      "seed": 3,
+      "nmse_h10": 1.6500089880397394e-08,
+      "copy_last_h10": 107.33724432040792,
+      "ratio": 1.537219441850367e-10,
+      "termination_episode_rate": 1.0,
+      "termination_step_rate": 0.006640547181087721,
+      "termination_auroc": 0.6352784277023865,
+      "divergence_step": 115.0,
+      "imagined_states": 29926,
+      "imagined_positives": 200
+    },
+    {
+      "seed": 4,
+      "nmse_h10": 1.9847186501663305e-08,
+      "copy_last_h10": 113.32882348931005,
+      "ratio": 1.7512920270927745e-10,
+      "termination_episode_rate": 1.0,
+      "termination_step_rate": 0.0066480521207286265,
+      "termination_auroc": 0.6385042163030384,
+      "divergence_step": 116.5,
+      "imagined_states": 29759,
+      "imagined_positives": 197
+    }
+  ],
+  "gate": {
+    "ratio": 1.8487050185198145e-10,
+    "termination_episode_rate": 1.0,
+    "termination_auroc": 0.6468636424866027,
+    "divergence_step": 114.8,
+    "ratio_ok": true,
+    "termination_ok": false,
+    "divergence_ok": true,
+    "p3_v2_ready": false
+  },
+  "repro": "```text\n实验名称：P3 终止头 v2\n日期：2026-10-28 02:47:06 中国标准时间\nGit commit：e03037c198c7d2c977acbebf15d0b0659d7c519f\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_world_model_termination_v2.py --seeds 0-4\n耗时：23.4 s\n备注：头训练于模型多步 rollout 状态；标签为真实环境在同一动作序列上的 terminated\n备注：闭环 H=500；不调状态模型/阈值\n```"
+}
