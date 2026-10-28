@@ -117,8 +117,10 @@ class SpikingPopulationTimescale:
             raise ValueError(f"population 必须 >= 1，收到 {population}。")
         if not 0.0 < gain_range[0] <= gain_range[1]:
             raise ValueError(f"gain_range 必须为正且递增，收到 {gain_range}。")
-        if readout not in ("post", "prereset", "trace"):
-            raise ValueError(f"readout 只能是 post / prereset / trace，收到 {readout!r}。")
+        if readout not in ("post", "prereset", "trace", "spike_trace"):
+            raise ValueError(
+                f"readout 只能是 post / prereset / trace / spike_trace，收到 {readout!r}。"
+            )
         self.readout = readout
         self.n_dims = int(n_dims)
         self.population = int(population)
@@ -182,7 +184,11 @@ class SpikingPopulationTimescale:
                 previous = states[index].z
                 fired, states[index] = cell.step(inputs, states[index])
                 spikes[index] += fired.sum()
-                if step >= test_step - self.membrane_window:
+                if step >= test_step - self.membrane_window and self.readout == "spike_trace":
+                    membrane[index] += (
+                        traces[index].squeeze(0).reshape(self.n_dims, self.population).mean(dim=1)
+                    )
+                elif step >= test_step - self.membrane_window:
                     if self.readout == "trace":
                         # v 含 −thr·z_{t−1} 的复位；加上 thr·trace_{t−1} 得到无复位的
                         # 泄漏积分 u_t = Σ α^{t−s} I_s。trace 与膜电位同 τ。
