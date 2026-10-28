@@ -1,0 +1,87 @@
+{
+  "experiment": "P3 终止头 v3：固定动作序列的开环想象",
+  "config": {
+    "seeds": [
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "episodes": 200,
+    "test_episodes": 100,
+    "horizon": 200,
+    "bounds": [
+      2.4,
+      3.0,
+      0.2095,
+      3.0
+    ]
+  },
+  "per_seed": [
+    {
+      "seed": 5,
+      "open_auroc": 1.0,
+      "open_episode_rate": 1.0,
+      "open_step_rate": 0.04967709885742673,
+      "terminal_error_median": 0.0029713290307116225,
+      "margin_positive_median": 1.0555825272545407,
+      "margin_negative_max": 0.9992424414230823,
+      "closed_auroc": 0.6317117177097203
+    },
+    {
+      "seed": 6,
+      "open_auroc": 1.0,
+      "open_episode_rate": 1.0,
+      "open_step_rate": 0.049164208456243856,
+      "terminal_error_median": 0.003228045544886371,
+      "margin_positive_median": 1.0625745883832838,
+      "margin_negative_max": 1.0005018974884337,
+      "closed_auroc": 0.6491864023416711
+    },
+    {
+      "seed": 7,
+      "open_auroc": 1.0,
+      "open_episode_rate": 1.0,
+      "open_step_rate": 0.04697040864255519,
+      "terminal_error_median": 0.003134300287678138,
+      "margin_positive_median": 1.063864150903561,
+      "margin_negative_max": 0.9998730551855743,
+      "closed_auroc": 0.6467388389864593
+    },
+    {
+      "seed": 8,
+      "open_auroc": 0.999995129079396,
+      "open_episode_rate": 1.0,
+      "open_step_rate": 0.046446818392940084,
+      "terminal_error_median": 0.0030390842091191916,
+      "margin_positive_median": 1.0654667022820012,
+      "margin_negative_max": 1.0030576561854385,
+      "closed_auroc": 0.6093342228152101
+    },
+    {
+      "seed": 9,
+      "open_auroc": 1.0,
+      "open_episode_rate": 1.0,
+      "open_step_rate": 0.04928536224741252,
+      "terminal_error_median": 0.003022749065633157,
+      "margin_positive_median": 1.0606914748765188,
+      "margin_negative_max": 0.9980276929275603,
+      "closed_auroc": 0.6339250305581964
+    }
+  ],
+  "gate": {
+    "open_auroc": 0.9999990258158793,
+    "open_episode_rate": 1.0,
+    "terminal_error_median": 0.003079101627605696,
+    "margin_positive_median": 1.0616358887399813,
+    "margin_negative_max": 1.0001405486420176,
+    "closed_auroc": 0.6341792424822514,
+    "auroc_ok": true,
+    "rate_ok": true,
+    "terminal_error_ok": true,
+    "margin_separation_ok": false,
+    "p3_v3_ready": false
+  },
+  "repro": "```text\n实验名称：P3 终止头 v3\n日期：2026-10-28 10:59:02 中国标准时间\nGit commit：5716e198585371326a0233c90d11df6ae31ccea9\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：5,6,7,8,9\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_world_model_termination_v3.py\n耗时：10.2 s\n备注：开环：每回合固定随机动作序列，模型/环境共用；分数=预测下一状态的边界余量\n备注：闭环：v2 口径动作反馈，仅作边界对照，不参与 p3_v3_ready\n备注：终止界用 CartPole 已知界；不是时间/步数特征\n```"
+}
