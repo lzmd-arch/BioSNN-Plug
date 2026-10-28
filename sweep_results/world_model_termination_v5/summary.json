@@ -1,0 +1,93 @@
+{
+  "experiment": "P3 终止头 v5：校准集阈值",
+  "config": {
+    "seeds": [
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "episodes": 200,
+    "calibration_episodes": 100,
+    "test_episodes": 100,
+    "horizon": 200
+  },
+  "per_seed": [
+    {
+      "seed": 15,
+      "threshold": 0.9989607954496463,
+      "calibration_false_positive": 0.0009765625,
+      "calibration_hit": 1.0,
+      "open_auroc": 1.0,
+      "open_episode_rate": 1.0,
+      "terminal_error_median": 0.0030511671030769016,
+      "false_positive_rate": 0.001026167265264238,
+      "hit_rate": 1.0,
+      "closed_auroc": 0.6384358101341878
+    },
+    {
+      "seed": 16,
+      "threshold": 0.999138826453168,
+      "calibration_false_positive": 0.0009643201542912247,
+      "calibration_hit": 0.98,
+      "open_auroc": 1.0,
+      "open_episode_rate": 1.0,
+      "terminal_error_median": 0.00293858029065297,
+      "false_positive_rate": 0.0,
+      "hit_rate": 1.0,
+      "closed_auroc": 0.6347698744769874
+    },
+    {
+      "seed": 17,
+      "threshold": 0.9989915770542345,
+      "calibration_false_positive": 0.0005117707267144319,
+      "calibration_hit": 1.0,
+      "open_auroc": 1.0,
+      "open_episode_rate": 1.0,
+      "terminal_error_median": 0.0029792348580904293,
+      "false_positive_rate": 0.0004975124378109452,
+      "hit_rate": 1.0,
+      "closed_auroc": 0.651760524876982
+    },
+    {
+      "seed": 18,
+      "threshold": 1.0004315547321398,
+      "calibration_false_positive": 0.001,
+      "calibration_hit": 1.0,
+      "open_auroc": 1.0,
+      "open_episode_rate": 1.0,
+      "terminal_error_median": 0.003060426338924338,
+      "false_positive_rate": 0.0,
+      "hit_rate": 1.0,
+      "closed_auroc": 0.6306696927833695
+    },
+    {
+      "seed": 19,
+      "threshold": 0.9974798725887021,
+      "calibration_false_positive": 0.0009345794392523365,
+      "calibration_hit": 1.0,
+      "open_auroc": 0.9999800697558545,
+      "open_episode_rate": 1.0,
+      "terminal_error_median": 0.0032121673847956833,
+      "false_positive_rate": 0.000996512207274539,
+      "hit_rate": 0.99,
+      "closed_auroc": 0.6398519054827881
+    }
+  ],
+  "gate": {
+    "open_auroc": 0.9999960139511709,
+    "open_episode_rate": 1.0,
+    "terminal_error_median": 0.0030483151951080645,
+    "false_positive_rate": 0.0005040383820699445,
+    "hit_rate": 0.998,
+    "closed_auroc": 0.639097561550863,
+    "auroc_ok": true,
+    "rate_ok": true,
+    "terminal_error_ok": true,
+    "false_positive_ok": true,
+    "hit_rate_ok": true,
+    "p3_v5_ready": true
+  },
+  "repro": "```text\n实验名称：P3 终止头 v5\n日期：2026-10-28 11:01:26 中国标准时间\nGit commit：12c54b7d2f754ad215fc600f1db2e91b9847deb3\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：15,16,17,18,19\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_world_model_termination_v5.py\n耗时：12.0 s\n备注：开环固定动作序列；阈值只在 calibration（seed+30000）上选，测试不参与\n备注：目标：校准 FP<=1e-3 的最小 tau；测试用同一 tau\n备注：闭环 v2 口径仅作边界对照，不参与 p3_v5_ready\n```"
+}
