@@ -1125,6 +1125,20 @@
 >    的 e-prop；不引 ncps/CfC/BPTT。见
 >    [`sweep_results/liquid_shd_prereg.md`](sweep_results/liquid_shd_prereg.md)。
 
+> 125. **2026-10-29：元认知 v10——max_errors 修好 correlated，dim_dropout 仍差**。
+>    门 kNN(5) on `[max_errors, state_norm]`，种子 15–19：time_shift 0.998、time_reverse
+>    0.980、**correlated 0.983** 过；**dim_dropout 0.762** < 0.80，`v10_ready=false`。
+>    失败原因是只看最大维、丢掉整体能量；v11 加回 `errors`。见
+>    [`sweep_results/metacognitive_gate_v10/README.md`](sweep_results/metacognitive_gate_v10/README.md)。
+
+> 126. **2026-10-29：元认知 v11——max/mean/norm 组合门，四族 OOD 全过**。
+>    kNN(5) on `[max_errors, errors, state_norm]`，新种子 20–24：time_shift **0.998**、
+>    time_reverse **0.990**、dim_dropout **0.858**、correlated **0.987**，尺度 sanity
+>    **0.855**；覆盖 0.788、选择性 MSE 0.0355。`v11_ready=true`。通用 OOD 从 v8 的
+>    尺度+量化扩到时间重排/单维丢失/相关性五类；v9/v10 负结果保留。边界：仍只覆盖
+>    输入变换型 OOD，不覆盖标签漂移/零空间变换。见
+>    [`sweep_results/metacognitive_gate_v11/README.md`](sweep_results/metacognitive_gate_v11/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
