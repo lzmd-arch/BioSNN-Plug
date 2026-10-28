@@ -140,6 +140,7 @@ its activation condition; until that condition holds, it does not start. They ar
 | :--- | :--- | :--- |
 | **World-model component** ([ADR-0015](docs/adr/ADR-0015-world-model-as-phase-four-component.en.md)) | Phase-four component (inherits Predictive E-prop) | **Started** (phase 3 partially accepted under ADR-0019 + ADR-0015 exists): P3 closed loop is stable (NMSE ~2e-8), termination head AUROC 0.63-0.67, not passing |
 | **Arousal channel** ([ADR-0016](docs/adr/ADR-0016-arousal-channel-and-consolidation-experiment.en.md)) | Componentising the dynamics axis | Its ADR is accepted |
+| **Liquid τ (Liquid LIF)** ([prereg](sweep_results/liquid_lif_prereg.md) · [v7 candidate 4](docs/roadmap_v7_candidates.en.md)) | Dynamics-axis exploration (outside phase-4 acceptance) | Prereg/implementation/clean smoke done; 5 seeds × 250ep running; event-stream round pending activation |
 | **PINN physical prior** ([v7.0 candidate](docs/roadmap_v7_candidates.en.md)) | Roadmap v7.0 candidate (exploration note) | Phase-three acceptance + the CL probe lands; review in summer 2027 |
 
 ## Architecture
@@ -161,6 +162,7 @@ flowchart TB
         EM["Episodic memory<br/>DPAR delayed paired association<br/>◐ non-local pseudo 0.828; literal NN 0.938<br/>⚠️ local Hebbian 0.311; capacity K=8-16"]
         MG["Metacognitive gating<br/>member disagreement + world-model surprise + density gate<br/>◐ v3 CIFAR AUROC 0.753<br/>◐ v4 scale OOD only 0.9003; quantization OOD fails"]
         WMODEL["World model P3<br/>ridge state dynamics + termination head<br/>◐ closed-loop NMSE ~2e-8; termination AUROC 0.63-0.67"]
+        LIQ["Liquid τ (Liquid LIF)<br/>τ=1/(a+b·r), local, not trained<br/>◐ prereg/implementation/smoke; 5×250ep running<br/>⬜ event-stream/timing tasks pending"]
     end
 
     subgraph ARB["Cross-rule arbitration research/arbiter"]
@@ -191,6 +193,8 @@ flowchart TB
     HEB -.->|features| WM
     WM --> EM
     WM --> WMODEL
+    LIQ -.->|dynamic time-constant candidate| WM
+    LIQ -.->|modulator candidate (ADR-0016 downstream)| EM
     EM --> MG
     WMODEL --> MG
     MG --> ACT

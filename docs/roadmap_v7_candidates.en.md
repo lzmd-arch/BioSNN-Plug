@@ -103,3 +103,53 @@ line -- this project does not run LLM inference, so it changes no experimental d
 (two consecutive releases with fixes).
 
 **Review date**: spring 2027, together with Candidate 2.
+
+---
+
+## Candidate 4: Liquid τ (Liquid LIF, dynamics axis)
+
+**Nature**: an exploration item, not current scheduling. The mechanism is
+`τ_i(t)=1/(a+b·r_i(t))`, where `r_i` is the local firing rate; `a,b` are fixed and never enter
+the gradient. The e-prop α trajectory is currently **frozen** (the ∂α/∂z term is neglected).
+Preregistration, implementation and a clean 1-epoch smoke are done; 5 seeds × 250 epochs are
+running. Do not write "effective" before the result exists.
+
+### Routes worth taking (priority order)
+
+1. **Event streams (highest)**: SHD, DVS, cochlear events. The hypothesis predicts gains on
+   irregular event streams, not on the regular sMNIST grid; compare LIF/ALIF under the same
+   budget, with a separate prereg.
+2. **WM timing/event-interval task**: v9 is a spike-count/low-pass code, not a timing code.
+   The task must require timing, and a time-shuffle guard is mandatory so that "counting" is
+   not written up as "timing".
+3. **CL / modulation (ADR-0016 downstream)**: τ as a task-context/modulator carrier is only a
+   candidate; it needs a new CL protocol and cannot be extrapolated from sMNIST.
+4. **Gas-sensor temperature modulation (private, out of repo)**: the known gap is that a fixed
+   τ treats slow temperature modulation as events; the plugin is proprietary and out of repo,
+   so this is private validation only -- no code or parameters go into the public repo.
+
+### Explicit non-routes
+
+- **P3 500-step pure-imagination closed loop**: the failure is binary action feedback plus
+  float32 sensitivity; liquid τ does not fix it. Keep the rolling-horizon closed-loop wording.
+- **General OOD**: liquid τ adds no input information; keep reconstruction/input-side gates.
+- **WM v5/v6 input-sample ceiling**: the information ceiling of five Bernoulli samples is
+  independent of τ.
+- **Episodic capacity / thin K16**: τ is only a leaky integrator; capacity needs attractors,
+  sparsification or error correction.
+
+### Activation conditions
+
+1. The sMNIST 5-seed result is recorded and read under the prereg (mean >0.8889 and 95% CI
+   lower bound >0.8889);
+2. The event-stream prereg is on disk first (same budget/encoding, time-shuffle and count
+   controls);
+3. The frozen-α approximation is stated in the report; claiming an exact liquid gradient
+   requires deriving and numerically verifying ∂α/∂z;
+4. The GPU budget is reconfirmed against the measured ETA.
+
+### Review date
+
+After the sMNIST result (about 2026-10-29), decide whether to start event streams; WM timing
+and CL are considered only after event streams pass.
+
