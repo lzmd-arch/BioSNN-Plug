@@ -111,11 +111,15 @@ class SpikingPopulationTimescale:
         threshold: float = 1.0,
         seed: int = 0,
         membrane_window: int = 10,
+        readout: str = "post",
     ) -> None:
         if population < 1:
             raise ValueError(f"population 必须 >= 1，收到 {population}。")
         if not 0.0 < gain_range[0] <= gain_range[1]:
             raise ValueError(f"gain_range 必须为正且递增，收到 {gain_range}。")
+        if readout not in ("post", "prereset", "trace"):
+            raise ValueError(f"readout 只能是 post / prereset / trace，收到 {readout!r}。")
+        self.readout = readout
         self.n_dims = int(n_dims)
         self.population = int(population)
         self.taus = tuple(taus)
@@ -164,6 +168,7 @@ class SpikingPopulationTimescale:
         spikes = torch.zeros(len(self.taus))
         peak = 0.0
         states = [ALIFState.zeros(1, width) for _ in self.cells]
+        traces = [torch.zeros(1, width) for _ in self.cells]
         for step in range(test_step):
             if CUE_A[0] <= step <= CUE_A[1]:
                 probability = probability_a
@@ -174,13 +179,24 @@ class SpikingPopulationTimescale:
             expanded = probability.repeat_interleave(self.population)
             inputs = (torch.rand(width, generator=generator) < expanded).float().unsqueeze(0)
             for index, cell in enumerate(self.cells):
+                previous = states[index].z
                 fired, states[index] = cell.step(inputs, states[index])
                 spikes[index] += fired.sum()
                 if step >= test_step - self.membrane_window:
+                    if self.readout == "trace":
+                        # v 含 −thr·z_{t−1} 的复位；加上 thr·trace_{t−1} 得到无复位的
+                        # 泄漏积分 u_t = Σ α^{t−s} I_s。trace 与膜电位同 τ。
+                        value = states[index].v + cell.threshold * traces[index]
+                    elif self.readout == "prereset":
+                        # 复位项用基阈值；把上一步的复位加回去即复位前膜电位。
+                        value = states[index].v + cell.threshold * previous
+                    else:
+                        value = states[index].v
                     membrane[index] += (
-                        states[index].v.squeeze(0).reshape(self.n_dims, self.population).mean(dim=1)
+                        value.squeeze(0).reshape(self.n_dims, self.population).mean(dim=1)
                     )
                     peak = max(peak, float(states[index].v.max()))
+                traces[index] = cell.alpha * traces[index] + fired
         self.last_spike_rates = (spikes / (test_step * width)).numpy()
         self.last_membrane_max = peak
         span = min(self.membrane_window, test_step)
