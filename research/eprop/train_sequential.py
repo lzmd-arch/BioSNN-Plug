@@ -112,6 +112,7 @@ def train(
     *,
     learner_cls=None,
     learner_kwargs: dict | None = None,
+    metrics: dict | None = None,
 ) -> tuple[float, float, int]:
     book = SeedBook(base=args.seed)
     book.apply("全局种子")
@@ -157,6 +158,8 @@ def train(
     started = time.perf_counter()
     n_train = len(train_labels)
 
+    selected_total = 0.0
+    selected_batches = 0
     with measure_peak_memory(device) as memory:
         for epoch in range(1, args.epochs + 1):
             permutation = torch.randperm(n_train, generator=shuffle)
@@ -166,6 +169,8 @@ def train(
                 chunk = permutation[start : start + args.batch_size]
                 running += model.update(train_inputs[:, chunk], train_labels[chunk])
                 batches += 1
+                selected_total += float(getattr(model, "last_update_fraction", 1.0))
+                selected_batches += 1
             running /= max(batches, 1)
 
             eval_every = args.eval_every or max(1, args.epochs // 5)
@@ -193,6 +198,10 @@ def train(
     print(f"活跃神经元比例：{active:.4f}（§七 阈值 > {ACTIVE_NEURON_THRESHOLD}）")
     print(f"脉冲稀疏度：{sparsity:.4f}")
 
+    if metrics is not None:
+        metrics["mean_update_fraction"] = (
+            selected_total / selected_batches if selected_batches else 1.0
+        )
     degradation = DegradationLog()
     if limit is not None:
         degradation.scale_reduction = True
