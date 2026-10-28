@@ -9,10 +9,10 @@
 
 | 组件 | 状态 | 关键数字 | 边界/口径 |
 | :--- | :--- | :--- | :--- |
-| 多时间尺度工作记忆 | **v4 ready** | 三线索 R² **0.9994 / 0.9982 / 0.9994**，均值 0.9990 > ridge 0.9931 | 局部 RLS 读出（rank-one，无反向传播）；脉冲 v5 不 ready |
-| 元认知门控 | **v3 + v4 ready（仅尺度）** | v3 CIFAR：选择性 80% **0.5423**、AUROC **0.7530**、ECE **0.0296**；v4 e2e v3：弃权 **0.8456**、AUROC **0.9003**、覆盖 **0.8028** | v4 增益来自 `state_norm` 对 A/B×3 尺度 OOD 的检测。v5 旋转不构成 OOD；v6 量化 OOD 有效（误差 6.38×）但弃权 0.1716/AUROC 0.4876，门失效。不是通用 OOD；v7 高阶矩 0.2048/0.5024，仍失效 |
-| 世界模型 P3 | **部分** | 闭环 H=10 NMSE ~2e-8；首发散步 **115.5**；终止闭环 AUROC **0.632–0.665**；v2 多步想象 **0.6469** | 状态/闭环稳定过；终止头仍不过 0.75，`p3_ready=false`；v2 标签修订与结果见 README |
-| 情景记忆 | **DPAR 非局部可用** | DPAR（K=8、σ=0.1）：字面 NN **0.938**、pseudo **0.828**、Hebbian **0.311**；状态控制 **0.121**（chance 0.125） | 只有非局部伪逆过线；局部 Hebbian 仍不可用；容量边界 K=8–16；原 CartPole 任务边界保留 |
+| 多时间尺度工作记忆 | **v4 + v9 ready** | v4 三线索 R² **0.9994 / 0.9982 / 0.9994**；v9 脉冲迹 A/B **0.9257 / 0.9281**（LIF）、**0.9261 / 0.9292**（ALIF） | v4 局部 RLS；v9 独立传入群体 + 脉冲迹（臂差中位数 0.130，非平凡）；v5/v6/v7 负结果，v8 平凡解不作证据；v9 是脉冲计数/低通码，不要求时序 |
+| 元认知门控 | **v3 + v8 ready** | v3 CIFAR：选择性 80% **0.5423**、AUROC **0.7530**、ECE **0.0296**；v8（种子 5–9）：覆盖 **0.810**、选择性 MSE **0.033**、量化弃权 **0.898**、AUROC **0.925**、尺度弃权 **0.851**、有效性 **6.43×** | v4 仅尺度；v5 旋转不构成 OOD；v6/v7 量化门失效；v8 是重建一致性门（errors + state_norm），只覆盖输入变换型 OOD，不是通用弃权 |
+| 世界模型 P3 | **状态/开环终止 ready；闭环终止开放** | 闭环 H=10 NMSE ~2e-8；散步 115.5；开环终止 AUROC **0.999996**、FP **0.000504**、命中 **0.998**、终止步误差 **0.00305**（v5，种子 15–19）；闭环终止 AUROC **0.634–0.665** | 闭环状态稳定过；开环固定动作序列的终止风险过线（v5）；**动作反馈闭环仍失败**（v2 0.6469、v3/v4/v5 约 0.63–0.66），`p3_closed_loop_ready=false`；v3 全或无、v4 率判据均原样保留 |
+| 情景记忆 | **DPAR 非局部 + 局部 delta 可用** | v4：字面 NN **0.938**、pseudo **0.828**、Hebbian **0.311**；v5 局部 delta K=8 **0.805**、K=4 **0.922**、状态控制 **0.123** | 局部 delta 逼近伪逆（0.805 vs 0.816），K8 薄过（3/5 种子<0.80），K4 稳定；容量 K=8–16；Hebbian 一次性外积仍不可用 |
 | 阶段四集成 demo | **可运行** | WM/世界模型逐位等价；元认知回归 AUROC **0.562**；情景检索 MSE 1.194 | 组合/等价性成立；端到端元认知未继承，不能当能力结论 |
 | 端到端任务（延迟问答 + OOD 弃权） | **4/5 判据过** | R² **0.9994**、选择性 MSE **0.00053**、OOD AUROC **0.927**、弃权 **0.887**；情景 MSE **0.822** | WM + 元认知 + 世界模型惊喜能协同；**情景检索是唯一未过项**，`e2e_ready=false` |
 | 端到端 v2（四线索 + 离散情景） | **5/5 ready** | R² **0.9983**、选择性 MSE **0.00172**、OOD AUROC **0.8895**、弃权 **0.824**、E 检索 **1.000** | 五条全过；但 E 检索是“管道通”不是难记忆，seed 2 弃权仅 0.746 |
@@ -35,7 +35,7 @@
 - 只表示**在该组件的预注册判据下**通过（见各结果 README），不包括：
   - 阶段四端到端任务；
   - 与总线/插件的集成；
-  - 脉冲化（工作记忆）或全局部化（元认知标定头）；
+  - 全局部化（元认知标定头）；v9 的脉冲工作记忆是计数/低通码，时序编码未验；
 - 所有“负结果/边界”原样保留，没有事后改判据；计划书台账 ㊽–110 是完整索引。
 
 ## 3. 开放研究项（按建议顺序）
@@ -63,9 +63,11 @@
    元认知，v14 的 14/18 仍是状态级结论。
    **v12 换 diag 门**：snapshot85 0.7820、longtau 0.8052，两臂七项全过；shrunk 仍不过。
    K8 的边界是 **28×28 协方差估计**，不是 WM 或 DPAR。
-2. **工作记忆 v6（脉冲）**：v5 的失败在**表示**（60 步计数只有个位数），不在读出；
-   v6 需改膜电位/亚阈值状态、更长积分窗口或 rate 输入。注意 v5 跑了 2598.7 s，下一轮
-   要减种子/窗口或并行。
+2. **脉冲工作记忆 v5–v9（已收口）**：v5 计数 0.217/0.187、v6 膜电位 0.309/0.121、
+   v7 群体膜电位 0.788——瓶颈从“5 个伯努利样本”转到“脉冲复位擦除”；v8 的
+   `v+thr·trace` 代数抵消复位，LIF/ALIF 逐位相同（≤2e-7），是平凡解、不作证据；
+   **v9 用独立传入群体 + 纯脉冲迹 `s=αs+z`**，LIF/ALIF 0.9269/0.9276，臂差中位数
+   0.130，四条判据全过。边界：v9 是脉冲计数/低通码，不要求时序；读出是测量头。
 3. **元认知 v4 已完成（有边界）**：独立校准集 + 三维密度门（disagreement / surprise /
    state_norm）把 e2e v3 的弃权从 0.7056 提到 **0.8456**、AUROC 0.8350→**0.9003**，
    选择性 MSE 基本不变。但 **gauss2 反而更差**（0.6984），增益来自 `state_norm` 对
@@ -75,17 +77,24 @@
    先过“OOD 误差 ≥2× in-dist”的有效性门，再谈弃权。**v6 量化 OOD 过了有效性门**
    （6.38×），但 gauss3 弃权 0.1716、AUROC 0.4876，四个门全失效；**v7 换高阶矩门**
    （mean z²/|z|/z⁴/尾比例）仍是 0.2048 / 0.5024，尺度 sanity 也掉到 0.7544。所以 v4
-   只能限定在尺度偏移，不能写成通用弃权能力。
-4. **世界模型 P3 后续**：终止闭环的分布偏移（离线 0.999 → 闭环 0.665）没有解决；
-   方向是更强状态模型（把发散步从 115 推远）或与想象分布匹配的终止头；一步想象增广
-   已试，0.632；**v2 多步想象 + 真实标签 0.6469**，仍不够；下一步需要时间/风险特征或
-   更强状态模型。
+   只能限定在尺度偏移，不能写成通用弃权能力。**v8 换成重建一致性门**
+   （kNN(5) on [errors, state_norm]）：种子 5–9 覆盖 0.810、量化弃权 0.898/AUROC
+   0.925、尺度 0.851、有效性 6.43×，`v8_ready=true`；边界是只覆盖输入变换型 OOD，
+   覆盖率单种子出带。
+4. **世界模型 P3（拆分收口）**：闭环状态/稳定性过（H=10 NMSE ~2e-8、散步 115.5），
+   但**闭环终止**仍失败：v1 0.616、dedicated 0.665、一步想象 0.632、v2 多步 0.6469，
+   v3/v4/v5 的闭环对照也只有 0.634–0.640。根因是动作反馈：平衡策略在 `θ+0.5θ̇` 阈值
+   附近翻转动作，微小模型误差改变动作序列，115 步想象发散；DAgger 不能修（一步误差已
+   1e-5）。**开环固定动作序列**的终止风险可用：v3 AUROC≈1 但全或无分离差 1.4e-4，
+   v4 率判据 FP 0.00244 未过，**v5 校准阈值后 AUROC 0.999996、FP 0.000504、命中
+   0.998、终止步误差 0.00305**。`p3_v5_ready=true` 仅限开环；`p3_closed_loop_ready=false`。
 5. **情景记忆**：DPAR（v4）证明任务确实需要绑定（状态控制 0.121 ≈ chance）；**非局部
-   伪逆**在 K=8/σ=0.1 过线（0.828），字面 NN 0.938 更高，**局部 Hebbian 仍只有 0.311**，
-   容量边界 K=8–16。原 CartPole 任务/噪声/时间顺序边界保留。下一步应试局部或低维键，
-   或接受查表基线；不要继续调 k/β/编码维度。
-6. **工作记忆 v5 的替代**：如果项目坚持“纯脉冲计数”，需要先解决低计数表示问题；
-   否则接受 v4 的速率漏积分器作为阶段四的可用局部表示。
+   伪逆**在 K=8/σ=0.1 过线（0.828），字面 NN 0.938 更高，**局部 Hebbian 仍只有 0.311**。
+   **v5 的局部 delta 规则**把 K=8 提到 **0.805**、K=4 **0.922**，逼近伪逆 0.816；
+   边界：K8 均值过线但 3/5 种子 <0.80，K=16 掉到 0.531，σ=0.3 掉到 0.553。容量边界
+   K=8–16；原 CartPole 任务/噪声/时间顺序边界保留。
+6. **工作记忆收口**：v4（速率）与 v9（脉冲迹）都是 ready；v9 的边界是计数/低通码、
+   不要求时序。若后续要主张时序编码，需要新的预注册与时间置换守卫。
 
 ## 4. 与阶段三的关系
 
@@ -96,18 +105,27 @@
 ## 5. 索引
 
 - 工作记忆：[v4 结果](../sweep_results/working_memory_v4/README.md)、
-  [v5 结果](../sweep_results/working_memory_v5/README.md)
+  [v5 结果](../sweep_results/working_memory_v5/README.md)、
+  [v6 膜电位](../sweep_results/working_memory_v6/README.md)、
+  [v7 群体膜电位](../sweep_results/working_memory_v7/README.md)、
+  [v8 平凡解](../sweep_results/working_memory_v8/README.md)、
+  [v9 脉冲迹](../sweep_results/working_memory_v9/README.md)
 - 元认知：[v3 结果](../sweep_results/metacognitive_gate_v3/README.md)、
   [v4 风险控制](../sweep_results/metacognitive_gate_v4/README.md)、
   [v5 旋转有效性检查](../sweep_results/metacognitive_gate_v5/README.md)、
   [v6 量化 OOD](../sweep_results/metacognitive_gate_v6/README.md)、
-  [v7 高阶矩门](../sweep_results/metacognitive_gate_v7/README.md)
+  [v7 高阶矩门](../sweep_results/metacognitive_gate_v7/README.md)、
+  [v8 重建一致性门](../sweep_results/metacognitive_gate_v8/README.md)
 - 世界模型：[P3 闭环](../sweep_results/world_model_closed_loop_h500/README.md)、
   [终止头集成](../sweep_results/world_model_closed_loop_head/README.md)、
   [想象状态头](../sweep_results/world_model_closed_loop_imagined/README.md)、
-  [终止头 v2](../sweep_results/world_model_termination_v2/README.md)
+  [终止头 v2](../sweep_results/world_model_termination_v2/README.md)、
+  [终止头 v3](../sweep_results/world_model_termination_v3/README.md)、
+  [终止头 v4](../sweep_results/world_model_termination_v4/README.md)、
+  [终止头 v5](../sweep_results/world_model_termination_v5/README.md)
 - 情景记忆：[v3 结果](../sweep_results/episodic_memory_v3/README.md)、
-  [DPAR 结果](../sweep_results/episodic_paired_associate/README.md)
+  [DPAR 结果](../sweep_results/episodic_paired_associate/README.md)、
+  [局部 delta v5](../sweep_results/episodic_paired_associate_v5/README.md)
 - 集成 demo：[结果](../sweep_results/stage4_integration_demo/README.md)
 - 端到端：[v2 结果](../sweep_results/stage4_e2e_v2/README.md)、
   [v3 压力测试](../sweep_results/stage4_e2e_v3/README.md)、

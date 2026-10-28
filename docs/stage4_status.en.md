@@ -13,10 +13,10 @@ not turn "component ready" into "phase-4 end-to-end holds".
 
 | Component | Status | Key numbers | Boundary/caveat |
 | :--- | :--- | :--- | :--- |
-| Multi-timescale working memory | **v4 ready** | Three-cue R² **0.9994 / 0.9982 / 0.9994**, mean 0.9990 > ridge 0.9931 | Local RLS readout (rank-one, no backprop); spiking v5 not ready |
-| Metacognitive gate | **v3 + v4 ready (scale only)** | v3 CIFAR: selective 80% **0.5423**, AUROC **0.7530**, ECE **0.0296**; v4 e2e v3: abstain **0.8456**, AUROC **0.9003**, coverage **0.8028** | v4's gain comes from `state_norm` detecting the A/B×3 scale OOD. v5 rotation is not OOD; v6 quantization OOD is valid (error 6.38×) but abstain 0.1716/AUROC 0.4876, so the gate fails; v7 higher moments give 0.2048/0.5024 and still fail. Not general OOD |
-| World model P3 | **partial** | Closed-loop H=10 NMSE ~2e-8; first-step drift **115.5**; closed-loop termination AUROC **0.632–0.665**; v2 multi-step **0.6469** | State/closed loop stable; termination head still below 0.75, `p3_ready=false`; see the v2 README for the label revision |
-| Episodic memory | **DPAR non-local usable** | DPAR (K=8, σ=0.1): literal NN **0.938**, pseudo **0.828**, Hebbian **0.311**; state control **0.121** (chance 0.125) | Only non-local pseudo-inverse passes; local Hebbian still unusable; capacity boundary K=8–16; the original CartPole task boundary is preserved |
+| Multi-timescale working memory | **v4 + v9 ready** | v4 three cues R² **0.9994 / 0.9982 / 0.9994**; v9 spiking trace A/B **0.9257 / 0.9281** (LIF), **0.9261 / 0.9292** (ALIF) | v4 local RLS; v9 independent afferent population + spike trace (arm-state median diff 0.130, non-trivial); v5/v6/v7 negative, v8 trivial (no evidence); v9 is a spike-count/low-pass code, timing not required |
+| Metacognitive gate | **v3 + v8 ready** | v3 CIFAR: selective 80% **0.5423**, AUROC **0.7530**, ECE **0.0296**; v8 (seeds 5–9): coverage **0.810**, selective MSE **0.033**, quantized abstain **0.898**, AUROC **0.925**, scale abstain **0.851**, validity **6.43×** | v4 scale only; v5 rotation not OOD; v6/v7 quantization gates fail; v8 reconstruction-consistency gate (errors + state_norm), input-transform OOD only, not general abstention |
+| World model P3 | **state/open-loop termination ready; closed-loop termination open** | closed-loop H=10 NMSE ~2e-8; drift 115.5; open-loop termination AUROC **0.999996**, FP **0.000504**, hit **0.998**, terminal error **0.00305** (v5, seeds 15–19); closed-loop termination AUROC **0.634–0.665** | closed-loop state stable; open-loop fixed-action termination ready (v5); **action-feedback closed loop still fails** (v2 0.6469, v3/v4/v5 ~0.63–0.66), `p3_closed_loop_ready=false`; v3 all-or-nothing and v4 rate verdicts preserved |
+| Episodic memory | **DPAR non-local + local delta usable** | v4: literal NN **0.938**, pseudo **0.828**, Hebbian **0.311**; v5 local delta K=8 **0.805**, K=4 **0.922**, state control **0.123** | local delta approaches pseudo-inverse (0.805 vs 0.816); K8 mean passes but 3/5 seeds <0.80; K4 stable; capacity K=8–16; one-shot Hebbian still unusable |
 | Phase-4 integration demo | **runnable** | WM/world model bit-identical; metacognitive regression AUROC **0.562**; episodic recall MSE 1.194 | Composition/equivalence holds; end-to-end metacognition not inherited, not a capability conclusion |
 | End-to-end task (delayed QA + OOD abstention) | **4/5 criteria** | R² **0.9994**, selective MSE **0.00053**, OOD AUROC **0.927**, abstain **0.887**; episodic MSE **0.822** | WM + metacognition + world-model surprise cooperate; **episodic recall is the only miss**, `e2e_ready=false` |
 | End-to-end v2 (four cues + discrete episodic) | **5/5 ready** | R² **0.9983**, selective MSE **0.00172**, OOD AUROC **0.8895**, abstain **0.824**, E recall **1.000** | All five pass; but E recall is "pipeline works", not hard memory; seed 2 abstains only 0.746 |
@@ -77,10 +77,13 @@ not turn "component ready" into "phase-4 end-to-end holds".
    a stronger scale feature. **v16 switches to an input-scale gate `max(||A||,||B||)` and passes
    18/18**; but it is an input-level gate, not state-level metacognition, and v14's 14/18 remains
    the state-level result.
-2. **Working memory v6 (spiking)**: v5's failure is in the **representation** (60-step counts
-   only single digits), not the readout; v6 needs membrane/subthreshold state, a longer
-   integration window, or rate input. Note v5 took 2598.7 s; the next round should cut
-   seeds/windows or parallelize.
+2. **Spiking working memory v5–v9 (closed)**: v5 counts 0.217/0.187, v6 membrane 0.309/0.121,
+   v7 population membrane 0.788; the bottleneck moved from "5 Bernoulli samples" to "spike reset
+   erasure". v8's `v+thr·trace` cancels reset algebraically (LIF/ALIF identical to ≤2e-7) and is a
+   trivial solution, not evidence. **v9 uses an independent afferent population + pure spike trace
+   `s=αs+z`**: LIF/ALIF 0.9269/0.9276, arm-state median diff 0.130, all four criteria pass.
+   Boundary: v9 is a spike-count/low-pass code; timing is not required, and the readout is a
+   measurement head.
 3. **Metacognition v4 is done (with a boundary)**: an independent calibration split plus a
    three-dimensional density gate (disagreement / surprise / state_norm) raises e2e v3 abstention
    from 0.7056 to **0.8456** and AUROC from 0.8350 to **0.9003**, with selective MSE essentially
@@ -94,22 +97,30 @@ not turn "component ready" into "phase-4 end-to-end holds".
    abstains 0.1716 with AUROC 0.4876 and all four gates fail; **v7 replaces the features with
    higher moments** (mean z²/|z|/z⁴/tail ratio) and still gets 0.2048/0.5024, with scale sanity
    dropping to 0.7544. So v4 is limited to scale shifts and cannot be written up as general
-   abstention ability.
-4. **World model P3 follow-up**: the closed-loop termination distribution shift (offline 0.999 →
-   closed loop 0.665) is unresolved; directions are a stronger state model (push the first-step
-   drift well beyond 115) or a termination head matched to the imagined distribution;
-   one-step imagination augmentation was tried, 0.632; **v2 multi-step imagination + real labels
-   is 0.6469**, still not enough. Time/risk features or a stronger state model are the next
-   candidates.
+   abstention ability. **v8 switches to a reconstruction-consistency gate** (kNN(5) on
+   [errors, state_norm]): seeds 5–9 coverage 0.810, quantized abstain 0.898/AUROC 0.925, scale
+   0.851, validity 6.43×, `v8_ready=true`; the boundary is input-transform OOD only, and coverage
+   leaves the band on individual seeds.
+4. **World model P3 (split)**: closed-loop state/stability passes (H=10 NMSE ~2e-8, drift 115.5),
+   but **closed-loop termination** still fails: v1 0.616, dedicated 0.665, one-step imagined 0.632,
+   v2 multi-step 0.6469; v3/v4/v5 closed-loop controls are only 0.634–0.640. The cause is action
+   feedback: the balancing policy flips actions near `θ+0.5θ̇`, tiny model errors change the action
+   sequence, and a 115-step imagination diverges; DAgger cannot fix it (one-step error already 1e-5).
+   **Open-loop fixed-action** termination risk is usable: v3 AUROC≈1 but all-or-nothing separation
+   misses by 1.4e-4, v4 rate FP 0.00244 fails, **v5 calibrated threshold reaches AUROC 0.999996,
+   FP 0.000504, hit 0.998, terminal error 0.00305**. `p3_v5_ready=true` is open-loop only;
+   `p3_closed_loop_ready=false`.
 5. **Episodic memory**: DPAR (v4) shows the task really requires binding (state control 0.121
    ≈ chance); **non-local pseudo-inverse** passes at K=8/σ=0.1 (0.828), literal NN is higher at
    0.938, and **local Hebbian still only reaches 0.311**; capacity boundary K=8–16. The original
    CartPole task/noise/temporal-order boundary is preserved. The next step should try local or
    low-dimensional keys, or accept the lookup baseline; do not keep tuning k/β/encoding
-   dimension.
-6. **Working-memory v5 alternative**: if the project insists on "pure spike counts", first solve
-   the low-count representation problem; otherwise accept v4's rate leaky integrator as the
-   usable local representation for phase 4.
+   dimension. **v5's local delta rule** raises K=8 to **0.805** and K=4 to **0.922**, close to
+   pseudo-inverse 0.816; boundaries: K8 passes on the mean but 3/5 seeds <0.80, K=16 drops to 0.531,
+   σ=0.3 to 0.553.
+6. **Working-memory close-out**: both v4 (rate) and v9 (spike trace) are ready; v9's boundary is a
+   spike-count/low-pass code, not a timing code. Claiming temporal coding needs a new prereg and a
+   time-shuffle guard.
 
 ## 4. Relation to phase 3
 
@@ -122,18 +133,27 @@ not turn "component ready" into "phase-4 end-to-end holds".
 ## 5. Index
 
 - Working memory: [v4 result](../sweep_results/working_memory_v4/README.md),
-  [v5 result](../sweep_results/working_memory_v5/README.md)
+  [v5 result](../sweep_results/working_memory_v5/README.md),
+  [v6 membrane](../sweep_results/working_memory_v6/README.md),
+  [v7 population membrane](../sweep_results/working_memory_v7/README.md),
+  [v8 trivial](../sweep_results/working_memory_v8/README.md),
+  [v9 spike trace](../sweep_results/working_memory_v9/README.md)
 - Metacognition: [v3 result](../sweep_results/metacognitive_gate_v3/README.md),
   [v4 risk control](../sweep_results/metacognitive_gate_v4/README.md),
   [v5 rotation validity check](../sweep_results/metacognitive_gate_v5/README.md),
   [v6 quantization OOD](../sweep_results/metacognitive_gate_v6/README.md),
-  [v7 higher-moment gate](../sweep_results/metacognitive_gate_v7/README.md)
+  [v7 higher-moment gate](../sweep_results/metacognitive_gate_v7/README.md),
+  [v8 reconstruction gate](../sweep_results/metacognitive_gate_v8/README.md)
 - World model: [P3 closed loop](../sweep_results/world_model_closed_loop_h500/README.md),
   [termination-head integration](../sweep_results/world_model_closed_loop_head/README.md),
   [imagined-state head](../sweep_results/world_model_closed_loop_imagined/README.md),
-  [termination head v2](../sweep_results/world_model_termination_v2/README.md)
+  [termination head v2](../sweep_results/world_model_termination_v2/README.md),
+  [v3 open-loop](../sweep_results/world_model_termination_v3/README.md),
+  [v4 rate](../sweep_results/world_model_termination_v4/README.md),
+  [v5 calibrated](../sweep_results/world_model_termination_v5/README.md)
 - Episodic memory: [v3 result](../sweep_results/episodic_memory_v3/README.md),
-  [DPAR result](../sweep_results/episodic_paired_associate/README.md)
+  [DPAR result](../sweep_results/episodic_paired_associate/README.md),
+  [local delta v5](../sweep_results/episodic_paired_associate_v5/README.md)
 - Integration demo: [result](../sweep_results/stage4_integration_demo/README.md)
 - End-to-end: [v2 result](../sweep_results/stage4_e2e_v2/README.md),
   [v3 stress test](../sweep_results/stage4_e2e_v3/README.md),

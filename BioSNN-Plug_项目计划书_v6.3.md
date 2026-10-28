@@ -1015,6 +1015,67 @@
 >    索引（先前 test[7] 误用 input_norm，state=0.0；修复后 0.12–0.25）。见
 >    [`sweep_results/stage4_e2e_v16/README.md`](sweep_results/stage4_e2e_v16/README.md)。
 
+> 111. **2026-10-28：工作记忆 v6——膜电位读出，仍不 ready（5 个伯努利样本的上限）**。
+>    v6 只把 60 步脉冲计数换成最后 10 步膜电位均值：LIF 多尺度 **0.308/0.311**、ALIF
+>    **0.044/0.197**；ridge 在同一份膜电位上与 RLS 逐位接近。诊断显示没有阈值饱和
+>    （近阈值比例 0–0.6%），瓶颈是每个 cue 只有 5 个伯努利样本：同生成过程的最优线性
+>    上界约 **0.382**，LIF 的 0.309 已接近。`v6_ready=false`；v5/v6 撞同一堵墙，下一步
+>    必须改输入统计。见
+>    [`sweep_results/working_memory_v6/README.md`](sweep_results/working_memory_v6/README.md)。
+
+> 112. **2026-10-28：工作记忆 v7——独立传入群体 0.788，差复位擦除**。
+>    每个 (τ,维度) 32 个独立传入通道、对数间隔增益 0.5–4.0，群体膜电位均值 + 局部 RLS：
+>    LIF **0.075/0.795**、ALIF **0.718/0.858**（均值 0.788）；两臂脉冲率 >0，fast/单尺度
+>    判据过，只差不退化线 0.899。诊断：慢 τ 组自己只解出 A **0.379**——B 窗口的脉冲复位
+>    把早期 cue 永久扣掉；ALIF 适应减轻复位，所以远好于 LIF。`v7_ready=false`。见
+>    [`sweep_results/working_memory_v7/README.md`](sweep_results/working_memory_v7/README.md)。
+
+> 113. **2026-10-28：工作记忆 v8——判据过线但是平凡解**。
+>    `v + thr·trace` 读出：LIF/ALIF 都 **0.9332**，两臂逐位相同（差 ≤2e-7），ridge 也相同。
+>    原因是读出 `v_t + thr·trace_{t−1} = Σ α^{t−s} I_s` **代数抵消复位**，与脉冲时序/beta
+>    无关；预注册的 `spiking_ok`（脉冲率>0）不够。按预注册 `v8_ready=true`，但
+>    **`v8_valid_as_spiking=false`**，不作脉冲工作记忆证据；v9 加臂差守卫。见
+>    [`sweep_results/working_memory_v8/README.md`](sweep_results/working_memory_v8/README.md)。
+
+> 114. **2026-10-28：工作记忆 v9——纯脉冲迹读出，首个非平凡 ready**。
+>    `s_t = α·s_{t−1} + z_t`（不含膜电位）+ 最后 10 步群体均值 + 局部 RLS；LIF
+>    **0.9257/0.9281**、ALIF **0.9261/0.9292**，四条判据全过；**臂差中位数 0.130**
+>    （阈值 1e-3）、脉冲率 0.098/0.089，说明脉冲动力学确实参与读出。`v9_ready=true`。
+>    **边界**：脉冲计数/低通码，不要求时序；读出是固定 α 的测量头；与 v4 速率 0.9990
+>    仍差 0.072。见
+>    [`sweep_results/working_memory_v9/README.md`](sweep_results/working_memory_v9/README.md)。
+
+> 115. **2026-10-28：情景记忆 v5——局部 delta 规则 0.805，逼近伪逆**。
+>    DPAR 不变；把局部存储换成误差修正 delta（50 epoch、η=1.0），最终种子 5–9：K=8
+>    **0.805**、K=4 **0.922**、状态控制 **0.123**、Hebbian **0.314**、伪逆 0.816、
+>    字面 NN 0.930；`v5_ready=true`。**边界**：K8 逐种子 0.782–0.858，3/5 低于 0.80，
+>    均值薄过；K=16 掉到 0.531、σ=0.3 掉到 0.553；delta 是局部误差修正，不是一次性
+>    Hebbian。见
+>    [`sweep_results/episodic_paired_associate_v5/README.md`](sweep_results/episodic_paired_associate_v5/README.md)。
+
+> 116. **2026-10-28：元认知 v8——重建一致性门，量化+尺度 OOD ready**。
+>    v6 的量化 OOD 误差升到 6.38×，但密度门没有“state 能否重建观测输入”这一维；v8 用
+>    kNN(5) on `[errors, state_norm]`。最终种子 5–9：覆盖 **0.810**、选择性 MSE **0.033**、
+>    量化弃权 **0.898**、AUROC **0.925**、尺度弃权 **0.851**、有效性 **6.43×**，
+>    `v8_ready=true`。**边界**：只覆盖输入变换型 OOD（量化、尺度），不是通用弃权；
+>    覆盖率单种子 0.772/0.868 出带，均值过线。见
+>    [`sweep_results/metacognitive_gate_v8/README.md`](sweep_results/metacognitive_gate_v8/README.md)。
+
+> 117. **2026-10-28：P3 终止 v3–v5——开环 ready，闭环仍是开放边界**。
+>    闭环终止仍只有 0.63–0.66（v1 0.616、dedicated 0.665、v2 0.6469），根因是动作反馈
+>    在 `θ+0.5θ̇` 阈值附近翻转动作，微小模型误差改变动作序列、115 步想象发散；DAgger
+>    不能修（一步误差已 1e-5）。固定动作序列的开环：v3 AUROC≈1 但全或无分离差 1.4e-4，
+>    `p3_v3_ready=false`；v4 率判据 FP **0.00244**，`p3_v4_ready=false`；v5 只在校准集
+>    选阈值，测试 AUROC **0.999996**、FP **0.000504**、命中 **0.998**、终止步误差
+>    **0.00305**，`p3_v5_ready=true`。**边界**：这只证明开环固定动作序列的终止风险，
+>    `p3_closed_loop_ready=false`；v3/v4 的 false 判定原样保留。见
+>    [`sweep_results/world_model_termination_v5/README.md`](sweep_results/world_model_termination_v5/README.md)。
+
+> 118. **2026-10-28：阶段四记分卡三语更新**。
+>    [docs/stage4_status.md](docs/stage4_status.md)、`.en.md`、`.ja.md` 同步：工作记忆
+>    v4+v9、元认知 v3+v8、情景 v4+v5、P3 状态/开环终止 ready、闭环终止开放；v5–v8 的
+>    负结果与 v8 平凡解原样保留。阶段三 ADR-0018/0019 不变。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

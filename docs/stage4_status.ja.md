@@ -13,10 +13,10 @@
 
 | コンポーネント | 状態 | 主要な数値 | 境界・口径 |
 | :--- | :--- | :--- | :--- |
-| 多重時間スケール作業記憶 | **v4 ready** | 三手がかり R² **0.9994 / 0.9982 / 0.9994**、平均 0.9990 > ridge 0.9931 | 局所 RLS 読み出し（rank-one、誤差逆伝播なし）。スパイキング v5 は not ready |
-| メタ認知ゲート | **v3 + v4 ready（尺度のみ）** | v3 CIFAR：選択的 80% **0.5423**、AUROC **0.7530**、ECE **0.0296**。v4 e2e v3：棄権 **0.8456**、AUROC **0.9003**、カバレッジ **0.8028** | v4 の利得は `state_norm` が A/B×3 の尺度 OOD を検出したことによる。v5 の回転は OOD ではない。v6 の量子化 OOD は有効（誤差 6.38×）だが棄権 0.1716／AUROC 0.4876 でゲートは失敗。v7 の高次モーメントは 0.2048／0.5024 で依然失敗。汎用 OOD ではない |
-| 世界モデル P3 | **部分** | 閉ループ H=10 NMSE ~2e-8、初手ばらつき **115.5**、終了閉ループ AUROC **0.632–0.665**、v2 多段 **0.6469** | 状態・閉ループは安定。終了ヘッドは 0.75 未満で `p3_ready=false`。v2 のラベル改訂は README 参照 |
-| エピソード記憶 | **DPAR 非局所で可用** | DPAR（K=8、σ=0.1）：字義 NN **0.938**、pseudo **0.828**、Hebbian **0.311**、状態制御 **0.121**（chance 0.125） | 非局所擬似逆だけが通過。局所 Hebbian は依然不可用。容量境界 K=8–16。元の CartPole 課題の境界は保持 |
+| 多重時間スケール作業記憶 | **v4 + v9 ready** | v4 三手がかり R² **0.9994 / 0.9982 / 0.9994**。v9 スパイク痕跡 A/B **0.9257 / 0.9281**（LIF）、**0.9261 / 0.9292**（ALIF） | v4 局所 RLS。v9 独立入力集団 + スパイク痕跡（アーム差中央値 0.130、非自明）。v5/v6/v7 は負結果、v8 は自明解で証拠にしない。v9 はスパイク数／低域通過コードで、タイミングは不要 |
+| メタ認知ゲート | **v3 + v8 ready** | v3 CIFAR：選択的 80% **0.5423**、AUROC **0.7530**、ECE **0.0296**。v8（seed 5–9）：カバレッジ **0.810**、選択的 MSE **0.033**、量子化棄権 **0.898**、AUROC **0.925**、尺度棄権 **0.851**、有効性 **6.43×** | v4 は尺度のみ、v5 回転は OOD でない、v6/v7 の量子化ゲートは失敗。v8 は再構成整合ゲート（errors + state_norm）で、入力変換型 OOD のみ。汎用棄権ではない |
+| 世界モデル P3 | **状態／開環終了 ready、閉環終了は開放** | 閉環 H=10 NMSE ~2e-8、散歩 115.5。開環終了 AUROC **0.999996**、FP **0.000504**、命中 **0.998**、終了ステップ誤差 **0.00305**（v5、seed 15–19）。閉環終了 AUROC **0.634–0.665** | 閉環状態は安定。開環固定行動列の終了リスクは通過（v5）。**行動フィードバック閉環は依然失敗**（v2 0.6469、v3/v4/v5 約 0.63–0.66）、`p3_closed_loop_ready=false`。v3 の全か無か、v4 の率判定は保持 |
+| エピソード記憶 | **DPAR 非局所 + 局所 delta 可用** | v4：字義 NN **0.938**、pseudo **0.828**、Hebbian **0.311**。v5 局所 delta K=8 **0.805**、K=4 **0.922**、状態制御 **0.123** | 局所 delta は擬似逆 0.816 に接近（0.805）。K8 は平均で通過だが 3/5 seed が <0.80、K4 は安定。容量 K=8–16。一回の Hebbian 外積は依然不可用 |
 | フェーズ4統合デモ | **実行可能** | WM/世界モデルはビット一致。メタ認知回帰 AUROC **0.562**。エピソード検索 MSE 1.194 | 組合せ・等価性は成立。エンドツーエンドのメタ認知は継承されず、能力の結論にはできない |
 | エンドツーエンド課題（遅延 QA + OOD 棄権） | **4/5 基準** | R² **0.9994**、選択的 MSE **0.00053**、OOD AUROC **0.927**、棄権 **0.887**、エピソード MSE **0.822** | WM + メタ認知 + 世界モデル驚きが協調。**エピソード検索だけが未達**、`e2e_ready=false` |
 | エンドツーエンド v2（四手がかり + 離散エピソード） | **5/5 ready** | R² **0.9983**、選択的 MSE **0.00172**、OOD AUROC **0.8895**、棄権 **0.824**、E 検索 **1.000** | 五つすべて通過。ただし E 検索は「経路が通った」であり難しい記憶ではない。seed 2 の棄権は 0.746 のみ |
@@ -73,9 +73,12 @@
    状態レベル・メタ認知ではない。v14 の 14/18 は状態レベルの結果として残る。
    **v12 は diag ゲートに変更**：snapshot85 0.7820、longtau 0.8052 で二腕とも七項通過。
    shrunk は依然不合格。K8 の境界は **28×28 共分散推定**で、WM でも DPAR でもない。
-2. **作業記憶 v6（スパイキング）**：v5 の失敗は読み出しではなく**表現**（60 ステップの
-   カウントが一桁）にある。v6 は膜電位／閾値下状態、より長い積分窓、または rate 入力が
-   必要。v5 は 2598.7 s かかったので、次回は seed／窓を減らすか並列化する。
+2. **スパイキング作業記憶 v5–v9（収束）**：v5 カウント 0.217/0.187、v6 膜電位 0.309/0.121、
+   v7 集団膜電位 0.788。ボトルネックは「5 個のベルヌーイ標本」から「スパイク復位による
+   消去」へ移った。v8 の `v+thr·trace` は復位を代数的に相殺し、LIF/ALIF が ≤2e-7 で一致する
+   自明解であり証拠にしない。**v9 は独立入力集団 + 純スパイク痕跡 `s=αs+z`**：LIF/ALIF
+   0.9269/0.9276、アーム差中央値 0.130、四基準すべて通過。境界：v9 はスパイク数／低域通過
+   コードで、タイミングは不要。読み出しは測定ヘッド。
 3. **メタ認知 v4 は完了（境界付き）**：独立校正集 + 三次元密度ゲート（disagreement /
    surprise / state_norm）により、e2e v3 の棄権は 0.7056 から **0.8456**、AUROC は
    0.8350 から **0.9003** へ上がり、選択的 MSE はほぼ不変。ただし **gauss2 はむしろ悪化**
@@ -87,18 +90,27 @@
    OOD は有効性ゲートを通る**（6.38×）が、gauss3 の棄権 0.1716、AUROC 0.4876 で四つの
    ゲートはすべて失敗。**v7 は特徴を高次モーメント**（mean z²/|z|/z⁴/尾比率）に替えても
    0.2048／0.5024 で、尺度 sanity も 0.7544 に落ちる。v4 は尺度偏移に限定され、汎用の
-   棄権能力とは書けない。
-4. **世界モデル P3 の後続**：終了の閉ループ分布偏移（オフライン 0.999 → 閉ループ 0.665）は
-   未解決。方向はより強い状態モデル（初手ばらつきを 115 より十分大きくする）か、想像分布に
-   合わせた終了ヘッド。一手先想像の増強は試したが 0.632、**v2 の多段想像 + 実ラベルは
-   0.6469** で不足。次は時間／リスク特徴か、より強い状態モデル。
+   棄権能力とは書けない。**v8 は再構成整合ゲート**（kNN(5) on [errors, state_norm]）で、
+   seed 5–9 のカバレッジ 0.810、量子化棄権 0.898／AUROC 0.925、尺度 0.851、有効性 6.43×、
+   `v8_ready=true`。境界は入力変換型 OOD のみで、カバレッジは単 seed で帯を外れる。
+4. **世界モデル P3（分割収束）**：閉環の状態／安定性は通過（H=10 NMSE ~2e-8、散歩 115.5）だが、
+   **閉環終了**は依然失敗：v1 0.616、dedicated 0.665、一手想像 0.632、v2 多段 0.6469。
+   v3/v4/v5 の閉環対照も 0.634–0.640 のみ。原因は行動フィードバック：平衡方策が
+   `θ+0.5θ̇` の閾値付近で行動を反転し、微小なモデル誤差が行動列を変え、115 ステップの
+   想像が発散する。DAgger では直らない（一手誤差は既に 1e-5）。**開環固定行動列**の終了
+   リスクは使用可能：v3 は AUROC≈1 だが全か無かの分離が 1.4e-4 不足、v4 は率判定 FP
+   0.00244 で不合格、**v5 は校正閾値で AUROC 0.999996、FP 0.000504、命中 0.998、終了
+   ステップ誤差 0.00305**。`p3_v5_ready=true` は開環のみ、`p3_closed_loop_ready=false`。
 5. **エピソード記憶**：DPAR（v4）は課題が本当に結合を要することを示した（状態制御 0.121
    ≈ chance）。**非局所擬似逆**は K=8/σ=0.1 で通過（0.828）、字義 NN は 0.938 でより高く、
    **局所 Hebbian は依然 0.311 のみ**。容量境界は K=8–16。元の CartPole 課題／ノイズ／
    時間順序の境界は保持する。次は局所または低次元キーを試すか、参照表ベースラインを受け入れる。
-   k/β／符号化次元の調整を続けない。
-6. **作業記憶 v5 の代替**：「純粋なスパイク数」に固執するなら、まず低カウント表現の問題を
-   解決する。そうでなければ v4 の rate 漏れ積分器をフェーズ4の実用局所表現として受け入れる。
+   k/β／符号化次元の調整を続けない。**v5 の局所 delta 規則**は K=8 を **0.805**、K=4 を
+   **0.922** に上げ、擬似逆 0.816 に接近。境界：K8 は平均で通過だが 3/5 seed が <0.80、
+   K=16 は 0.531、σ=0.3 は 0.553 に落ちる。
+6. **作業記憶の収束**：v4（rate）と v9（スパイク痕跡）はともに ready。v9 の境界は
+   スパイク数／低域通過コードで、タイミング符号ではない。時間符号を主張するには新しい
+   事前登録と時間置換ガードが必要。
 
 ## 4. フェーズ3との関係
 
@@ -112,18 +124,27 @@
 ## 5. 索引
 
 - 作業記憶：[v4 結果](../sweep_results/working_memory_v4/README.md)、
-  [v5 結果](../sweep_results/working_memory_v5/README.md)
+  [v5 結果](../sweep_results/working_memory_v5/README.md)、
+  [v6 膜電位](../sweep_results/working_memory_v6/README.md)、
+  [v7 集団膜電位](../sweep_results/working_memory_v7/README.md)、
+  [v8 自明解](../sweep_results/working_memory_v8/README.md)、
+  [v9 スパイク痕跡](../sweep_results/working_memory_v9/README.md)
 - メタ認知：[v3 結果](../sweep_results/metacognitive_gate_v3/README.md)、
   [v4 リスク制御](../sweep_results/metacognitive_gate_v4/README.md)、
   [v5 回転有効性検査](../sweep_results/metacognitive_gate_v5/README.md)、
   [v6 量子化 OOD](../sweep_results/metacognitive_gate_v6/README.md)、
-  [v7 高次モーメントゲート](../sweep_results/metacognitive_gate_v7/README.md)
+  [v7 高次モーメントゲート](../sweep_results/metacognitive_gate_v7/README.md)、
+  [v8 再構成整合ゲート](../sweep_results/metacognitive_gate_v8/README.md)
 - 世界モデル：[P3 閉ループ](../sweep_results/world_model_closed_loop_h500/README.md)、
   [終了ヘッド統合](../sweep_results/world_model_closed_loop_head/README.md)、
   [想像状態ヘッド](../sweep_results/world_model_closed_loop_imagined/README.md)、
-  [終了ヘッド v2](../sweep_results/world_model_termination_v2/README.md)
+  [終了ヘッド v2](../sweep_results/world_model_termination_v2/README.md)、
+  [v3 開環](../sweep_results/world_model_termination_v3/README.md)、
+  [v4 率](../sweep_results/world_model_termination_v4/README.md)、
+  [v5 校正閾値](../sweep_results/world_model_termination_v5/README.md)
 - エピソード記憶：[v3 結果](../sweep_results/episodic_memory_v3/README.md)、
-  [DPAR 結果](../sweep_results/episodic_paired_associate/README.md)
+  [DPAR 結果](../sweep_results/episodic_paired_associate/README.md)、
+  [局所 delta v5](../sweep_results/episodic_paired_associate_v5/README.md)
 - 統合デモ：[結果](../sweep_results/stage4_integration_demo/README.md)
 - エンドツーエンド：[v2 結果](../sweep_results/stage4_e2e_v2/README.md)、
   [v3 ストレステスト](../sweep_results/stage4_e2e_v3/README.md)、
