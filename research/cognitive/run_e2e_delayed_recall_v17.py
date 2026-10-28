@@ -262,23 +262,23 @@ def run(
         )
 
     summary = {
-        "experiment": "阶段四端到端 v16：输入尺度门 18 格",
+        "experiment": "阶段四端到端 v17：状态级重建一致性门",
         "config": {
             "seeds": seeds,
             "test_episodes": test_episodes,
             "coverage": COVERAGE,
             "conditions": [f"K{p}-s{s:g}-n{n:g}" for p, s, n in conditions],
-            "gate": "input_norm",
+            "gate": "knn(errors,state_norm)",
             "k8_arm": "longtau",
         },
         "conditions": results,
-        "v16_ready": all(result["ready"] for result in results.values()),
+        "v17_ready": all(result["ready"] for result in results.values()),
         "repro": collect(
             "阶段四端到端 v17",
             seeds=",".join(str(s) for s in seeds),
             elapsed_s=time.perf_counter() - started,
             notes=[
-                "K=4/8 × s=2/3/5 × sigma=0.1/0.3/0.5；input_norm 门",
+                "K=4/8 × s=2/3/5 × sigma=0.1/0.3/0.5；kNN(5) on [errors,state_norm]",
                 "K=4 bank W 28 维；K=8 longtau 32 维（tau=400）",
                 "OOD 尺度 s、in-dist 噪声 sigma；阈值只在 calibration 上取",
             ],
@@ -289,7 +289,7 @@ def run(
     (out / "summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n"
     )
-    print(json.dumps({"v16_ready": summary["v16_ready"]}))
+    print(json.dumps({"v17_ready": summary["v17_ready"]}))
     return summary
 
 
