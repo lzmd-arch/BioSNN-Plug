@@ -1238,6 +1238,12 @@
 >    新任务仍 <0.90，`neurogenesis_v2_ready=false`。v1 线性 delta 负结果保留。见
 >    [`sweep_results/neurogenesis_ncm/README.md`](sweep_results/neurogenesis_ncm/README.md)。
 
+> 142. **2026-10-29：event-driven e-prop 10k 神经元 1 epoch 冒烟**。
+>    sMNIST、n_rec=10,000、fan_in=32、batch=8、6000/60000 样本、1 epoch：**205.6 s**
+>    （0.274 s/update），测试 **0.5200**（1 epoch，不作精度结论）。**边界**：只到 10k、
+>    只 6000 样本、未记峰值显存；500k 训练仍不承诺。见
+>    [`sweep_results/event_driven_10k/README.md`](sweep_results/event_driven_10k/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
