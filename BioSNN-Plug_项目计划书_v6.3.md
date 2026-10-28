@@ -1171,6 +1171,20 @@
 >    不写成 ready。见
 >    [`sweep_results/neurogenesis_prereg.md`](sweep_results/neurogenesis_prereg.md)。
 
+> 132. **2026-10-29：事件驱动 e-prop 最小实现——稀疏 fan-in，LIF/最后一步等价**。
+>    `research/eprop/event_driven.py`：固定 fan-in k、LIF（β=0）、损失最后一步；利用
+>    ε_v 与后突触下标无关，把痕迹降到 O(N) 前突触滤波 + O(N·k) 权重。与 dense e-prop
+>    在同一 mask 上 w_in/w_out/w_rec 更新逐位一致（atol 1e-6）。**边界**：前向仍按时
+>    间步推进，不是完整事件驱动；未跑 10k/100k 训练，不能写“已扩展到 500k”。见
+>    [`sweep_results/event_driven_eprop/README.md`](sweep_results/event_driven_eprop/README.md)。
+
+> 133. **2026-10-29：神经发生最小探针——控制器触发，但无收益（负结果）**。
+>    玩具：4 个顺序任务 ×4 类、随机 ReLU 特征、旧类读出冻结；固定 64 vs 增长 64→112/128，
+>    5 种子。增长臂最后任务 **0.432**、旧任务最低 **0.310**；固定臂 0.526/0.323。控制器
+>    确实触发 3–4 次，但新类竞争使旧样本被判到新类，增长不解决读出竞争/回放。
+>    `neurogenesis_ready=false`；不调噪声/类别数/学习率改判。见
+>    [`sweep_results/neurogenesis_probe/README.md`](sweep_results/neurogenesis_probe/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
