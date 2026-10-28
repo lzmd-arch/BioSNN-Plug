@@ -1,0 +1,44 @@
+{
+  "kind": "analytic proxy, NOT hardware energy",
+  "energy_constants_pj": {
+    "MAC": 4.6,
+    "SOP": 0.9,
+    "source": "45nm order-of-magnitude values; unverified in this repo"
+  },
+  "assumptions": "inference only; dense ANN with the same layer shape; sparsity is a parameter",
+  "configs": [
+    {
+      "n_in": 28,
+      "n_rec": 256,
+      "steps": 28,
+      "sparsity": 0.9,
+      "sop_per_sample": 203571.19999999995,
+      "mac_per_sample": 2035712,
+      "snn_energy_pj": 183214.07999999996,
+      "ann_energy_pj": 9364275.2,
+      "ann_over_snn": 51.11111111111112
+    },
+    {
+      "n_in": 28,
+      "n_rec": 256,
+      "steps": 28,
+      "sparsity": 0.95,
+      "sop_per_sample": 101785.6000000001,
+      "mac_per_sample": 2035712,
+      "snn_energy_pj": 91607.04000000008,
+      "ann_energy_pj": 9364275.2,
+      "ann_over_snn": 102.22222222222213
+    },
+    {
+      "n_in": 28,
+      "n_rec": 256,
+      "steps": 28,
+      "sparsity": 0.98,
+      "sop_per_sample": 40714.240000000034,
+      "mac_per_sample": 2035712,
+      "snn_energy_pj": 36642.816000000035,
+      "ann_energy_pj": 9364275.2,
+      "ann_over_snn": 255.5555555555553
+    }
+  ]
+}
