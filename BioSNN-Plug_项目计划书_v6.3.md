@@ -1232,6 +1232,12 @@
 >    4 次调用（8 个 knowledge 因词面撞车高分被跳过）；合成集不外推。见
 >    [`sweep_results/phase5_m2/README.md`](sweep_results/phase5_m2/README.md)。
 
+> 141. **2026-10-29：神经发生 v2（NCM 读出）——新任务 0.766，但旧任务更差**。
+>    同 v1 任务/控制器，读出换 NCM：固定 64 最后任务 0.617/旧任务 0.508；增长 64→128
+>    最后任务 **0.766**/旧任务 **0.277**。增长触发有效，但新类原型竞争使旧任务下降 23.1pp，
+>    新任务仍 <0.90，`neurogenesis_v2_ready=false`。v1 线性 delta 负结果保留。见
+>    [`sweep_results/neurogenesis_ncm/README.md`](sweep_results/neurogenesis_ncm/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
