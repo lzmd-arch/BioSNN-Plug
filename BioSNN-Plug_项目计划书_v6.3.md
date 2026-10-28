@@ -1110,6 +1110,21 @@
 >    正式长跑尚未启动，等确认。见
 >    [`sweep_results/liquid_lif_prereg.md`](sweep_results/liquid_lif_prereg.md)。
 
+> 123. **2026-10-29：元认知 v9——时间 OOD 过，信息丢失/相关性 OOD 未过**。
+>    门与 v8 相同（kNN[errors,state_norm]），新种子 10–14，四个输入变换家族都过有效性
+>    （OOD/in-dist MSE 4.7–27.4×）：**time_shift 弃权 0.983/AUROC 0.976、time_reverse
+>    0.991/0.991 过**；**dim_dropout 0.596、correlated 0.539/AUROC 0.684 未过**。
+>    `v9_ready=false`。边界：v8/v9 覆盖尺度、符号量化、时间重排，不覆盖部分信息丢失/
+>    相关性；后者需要逐维/协方差级门。见
+>    [`sweep_results/metacognitive_gate_v9/README.md`](sweep_results/metacognitive_gate_v9/README.md)。
+
+> 124. **2026-10-29：事件流液态 LIF（SHD）预注册（未启动）**。
+>    只有 sMNIST 5 种子按预注册判读后才启动；先 LIF 预算校准（种子 20–22，n_rec=450、
+>    100 epoch、lr 网格），再 LIF/ALIF/Liquid 三臂同预算（种子 30–34）。主判据：液态
+>    均值 > LIF 至少 1pp 且 95% CI 下界 > LIF；次判据 ≥ ALIF；活跃 >60%。仍用冻结 α
+>    的 e-prop；不引 ncps/CfC/BPTT。见
+>    [`sweep_results/liquid_shd_prereg.md`](sweep_results/liquid_shd_prereg.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
