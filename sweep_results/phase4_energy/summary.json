@@ -11,6 +11,17 @@
       "n_in": 28,
       "n_rec": 256,
       "steps": 28,
+      "sparsity": 0.8758183717727661,
+      "sop_per_sample": 252798.03076171875,
+      "mac_per_sample": 2035712,
+      "snn_energy_pj": 227518.22768554688,
+      "ann_energy_pj": 9364275.2,
+      "ann_over_snn": 41.158351553891194
+    },
+    {
+      "n_in": 28,
+      "n_rec": 256,
+      "steps": 28,
       "sparsity": 0.9,
       "sop_per_sample": 203571.19999999995,
       "mac_per_sample": 2035712,

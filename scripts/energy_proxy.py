@@ -42,6 +42,7 @@ def proxy(n_in: int, n_rec: int, steps: int, sparsity: float) -> dict[str, float
 
 def main() -> int:
     configs = [
+        proxy(28, 256, 28, 0.8758183717727661),
         proxy(28, 256, 28, 0.9),
         proxy(28, 256, 28, 0.95),
         proxy(28, 256, 28, 0.98),
