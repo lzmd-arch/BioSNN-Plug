@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import resource
 import sys
 import time
 from pathlib import Path
@@ -55,7 +54,6 @@ def main(argv: list[str] | None = None) -> int:
                 "fan_in": args.fan_in,
                 "steps": args.steps,
                 "elapsed_s": elapsed,
-                "maxrss_raw": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
                 "sparse_weights": n_rec * args.fan_in,
                 "prediction": int(predicted.item()),
             }
