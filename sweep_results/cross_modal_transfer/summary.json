@@ -1,0 +1,53 @@
+{
+  "kind": "report only; deterministic HashEmbedding; procedural paired set",
+  "rows": [
+    {
+      "seed": 0,
+      "cka_text_image": 0.4205574884468062,
+      "text_probe": 1.0,
+      "image_probe": 0.7327586206896551,
+      "text_to_image_transfer": 0.8879310344827587,
+      "image_to_text_transfer": 0.7327586206896551
+    },
+    {
+      "seed": 1,
+      "cka_text_image": 0.3982826904907563,
+      "text_probe": 1.0,
+      "image_probe": 0.7155172413793104,
+      "text_to_image_transfer": 0.9568965517241379,
+      "image_to_text_transfer": 0.7155172413793104
+    },
+    {
+      "seed": 2,
+      "cka_text_image": 0.41885997066595404,
+      "text_probe": 1.0,
+      "image_probe": 0.7327586206896551,
+      "text_to_image_transfer": 0.9396551724137931,
+      "image_to_text_transfer": 0.7327586206896551
+    },
+    {
+      "seed": 3,
+      "cka_text_image": 0.42880133991347774,
+      "text_probe": 1.0,
+      "image_probe": 0.75,
+      "text_to_image_transfer": 0.8620689655172413,
+      "image_to_text_transfer": 0.75
+    },
+    {
+      "seed": 4,
+      "cka_text_image": 0.423097843268873,
+      "text_probe": 1.0,
+      "image_probe": 0.75,
+      "text_to_image_transfer": 0.8620689655172413,
+      "image_to_text_transfer": 0.75
+    }
+  ],
+  "means": {
+    "cka_text_image": 0.4179198665571734,
+    "text_probe": 1.0,
+    "image_probe": 0.7362068965517241,
+    "text_to_image_transfer": 0.9017241379310343,
+    "image_to_text_transfer": 0.7362068965517241
+  },
+  "boundary": "synthetic attributes, no Flickr8k transfer claim"
+}

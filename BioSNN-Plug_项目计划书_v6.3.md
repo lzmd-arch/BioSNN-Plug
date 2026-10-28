@@ -1244,6 +1244,12 @@
 >    只 6000 样本、未记峰值显存；500k 训练仍不承诺。见
 >    [`sweep_results/event_driven_10k/README.md`](sweep_results/event_driven_10k/README.md)。
 
+> 143. **2026-10-29：阶段四跨模态迁移报告——CKA 0.418、图像探测 0.736、文本→图像 0.902**。
+>    程序化 144 条配对集、确定性 HashEmbedding、bus@128、5 个切分种子：CKA **0.418**、
+>    文本线性探测 **1.000（平凡：caption 写出属性）**、图像探测 **0.736**、文本→图像
+>    迁移 **0.902**、图像→文本 **0.736**。**边界**：合成属性集，不外推 Flickr8k；这不是
+>    迁移能力验收。见 [`sweep_results/cross_modal_transfer/README.md`](sweep_results/cross_modal_transfer/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
