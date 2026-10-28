@@ -1147,6 +1147,30 @@
 >    新预注册定义；阶段四 500 步纯想象 P3 边界不变。见
 >    [`docs/adr/ADR-0020-phase-five-m0-readonly-mcp.md`](docs/adr/ADR-0020-phase-five-m0-readonly-mcp.md)。
 
+> 128. **2026-10-29：阶段五 M1——mock LLM + 对话 trace + 触发协议预注册**。
+>    `MockLLM` 确定性、无网络/key；`DialogueTrace` 记录 turn/state/retrieved/trigger/
+>    llm_response/consolidation，JSONL 可回放；触发准确率/首触发延迟/巩固率留到 M2/M3。
+>    M1 不报任何模型能力；包测试 18 个。见
+>    [`sweep_results/phase5_m1_prereg.md`](sweep_results/phase5_m1_prereg.md)。
+
+> 129. **2026-10-29：阶段四规模——500k 在当前 e-prop 实现上不可达**。
+>    对已有 W2 曲线复算：64–2048、显存 log-log 斜率 **0.863**；8 GB 下最大约 **1.35k**
+>    循环神经元；外推 4k≈21 GB、10k≈46 GB、100k≈336 GB、**500k≈1.38 TB**。
+>    结论：500k 需事件驱动/稀疏连接/线性痕迹，不是换 n_rec；按 §6.2 只能报告降级曲线。
+>    见 [`sweep_results/phase4_scale/README.md`](sweep_results/phase4_scale/README.md)。
+
+> 130. **2026-10-29：阶段四能效——只有代理，不是硬件测量**。
+>    W2 形状（n_in=28、n_rec=256、T=28）按 45nm 常数（MAC 4.6pJ、SOP 0.9pJ，未核验）
+>    与假设稀疏度算：稀疏 0.90/0.95/0.98 的 ANN/SNN 能量代理比 **51/102/256×**。
+>    仓库没有功率计与逐样本能耗采集，**不能**声称硬件 10×；只能写“代理达标、硬件未测”。
+>    见 [`sweep_results/phase4_energy/README.md`](sweep_results/phase4_energy/README.md)。
+
+> 131. **2026-10-29：阶段四神经发生——预注册已落，未实现**。
+>    最小协议：冻结双模态特征 + 4 个顺序冲突任务；初始 64 个 LIF，准确率 <0.90 时 +16、
+>    上限 2×；旧读出冻结；判据为新任务≥0.90、旧任务掉≤2pp、增长有界。**没有实现/数据**，
+>    不写成 ready。见
+>    [`sweep_results/neurogenesis_prereg.md`](sweep_results/neurogenesis_prereg.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
