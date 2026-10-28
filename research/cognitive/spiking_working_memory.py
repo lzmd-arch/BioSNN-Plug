@@ -11,7 +11,7 @@ import torch
 
 from research.eprop import ALIFCell, ALIFState
 
-__all__ = ["TAUS", "SpikingMultiTimescale"]
+__all__ = ["TAUS", "SpikingMultiTimescale", "SpikingPopulationTimescale"]
 
 TAUS = (2, 5, 10, 20, 50, 100, 200)
 N_DIMS = 4
@@ -88,3 +88,100 @@ class SpikingMultiTimescale:
             span = min(self.membrane_window, test_step)
             return (membrane / max(span, 1)).reshape(-1).numpy()
         return counts.reshape(-1).numpy()
+
+
+class SpikingPopulationTimescale:
+    """每个 τ 一组独立传入通道的 ALIF 群体；读出为群体膜电位均值。
+
+    v5/v6 每个 cue 每个维度只有**一个**伯努利通道（5 个样本），线性解码上界约 0.38。
+    这里每个 (τ, 维度) 用 ``population`` 个独立通道（同一 p、独立采样），每个通道驱动
+    一个 ALIF 单元；单元间无循环权重，输入权重按 ``gain_range`` 对数间隔给不同灵敏度。
+    读出取最后 ``membrane_window`` 步、每个 (τ, 维度) 的群体膜电位均值，得到与 v5/v6
+    相同的 ``len(taus)·n_dims`` 维状态（population 维已平均掉）。
+    """
+
+    def __init__(
+        self,
+        *,
+        taus: tuple[int, ...] = TAUS,
+        n_dims: int = N_DIMS,
+        population: int = 32,
+        gain_range: tuple[float, float] = (0.5, 4.0),
+        beta: float = 0.0,
+        threshold: float = 1.0,
+        seed: int = 0,
+        membrane_window: int = 10,
+    ) -> None:
+        if population < 1:
+            raise ValueError(f"population 必须 >= 1，收到 {population}。")
+        if not 0.0 < gain_range[0] <= gain_range[1]:
+            raise ValueError(f"gain_range 必须为正且递增，收到 {gain_range}。")
+        self.n_dims = int(n_dims)
+        self.population = int(population)
+        self.taus = tuple(taus)
+        self.membrane_window = int(membrane_window)
+        self.gains = torch.as_tensor(
+            np.geomspace(gain_range[0], gain_range[1], self.population), dtype=torch.float32
+        )
+        generator = torch.Generator().manual_seed(seed)
+        self.cells = []
+        width = self.n_dims * self.population
+        for tau in self.taus:
+            cell = ALIFCell(
+                width,
+                width,
+                tau=float(tau),
+                beta=beta,
+                threshold=threshold,
+                generator=generator,
+            )
+            with torch.no_grad():
+                cell.w_in.zero_()
+                index = torch.arange(width)
+                cell.w_in[index, index] = self.gains.repeat(self.n_dims)
+                cell.w_rec.zero_()
+            for parameter in cell.parameters():
+                parameter.requires_grad_(False)
+            self.cells.append(cell)
+        self.last_spike_rates = np.zeros(len(self.taus))
+        self.last_membrane_max = 0.0
+
+    @torch.no_grad()
+    def run(
+        self,
+        cue_a: np.ndarray,
+        cue_b: np.ndarray,
+        *,
+        generator: torch.Generator,
+        test_step: int = TEST_STEP,
+    ) -> np.ndarray:
+        cue_a_t = torch.as_tensor(cue_a, dtype=torch.float32)
+        cue_b_t = torch.as_tensor(cue_b, dtype=torch.float32)
+        probability_a = ((cue_a_t + 3.0) / 6.0).clamp(0.0, 1.0)
+        probability_b = ((cue_b_t + 3.0) / 6.0).clamp(0.0, 1.0)
+        width = self.n_dims * self.population
+        membrane = torch.zeros(len(self.taus), self.n_dims)
+        spikes = torch.zeros(len(self.taus))
+        peak = 0.0
+        states = [ALIFState.zeros(1, width) for _ in self.cells]
+        for step in range(test_step):
+            if CUE_A[0] <= step <= CUE_A[1]:
+                probability = probability_a
+            elif CUE_B[0] <= step <= CUE_B[1]:
+                probability = probability_b
+            else:
+                probability = torch.zeros(self.n_dims)
+            expanded = probability.repeat_interleave(self.population)
+            inputs = (torch.rand(width, generator=generator) < expanded).float().unsqueeze(0)
+            for index, cell in enumerate(self.cells):
+                fired, states[index] = cell.step(inputs, states[index])
+                spikes[index] += fired.sum()
+                if step >= test_step - self.membrane_window:
+                    membrane[index] += (
+                        states[index].v.squeeze(0).reshape(self.n_dims, self.population).mean(dim=1)
+                    )
+                    peak = max(peak, float(states[index].v.max()))
+        self.last_spike_rates = (spikes / (test_step * width)).numpy()
+        self.last_membrane_max = peak
+        span = min(self.membrane_window, test_step)
+        return (membrane / max(span, 1)).reshape(-1).numpy()
