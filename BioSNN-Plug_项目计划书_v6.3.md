@@ -1218,6 +1218,13 @@
 >    **仍是代理、不是硬件能耗**；阶段四 10× 不能据此写成硬件验收。见
 >    [`sweep_results/phase4_energy/README.md`](sweep_results/phase4_energy/README.md)。
 
+> 139. **2026-10-29：事件驱动 e-prop 单 batch 训练冒烟——500k 一次 update 5.44 s**。
+>    n_in=28、T=28、batch=1、fan_in=32：10k **0.15 s**、100k **0.99 s**、500k **5.44 s**，
+>    稀疏权重 16M；loss 2.19/2.29/2.64（随机初始化单 batch，不作准确率结论）。**边界**：
+>    只测一次 update，不是 epoch 训练；按 batch=1 外推 500k epoch 约 90 h。阶段四规模
+>    仍未验收。见
+>    [`sweep_results/event_driven_train_scale/README.md`](sweep_results/event_driven_train_scale/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

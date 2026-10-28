@@ -1,0 +1,40 @@
+{
+  "kind": "one-update training smoke; NOT an epoch accuracy experiment",
+  "config": {
+    "sizes": "10000,100000,500000",
+    "fan_in": 32,
+    "steps": 28,
+    "n_in": 28,
+    "n_out": 10,
+    "out": "sweep_results\\event_driven_train_scale\\summary.json"
+  },
+  "results": [
+    {
+      "n_rec": 10000,
+      "fan_in": 32,
+      "steps": 28,
+      "batch": 1,
+      "elapsed_s": 0.10427579999668524,
+      "loss": 2.1901726722717285,
+      "sparse_weights": 320000
+    },
+    {
+      "n_rec": 100000,
+      "fan_in": 32,
+      "steps": 28,
+      "batch": 1,
+      "elapsed_s": 0.8781145999673754,
+      "loss": 2.2890498638153076,
+      "sparse_weights": 3200000
+    },
+    {
+      "n_rec": 500000,
+      "fan_in": 32,
+      "steps": 28,
+      "batch": 1,
+      "elapsed_s": 5.268673999991734,
+      "loss": 2.635310173034668,
+      "sparse_weights": 16000000
+    }
+  ]
+}
