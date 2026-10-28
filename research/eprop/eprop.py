@@ -49,6 +49,7 @@ class Rollout:
     spikes: torch.Tensor  # (T, batch, n_rec)
     v_scaled: torch.Tensor  # (T, batch, n_rec)
     filtered: torch.Tensor  # (T, batch, n_rec)，指数滤波后的脉冲，读出的输入
+    alpha: torch.Tensor | None = None  # (T, batch, n_rec)，仅液态 τ 细胞有
 
 
 class EPropLearner(torch.nn.Module):
@@ -116,17 +117,24 @@ class EPropLearner(torch.nn.Module):
     def simulate(self, inputs: torch.Tensor) -> Rollout:
         """跑完整序列，返回脉冲与缩放后的膜电位。**全程无计算图。**"""
         steps, batch = inputs.shape[0], inputs.shape[1]
-        state = ALIFState.zeros(batch, self.n_rec, device=inputs.device, dtype=inputs.dtype)
-        spikes, scaled = [], []
+        if hasattr(self.cell, "initial_state"):
+            state = self.cell.initial_state(batch, device=inputs.device, dtype=inputs.dtype)
+        else:
+            state = ALIFState.zeros(batch, self.n_rec, device=inputs.device, dtype=inputs.dtype)
+        spikes, scaled, alphas = [], [], []
+        liquid = bool(getattr(self.cell, "liquid", False))
         for t in range(steps):
             z, state = self.cell.step(inputs[t], state)
             spikes.append(z)
             scaled.append(self.cell.v_scaled(state.v, state.a))
+            if liquid:
+                alphas.append(self.cell.last_alpha)
         stacked = torch.stack(spikes)
         return Rollout(
             spikes=stacked,
             v_scaled=torch.stack(scaled),
             filtered=exp_convolve(stacked, self.decay_out),
+            alpha=torch.stack(alphas) if alphas else None,
         )
 
     @torch.no_grad()
@@ -211,7 +219,7 @@ class EPropLearner(torch.nn.Module):
                 z_pre,
                 rollout.spikes,
                 signal,
-                alpha=self.cell.alpha,
+                alpha=rollout.alpha if rollout.alpha is not None else self.cell.alpha,
                 rho=self.cell.rho,
                 beta=self.cell.beta,
                 threshold=self.cell.threshold,

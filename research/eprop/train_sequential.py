@@ -103,6 +103,9 @@ def train(
     args: argparse.Namespace,
     device: torch.device,
     history: list[dict[str, float]] | None = None,
+    *,
+    learner_cls=None,
+    learner_kwargs: dict | None = None,
 ) -> tuple[float, float, int]:
     book = SeedBook(base=args.seed)
     book.apply("全局种子")
@@ -127,7 +130,8 @@ def train(
     val_inputs, val_labels = val_inputs.to(device), val_labels.to(device)
     test_inputs, test_labels = test_inputs.to(device), test_labels.to(device)
 
-    model = EPropLearner(
+    learner_cls = EPropLearner if learner_cls is None else learner_cls
+    model = learner_cls(
         n_in,
         args.n_rec,
         n_classes,
@@ -139,6 +143,7 @@ def train(
         learning_rate_out=args.learning_rate_out,
         decay_out=args.decay_out,
         generator=torch.Generator().manual_seed(book.derive("权重初始化")),
+        **(learner_kwargs or {}),
     ).to(device)
 
     shuffle = torch.Generator().manual_seed(book.derive("每批打乱"))

@@ -140,6 +140,56 @@ def eligibility_traces(
     return e_trace
 
 
+def _eprop_gradient_varying_alpha(
+    v_scaled: torch.Tensor,
+    z_pre: torch.Tensor,
+    z_post: torch.Tensor,
+    learning_signal: torch.Tensor,
+    *,
+    alpha: torch.Tensor,
+    rho: float,
+    beta: float,
+    threshold: float,
+    dampening_factor: float,
+    n_refractory: int,
+    is_recurrent: bool,
+) -> torch.Tensor:
+    """液态 τ 的 e-prop 痕迹：``ε_v,ij^t = α_j(t)·ε_v^{t−1} + z_i^t``。
+
+    **alpha 是外部系数轨迹**：它由前向的局部分布率现算，但在这里不做 ``∂α/∂z``。
+    因此这是“冻结液态 τ 轨迹的 e-prop”，不是液态递推的精确梯度；调用方必须把这个
+    边界写进报告。alpha 形状 ``(T, batch, n_post)``。
+    """
+    steps, batch, n_post = v_scaled.shape
+    n_pre = z_pre.shape[-1]
+    hard_refractory = refractory_mask(z_post, n_refractory)
+    psi_full = (dampening_factor / threshold) * torch.clamp(1.0 - v_scaled.abs(), min=0.0)
+    psi = torch.where(hard_refractory, torch.zeros_like(psi_full), psi_full)
+
+    gradients = torch.zeros(n_pre, n_post, device=v_scaled.device, dtype=v_scaled.dtype)
+    epsilon_v = z_pre[0][:, :, None].expand(batch, n_pre, n_post).clone()
+    epsilon_a = (
+        torch.zeros(batch, n_pre, n_post, device=v_scaled.device, dtype=v_scaled.dtype)
+        if beta != 0.0
+        else None
+    )
+    for t in range(steps):
+        if t > 0:
+            epsilon_v = alpha[t].unsqueeze(1) * epsilon_v + z_pre[t][:, :, None]
+        psi_t = psi[t][:, None, :]
+        if beta != 0.0:
+            epsilon_a = (rho - beta * psi_t) * epsilon_a + psi_t * epsilon_v
+            e_trace = psi_t * (epsilon_v - beta * epsilon_a)
+        else:
+            e_trace = psi_t * epsilon_v
+        gradients += torch.einsum("bj,bij->ij", learning_signal[t], e_trace)
+
+    if is_recurrent:
+        identity = torch.eye(n_pre, device=gradients.device, dtype=gradients.dtype)
+        gradients = gradients * (1.0 - identity)
+    return gradients
+
+
 def exp_convolve(tensor: torch.Tensor, decay: float) -> torch.Tensor:
     """沿时间维做指数滤波：``y^t = decay·y^{t−1} + (1 − decay)·x^t``，``y^0`` 取零。
 
@@ -207,6 +257,25 @@ def eprop_gradient(
             f"收到 {tuple(learning_signal.shape)}。"
         )
     n_pre = z_pre.shape[-1]
+    if torch.is_tensor(alpha):
+        if alpha.shape != (steps, batch, n_post):
+            raise ValueError(
+                f"逐神经元 alpha 的形状必须是 (T, batch, n_post)="
+                f"{(steps, batch, n_post)}，收到 {tuple(alpha.shape)}。"
+            )
+        return _eprop_gradient_varying_alpha(
+            v_scaled,
+            z_pre,
+            z_post,
+            learning_signal,
+            alpha=alpha,
+            rho=rho,
+            beta=beta,
+            threshold=threshold,
+            dampening_factor=dampening_factor,
+            n_refractory=n_refractory,
+            is_recurrent=is_recurrent,
+        )
 
     hard_refractory = refractory_mask(z_post, n_refractory)
     psi_full = (dampening_factor / threshold) * torch.clamp(1.0 - v_scaled.abs(), min=0.0)
