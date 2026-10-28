@@ -1185,6 +1185,13 @@
 >    `neurogenesis_ready=false`；不调噪声/类别数/学习率改判。见
 >    [`sweep_results/neurogenesis_probe/README.md`](sweep_results/neurogenesis_probe/README.md)。
 
+> 134. **2026-10-29：W3 计数同向资格（count-aligned）——0/10，中位 9.5，仍不 ready**。
+>    按预注册 v3 实现 `E ← λE + x ⊗ [z ⊙ (1[a]−π)]`（x 输入计数、z 发放计数、π 实际采样
+>    分布），守卫三项过；与 D1（62.15）配对中位 **−52.7**、**0/10** 变好；10 种子中位
+>    **9.5**（9.2–9.7），0/10 过 200。按判读表：**“同向”不是充分条件**；下一嫌疑是计数
+>    策略表达力/信号尺度，不在本轮调 lr/宽度/回合。阶段三脉冲执行层仍未达。见
+>    [`sweep_results/rstdp_spiking_count_aligned/README.md`](sweep_results/rstdp_spiking_count_aligned/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
