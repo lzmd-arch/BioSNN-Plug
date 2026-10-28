@@ -10,7 +10,12 @@ from dataclasses import dataclass
 
 import numpy as np
 
-__all__ = ["GrowableFeatureReadout", "GrowthController", "GrowthDecision"]
+__all__ = [
+    "GrowableFeatureReadout",
+    "GrowableNCMReadout",
+    "GrowthController",
+    "GrowthDecision",
+]
 
 
 @dataclass(frozen=True)
@@ -100,6 +105,69 @@ class GrowableFeatureReadout:
 
     def predict(self, x: np.ndarray) -> np.ndarray:
         return np.argmax(self._features(x) @ self.weights.T + self.bias, axis=1)
+
+    def maybe_grow(self, accuracy: float) -> GrowthDecision:
+        decision = self.controller.decide(accuracy, self.n_features)
+        self.decisions.append(decision)
+        if decision.grow:
+            self.grow()
+        return decision
+
+
+class GrowableNCMReadout:
+    """随机 ReLU 特征 + 最近类均值（NCM）读出；增长只补特征维，旧类均值补零。"""
+
+    def __init__(
+        self,
+        n_in: int,
+        n_classes: int,
+        *,
+        n0: int = 64,
+        growth: int = 16,
+        max_ratio: float = 2.0,
+        min_accuracy: float = 0.90,
+        seed: int = 0,
+    ) -> None:
+        self.n_in = int(n_in)
+        self.n_classes = int(n_classes)
+        self.rng = np.random.default_rng(seed)
+        self.n_features = int(n0)
+        self.projection = self._projection(n0)
+        self.sums = np.zeros((self.n_classes, self.n_features))
+        self.counts = np.zeros(self.n_classes, dtype=np.int64)
+        self.controller = GrowthController(
+            n0=n0, growth=growth, max_ratio=max_ratio, min_accuracy=min_accuracy
+        )
+        self.decisions: list[GrowthDecision] = []
+
+    def _projection(self, n: int) -> np.ndarray:
+        return self.rng.normal(size=(self.n_in, n)) / np.sqrt(self.n_in)
+
+    def _features(self, x: np.ndarray) -> np.ndarray:
+        return np.maximum(np.asarray(x, dtype=np.float64) @ self.projection, 0.0)
+
+    def grow(self) -> None:
+        added = self.controller.growth
+        self.projection = np.hstack([self.projection, self._projection(added)])
+        self.sums = np.hstack([self.sums, np.zeros((self.n_classes, added))])
+        self.n_features += added
+
+    def fit_task(self, x: np.ndarray, y: np.ndarray, *, classes: np.ndarray) -> float:
+        """只更新本任务的类均值；旧类不动。返回训练集准确率。"""
+        f = self._features(x)
+        for label in classes:
+            rows = np.asarray(y) == label
+            self.sums[int(label)] = f[rows].sum(axis=0)
+            self.counts[int(label)] = int(rows.sum())
+        predicted = self.predict(x)
+        return float(np.mean(predicted == y))
+
+    def predict(self, x: np.ndarray) -> np.ndarray:
+        f = self._features(x)
+        means = self.sums / np.maximum(self.counts[:, None], 1)
+        distances = ((f[:, None, :] - means[None, :, :]) ** 2).sum(axis=2)
+        distances[:, self.counts == 0] = np.inf
+        return np.argmin(distances, axis=1)
 
     def maybe_grow(self, accuracy: float) -> GrowthDecision:
         decision = self.controller.decide(accuracy, self.n_features)
