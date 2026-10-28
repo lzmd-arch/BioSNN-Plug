@@ -1085,6 +1085,22 @@
 >    数字逐位复现。见
 >    [`sweep_results/stage4_e2e_v17/README.md`](sweep_results/stage4_e2e_v17/README.md)。
 
+> 120. **2026-10-28：阶段四端到端 v18——状态级预测范数门，18/18 ready**。
+>    门 = 读出预测向量 `[A,B,Q]` 的 L2 范数偏离 calibration 的 z 分数，不使用 input_norm。
+>    18 格 × 新种子 15–19：s=2 六格弃权 **0.837–0.907**、覆盖率 **0.795–0.814**、
+>    AUROC **0.900–0.942**；WM R² 0.906–0.994、DPAR 0.937–0.958、状态控制 0.130–0.231。
+>    `v18_ready=true`——**状态级** s=2 关闭，不再依赖 v16 的输入级门。v14 14/18、
+>    v17 12/18 原样保留。边界：只覆盖 A/B 尺度 OOD，不是通用弃权。见
+>    [`sweep_results/stage4_e2e_v18/README.md`](sweep_results/stage4_e2e_v18/README.md)。
+
+> 121. **2026-10-28：P3 终止 v6——滚动时域闭环 ready；纯想象仍开放**。
+>    每步用真实观测出动作、模型只预测一步风险，阈值在校准集选。种子 20–24：AUROC
+>    **1.0**、FP **0.000912**、命中 **1.0**、终止步误差 **1.14e-5**、终止回合率 0.188，
+>    `p3_v6_ready=true`。同一模型的 500 步纯想象对照仍只有 **0.645**；根因是二值策略在
+>    `θ+0.5θ̇` 阈值翻转动作，连 float64 精确方程也因环境 float32 的 1e-7 差而发散。
+>    **500 步纯想象闭环仍是结构性开放边界**，`p3_closed_loop_imagination_ready=false`。见
+>    [`sweep_results/world_model_termination_v6/README.md`](sweep_results/world_model_termination_v6/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

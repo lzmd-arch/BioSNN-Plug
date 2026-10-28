@@ -15,7 +15,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
 | :--- | :--- | :--- | :--- |
 | Multi-timescale working memory | **v4 + v9 ready** | v4 three cues R² **0.9994 / 0.9982 / 0.9994**; v9 spiking trace A/B **0.9257 / 0.9281** (LIF), **0.9261 / 0.9292** (ALIF) | v4 local RLS; v9 independent afferent population + spike trace (arm-state median diff 0.130, non-trivial); v5/v6/v7 negative, v8 trivial (no evidence); v9 is a spike-count/low-pass code, timing not required |
 | Metacognitive gate | **v3 + v8 ready** | v3 CIFAR: selective 80% **0.5423**, AUROC **0.7530**, ECE **0.0296**; v8 (seeds 5–9): coverage **0.810**, selective MSE **0.033**, quantized abstain **0.898**, AUROC **0.925**, scale abstain **0.851**, validity **6.43×** | v4 scale only; v5 rotation not OOD; v6/v7 quantization gates fail; v8 reconstruction-consistency gate (errors + state_norm), input-transform OOD only, not general abstention |
-| World model P3 | **state/open-loop termination ready; closed-loop termination open** | closed-loop H=10 NMSE ~2e-8; drift 115.5; open-loop termination AUROC **0.999996**, FP **0.000504**, hit **0.998**, terminal error **0.00305** (v5, seeds 15–19); closed-loop termination AUROC **0.634–0.665** | closed-loop state stable; open-loop fixed-action termination ready (v5); **action-feedback closed loop still fails** (v2 0.6469, v3/v4/v5 ~0.63–0.66), `p3_closed_loop_ready=false`; v3 all-or-nothing and v4 rate verdicts preserved |
+| World model P3 | **state/open-loop/rolling closed-loop termination ready; pure-imagination loop open** | closed-loop H=10 NMSE ~2e-8; drift 115.5; open-loop v5 AUROC **0.999996**, FP **0.000504**, hit **0.998**; rolling closed-loop v6 AUROC **1.0**, FP **0.000912**, hit **1.0**, terminal error **1.14e-5**; pure imagination **0.634–0.665** | open-loop and rolling closed-loop ready; **500-step pure-imagination loop still fails** (v2 0.6469, v6 control 0.645), due to action feedback + float32 bit sensitivity; `p3_closed_loop_imagination_ready=false` |
 | Episodic memory | **DPAR non-local + local delta usable** | v4: literal NN **0.938**, pseudo **0.828**, Hebbian **0.311**; v5 local delta K=8 **0.805**, K=4 **0.922**, state control **0.123** | local delta approaches pseudo-inverse (0.805 vs 0.816); K8 mean passes but 3/5 seeds <0.80; K4 stable; capacity K=8–16; one-shot Hebbian still unusable |
 | Phase-4 integration demo | **runnable** | WM/world model bit-identical; metacognitive regression AUROC **0.562**; episodic recall MSE 1.194 | Composition/equivalence holds; end-to-end metacognition not inherited, not a capability conclusion |
 | End-to-end task (delayed QA + OOD abstention) | **4/5 criteria** | R² **0.9994**, selective MSE **0.00053**, OOD AUROC **0.927**, abstain **0.887**; episodic MSE **0.822** | WM + metacognition + world-model surprise cooperate; **episodic recall is the only miss**, `e2e_ready=false` |
@@ -34,6 +34,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
 | End-to-end v15 (fill s=2 four cells) | **0/4** | K4-σ0.5 longtau **0.7868**; K8-s2 snapshot **0.7700/0.7416/0.7044** | Swapping arms (longtau/snapshot85) still misses 0.80; s=2 boundary not closed |
 | End-to-end v16 (input-scale gate) | **18/18 ready** | K4/K8 × s2/3/5 × σ.1/.3/.5: coverage **0.796–0.810**, abstain **0.882–1.000**, AUROC **0.928–1.000**; WM/DPAR/state pass | **Input-level** input_norm gate, not state-level metacognition; v14 state-level remains 14/18; scale OOD only |
 | End-to-end v17 (state-level reconstruction gate) | **12/18 ready** | seeds 10–14: s3/s5 all pass; six s2 cells abstain **0.620–0.736**, all fail; other metrics R² 0.906–0.994, DPAR 0.930–0.964, state 0.125–0.243 | state-level kNN[errors,state_norm] does not close s=2 and is two cells below v14’s 14/18; v16’s input-level 18/18 is not mixed in |
+| End-to-end v18 (state-level prediction-norm gate) | **18/18 ready** | seeds 15–19: s2 abstain **0.837–0.907**, coverage **0.795–0.814**, AUROC **0.900–0.942**; WM R² 0.906–0.994, DPAR 0.937–0.958 | state-level gate without input_norm; v14 14/18 and v17 12/18 preserved |
 
 ## 2. What "ready" means
 
@@ -77,7 +78,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
    **v15's arm swap is still 0/4** (longtau 0.7868; snapshot 0.770/0.742/0.704); s=2 needs
    a stronger scale feature. **v16 switches to an input-scale gate `max(||A||,||B||)` and passes
    18/18**; but it is an input-level gate, not state-level metacognition, and v14's 14/18 remains
-   the state-level result. **v17 applies the metacognitive v8 kNN[errors,state_norm] gate to the 18 cells and reaches only 12/18**: s=3/5 pass, but all six s=2 cells abstain 0.620–0.736 and fail; this is two cells below v14, and state-level s=2 remains open.
+   the state-level result. **v17 applies the metacognitive v8 kNN[errors,state_norm] gate to the 18 cells and reaches only 12/18**: s=3/5 pass, but all six s=2 cells abstain 0.620–0.736 and fail; this is two cells below v14, and state-level s=2 remains open. **v18 switches to the prediction-norm z gate and reaches 18/18**: six s=2 cells abstain 0.837–0.907, coverage 0.795–0.814, AUROC 0.900–0.942; state-level s=2 is closed.
 2. **Spiking working memory v5–v9 (closed)**: v5 counts 0.217/0.187, v6 membrane 0.309/0.121,
    v7 population membrane 0.788; the bottleneck moved from "5 Bernoulli samples" to "spike reset
    erasure". v8's `v+thr·trace` cancels reset algebraically (LIF/ALIF identical to ≤2e-7) and is a
@@ -109,7 +110,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
    sequence, and a 115-step imagination diverges; DAgger cannot fix it (one-step error already 1e-5).
    **Open-loop fixed-action** termination risk is usable: v3 AUROC≈1 but all-or-nothing separation
    misses by 1.4e-4, v4 rate FP 0.00244 fails, **v5 calibrated threshold reaches AUROC 0.999996,
-   FP 0.000504, hit 0.998, terminal error 0.00305**. `p3_v5_ready=true` is open-loop only;
+   FP 0.000504, hit 0.998, terminal error 0.00305**. `p3_v5_ready=true` is open-loop only; **v6 rolling-horizon closed loop** (real observations for actions, one-step model risk) reaches AUROC 1.0, FP 0.000912, hit 1.0, terminal error 1.14e-5, `p3_v6_ready=true`; **the 500-step pure-imagination loop remains open**, `p3_closed_loop_imagination_ready=false`.
    `p3_closed_loop_ready=false`.
 5. **Episodic memory**: DPAR (v4) shows the task really requires binding (state control 0.121
    ≈ chance); **non-local pseudo-inverse** passes at K=8/σ=0.1 (0.828), literal NN is higher at
@@ -151,7 +152,8 @@ not turn "component ready" into "phase-4 end-to-end holds".
   [termination head v2](../sweep_results/world_model_termination_v2/README.md),
   [v3 open-loop](../sweep_results/world_model_termination_v3/README.md),
   [v4 rate](../sweep_results/world_model_termination_v4/README.md),
-  [v5 calibrated](../sweep_results/world_model_termination_v5/README.md)
+  [v5 calibrated](../sweep_results/world_model_termination_v5/README.md),
+  [v6 rolling closed loop](../sweep_results/world_model_termination_v6/README.md)
 - Episodic memory: [v3 result](../sweep_results/episodic_memory_v3/README.md),
   [DPAR result](../sweep_results/episodic_paired_associate/README.md),
   [local delta v5](../sweep_results/episodic_paired_associate_v5/README.md)
@@ -170,6 +172,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   [v14 18-cell matrix](../sweep_results/stage4_e2e_v14/README.md),
   [v15 s=2 four cells](../sweep_results/stage4_e2e_v15/README.md),
   [v16 input-scale gate](../sweep_results/stage4_e2e_v16/README.md),
-  [v17 state-level reconstruction gate](../sweep_results/stage4_e2e_v17/README.md)
+  [v17 state-level reconstruction gate](../sweep_results/stage4_e2e_v17/README.md),
+  [v18 prediction-norm gate](../sweep_results/stage4_e2e_v18/README.md)
 - Technical report: [paper/stage4/README.md](../paper/stage4/README.md) · Zenodo
   [10.5281/zenodo.23696829](https://doi.org/10.5281/zenodo.23696829) (v1.0, 2026-10-28)
