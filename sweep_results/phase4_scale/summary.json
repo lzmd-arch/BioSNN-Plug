@@ -1,0 +1,46 @@
+{
+  "source": "sweep_results/w2_scale_n*/seed*.json (2 epoch, seed 0, beta=0)",
+  "points": [
+    {
+      "n_rec": 64,
+      "peak_mb": 603.89404296875,
+      "s_per_epoch": 46.28144044999499
+    },
+    {
+      "n_rec": 128,
+      "peak_mb": 966.1455078125,
+      "s_per_epoch": 44.30289544998959
+    },
+    {
+      "n_rec": 256,
+      "peak_mb": 1688.5703125,
+      "s_per_epoch": 55.57602394999412
+    },
+    {
+      "n_rec": 512,
+      "peak_mb": 3116.185546875,
+      "s_per_epoch": 133.33465365000302
+    },
+    {
+      "n_rec": 1024,
+      "peak_mb": 5989.697265625,
+      "s_per_epoch": 435.32341719999386
+    },
+    {
+      "n_rec": 2048,
+      "peak_mb": 11744.783203125,
+      "s_per_epoch": 2646.7591968500055
+    }
+  ],
+  "memory_loglog_slope": 0.8625255751643959,
+  "time_loglog_slope": 1.152588808227529,
+  "gpu_mb": 8192.0,
+  "max_n_rec_under_gpu": 1348.7708115810635,
+  "extrapolated_peak_mb": {
+    "4096": 21354.58199236296,
+    "10000": 46114.82167144093,
+    "100000": 336020.75918374566,
+    "500000": 1346621.7159073427
+  },
+  "note": "extrapolation, not measurement; 500k is far outside the fitted range"
+}
