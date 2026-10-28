@@ -1199,6 +1199,13 @@
 >    3.5× 不能写成 3× 通过；原 3× 仍是未达开放项。见
 >    [`sweep_results/relearn_3x_v4/README.md`](sweep_results/relearn_3x_v4/README.md)。
 
+> 136. **2026-10-29：阶段四事件优先级——选择比例 0.339 达标，但精度掉 15.35pp**。
+>    在 e-prop 上实现“只让输入活动最高的 30% 时间步进入权重更新”（`selective_fraction`）；
+>    sMNIST 30 epoch seed0：baseline **0.7748**、selective **0.6213**，实际选中比例
+>    **0.3391**、活跃 1.0。判据 1/3 过、判据 2（掉 ≤1pp）未过，`event_priority_ready=false`。
+>    这是“把低活动步的 L 置零”的最小近似，不是 ESPP 规则本身；下一步需把选择与学习信号/
+>    损失联合。见 [`sweep_results/event_priority/README.md`](sweep_results/event_priority/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
