@@ -189,6 +189,7 @@ class SpikingActor:
         """
         pre_spikes, post_spikes = self.window_spikes(features, generator=generator)
         spike_counts = post_spikes.sum(dim=0).squeeze(0)
+        policy = torch.softmax(self.sampling_scale() * spike_counts, dim=-1)
 
         # 先把动作定下来，再累计痕迹：符号一致的规则需要知道**被选的是哪一列**。
         # pair-stdp 不看 action，所以这个顺序对默认路径逐位不变（它不消耗随机流）。
@@ -197,8 +198,7 @@ class SpikingActor:
         elif self.action_sampling == "boltzmann":
             # 采样在生成器所在的设备上做（CPU 生成器不能直接采 CUDA 张量）；
             # CPU 上逐位不变，CUDA 上把概率搬到 CPU 再采，随机流仍由同一个种子决定。
-            probabilities = torch.softmax(self.sampling_scale() * spike_counts, dim=-1)
-            probabilities = probabilities.to(generator.device)
+            probabilities = policy.to(generator.device)
             # 诊断 ②：Boltzmann 动作分布的熵（nats）。只记采样分支，贪婪/ε 分支不计。
             entropy = float(-(probabilities * probabilities.clamp(min=1e-12).log()).sum())
             self.last_entropy = entropy
@@ -211,9 +211,19 @@ class SpikingActor:
             chosen = int(spike_counts.argmax().item())
 
         if learn_trace:
-            self.trace.accumulate_window(
-                pre_spikes, post_spikes, self.window, chosen, features=features
-            )
+            if self.trace_rule == "count-aligned":
+                self.trace.accumulate_window(
+                    pre_spikes,
+                    post_spikes,
+                    self.window,
+                    chosen,
+                    features=features,
+                    policy=policy,
+                )
+            else:
+                self.trace.accumulate_window(
+                    pre_spikes, post_spikes, self.window, chosen, features=features
+                )
         return chosen
 
     @torch.no_grad()

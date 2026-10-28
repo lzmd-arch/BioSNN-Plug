@@ -39,6 +39,7 @@ import math
 import torch
 
 __all__ = [
+    "CountAlignedTrace",
     "EligibilityTrace",
     "PairBasedTrace",
     "RateFeatureTrace",
@@ -368,7 +369,66 @@ class RateFeatureTrace:
         self.value.zero_()
 
 
-_TRACE_RULES = ("pair-stdp", "sign-consistent", "rate-features")
+class CountAlignedTrace:
+    """计数同向资格：``E ← λE + x ⊗ [z ⊙ (1[a] − π)]``。
+
+    预注册 ``rstdp_spiking_count_aligned_prereg.md``。``x`` 是输入脉冲计数，``z`` 是
+    LIF 发放计数，``π`` 是 Actor 的实际采样分布。它同时改了输入侧（连续特征→计数）与
+    动作因子（指示→计数加权中心化），因此只声称“同向 > 不同向”，不做单变量归因。
+    """
+
+    def __init__(
+        self,
+        n_pre: int,
+        n_post: int,
+        *,
+        decay: float = 0.9,
+        device: torch.device | None = None,
+    ) -> None:
+        if not 0.0 <= decay < 1.0:
+            raise ValueError(f"decay 应在 [0, 1) 内，收到 {decay}。")
+        self.decay = float(decay)
+        self.value = torch.zeros(n_pre, n_post, device=device)
+
+    def accumulate_window(
+        self,
+        pre_spikes: torch.Tensor,
+        post_spikes: torch.Tensor,
+        window: STDPWindow,
+        action: int,
+        *,
+        features: torch.Tensor | None = None,
+        policy: torch.Tensor | None = None,
+    ) -> None:
+        del window, features
+        if policy is None:
+            raise ValueError("count-aligned 需要 Actor 的实际采样分布 policy。")
+        if not 0 <= int(action) < self.value.shape[1]:
+            raise ValueError(f"动作 {action} 越界（共 {self.value.shape[1]} 个）。")
+        pre_counts = pre_spikes.sum(dim=0).squeeze(0).to(self.value.dtype)
+        post_counts = post_spikes.sum(dim=0).squeeze(0).to(self.value.dtype)
+        policy = policy.to(self.value.device, dtype=self.value.dtype)
+        one_hot = torch.zeros_like(policy)
+        one_hot[int(action)] = 1.0
+        factor = post_counts * (one_hot - policy)
+        self.value.mul_(self.decay).add_(torch.outer(pre_counts, factor))
+
+    def apply(
+        self,
+        weights: torch.Tensor,
+        learning_rate: float,
+        success_signal: float,
+    ) -> None:
+        weights.add_(learning_rate * float(success_signal) * self.value)
+
+    def rms(self) -> float:
+        return float(self.value.pow(2).mean().sqrt().item())
+
+    def reset(self) -> None:
+        self.value.zero_()
+
+
+_TRACE_RULES = ("pair-stdp", "sign-consistent", "rate-features", "count-aligned")
 
 
 def build_trace(
@@ -386,4 +446,6 @@ def build_trace(
         return SignConsistentTrace(n_pre, n_post, decay=decay, device=device)
     if rule == "rate-features":
         return RateFeatureTrace(n_pre, n_post, decay=decay, device=device)
+    if rule == "count-aligned":
+        return CountAlignedTrace(n_pre, n_post, decay=decay, device=device)
     raise ValueError(f"未知的 trace_rule：{rule!r}；可选 {_TRACE_RULES}。")

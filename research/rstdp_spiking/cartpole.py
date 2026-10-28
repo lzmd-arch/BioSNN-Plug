@@ -354,11 +354,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--logit-scale-end", type=float, default=40.0)
     parser.add_argument(
         "--trace-rule",
-        choices=("pair-stdp", "sign-consistent", "rate-features"),
+        choices=("pair-stdp", "sign-consistent", "rate-features", "count-aligned"),
         default="pair-stdp",
         help="Actor 痕迹规则：pair-stdp=历史的有符号规则（默认）；"
         "sign-consistent=按成功信号符号选 LTP/LTD 两相；"
-        "rate-features=速率版形状的 x·a（诊断对照）",
+        "rate-features=速率版形状的 x·a（诊断对照）；count-aligned=计数同向 x⊗[z⊙(1[a]−π)]",
     )
     parser.add_argument("--baseline-decay", type=float, default=0.05)
     parser.add_argument(
