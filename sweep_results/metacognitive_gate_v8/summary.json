@@ -1,0 +1,103 @@
+{
+  "experiment": "元认知 v8：重建一致性门",
+  "config": {
+    "seeds": [
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "test_episodes": 500,
+    "coverage": 0.8,
+    "columns": [
+      "errors",
+      "state_norm"
+    ],
+    "neighbors": 5,
+    "validity_ratio": 2.0
+  },
+  "per_seed": [
+    {
+      "seed": 5,
+      "test_coverage": 0.806,
+      "selective_mse": 0.030939171503375655,
+      "test_mse_all": 0.06307668031133701,
+      "quantized_abstain": 0.93,
+      "quantized_auroc": 0.940104,
+      "quantized_mse_all": 0.44539597143726806,
+      "scale_abstain": 0.858,
+      "scale_auroc": 0.923604
+    },
+    {
+      "seed": 6,
+      "test_coverage": 0.786,
+      "selective_mse": 0.030135550940085916,
+      "test_mse_all": 0.07204617517521339,
+      "quantized_abstain": 0.914,
+      "quantized_auroc": 0.9163,
+      "quantized_mse_all": 0.43273857036968655,
+      "scale_abstain": 0.852,
+      "scale_auroc": 0.903576
+    },
+    {
+      "seed": 7,
+      "test_coverage": 0.818,
+      "selective_mse": 0.0322411508417104,
+      "test_mse_all": 0.06420386481821842,
+      "quantized_abstain": 0.898,
+      "quantized_auroc": 0.931996,
+      "quantized_mse_all": 0.42802127040143534,
+      "scale_abstain": 0.854,
+      "scale_auroc": 0.9133
+    },
+    {
+      "seed": 8,
+      "test_coverage": 0.772,
+      "selective_mse": 0.033450425559136375,
+      "test_mse_all": 0.07557011312405032,
+      "quantized_abstain": 0.882,
+      "quantized_auroc": 0.90418,
+      "quantized_mse_all": 0.4286825131341896,
+      "scale_abstain": 0.84,
+      "scale_auroc": 0.906124
+    },
+    {
+      "seed": 9,
+      "test_coverage": 0.868,
+      "selective_mse": 0.03863835492378951,
+      "test_mse_all": 0.06210706423179683,
+      "quantized_abstain": 0.864,
+      "quantized_auroc": 0.932168,
+      "quantized_mse_all": 0.433082984282982,
+      "scale_abstain": 0.85,
+      "scale_auroc": 0.923408
+    }
+  ],
+  "gate": {
+    "columns": [
+      "errors",
+      "state_norm"
+    ],
+    "neighbors": 5,
+    "metrics": {
+      "test_coverage": 0.8100000000000002,
+      "selective_mse": 0.03308093075361957,
+      "test_mse_all": 0.0674007795321232,
+      "quantized_abstain": 0.8976000000000001,
+      "quantized_auroc": 0.9249496,
+      "quantized_mse_all": 0.4335842619251123,
+      "scale_abstain": 0.8507999999999999,
+      "scale_auroc": 0.9140024
+    },
+    "validity_ratio": 6.4329265170956385,
+    "validity": true,
+    "coverage_ok": true,
+    "selective_ok": true,
+    "abstain_ok": true,
+    "auroc_ok": true,
+    "scale_abstain_ok": true,
+    "v8_ready": true
+  },
+  "repro": "```text\n实验名称：元认知 v8：重建一致性门\n日期：2026-10-28 10:57:02 中国标准时间\nGit commit：c82058eaeecd988cbdb49373d59e99b2b2185df0\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：5,6,7,8,9\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_metacognitive_gate_v8.py\n耗时：42.2 s\n备注：quantized：A/B 输入取 sign，目标保留原始幅度；Q/E 不变\n备注：门：kNN(5) on [errors, state_norm]；阈值只在 calibration（seed+30000）上取\n备注：最终种子 5-9；0-4 只用于预注册前的门族试点\n```"
+}
