@@ -31,7 +31,13 @@ class SpikingMultiTimescale:
         beta: float = 0.0,
         threshold: float = 1.0,
         seed: int = 0,
+        readout: str = "counts",
+        membrane_window: int = 10,
     ) -> None:
+        if readout not in ("counts", "membrane"):
+            raise ValueError("readout 只能是 counts / membrane。")
+        self.readout = readout
+        self.membrane_window = int(membrane_window)
         self.n_dims = int(n_dims)
         self.taus = tuple(taus)
         generator = torch.Generator().manual_seed(seed)
@@ -64,6 +70,7 @@ class SpikingMultiTimescale:
         cue_a_t = torch.as_tensor(cue_a, dtype=torch.float32)
         cue_b_t = torch.as_tensor(cue_b, dtype=torch.float32)
         counts = torch.zeros(len(self.taus), self.n_dims)
+        membrane = torch.zeros(len(self.taus), self.n_dims)
         states = [ALIFState.zeros(1, self.n_dims) for _ in self.cells]
         for step in range(test_step):
             probability = torch.zeros(self.n_dims)
@@ -75,4 +82,9 @@ class SpikingMultiTimescale:
             for index, cell in enumerate(self.cells):
                 spikes, states[index] = cell.step(inputs.unsqueeze(0), states[index])
                 counts[index] += spikes.squeeze(0)
+                if step >= test_step - self.membrane_window:
+                    membrane[index] += states[index].v.squeeze(0)
+        if self.readout == "membrane":
+            span = min(self.membrane_window, test_step)
+            return (membrane / max(span, 1)).reshape(-1).numpy()
         return counts.reshape(-1).numpy()
