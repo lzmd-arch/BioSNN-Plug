@@ -1,0 +1,37 @@
+{
+  "kind": "inference-only scale smoke; no training/accuracy claim",
+  "config": {
+    "sizes": "10000,100000,500000",
+    "fan_in": 32,
+    "steps": 28,
+    "n_in": 28,
+    "n_out": 10,
+    "out": "sweep_results\\event_driven_scale\\summary.json"
+  },
+  "results": [
+    {
+      "n_rec": 10000,
+      "fan_in": 32,
+      "steps": 28,
+      "elapsed_s": 0.0917083999956958,
+      "sparse_weights": 320000,
+      "prediction": 5
+    },
+    {
+      "n_rec": 100000,
+      "fan_in": 32,
+      "steps": 28,
+      "elapsed_s": 0.8307859000051394,
+      "sparse_weights": 3200000,
+      "prediction": 9
+    },
+    {
+      "n_rec": 500000,
+      "fan_in": 32,
+      "steps": 28,
+      "elapsed_s": 5.0176603000145406,
+      "sparse_weights": 16000000,
+      "prediction": 6
+    }
+  ]
+}

@@ -1206,6 +1206,12 @@
 >    这是“把低活动步的 L 置零”的最小近似，不是 ESPP 规则本身；下一步需把选择与学习信号/
 >    损失联合。见 [`sweep_results/event_priority/README.md`](sweep_results/event_priority/README.md)。
 
+> 137. **2026-10-29：事件驱动 e-prop 推理规模冒烟——500k 前向 5.02 s**。
+>    `EventDrivenEProp` 在 N>4096 时用向量化 fan-in（允许重复，不构造 N×N）；n_in=28、
+>    T=28、batch=1、fan_in=32：10k 0.09 s、100k 0.83 s、**500k 5.02 s**，稀疏权重
+>    16M。**边界**：只测前向，不测训练/梯度/精度；阶段四 500k 规模仍未验收。见
+>    [`sweep_results/event_driven_scale/README.md`](sweep_results/event_driven_scale/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
