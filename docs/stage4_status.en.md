@@ -33,6 +33,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
 | End-to-end v14 (18-cell matrix) | **14/18 ready** | s3/s5 all pass; K4-s2 σ0.1/0.3 pass; failures **K4-s2-σ0.5 abstain 0.7756**, **K8-s2 three noise levels 0.7656/0.7448/0.7024** | `v14_ready=false`; the only failing criterion is s=2 OOD abstention; WM/DPAR/state/AUROC pass |
 | End-to-end v15 (fill s=2 four cells) | **0/4** | K4-σ0.5 longtau **0.7868**; K8-s2 snapshot **0.7700/0.7416/0.7044** | Swapping arms (longtau/snapshot85) still misses 0.80; s=2 boundary not closed |
 | End-to-end v16 (input-scale gate) | **18/18 ready** | K4/K8 × s2/3/5 × σ.1/.3/.5: coverage **0.796–0.810**, abstain **0.882–1.000**, AUROC **0.928–1.000**; WM/DPAR/state pass | **Input-level** input_norm gate, not state-level metacognition; v14 state-level remains 14/18; scale OOD only |
+| End-to-end v17 (state-level reconstruction gate) | **12/18 ready** | seeds 10–14: s3/s5 all pass; six s2 cells abstain **0.620–0.736**, all fail; other metrics R² 0.906–0.994, DPAR 0.930–0.964, state 0.125–0.243 | state-level kNN[errors,state_norm] does not close s=2 and is two cells below v14’s 14/18; v16’s input-level 18/18 is not mixed in |
 
 ## 2. What "ready" means
 
@@ -76,7 +77,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
    **v15's arm swap is still 0/4** (longtau 0.7868; snapshot 0.770/0.742/0.704); s=2 needs
    a stronger scale feature. **v16 switches to an input-scale gate `max(||A||,||B||)` and passes
    18/18**; but it is an input-level gate, not state-level metacognition, and v14's 14/18 remains
-   the state-level result.
+   the state-level result. **v17 applies the metacognitive v8 kNN[errors,state_norm] gate to the 18 cells and reaches only 12/18**: s=3/5 pass, but all six s=2 cells abstain 0.620–0.736 and fail; this is two cells below v14, and state-level s=2 remains open.
 2. **Spiking working memory v5–v9 (closed)**: v5 counts 0.217/0.187, v6 membrane 0.309/0.121,
    v7 population membrane 0.788; the bottleneck moved from "5 Bernoulli samples" to "spike reset
    erasure". v8's `v+thr·trace` cancels reset algebraically (LIF/ALIF identical to ≤2e-7) and is a
@@ -168,6 +169,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   [v12 K8 diag gate](../sweep_results/stage4_e2e_v12/README.md),
   [v14 18-cell matrix](../sweep_results/stage4_e2e_v14/README.md),
   [v15 s=2 four cells](../sweep_results/stage4_e2e_v15/README.md),
-  [v16 input-scale gate](../sweep_results/stage4_e2e_v16/README.md)
+  [v16 input-scale gate](../sweep_results/stage4_e2e_v16/README.md),
+  [v17 state-level reconstruction gate](../sweep_results/stage4_e2e_v17/README.md)
 - Technical report: [paper/stage4/README.md](../paper/stage4/README.md) · Zenodo
   [10.5281/zenodo.23696829](https://doi.org/10.5281/zenodo.23696829) (v1.0, 2026-10-28)
