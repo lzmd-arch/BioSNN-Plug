@@ -42,7 +42,7 @@ not turn "component ready" into "phase-4 end-to-end holds".
   does not include:
   - the phase-4 end-to-end task;
   - integration with the bus/plugins;
-  - spiking (working memory) or full locality (metacognitive calibration head);
+  - full locality (metacognitive calibration head); v9 spiking WM is a count/low-pass code, timing untested;
 - All negative results/boundaries are kept as-is; no criteria were changed after the fact. Ledger
   entries ㊽–110 in the project plan are the complete index.
 

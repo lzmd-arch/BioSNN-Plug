@@ -23,7 +23,8 @@ e2e v14 (18-cell matrix, 14/18 state-level), v15 (s=2 arms still 0/4), v16 (inpu
 0.130; v8 was a trivial solution and is not evidence); episodic v5 (local delta 0.805 at K=8,
 0.922 at K=4); metacognitive v8 (reconstruction-consistency gate: quantized abstain 0.898, AUROC
 0.925, coverage 0.810); and P3 v3–v5 (open-loop calibrated termination 0.999996 AUROC, FP
-0.000504, hit 0.998; closed-loop termination remains 0.63–0.66 and open). A v1.1 deposit, if
+0.000504, hit 0.998; rolling-horizon closed-loop v6 AUROC 1.0, FP 0.000912, hit 1.0; the 500-step
+pure-imagination loop remains 0.63–0.66 and open; state-level E2E v18 is 18/18). A v1.1 deposit, if
 made, should carry those updates; the DOI above stays the v1.0 snapshot. The PDF was rendered from that Markdown outside the
 repository (PDFs are not committed), with an ASCII-normalized text layer so extraction is clean.
 
