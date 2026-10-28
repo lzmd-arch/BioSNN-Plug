@@ -4,6 +4,7 @@ from .core import CognitiveCore, InMemoryCore, MemoryEntry, ToolError
 from .llm import LLMAdapter, MockLLM
 from .server import PROTOCOL_VERSION, TOOLS, handle_message, serve_stdio
 from .trace import SCHEMA_VERSION, DialogueTrace, TurnRecord
+from .trigger import TriggerDecision, TriggerPolicy
 
 __all__ = [
     "PROTOCOL_VERSION",
@@ -16,6 +17,8 @@ __all__ = [
     "MemoryEntry",
     "MockLLM",
     "ToolError",
+    "TriggerDecision",
+    "TriggerPolicy",
     "TurnRecord",
     "handle_message",
     "serve_stdio",

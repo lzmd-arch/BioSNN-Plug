@@ -1,0 +1,321 @@
+{
+  "accuracy": 0.7333333333333333,
+  "first_correct_call_turn": 2,
+  "llm_calls": 4,
+  "trace_summary": {
+    "schema_version": 1,
+    "turns": 30,
+    "llm_calls": 4,
+    "retrieved": 66,
+    "consolidated": 0
+  },
+  "decisions": [
+    {
+      "turn": 1,
+      "query": "what is the capital of France",
+      "intent": "knowledge",
+      "should_call": true,
+      "call": false,
+      "reason": "retrieval_sufficient",
+      "score": 0.3333333333333333,
+      "correct": false
+    },
+    {
+      "turn": 2,
+      "query": "how does photosynthesis work",
+      "intent": "knowledge",
+      "should_call": true,
+      "call": true,
+      "reason": "knowledge_low_retrieval",
+      "score": 0.0,
+      "correct": true
+    },
+    {
+      "turn": 3,
+      "query": "who wrote the tempest",
+      "intent": "knowledge",
+      "should_call": true,
+      "call": false,
+      "reason": "retrieval_sufficient",
+      "score": 0.25,
+      "correct": false
+    },
+    {
+      "turn": 4,
+      "query": "what is the boiling point of water",
+      "intent": "knowledge",
+      "should_call": true,
+      "call": false,
+      "reason": "retrieval_sufficient",
+      "score": 0.2857142857142857,
+      "correct": false
+    },
+    {
+      "turn": 5,
+      "query": "how far is the moon",
+      "intent": "knowledge",
+      "should_call": true,
+      "call": false,
+      "reason": "retrieval_sufficient",
+      "score": 0.4,
+      "correct": false
+    },
+    {
+      "turn": 6,
+      "query": "what causes thunder",
+      "intent": "knowledge",
+      "should_call": true,
+      "call": true,
+      "reason": "knowledge_low_retrieval",
+      "score": 0.0,
+      "correct": true
+    },
+    {
+      "turn": 7,
+      "query": "what is a prime number",
+      "intent": "knowledge",
+      "should_call": true,
+      "call": false,
+      "reason": "retrieval_sufficient",
+      "score": 0.4,
+      "correct": false
+    },
+    {
+      "turn": 8,
+      "query": "who painted the starry night",
+      "intent": "knowledge",
+      "should_call": true,
+      "call": true,
+      "reason": "knowledge_low_retrieval",
+      "score": 0.2,
+      "correct": true
+    },
+    {
+      "turn": 9,
+      "query": "what is the largest ocean",
+      "intent": "knowledge",
+      "should_call": true,
+      "call": false,
+      "reason": "retrieval_sufficient",
+      "score": 0.4,
+      "correct": false
+    },
+    {
+      "turn": 10,
+      "query": "how do vaccines work",
+      "intent": "knowledge",
+      "should_call": true,
+      "call": true,
+      "reason": "knowledge_low_retrieval",
+      "score": 0.0,
+      "correct": true
+    },
+    {
+      "turn": 11,
+      "query": "what is the speed of light",
+      "intent": "knowledge",
+      "should_call": true,
+      "call": false,
+      "reason": "retrieval_sufficient",
+      "score": 0.3333333333333333,
+      "correct": false
+    },
+    {
+      "turn": 12,
+      "query": "what is the tallest mountain",
+      "intent": "knowledge",
+      "should_call": true,
+      "call": false,
+      "reason": "retrieval_sufficient",
+      "score": 0.4,
+      "correct": false
+    },
+    {
+      "turn": 13,
+      "query": "what is my birthday",
+      "intent": "memory",
+      "should_call": false,
+      "call": false,
+      "reason": "memory",
+      "score": 0.75,
+      "correct": true
+    },
+    {
+      "turn": 14,
+      "query": "what is my favorite color",
+      "intent": "memory",
+      "should_call": false,
+      "call": false,
+      "reason": "memory",
+      "score": 0.8,
+      "correct": true
+    },
+    {
+      "turn": 15,
+      "query": "where do i live",
+      "intent": "memory",
+      "should_call": false,
+      "call": false,
+      "reason": "memory",
+      "score": 0.5,
+      "correct": true
+    },
+    {
+      "turn": 16,
+      "query": "what is my sister's name",
+      "intent": "memory",
+      "should_call": false,
+      "call": false,
+      "reason": "memory",
+      "score": 0.8,
+      "correct": true
+    },
+    {
+      "turn": 17,
+      "query": "what project am i working on",
+      "intent": "memory",
+      "should_call": false,
+      "call": false,
+      "reason": "memory",
+      "score": 0.8333333333333334,
+      "correct": true
+    },
+    {
+      "turn": 18,
+      "query": "what did i say about the deadline",
+      "intent": "memory",
+      "should_call": false,
+      "call": false,
+      "reason": "memory",
+      "score": 0.2857142857142857,
+      "correct": true
+    },
+    {
+      "turn": 19,
+      "query": "what is my coffee order",
+      "intent": "memory",
+      "should_call": false,
+      "call": false,
+      "reason": "memory",
+      "score": 0.8,
+      "correct": true
+    },
+    {
+      "turn": 20,
+      "query": "which music do i like",
+      "intent": "memory",
+      "should_call": false,
+      "call": false,
+      "reason": "memory",
+      "score": 0.6,
+      "correct": true
+    },
+    {
+      "turn": 21,
+      "query": "what is my cat called",
+      "intent": "memory",
+      "should_call": false,
+      "call": false,
+      "reason": "memory",
+      "score": 0.8,
+      "correct": true
+    },
+    {
+      "turn": 22,
+      "query": "where did i park",
+      "intent": "memory",
+      "should_call": false,
+      "call": false,
+      "reason": "memory",
+      "score": 0.25,
+      "correct": true
+    },
+    {
+      "turn": 23,
+      "query": "what is my phone model",
+      "intent": "memory",
+      "should_call": false,
+      "call": false,
+      "reason": "memory",
+      "score": 0.8,
+      "correct": true
+    },
+    {
+      "turn": 24,
+      "query": "what did i plan for the weekend",
+      "intent": "memory",
+      "should_call": false,
+      "call": false,
+      "reason": "memory",
+      "score": 0.5714285714285714,
+      "correct": true
+    },
+    {
+      "turn": 25,
+      "query": "hello",
+      "intent": "chat",
+      "should_call": false,
+      "call": false,
+      "reason": "chat",
+      "score": 0.0,
+      "correct": true
+    },
+    {
+      "turn": 26,
+      "query": "good morning",
+      "intent": "chat",
+      "should_call": false,
+      "call": false,
+      "reason": "chat",
+      "score": 0.0,
+      "correct": true
+    },
+    {
+      "turn": 27,
+      "query": "i feel tired",
+      "intent": "chat",
+      "should_call": false,
+      "call": false,
+      "reason": "chat",
+      "score": 0.3333333333333333,
+      "correct": true
+    },
+    {
+      "turn": 28,
+      "query": "thank you",
+      "intent": "chat",
+      "should_call": false,
+      "call": false,
+      "reason": "chat",
+      "score": 0.0,
+      "correct": true
+    },
+    {
+      "turn": 29,
+      "query": "how are you",
+      "intent": "chat",
+      "should_call": false,
+      "call": false,
+      "reason": "chat",
+      "score": 0.0,
+      "correct": true
+    },
+    {
+      "turn": 30,
+      "query": "good night",
+      "intent": "chat",
+      "should_call": false,
+      "call": false,
+      "reason": "chat",
+      "score": 0.0,
+      "correct": true
+    }
+  ],
+  "gate": {
+    "accuracy_ok": true,
+    "first_call_ok": true,
+    "trace_ok": true,
+    "no_network": true,
+    "m2_ready": true
+  }
+}

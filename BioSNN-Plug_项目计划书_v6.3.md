@@ -1225,6 +1225,13 @@
 >    仍未验收。见
 >    [`sweep_results/event_driven_train_scale/README.md`](sweep_results/event_driven_train_scale/README.md)。
 
+> 140. **2026-10-29：阶段五 M2——触发策略 + mock LLM trace，协议层 ready（0.733）**。
+>    30 个脚本化场景（12 knowledge/12 memory/6 chat），意图给定、检索分数由 InMemoryCore
+>    实算、MockLLM 无网络：触发准确率 **0.733**（门槛 0.70，薄）、首次正确调用第 **2** 轮、
+>    30/30 trace 完整、0 网络/key；`m2_ready=true`。**边界**：规则触发不是自主推断；
+>    4 次调用（8 个 knowledge 因词面撞车高分被跳过）；合成集不外推。见
+>    [`sweep_results/phase5_m2/README.md`](sweep_results/phase5_m2/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
