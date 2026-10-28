@@ -73,15 +73,25 @@ class EventDrivenEProp(nn.Module):
         self.w_in = nn.Parameter(torch.randn(n_in, n_rec, generator=gen) / (n_in**0.5))
         self.w_out = nn.Parameter(torch.randn(n_rec, n_out, generator=gen) / (n_rec**0.5))
         # 固定 fan-in：每个后神经元选 fan_in 个不同的前神经元（不含自身）。
-        indices = []
-        values = []
-        for post in range(n_rec):
-            candidates = torch.randperm(n_rec - 1, generator=gen)[:fan_in]
-            candidates = candidates + (candidates >= post).long()
-            indices.append(candidates)
-            values.append(torch.randn(fan_in, generator=gen) / (fan_in**0.5))
-        self.register_buffer("pre_index", torch.stack(indices), persistent=False)  # (N,k)
-        self.w_rec = nn.Parameter(torch.stack(values))  # (N,k)
+        if n_rec <= 4096:
+            # 小网络：每行无放回，便于与 dense 同 mask 逐位对照。
+            indices = []
+            values = []
+            for post in range(n_rec):
+                candidates = torch.randperm(n_rec - 1, generator=gen)[:fan_in]
+                candidates = candidates + (candidates >= post).long()
+                indices.append(candidates)
+                values.append(torch.randn(fan_in, generator=gen) / (fan_in**0.5))
+            pre_index = torch.stack(indices)
+            values_t = torch.stack(values)
+        else:
+            # 大规模：向量化、允许重复（N≫k 时重复概率可忽略）；不构造 N×N。
+            post = torch.arange(n_rec).unsqueeze(1)
+            candidates = torch.randint(0, n_rec - 1, (n_rec, fan_in), generator=gen)
+            pre_index = candidates + (candidates >= post).long()
+            values_t = torch.randn(n_rec, fan_in, generator=gen) / (fan_in**0.5)
+        self.register_buffer("pre_index", pre_index, persistent=False)  # (N,k)
+        self.w_rec = nn.Parameter(values_t)  # (N,k)
 
     def _trace(self, values: torch.Tensor) -> torch.Tensor:
         """ε_v 递推：``ε_t = α·ε_{t−1} + z_t``（没有 1−α；那是读出滤波）。"""
