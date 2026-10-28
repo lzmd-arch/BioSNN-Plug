@@ -38,4 +38,4 @@ D1（rate-features）中位数 62.15、sign-consistent 75.65；本臂比两者�
 
 ## 自证
 
-`summary.json` 复现块：commit `92f1409`，工作区干净；耗时约 7 分钟（10 种子，CPU）。
+`summary.json` 复现块：commit `92f1409`，工作区干净；耗时 242.5 s（10 种子，CPU）。
