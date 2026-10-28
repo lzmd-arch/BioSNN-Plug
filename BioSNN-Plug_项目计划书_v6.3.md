@@ -1212,6 +1212,12 @@
 >    16M。**边界**：只测前向，不测训练/梯度/精度；阶段四 500k 规模仍未验收。见
 >    [`sweep_results/event_driven_scale/README.md`](sweep_results/event_driven_scale/README.md)。
 
+> 138. **2026-10-29：能效代理加入实测脉冲稀疏度 0.8758**。
+>    W2 1 epoch 实测 `spike_sparsity=0.8758`（精度 0.4221，不作准确率结论）；按 45nm
+>    常数重算 ANN/SNN 代理比 **41.2×**（假设 0.90/0.95/0.98 分别为 51/102/256×）。
+>    **仍是代理、不是硬件能耗**；阶段四 10× 不能据此写成硬件验收。见
+>    [`sweep_results/phase4_energy/README.md`](sweep_results/phase4_energy/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
