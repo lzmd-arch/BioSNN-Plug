@@ -1139,6 +1139,14 @@
 >    输入变换型 OOD，不覆盖标签漂移/零空间变换。见
 >    [`sweep_results/metacognitive_gate_v11/README.md`](sweep_results/metacognitive_gate_v11/README.md)。
 
+> 127. **2026-10-29：阶段五 M0——只读 MCP 骨架落地（不接 LLM）**。
+>    新增 `packages/biosnn-mcp`（无第三方依赖，JSON-RPC 2.0 over stdio），暴露三个只读
+>    工具：`state.query`、`memory.search`、`trigger.status`；认知核是 `InMemoryCore` 替身。
+>    M0 **不连接 LLM、不写记忆、不武装触发**；`trigger.status` 固定未武装，避免脚本调用
+>    被写成自主触发。11 个协议/工具测试；ADR-0020 已采纳。阶段五正式验收仍由 M1–M3 的
+>    新预注册定义；阶段四 500 步纯想象 P3 边界不变。见
+>    [`docs/adr/ADR-0020-phase-five-m0-readonly-mcp.md`](docs/adr/ADR-0020-phase-five-m0-readonly-mcp.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

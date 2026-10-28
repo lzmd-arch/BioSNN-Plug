@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "biosnn-mcp"
+version = "0.1.0"
+description = "BioSNN-Plug 阶段五 M0：只读 MCP 工具骨架（认知状态/记忆检索/触发状态），不依赖 LLM"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+authors = [{ name = "离中梦蝶", email = "269058959+lzmd-arch@users.noreply.github.com" }]
+keywords = ["mcp", "spiking-neural-network", "orchestration"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/lzmd-arch/BioSNN-Plug"
+Repository = "https://github.com/lzmd-arch/BioSNN-Plug"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/biosnn_mcp"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/", "tests/"]

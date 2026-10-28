@@ -51,3 +51,4 @@ Michael Nygard の古典的な 4 段構成を採用します：
 | [ADR-0017](ADR-0017-cl-main-route-switch-and-replay-first.ja.md) | CL 主路線を Route R へ（リプレイ先行）；Route W は保持；第 4 フェーズ入口を書き換え | 採用済み |
 | [ADR-0018](ADR-0018-task-aware-cl-gate.ja.md) | 第 3 フェーズ CL ゲートをタスク認識 CIL（task-incremental）へ；純粋 CIL の陰性結果は保持 | 採用済み |
 | [ADR-0019](ADR-0019-stage-four-entry-decoupled-from-relearn.ja.md) | 第 4 フェーズ入口を再学習 3× から切り離す；3× は未達の開放項目 | 採用済み |
+| [ADR-0020](ADR-0020-phase-five-m0-readonly-mcp.ja.md) | フェーズ5 M0：読み取り専用 MCP 骨格（LLM 接続なし・書き込みなし） | 採用済み |

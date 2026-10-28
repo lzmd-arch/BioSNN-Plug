@@ -104,10 +104,10 @@ package = false
 
 [tool.pytest.ini_options]
 # packages/... 是骨架库自己的测试；tests/ 是仓库工具链（检查脚本等）的测试
-testpaths = ["packages/biosnn-bus/tests", "tests", "research"]
+testpaths = ["packages/biosnn-bus/tests", "packages/biosnn-mcp/tests", "tests", "research"]
 # 目录名 biosnn-bus 含连字符、不能作为包，因此把 tests/ 挂进 sys.path，
 # 让测试文件能 `from helpers import ...`。
-pythonpath = ["packages/biosnn-bus/tests"]
+pythonpath = ["packages/biosnn-bus/tests", "packages/biosnn-mcp/src"]
 addopts = "-ra --strict-markers --strict-config"
 markers = [
   "gpu: 需要 CUDA 的测试（CI 默认跳过，本地可用 -m gpu 运行）",

@@ -13,6 +13,7 @@ resolution-markers = [
 [manifest]
 members = [
     "biosnn-bus",
+    "biosnn-mcp",
     "biosnn-plug",
 ]
 
@@ -61,6 +62,11 @@ requires-dist = [
     { name = "torch", marker = "sys_platform != 'win32' and extra == 'torch'", specifier = ">=2.0", index = "https://download.pytorch.org/whl/cpu" },
 ]
 provides-extras = ["torch", "examples"]
+
+[[package]]
+name = "biosnn-mcp"
+version = "0.1.0"
+source = { editable = "packages/biosnn-mcp" }
 
 [[package]]
 name = "biosnn-plug"

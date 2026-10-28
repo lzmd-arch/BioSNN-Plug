@@ -48,3 +48,4 @@
 | [ADR-0017](ADR-0017-cl-main-route-switch-and-replay-first.md) | CL 主路线切换为 Route R（回放先行）；Route W 保留；阶段四入口改写 | 已采纳 |
 | [ADR-0018](ADR-0018-task-aware-cl-gate.md) | 阶段三 CL 门口径改为任务感知 CIL（task-incremental）；纯 CIL 阴性结果保留 | 已采纳 |
 | [ADR-0019](ADR-0019-stage-four-entry-decoupled-from-relearn.md) | 阶段四入口与「重学快 3×」解耦；3× 记为未达的开放项 | 已采纳 |
+| [ADR-0020](ADR-0020-phase-five-m0-readonly-mcp.md) | 阶段五 M0：只读 MCP 骨架（不接 LLM、不写记忆） | 已采纳 |
