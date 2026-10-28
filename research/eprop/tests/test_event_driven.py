@@ -17,7 +17,12 @@ def test_matches_dense_eprop_on_the_same_mask():
     targets = torch.tensor([0, 2])
 
     sparse = EventDrivenEProp(
-        n_in, n_rec, n_out, fan_in=fan_in, n_refractory=2, generator=torch.Generator().manual_seed(3)
+        n_in,
+        n_rec,
+        n_out,
+        fan_in=fan_in,
+        n_refractory=2,
+        generator=torch.Generator().manual_seed(3),
     )
     dense = EPropLearner(
         n_in,

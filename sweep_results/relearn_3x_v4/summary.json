@@ -1,0 +1,155 @@
+{
+  "experiment": "重学 3× v4：保留探索状态的实用重学",
+  "config": {
+    "gravity_new": 20.0,
+    "threshold": 200.0,
+    "episodes": 800,
+    "seeds": [
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112
+    ]
+  },
+  "per_seed": [
+    {
+      "seed": 103,
+      "phase_a_final": 184.4,
+      "warm_initial": 169.6,
+      "warm_time": null,
+      "scratch_time": 140,
+      "warm_final": 9.1,
+      "scratch_final": 206.6,
+      "warm_last_two": 8.8,
+      "scratch_last_two": 215.2,
+      "ratio": null
+    },
+    {
+      "seed": 104,
+      "phase_a_final": 239.6,
+      "warm_initial": 264.4,
+      "warm_time": 50,
+      "scratch_time": 470,
+      "warm_final": 88.3,
+      "scratch_final": 265.2,
+      "warm_last_two": 132.7,
+      "scratch_last_two": 311.9,
+      "ratio": 9.4
+    },
+    {
+      "seed": 105,
+      "phase_a_final": 182.9,
+      "warm_initial": 164.6,
+      "warm_time": 20,
+      "scratch_time": 70,
+      "warm_final": 10.0,
+      "scratch_final": 251.8,
+      "warm_last_two": 10.0,
+      "scratch_last_two": 229.3,
+      "ratio": 3.5
+    },
+    {
+      "seed": 106,
+      "phase_a_final": 251.7,
+      "warm_initial": 183.8,
+      "warm_time": 10,
+      "scratch_time": 800,
+      "warm_final": 123.0,
+      "scratch_final": 295.6,
+      "warm_last_two": 113.5,
+      "scratch_last_two": 296.29999999999995,
+      "ratio": 80.0
+    },
+    {
+      "seed": 107,
+      "phase_a_final": 471.6,
+      "warm_initial": 356.8,
+      "warm_time": 220,
+      "scratch_time": 470,
+      "warm_final": 30.2,
+      "scratch_final": 402.9,
+      "warm_last_two": 32.5,
+      "scratch_last_two": 331.2,
+      "ratio": 2.1363636363636362
+    },
+    {
+      "seed": 108,
+      "phase_a_final": 118.7,
+      "warm_initial": 106.4,
+      "warm_time": null,
+      "scratch_time": 790,
+      "warm_final": 43.3,
+      "scratch_final": 161.9,
+      "warm_last_two": 90.80000000000001,
+      "scratch_last_two": 185.9,
+      "ratio": null
+    },
+    {
+      "seed": 109,
+      "phase_a_final": 389.1,
+      "warm_initial": 335.4,
+      "warm_time": 330,
+      "scratch_time": 550,
+      "warm_final": 182.8,
+      "scratch_final": 276.1,
+      "warm_last_two": 161.39999999999998,
+      "scratch_last_two": 258.70000000000005,
+      "ratio": 1.6666666666666667
+    },
+    {
+      "seed": 110,
+      "phase_a_final": 297.0,
+      "warm_initial": 160.2,
+      "warm_time": 80,
+      "scratch_time": 670,
+      "warm_final": 104.3,
+      "scratch_final": 198.6,
+      "warm_last_two": 102.19999999999999,
+      "scratch_last_two": 189.3,
+      "ratio": 8.375
+    },
+    {
+      "seed": 111,
+      "phase_a_final": 175.6,
+      "warm_initial": 136.4,
+      "warm_time": null,
+      "scratch_time": 500,
+      "warm_final": 9.7,
+      "scratch_final": 161.2,
+      "warm_last_two": 9.100000000000001,
+      "scratch_last_two": 144.10000000000002,
+      "ratio": null
+    },
+    {
+      "seed": 112,
+      "phase_a_final": 365.0,
+      "warm_initial": 199.4,
+      "warm_time": 140,
+      "scratch_time": 250,
+      "warm_final": 131.8,
+      "scratch_final": 148.8,
+      "warm_last_two": 139.7,
+      "scratch_last_two": 126.2,
+      "ratio": 1.7857142857142858
+    }
+  ],
+  "gate": {
+    "phase_a_median": 245.64999999999998,
+    "phase_a_mastery": true,
+    "valid_pairs": 7,
+    "nonzero_shot": 3,
+    "scratch_reaches": 10,
+    "scratch_median_time": 485.0,
+    "ratio_median": 3.5,
+    "warm_faster": 7,
+    "final_parity": false,
+    "relearn_3x_v4_ready": false
+  },
+  "repro": "```text\n实验名称：重学 3× v4\n日期：2026-10-29 06:05:46 中国标准时间\nGit commit：5b3efde55cce7a5b73983fbee0dd1800eec00cf0\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：CPU（Intel64 Family 6 Model 183 Stepping 1, GenuineIntel，无 GPU 参与）\n随机种子：103,104,105,106,107,108,109,110,111,112\n依赖快照：uv.lock sha256=9dc262ffcb62739dbe58df80d6314d5f83de95f66864d5462eb877933e37a783\n运行命令：relearn_practical.py --seeds 103-112 --episodes 800 --out sweep_results/relearn_3x_v4\n耗时：764.4 s\n备注：Phase A R0 9.8；Phase B warm 保留探索状态（0.02/40），R1 20.0；scratch 默认调度\n备注：速度 = best-so-far 首次 ≥200 的回合数\n备注：原 v1-v3 与 3× 未达结论不变\n```"
+}

@@ -1192,6 +1192,13 @@
 >    策略表达力/信号尺度，不在本轮调 lr/宽度/回合。阶段三脉冲执行层仍未达。见
 >    [`sweep_results/rstdp_spiking_count_aligned/README.md`](sweep_results/rstdp_spiking_count_aligned/README.md)。
 
+> 135. **2026-10-29：重学 3× v4（保留探索状态）——速度比 3.5×，但有效性门未过**。
+>    重力 9.8→20、阈值 200、warm 保留末尾 exploration=0.02/logit=40；种子 103–112：
+>    Phase A 中位 245.65、scratch 10/10 可达、比值中位 **3.5×**；但非零样本 **3/10**、
+>    有效配对 **7/10**、warm 更快 **7/10**、末值不更差 **false**，`relearn_3x_v4_ready=false`。
+>    3.5× 不能写成 3× 通过；原 3× 仍是未达开放项。见
+>    [`sweep_results/relearn_3x_v4/README.md`](sweep_results/relearn_3x_v4/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
