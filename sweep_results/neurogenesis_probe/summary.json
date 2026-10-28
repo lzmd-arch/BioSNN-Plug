@@ -1,0 +1,655 @@
+{
+  "experiment": "阶段四神经发生最小探针",
+  "config": {
+    "tasks": 4,
+    "classes_per_task": 4,
+    "n_in": 8,
+    "noise": 1.3,
+    "n0": 64,
+    "growth": 16,
+    "max_ratio": 2.0
+  },
+  "rows": [
+    {
+      "seed": 0,
+      "grow": false,
+      "history": [
+        {
+          "task": 0,
+          "train_accuracy": 0.82,
+          "task_accuracy": 0.81,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 1,
+          "train_accuracy": 0.7075,
+          "task_accuracy": 0.48,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 2,
+          "train_accuracy": 0.8075,
+          "task_accuracy": 0.41,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 3,
+          "train_accuracy": 0.9225,
+          "task_accuracy": 0.635,
+          "n_features": 64,
+          "grew": false
+        }
+      ],
+      "task_accuracies": [
+        0.565,
+        0.34,
+        0.375,
+        0.635
+      ],
+      "retention": [
+        [
+          0.81
+        ],
+        [
+          0.715,
+          0.48
+        ],
+        [
+          0.615,
+          0.385,
+          0.41
+        ],
+        [
+          0.565,
+          0.34,
+          0.375,
+          0.635
+        ]
+      ],
+      "final_task_accuracy": 0.635,
+      "min_old_accuracy": 0.34,
+      "n_features": 64,
+      "growth_count": 0
+    },
+    {
+      "seed": 0,
+      "grow": true,
+      "history": [
+        {
+          "task": 0,
+          "train_accuracy": 0.82,
+          "task_accuracy": 0.85,
+          "n_features": 80,
+          "grew": true
+        },
+        {
+          "task": 1,
+          "train_accuracy": 0.705,
+          "task_accuracy": 0.48,
+          "n_features": 96,
+          "grew": true
+        },
+        {
+          "task": 2,
+          "train_accuracy": 0.835,
+          "task_accuracy": 0.41,
+          "n_features": 112,
+          "grew": true
+        },
+        {
+          "task": 3,
+          "train_accuracy": 0.9425,
+          "task_accuracy": 0.365,
+          "n_features": 112,
+          "grew": false
+        }
+      ],
+      "task_accuracies": [
+        0.49,
+        0.32,
+        0.37,
+        0.365
+      ],
+      "retention": [
+        [
+          0.85
+        ],
+        [
+          0.675,
+          0.48
+        ],
+        [
+          0.495,
+          0.345,
+          0.41
+        ],
+        [
+          0.49,
+          0.32,
+          0.37,
+          0.365
+        ]
+      ],
+      "final_task_accuracy": 0.365,
+      "min_old_accuracy": 0.32,
+      "n_features": 112,
+      "growth_count": 3
+    },
+    {
+      "seed": 1,
+      "grow": false,
+      "history": [
+        {
+          "task": 0,
+          "train_accuracy": 0.775,
+          "task_accuracy": 0.76,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 1,
+          "train_accuracy": 0.8475,
+          "task_accuracy": 0.7,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 2,
+          "train_accuracy": 0.8675,
+          "task_accuracy": 0.7,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 3,
+          "train_accuracy": 0.8425,
+          "task_accuracy": 0.48,
+          "n_features": 64,
+          "grew": false
+        }
+      ],
+      "task_accuracies": [
+        0.32,
+        0.44,
+        0.62,
+        0.48
+      ],
+      "retention": [
+        [
+          0.76
+        ],
+        [
+          0.415,
+          0.7
+        ],
+        [
+          0.355,
+          0.565,
+          0.7
+        ],
+        [
+          0.32,
+          0.44,
+          0.62,
+          0.48
+        ]
+      ],
+      "final_task_accuracy": 0.48,
+      "min_old_accuracy": 0.32,
+      "n_features": 64,
+      "growth_count": 0
+    },
+    {
+      "seed": 1,
+      "grow": true,
+      "history": [
+        {
+          "task": 0,
+          "train_accuracy": 0.79,
+          "task_accuracy": 0.8,
+          "n_features": 80,
+          "grew": true
+        },
+        {
+          "task": 1,
+          "train_accuracy": 0.87,
+          "task_accuracy": 0.695,
+          "n_features": 96,
+          "grew": true
+        },
+        {
+          "task": 2,
+          "train_accuracy": 0.895,
+          "task_accuracy": 0.655,
+          "n_features": 112,
+          "grew": true
+        },
+        {
+          "task": 3,
+          "train_accuracy": 0.845,
+          "task_accuracy": 0.475,
+          "n_features": 128,
+          "grew": true
+        }
+      ],
+      "task_accuracies": [
+        0.265,
+        0.435,
+        0.58,
+        0.475
+      ],
+      "retention": [
+        [
+          0.8
+        ],
+        [
+          0.38,
+          0.695
+        ],
+        [
+          0.29,
+          0.57,
+          0.655
+        ],
+        [
+          0.265,
+          0.435,
+          0.58,
+          0.475
+        ]
+      ],
+      "final_task_accuracy": 0.475,
+      "min_old_accuracy": 0.265,
+      "n_features": 128,
+      "growth_count": 4
+    },
+    {
+      "seed": 2,
+      "grow": false,
+      "history": [
+        {
+          "task": 0,
+          "train_accuracy": 0.6925,
+          "task_accuracy": 0.695,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 1,
+          "train_accuracy": 0.7925,
+          "task_accuracy": 0.625,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 2,
+          "train_accuracy": 0.7925,
+          "task_accuracy": 0.6,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 3,
+          "train_accuracy": 0.89,
+          "task_accuracy": 0.61,
+          "n_features": 64,
+          "grew": false
+        }
+      ],
+      "task_accuracies": [
+        0.32,
+        0.415,
+        0.48,
+        0.61
+      ],
+      "retention": [
+        [
+          0.695
+        ],
+        [
+          0.515,
+          0.625
+        ],
+        [
+          0.47,
+          0.505,
+          0.6
+        ],
+        [
+          0.32,
+          0.415,
+          0.48,
+          0.61
+        ]
+      ],
+      "final_task_accuracy": 0.61,
+      "min_old_accuracy": 0.32,
+      "n_features": 64,
+      "growth_count": 0
+    },
+    {
+      "seed": 2,
+      "grow": true,
+      "history": [
+        {
+          "task": 0,
+          "train_accuracy": 0.7325,
+          "task_accuracy": 0.735,
+          "n_features": 80,
+          "grew": true
+        },
+        {
+          "task": 1,
+          "train_accuracy": 0.8225,
+          "task_accuracy": 0.595,
+          "n_features": 96,
+          "grew": true
+        },
+        {
+          "task": 2,
+          "train_accuracy": 0.84,
+          "task_accuracy": 0.565,
+          "n_features": 112,
+          "grew": true
+        },
+        {
+          "task": 3,
+          "train_accuracy": 0.9125,
+          "task_accuracy": 0.535,
+          "n_features": 112,
+          "grew": false
+        }
+      ],
+      "task_accuracies": [
+        0.285,
+        0.395,
+        0.51,
+        0.535
+      ],
+      "retention": [
+        [
+          0.735
+        ],
+        [
+          0.46,
+          0.595
+        ],
+        [
+          0.37,
+          0.45,
+          0.565
+        ],
+        [
+          0.285,
+          0.395,
+          0.51,
+          0.535
+        ]
+      ],
+      "final_task_accuracy": 0.535,
+      "min_old_accuracy": 0.285,
+      "n_features": 112,
+      "growth_count": 3
+    },
+    {
+      "seed": 3,
+      "grow": false,
+      "history": [
+        {
+          "task": 0,
+          "train_accuracy": 0.86,
+          "task_accuracy": 0.84,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 1,
+          "train_accuracy": 0.96,
+          "task_accuracy": 0.79,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 2,
+          "train_accuracy": 0.8625,
+          "task_accuracy": 0.42,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 3,
+          "train_accuracy": 0.8275,
+          "task_accuracy": 0.57,
+          "n_features": 64,
+          "grew": false
+        }
+      ],
+      "task_accuracies": [
+        0.575,
+        0.715,
+        0.385,
+        0.57
+      ],
+      "retention": [
+        [
+          0.84
+        ],
+        [
+          0.705,
+          0.79
+        ],
+        [
+          0.695,
+          0.76,
+          0.42
+        ],
+        [
+          0.575,
+          0.715,
+          0.385,
+          0.57
+        ]
+      ],
+      "final_task_accuracy": 0.57,
+      "min_old_accuracy": 0.385,
+      "n_features": 64,
+      "growth_count": 0
+    },
+    {
+      "seed": 3,
+      "grow": true,
+      "history": [
+        {
+          "task": 0,
+          "train_accuracy": 0.8675,
+          "task_accuracy": 0.87,
+          "n_features": 80,
+          "grew": true
+        },
+        {
+          "task": 1,
+          "train_accuracy": 0.9575,
+          "task_accuracy": 0.795,
+          "n_features": 80,
+          "grew": false
+        },
+        {
+          "task": 2,
+          "train_accuracy": 0.8525,
+          "task_accuracy": 0.545,
+          "n_features": 96,
+          "grew": true
+        },
+        {
+          "task": 3,
+          "train_accuracy": 0.84,
+          "task_accuracy": 0.575,
+          "n_features": 112,
+          "grew": true
+        }
+      ],
+      "task_accuracies": [
+        0.565,
+        0.46,
+        0.47,
+        0.575
+      ],
+      "retention": [
+        [
+          0.87
+        ],
+        [
+          0.75,
+          0.795
+        ],
+        [
+          0.7,
+          0.665,
+          0.545
+        ],
+        [
+          0.565,
+          0.46,
+          0.47,
+          0.575
+        ]
+      ],
+      "final_task_accuracy": 0.575,
+      "min_old_accuracy": 0.46,
+      "n_features": 112,
+      "growth_count": 3
+    },
+    {
+      "seed": 4,
+      "grow": false,
+      "history": [
+        {
+          "task": 0,
+          "train_accuracy": 0.9325,
+          "task_accuracy": 0.915,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 1,
+          "train_accuracy": 0.77,
+          "task_accuracy": 0.455,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 2,
+          "train_accuracy": 0.785,
+          "task_accuracy": 0.29,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 3,
+          "train_accuracy": 0.77,
+          "task_accuracy": 0.335,
+          "n_features": 64,
+          "grew": false
+        }
+      ],
+      "task_accuracies": [
+        0.6,
+        0.285,
+        0.25,
+        0.335
+      ],
+      "retention": [
+        [
+          0.915
+        ],
+        [
+          0.66,
+          0.455
+        ],
+        [
+          0.635,
+          0.375,
+          0.29
+        ],
+        [
+          0.6,
+          0.285,
+          0.25,
+          0.335
+        ]
+      ],
+      "final_task_accuracy": 0.335,
+      "min_old_accuracy": 0.25,
+      "n_features": 64,
+      "growth_count": 0
+    },
+    {
+      "seed": 4,
+      "grow": true,
+      "history": [
+        {
+          "task": 0,
+          "train_accuracy": 0.9325,
+          "task_accuracy": 0.915,
+          "n_features": 64,
+          "grew": false
+        },
+        {
+          "task": 1,
+          "train_accuracy": 0.7875,
+          "task_accuracy": 0.57,
+          "n_features": 80,
+          "grew": true
+        },
+        {
+          "task": 2,
+          "train_accuracy": 0.835,
+          "task_accuracy": 0.23,
+          "n_features": 96,
+          "grew": true
+        },
+        {
+          "task": 3,
+          "train_accuracy": 0.8275,
+          "task_accuracy": 0.21,
+          "n_features": 112,
+          "grew": true
+        }
+      ],
+      "task_accuracies": [
+        0.395,
+        0.33,
+        0.22,
+        0.21
+      ],
+      "retention": [
+        [
+          0.915
+        ],
+        [
+          0.475,
+          0.57
+        ],
+        [
+          0.405,
+          0.39,
+          0.23
+        ],
+        [
+          0.395,
+          0.33,
+          0.22,
+          0.21
+        ]
+      ],
+      "final_task_accuracy": 0.21,
+      "min_old_accuracy": 0.22,
+      "n_features": 112,
+      "growth_count": 3
+    }
+  ],
+  "repro": "```text\n实验名称：阶段四神经发生最小探针\n日期：2026-10-29 05:07:08 中国标准时间\nGit commit：cfba9144978f029760475f22aca046c3c0958c37\nGit 状态：有 4 处未提交改动 —— ⚠️ 工作区不干净，本结论不可信，请提交后重跑\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0-4\n依赖快照：uv.lock sha256=9dc262ffcb62739dbe58df80d6314d5f83de95f66864d5462eb877933e37a783\n运行命令：run_neurogenesis.py --seeds 0-4\n耗时：0.8 s\n备注：玩具随机特征，不是多模态真实插件实验；旧类读出冻结\n```"
+}
