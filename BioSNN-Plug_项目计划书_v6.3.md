@@ -1101,6 +1101,15 @@
 >    **500 步纯想象闭环仍是结构性开放边界**，`p3_closed_loop_imagination_ready=false`。见
 >    [`sweep_results/world_model_termination_v6/README.md`](sweep_results/world_model_termination_v6/README.md)。
 
+> 122. **2026-10-28：液态 LIF 探针——预注册、实现、干净冒烟完成（正式长跑未启动）**。
+>    按桌面简报 `liquid_snn_agent_brief.md`：τ_i(t)=1/(a+b·r_i)，a=1/20、b=0.15、
+>    γ=0.9、τ∈[5,20]；a/b/γ 不进参数/优化器，AST 守卫钉死；e-prop 的 ε_v 用逐神经元
+>    α(t)，但**冻结 α 轨迹**（忽略 ∂α/∂z），frozen-α 梯度对照通过，边界写在预注册。
+>    1 epoch 干净冒烟：**80.2 s、显存 1,414.7 MiB、test 0.4161、活跃 1.0000**（commit
+>    `ebb2dd1`，工作区干净）。按此外推 250 epoch ≈ **5.6 h/种子**、5 种子 ≈ **28 h**；
+>    正式长跑尚未启动，等确认。见
+>    [`sweep_results/liquid_lif_prereg.md`](sweep_results/liquid_lif_prereg.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
