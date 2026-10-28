@@ -165,7 +165,7 @@ def run(seeds: list[int], *, out: Path, test_episodes: int = 500) -> dict[str, A
             metrics["passes"] for metrics in families.values() if metrics["valid"]
         ),
     }
-    gate["v9_ready"] = bool(
+    gate["v10_ready"] = bool(
         valid_count >= 3 and gate["all_valid_pass"] and gate["scale_abstain_ok"]
     )
     summary = {
