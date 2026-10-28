@@ -79,11 +79,14 @@ class EPropLearner(torch.nn.Module):
         learning_rate_out: float = 1e-2,
         decay_out: float = 0.95,
         loss_timesteps: str = "last",
+        selective_fraction: float | None = None,
         generator: torch.Generator | None = None,
     ) -> None:
         super().__init__()
         if loss_timesteps not in ("last", "all"):
             raise ValueError(f"loss_timesteps 只能是 'last' 或 'all'，收到 {loss_timesteps!r}。")
+        if selective_fraction is not None and not 0.0 < selective_fraction <= 1.0:
+            raise ValueError(f"selective_fraction 应在 (0, 1]，收到 {selective_fraction!r}。")
 
         self.cell = ALIFCell(
             n_in,
@@ -110,6 +113,8 @@ class EPropLearner(torch.nn.Module):
         self.learning_rate_out = float(learning_rate_out)
         self.decay_out = float(decay_out)
         self.loss_timesteps = loss_timesteps
+        self.selective_fraction = selective_fraction
+        self.last_update_fraction = 1.0
 
     # ---------------------------------------------------------------- 前向
 
@@ -205,6 +210,15 @@ class EPropLearner(torch.nn.Module):
         rollout = self.simulate(inputs)
         loss = self.loss_value(rollout, targets)
         signal = self.learning_signal(rollout, targets)
+        if self.selective_fraction is not None:
+            # 事件优先级：只让输入活动最高的时间步进入权重更新。
+            activity = inputs.sum(dim=-1)  # (T, batch)
+            flat = activity.flatten()
+            count = max(1, round(self.selective_fraction * flat.numel()))
+            threshold = torch.topk(flat, count).values.min()
+            keep = activity >= threshold
+            signal = signal * keep.unsqueeze(-1).to(signal.dtype)
+            self.last_update_fraction = float(keep.float().mean().item())
 
         # 前突触脉冲：输入直接是 x^t；循环连接用的是上一步的脉冲（官方实现传 z_previous_step）。
         z_prev = torch.cat([torch.zeros_like(rollout.spikes[:1]), rollout.spikes[:-1]])

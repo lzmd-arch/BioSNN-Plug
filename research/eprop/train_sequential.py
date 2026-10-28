@@ -72,6 +72,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=0,
         help="每多少个 epoch 评测一次验证集（0 = 沿用 epochs//5 的旧节奏，行为不变）",
     )
+    parser.add_argument(
+        "--selective-fraction",
+        type=float,
+        default=None,
+        help="只让输入活动最高的这个比例时间步进入权重更新（默认 None=全更新）",
+    )
     parser.add_argument("--device", default=None, choices=[None, "cpu", "cuda"])
     parser.add_argument("--smoke", action="store_true", help="CI 冒烟：缩到 CPU 一分钟内")
     return parser
@@ -142,6 +148,7 @@ def train(
         learning_rate_rec=args.learning_rate_rec,
         learning_rate_out=args.learning_rate_out,
         decay_out=args.decay_out,
+        selective_fraction=args.selective_fraction,
         generator=torch.Generator().manual_seed(book.derive("权重初始化")),
         **(learner_kwargs or {}),
     ).to(device)
