@@ -103,6 +103,7 @@ def main(argv: list[str] | None = None) -> int:
             "elapsed_s": elapsed,
             "peak_mb": memory["peak_mb"],
             "mean_update_fraction": metrics.get("mean_update_fraction", 1.0),
+            "spike_sparsity": metrics.get("spike_sparsity"),
             #: 逐 epoch 的验证准确率——论文画「epoch–准确率」曲线用的就是它。
             "curve": history,
             "config": {

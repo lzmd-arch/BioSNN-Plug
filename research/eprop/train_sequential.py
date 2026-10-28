@@ -202,6 +202,7 @@ def train(
         metrics["mean_update_fraction"] = (
             selected_total / selected_batches if selected_batches else 1.0
         )
+        metrics["spike_sparsity"] = sparsity
     degradation = DegradationLog()
     if limit is not None:
         degradation.scale_reduction = True
