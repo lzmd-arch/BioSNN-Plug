@@ -1,0 +1,93 @@
+{
+  "experiment": "P3 终止头 v6：滚动时域闭环",
+  "config": {
+    "seeds": [
+      20,
+      21,
+      22,
+      23,
+      24
+    ],
+    "episodes": 200,
+    "calibration_episodes": 100,
+    "test_episodes": 100,
+    "horizon": 500
+  },
+  "per_seed": [
+    {
+      "seed": 20,
+      "threshold": 0.9920491967131845,
+      "calibration_false_positive": 0.0009914775124462072,
+      "calibration_hit": 1.0,
+      "auroc": 1.0,
+      "episode_rate": 0.18,
+      "terminal_error_median": 1.1414640637669171e-05,
+      "false_positive_rate": 0.0007559372572076518,
+      "hit_rate": 1.0,
+      "imagined_closed_loop_auroc": 0.6324872727272727
+    },
+    {
+      "seed": 21,
+      "threshold": 0.9905718911193429,
+      "calibration_false_positive": 0.0009903702298923237,
+      "calibration_hit": 1.0,
+      "auroc": 1.0,
+      "episode_rate": 0.26,
+      "terminal_error_median": 9.864387557345644e-06,
+      "false_positive_rate": 0.0014717012866874107,
+      "hit_rate": 1.0,
+      "imagined_closed_loop_auroc": 0.6478988771599543
+    },
+    {
+      "seed": 22,
+      "threshold": 0.9918273654202902,
+      "calibration_false_positive": 0.0009792482706892241,
+      "calibration_hit": 1.0,
+      "auroc": 1.0,
+      "episode_rate": 0.17,
+      "terminal_error_median": 1.2588009554725943e-05,
+      "false_positive_rate": 0.0009790850762436464,
+      "hit_rate": 1.0,
+      "imagined_closed_loop_auroc": 0.676158850637029
+    },
+    {
+      "seed": 23,
+      "threshold": 0.993415312661566,
+      "calibration_false_positive": 0.0009882669582404642,
+      "calibration_hit": 1.0,
+      "auroc": 1.0,
+      "episode_rate": 0.17,
+      "terminal_error_median": 1.3083034819505457e-05,
+      "false_positive_rate": 0.0006237914041544507,
+      "hit_rate": 1.0,
+      "imagined_closed_loop_auroc": 0.6375739961248079
+    },
+    {
+      "seed": 24,
+      "threshold": 0.9927724490787192,
+      "calibration_false_positive": 0.0009832841691248771,
+      "calibration_hit": 1.0,
+      "auroc": 1.0,
+      "episode_rate": 0.16,
+      "terminal_error_median": 1.024119795359213e-05,
+      "false_positive_rate": 0.0007291362859880838,
+      "hit_rate": 1.0,
+      "imagined_closed_loop_auroc": 0.6331978247894423
+    }
+  ],
+  "gate": {
+    "auroc": 1.0,
+    "episode_rate": 0.188,
+    "terminal_error_median": 1.1438254104567669e-05,
+    "false_positive_rate": 0.0009119302620562486,
+    "hit_rate": 1.0,
+    "imagined_closed_loop_auroc": 0.6454633642877011,
+    "auroc_ok": true,
+    "rate_ok": true,
+    "terminal_error_ok": true,
+    "false_positive_ok": true,
+    "hit_rate_ok": true,
+    "p3_v6_ready": true
+  },
+  "repro": "```text\n实验名称：P3 终止头 v6\n日期：2026-10-28 12:41:10 中国标准时间\nGit commit：1b1757ad36105dca3be5ad9c2f4c5b2c3d171dff\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：20,21,22,23,24\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_world_model_termination_v6.py\n耗时：77.3 s\n备注：滚动时域：动作来自真实观测，模型只预测一步；不是 500 步纯想象\n备注：阈值只在 calibration（seed+30000）上选；测试用种子 20-24\n备注：纯想象闭环 AUROC 仅作边界对照，不参与 p3_v6_ready\n```"
+}
