@@ -1,0 +1,352 @@
+{
+  "experiment": "情景记忆 v5：局部 delta 规则",
+  "config": {
+    "seeds": [
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "test_episodes": 500,
+    "train_episodes": 2000,
+    "capacities": [
+      4,
+      8,
+      16
+    ],
+    "delta_epochs": 50,
+    "delta_lr": 1.0,
+    "dim": 512,
+    "sparsity": 32
+  },
+  "conditions": [
+    {
+      "k": 4,
+      "sigma": 0.1,
+      "per_seed": [
+        {
+          "seed": 5,
+          "delta_top1": 0.918,
+          "hebbian_top1": 0.562,
+          "pseudo_top1": 0.916,
+          "rawnn_top1": 0.962,
+          "delta_mse": 0.13858527315821795,
+          "hebbian_mse": 2205.5929158430995,
+          "pseudo_mse": 0.1340412406360811,
+          "rawnn_mse": 0.07760409711360662
+        },
+        {
+          "seed": 6,
+          "delta_top1": 0.912,
+          "hebbian_top1": 0.578,
+          "pseudo_top1": 0.92,
+          "rawnn_top1": 0.962,
+          "delta_mse": 0.13935355274579492,
+          "hebbian_mse": 2270.717162613867,
+          "pseudo_mse": 0.12777986183813866,
+          "rawnn_mse": 0.07598318372285665
+        },
+        {
+          "seed": 7,
+          "delta_top1": 0.932,
+          "hebbian_top1": 0.568,
+          "pseudo_top1": 0.926,
+          "rawnn_top1": 0.97,
+          "delta_mse": 0.123036352099624,
+          "hebbian_mse": 2145.834204588447,
+          "pseudo_mse": 0.10887335110167938,
+          "rawnn_mse": 0.05434732535229245
+        },
+        {
+          "seed": 8,
+          "delta_top1": 0.922,
+          "hebbian_top1": 0.576,
+          "pseudo_top1": 0.926,
+          "rawnn_top1": 0.95,
+          "delta_mse": 0.13441691765412825,
+          "hebbian_mse": 2070.7484507512586,
+          "pseudo_mse": 0.13046909242142568,
+          "rawnn_mse": 0.0868149894543547
+        },
+        {
+          "seed": 9,
+          "delta_top1": 0.928,
+          "hebbian_top1": 0.564,
+          "pseudo_top1": 0.93,
+          "rawnn_top1": 0.952,
+          "delta_mse": 0.12467380041337844,
+          "hebbian_mse": 2327.9492979351776,
+          "pseudo_mse": 0.11955327633551069,
+          "rawnn_mse": 0.09744411413723567
+        }
+      ],
+      "mean": {
+        "delta_top1": 0.9224,
+        "hebbian_top1": 0.5696000000000001,
+        "pseudo_top1": 0.9236000000000001,
+        "rawnn_top1": 0.9592,
+        "delta_mse": 0.13201317921422873,
+        "hebbian_mse": 2204.16840634637,
+        "pseudo_mse": 0.12414336446656711,
+        "rawnn_mse": 0.07843874195606922
+      }
+    },
+    {
+      "k": 8,
+      "sigma": 0.1,
+      "per_seed": [
+        {
+          "seed": 5,
+          "delta_top1": 0.79,
+          "hebbian_top1": 0.304,
+          "pseudo_top1": 0.818,
+          "rawnn_top1": 0.932,
+          "delta_mse": 0.2474105995738846,
+          "hebbian_mse": 4216.3847279371475,
+          "pseudo_mse": 0.20568695509551643,
+          "rawnn_mse": 0.13439432800022316
+        },
+        {
+          "seed": 6,
+          "delta_top1": 0.782,
+          "hebbian_top1": 0.336,
+          "pseudo_top1": 0.79,
+          "rawnn_top1": 0.92,
+          "delta_mse": 0.2963166523515122,
+          "hebbian_mse": 4233.6587661792355,
+          "pseudo_mse": 0.23684142500089508,
+          "rawnn_mse": 0.1595761991346036
+        },
+        {
+          "seed": 7,
+          "delta_top1": 0.786,
+          "hebbian_top1": 0.31,
+          "pseudo_top1": 0.796,
+          "rawnn_top1": 0.908,
+          "delta_mse": 0.24213574047473596,
+          "hebbian_mse": 4227.4093967338795,
+          "pseudo_mse": 0.2186386191052749,
+          "rawnn_mse": 0.18470705306237614
+        },
+        {
+          "seed": 8,
+          "delta_top1": 0.808,
+          "hebbian_top1": 0.29,
+          "pseudo_top1": 0.812,
+          "rawnn_top1": 0.94,
+          "delta_mse": 0.24224339825382685,
+          "hebbian_mse": 3948.4376995145253,
+          "pseudo_mse": 0.20631248682307773,
+          "rawnn_mse": 0.12252935758256749
+        },
+        {
+          "seed": 9,
+          "delta_top1": 0.858,
+          "hebbian_top1": 0.33,
+          "pseudo_top1": 0.862,
+          "rawnn_top1": 0.948,
+          "delta_mse": 0.2038488109820328,
+          "hebbian_mse": 4090.705307506319,
+          "pseudo_mse": 0.16717526854046913,
+          "rawnn_mse": 0.09302295690288914
+        }
+      ],
+      "mean": {
+        "delta_top1": 0.8048,
+        "hebbian_top1": 0.314,
+        "pseudo_top1": 0.8156000000000001,
+        "rawnn_top1": 0.9296,
+        "delta_mse": 0.2463910403271985,
+        "hebbian_mse": 4143.319179574222,
+        "pseudo_mse": 0.20693095091304664,
+        "rawnn_mse": 0.1388459789365319
+      }
+    },
+    {
+      "k": 8,
+      "sigma": 0.3,
+      "per_seed": [
+        {
+          "seed": 5,
+          "delta_top1": 0.528,
+          "hebbian_top1": 0.27,
+          "pseudo_top1": 0.556,
+          "rawnn_top1": 0.74,
+          "delta_mse": 0.6340380682867878,
+          "hebbian_mse": 4085.331135090708,
+          "pseudo_mse": 0.6069102709024107,
+          "rawnn_mse": 0.541670264910191
+        },
+        {
+          "seed": 6,
+          "delta_top1": 0.532,
+          "hebbian_top1": 0.282,
+          "pseudo_top1": 0.558,
+          "rawnn_top1": 0.724,
+          "delta_mse": 0.6331220046256314,
+          "hebbian_mse": 4073.706509184212,
+          "pseudo_mse": 0.5718475161349038,
+          "rawnn_mse": 0.5866509866218307
+        },
+        {
+          "seed": 7,
+          "delta_top1": 0.578,
+          "hebbian_top1": 0.272,
+          "pseudo_top1": 0.576,
+          "rawnn_top1": 0.74,
+          "delta_mse": 0.570604296925238,
+          "hebbian_mse": 4093.828117950251,
+          "pseudo_mse": 0.5520550909075945,
+          "rawnn_mse": 0.49689117903087243
+        },
+        {
+          "seed": 8,
+          "delta_top1": 0.58,
+          "hebbian_top1": 0.234,
+          "pseudo_top1": 0.59,
+          "rawnn_top1": 0.742,
+          "delta_mse": 0.5550496689208761,
+          "hebbian_mse": 3845.8503656474472,
+          "pseudo_mse": 0.5258472254495186,
+          "rawnn_mse": 0.4954679492131574
+        },
+        {
+          "seed": 9,
+          "delta_top1": 0.546,
+          "hebbian_top1": 0.282,
+          "pseudo_top1": 0.548,
+          "rawnn_top1": 0.73,
+          "delta_mse": 0.5519436261491155,
+          "hebbian_mse": 3866.4903821739176,
+          "pseudo_mse": 0.5354281368288656,
+          "rawnn_mse": 0.5596799929365375
+        }
+      ],
+      "mean": {
+        "delta_top1": 0.5528000000000001,
+        "hebbian_top1": 0.268,
+        "pseudo_top1": 0.5656,
+        "rawnn_top1": 0.7352,
+        "delta_mse": 0.5889515329815298,
+        "hebbian_mse": 3993.0413020093074,
+        "pseudo_mse": 0.5584176480446585,
+        "rawnn_mse": 0.5360720745425178
+      }
+    },
+    {
+      "k": 16,
+      "sigma": 0.1,
+      "per_seed": [
+        {
+          "seed": 5,
+          "delta_top1": 0.56,
+          "hebbian_top1": 0.178,
+          "pseudo_top1": 0.638,
+          "rawnn_top1": 0.88,
+          "delta_mse": 0.579473249586114,
+          "hebbian_mse": 7834.362542329735,
+          "pseudo_mse": 0.4436913712401872,
+          "rawnn_mse": 0.26439606036188606
+        },
+        {
+          "seed": 6,
+          "delta_top1": 0.508,
+          "hebbian_top1": 0.17,
+          "pseudo_top1": 0.628,
+          "rawnn_top1": 0.886,
+          "delta_mse": 0.5771902784191839,
+          "hebbian_mse": 7522.293395739693,
+          "pseudo_mse": 0.4114754159458732,
+          "rawnn_mse": 0.210883331538011
+        },
+        {
+          "seed": 7,
+          "delta_top1": 0.574,
+          "hebbian_top1": 0.154,
+          "pseudo_top1": 0.674,
+          "rawnn_top1": 0.904,
+          "delta_mse": 0.5584749148106627,
+          "hebbian_mse": 7816.785610199977,
+          "pseudo_mse": 0.3811482295287275,
+          "rawnn_mse": 0.23321960030156874
+        },
+        {
+          "seed": 8,
+          "delta_top1": 0.512,
+          "hebbian_top1": 0.154,
+          "pseudo_top1": 0.616,
+          "rawnn_top1": 0.898,
+          "delta_mse": 0.5795027508607816,
+          "hebbian_mse": 7424.182169503254,
+          "pseudo_mse": 0.4467172747839658,
+          "rawnn_mse": 0.20686651241746382
+        },
+        {
+          "seed": 9,
+          "delta_top1": 0.5,
+          "hebbian_top1": 0.158,
+          "pseudo_top1": 0.584,
+          "rawnn_top1": 0.88,
+          "delta_mse": 0.5940604113842505,
+          "hebbian_mse": 7511.0613926211145,
+          "pseudo_mse": 0.436004494757051,
+          "rawnn_mse": 0.23357404332550952
+        }
+      ],
+      "mean": {
+        "delta_top1": 0.5307999999999999,
+        "hebbian_top1": 0.1628,
+        "pseudo_top1": 0.628,
+        "rawnn_top1": 0.8896000000000001,
+        "delta_mse": 0.5777403210121985,
+        "hebbian_mse": 7621.737022078754,
+        "pseudo_mse": 0.423807357251161,
+        "rawnn_mse": 0.2297879095888878
+      }
+    }
+  ],
+  "state_control": {
+    "top1": 0.1232,
+    "mse": 0.9466522329015501,
+    "per_seed": [
+      {
+        "seed": 5,
+        "top1": 0.116,
+        "mse": 0.979783443936117
+      },
+      {
+        "seed": 6,
+        "top1": 0.11,
+        "mse": 0.9611275640545432
+      },
+      {
+        "seed": 7,
+        "top1": 0.106,
+        "mse": 0.9434482424282737
+      },
+      {
+        "seed": 8,
+        "top1": 0.148,
+        "mse": 0.9134181372034628
+      },
+      {
+        "seed": 9,
+        "top1": 0.136,
+        "mse": 0.9354837768853532
+      }
+    ]
+  },
+  "gate": {
+    "primary_k8_delta": 0.8048,
+    "k4_delta": 0.9224,
+    "state_control_top1": 0.1232,
+    "hebbian_k8": 0.314,
+    "k8_ok": true,
+    "k4_ok": true,
+    "state_control_ok": true,
+    "beats_hebbian": true,
+    "v5_ready": true
+  },
+  "repro": "```text\n实验名称：情景记忆 v5：局部 delta 规则\n日期：2026-10-28 10:55:22 中国标准时间\nGit commit：119a6a5badf1829ceed9670cddade01b03e0d544\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：5,6,7,8,9\n依赖快照：uv.lock sha256=3f0b0a6b1d8631b4660c996348c286a9001ba2c3b832f2173b8f96e906e6384e\n运行命令：run_paired_associate_recall_v5.py\n耗时：95.3 s\n备注：DPAR 与 v4 相同；新增局部 delta 规则 W←W+η(v−Wk)kᵀ/‖k‖²，50 epoch\n备注：最终种子 5-9；0-4 只用于预注册前的机制试点，不混报\n备注：伪逆/字面 NN/Hebbian 同流程对照；状态控制同 v4\n```"
+}
