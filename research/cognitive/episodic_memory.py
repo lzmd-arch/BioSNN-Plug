@@ -12,6 +12,7 @@ from __future__ import annotations
 import numpy as np
 
 __all__ = [
+    "DeltaEpisodicMemory",
     "EpisodicMemoryV1",
     "HebbianEpisodicMemory",
     "PseudoInverseMemory",
@@ -248,3 +249,41 @@ class PseudoInverseMemory:
         if self.coef is None:
             raise RuntimeError("记忆为空；先 store。")
         return np.asarray(keys, dtype=np.float64) @ self.coef
+
+
+class DeltaEpisodicMemory:
+    """局部 delta 规则：``W ← W + η·(v − Wk)·kᵀ/‖k‖²``，逐对重复呈现。
+
+    每次更新只用突触前键 ``k`` 与读出误差 ``v − Wk``，不做矩阵求逆；重复 ``epochs``
+    遍后 W 逼近同一批键值的最小二乘解，但学习规则仍是局部的（与伪逆的闭式解区分）。
+    """
+
+    def __init__(self, *, epochs: int = 50, learning_rate: float = 1.0, eps: float = 1e-8) -> None:
+        if epochs < 1:
+            raise ValueError(f"epochs 必须 >= 1，收到 {epochs}。")
+        if learning_rate <= 0:
+            raise ValueError(f"learning_rate 必须为正，收到 {learning_rate}。")
+        self.epochs = int(epochs)
+        self.learning_rate = float(learning_rate)
+        self.eps = float(eps)
+        self.matrix: np.ndarray | None = None
+        self.count = 0
+
+    def store(self, keys: np.ndarray, values: np.ndarray) -> None:
+        keys = np.asarray(keys, dtype=np.float64)
+        values = np.asarray(values, dtype=np.float64)
+        if keys.ndim != 2 or values.ndim != 2 or keys.shape[0] != values.shape[0]:
+            raise ValueError("keys (n,d) 与 values (n,v) 必须行数一致。")
+        matrix = np.zeros((keys.shape[1], values.shape[1]), dtype=np.float64)
+        for _ in range(self.epochs):
+            for index in range(keys.shape[0]):
+                key = keys[index]
+                error = values[index] - key @ matrix
+                matrix += self.learning_rate * np.outer(key, error) / (float(key @ key) + self.eps)
+        self.matrix = matrix
+        self.count = int(keys.shape[0])
+
+    def recall(self, keys: np.ndarray) -> np.ndarray:
+        if self.matrix is None:
+            raise RuntimeError("记忆为空；先 store。")
+        return np.asarray(keys, dtype=np.float64) @ self.matrix
