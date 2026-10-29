@@ -1,6 +1,7 @@
 """BioSNN-Plug 阶段五 M0：只读 MCP 工具骨架。"""
 
 from .core import CognitiveCore, InMemoryCore, MemoryEntry, ToolError
+from .dialogue import Scenario, Turn, WritableMemory, build_scenarios, run_session
 from .llm import LLMAdapter, MockLLM
 from .llm_ollama import OllamaLLM
 from .server import PROTOCOL_VERSION, TOOLS, handle_message, serve_stdio
@@ -17,11 +18,16 @@ __all__ = [
     "LLMAdapter",
     "MemoryEntry",
     "MockLLM",
+    "Scenario",
+    "Turn",
+    "WritableMemory",
+    "build_scenarios",
     "OllamaLLM",
     "ToolError",
     "TriggerDecision",
     "TriggerPolicy",
     "TurnRecord",
+    "run_session",
     "handle_message",
     "serve_stdio",
 ]

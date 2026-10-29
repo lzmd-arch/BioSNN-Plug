@@ -12,13 +12,23 @@
 * :mod:`~research.eprop.eprop` —— 学习信号与权重更新（三因子规则）；
 * :mod:`~research.eprop.tasks` —— sMNIST 与 SHD；
 * :mod:`~research.eprop.train_sequential` —— 验收运行脚本；
-* :mod:`~research.eprop.bptt_baseline` —— 代理梯度对照，用于量化差距报告。
+* :mod:`~research.eprop.bptt_baseline` —— 代理梯度对照，用于量化差距报告；
+* :mod:`~research.eprop.predictive` —— Predictive E-prop（预测误差当第三因子，对照路线）。
 """
 
 from __future__ import annotations
 
 from .eprop import EPropLearner
 from .neurons import ALIFCell, ALIFState
+from .predictive import PredictiveEProp, PredictiveRollout
 from .tasks import load_shd, load_smnist
 
-__all__ = ["ALIFCell", "ALIFState", "EPropLearner", "load_shd", "load_smnist"]
+__all__ = [
+    "ALIFCell",
+    "ALIFState",
+    "EPropLearner",
+    "PredictiveEProp",
+    "PredictiveRollout",
+    "load_shd",
+    "load_smnist",
+]
