@@ -396,6 +396,12 @@ def _probe_actor(
     return record
 
 
+def _render_repro(record, started: float) -> str:
+    """把开跑前采集的复现块渲染出来，只补上耗时。"""
+    record.elapsed_s = time.perf_counter() - started
+    return record.render_block()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="脉冲执行层 CartPole")
     parser.add_argument("--seeds", default="0,1,2,3,4")
@@ -516,6 +522,20 @@ def main(argv: list[str] | None = None) -> int:
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
     device = torch.device(args.device)
     started = time.perf_counter()
+    # **复现块在开跑前采集**：git 状态必须反映「跑之前」的工作区。此前在结尾采集，
+    # 于是同一次脚本里后跑的臂会把前一个臂的输出算成「未提交改动」，把干净跑误判成脏。
+    repro_record = collect(
+        "W3 脉冲化：CartPole（第三阶段）",
+        seeds=",".join(str(s) for s in seeds),
+        notes=[
+            "episodic R-STDP，成功信号 = 回报 − EMA 基线（**TD-LTP Critic 尚未接入**）",
+            "评测冻结随机流（环境种子 + 脉冲发生器种子）",
+            "Actor 痕迹规则："
+            + ("rate-centered（线性策略自带）" if args.policy == "linear" else args.trace_rule),
+            f"动作策略：{args.policy}",
+        ],
+        device=device,
+    )
     results = []
     for seed in seeds:
         outcome = train(
@@ -636,19 +656,7 @@ def main(argv: list[str] | None = None) -> int:
             / max(1, sum(1 for r in results if r.eval_scores))
         ),
         "passed": sum(r.best_steps >= ACCEPTANCE_STEPS for r in results),
-        "repro": collect(
-            "W3 脉冲化：CartPole（第三阶段）",
-            seeds=",".join(str(s) for s in seeds),
-            elapsed_s=time.perf_counter() - started,
-            notes=[
-                "episodic R-STDP，成功信号 = 回报 − EMA 基线（**TD-LTP Critic 尚未接入**）",
-                "评测冻结随机流（环境种子 + 脉冲发生器种子）",
-                "Actor 痕迹规则："
-                + ("rate-centered（线性策略自带）" if args.policy == "linear" else args.trace_rule),
-                f"动作策略：{args.policy}",
-            ],
-            device=device,
-        ).render_block(),
+        "repro": _render_repro(repro_record, started),
     }
 
     args.out.mkdir(parents=True, exist_ok=True)

@@ -163,6 +163,29 @@ def train(
 
     shuffle = torch.Generator().manual_seed(book.derive("每批打乱"))
     started = time.perf_counter()
+    # **复现块在开跑前采集**：git 状态必须反映跑之前的工作区；否则同一次多种子扫描里，
+    # 前一个种子的输出会把后一个种子误判成「工作区不干净」。
+    degradation = DegradationLog()
+    if limit is not None:
+        degradation.scale_reduction = True
+        degradation.notes.append(f"冒烟模式：只用 {n_samples} 个训练样本、{args.epochs} epoch")
+    record = collect(
+        f"eprop/{args.dataset}",
+        seeds=book.render(),
+        gpu=describe_device(device).render(),
+        degradation=degradation,
+        notes=[
+            f"n_rec={args.n_rec}, beta={args.beta}, thr={args.threshold}, "
+            f"eta_in={args.learning_rate_in}, eta_rec={args.learning_rate_rec}, "
+            f"eta_out={args.learning_rate_out}, decay_out={args.decay_out}",
+            "输入编码："
+            + (
+                "像素值作发放概率的伯努利采样（本项目自己的选择）"
+                if args.dataset == "smnist"
+                else "SHD 脉冲时刻铺到 100 个箱、箱内二值化（本项目自己的选择）"
+            ),
+        ],
+    )
     n_train = len(train_labels)
 
     selected_total = 0.0
@@ -210,30 +233,8 @@ def train(
             selected_total / selected_batches if selected_batches else 1.0
         )
         metrics["spike_sparsity"] = sparsity
-    degradation = DegradationLog()
-    if limit is not None:
-        degradation.scale_reduction = True
-        degradation.notes.append(f"冒烟模式：只用 {n_samples} 个训练样本、{args.epochs} epoch")
-
-    record = collect(
-        f"eprop/{args.dataset}",
-        seeds=book.render(),
-        elapsed_s=elapsed,
-        gpu=describe_device(device).render(),
-        peak_mb=memory["peak_mb"],
-        degradation=degradation,
-        notes=[
-            f"n_rec={args.n_rec}, beta={args.beta}, thr={args.threshold}, "
-            f"eta_in={args.learning_rate_in}, eta_rec={args.learning_rate_rec}, "
-            f"eta_out={args.learning_rate_out}, decay_out={args.decay_out}",
-            "输入编码："
-            + (
-                "像素值作发放概率的伯努利采样（本项目自己的选择）"
-                if args.dataset == "smnist"
-                else "SHD 脉冲时刻铺到 100 个箱、箱内二值化（本项目自己的选择）"
-            ),
-        ],
-    )
+    record.elapsed_s = elapsed
+    record.peak_mb = memory["peak_mb"]
     print("\n" + record.render_block())
 
     return test_accuracy, active, n_classes
