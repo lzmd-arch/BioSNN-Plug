@@ -88,6 +88,19 @@ def _state_tensor(raw, device: torch.device) -> torch.Tensor:
     return torch.tensor(raw, dtype=torch.float32, device=device)
 
 
+def _encode(
+    raw,
+    centers: torch.Tensor,
+    sigma: float,
+    scale: torch.Tensor | None,
+) -> torch.Tensor:
+    """状态 → 特征。``scale`` 非空时先把状态按轴归一化（D18；默认 ``None`` 与历史逐位相同）。"""
+    state = _state_tensor(raw, centers.device)
+    if scale is not None:
+        state = state / scale.to(state.device)
+    return encode_state(state, centers, sigma)
+
+
 def run_episode(
     env,
     actor: SpikingActor,
@@ -100,6 +113,7 @@ def run_episode(
     env_seed: int | None = None,
     critic: LinearCritic | PopulationCritic | None = None,
     delta_sink: list[float] | None = None,
+    scale: torch.Tensor | None = None,
 ) -> float:
     """跑一个回合，返回存活步数。
 
@@ -107,13 +121,13 @@ def run_episode(
     一起构成**冻结随机流**。
     """
     raw, _ = env.reset(seed=env_seed)
-    features = encode_state(_state_tensor(raw, centers.device), centers, sigma)
+    features = _encode(raw, centers, sigma, scale)
 
     steps = 0
     for _ in range(EPISODE_LIMIT):
         action = actor.step(features, generator=generator, greedy=greedy, learn_trace=learn)
         raw_next, reward, terminated, truncated, _ = env.step(action)
-        next_features = encode_state(_state_tensor(raw_next, centers.device), centers, sigma)
+        next_features = _encode(raw_next, centers, sigma, scale)
         if learn and critic is not None:
             # 逐步的演员-评论家：δ 就是成功信号，每一步都更新
             delta = critic.update(features, float(reward), next_features, terminated=terminated)
@@ -134,6 +148,7 @@ def evaluate(
     *,
     episodes: int,
     seed: int,
+    scale: torch.Tensor | None = None,
 ) -> float:
     """冻结随机流下的贪心评测，返回平均存活步数。
 
@@ -156,6 +171,7 @@ def evaluate(
                 learn=False,
                 greedy=True,
                 env_seed=seed + k,
+                scale=scale,
             )
         )
     env.close()
@@ -203,6 +219,8 @@ def train(
     logit_scale_end: float | None = 40.0,
     spiking_temperature: bool = False,
     contrastive_gamma: float = 0.0,
+    scale: torch.Tensor | None = None,
+    half_widths: tuple[float, ...] = CARTPOLE_HALF_WIDTHS,
 ) -> TrainResult:
     """训练一个种子。返回逐回合回报与评测曲线。"""
     import gymnasium
@@ -211,7 +229,7 @@ def train(
     env = gymnasium.make("CartPole-v1")
 
     centers = population_centers(
-        n_features, half_widths=CARTPOLE_HALF_WIDTHS, generator=generator, device=device
+        n_features, half_widths=half_widths, generator=generator, device=device
     )
     if policy == "spiking":
         actor = SpikingActor(
@@ -300,6 +318,7 @@ def train(
             # 在 make() 时由系统熵初始化的内部 RNG，**同一种子两次运行轨迹完全不同**
             # （实测：两次数值全不一样）。这曾让本模块所有数字都不是逐位可复现的。
             env_seed=seed * 100_000 + episode,
+            scale=scale,
         )
         returns.append(steps_alive)
         if episode_deltas:
@@ -324,11 +343,19 @@ def train(
                     seed=seed,
                     episode=episode + 1,
                     angles=probe_angles,
+                    scale=scale,
                 )
             )
 
         if warmup <= episode and (episode + 1) % eval_every == 0:
-            score = evaluate(actor, centers, sigma, episodes=eval_episodes, seed=10_000 + seed)
+            score = evaluate(
+                actor,
+                centers,
+                sigma,
+                episodes=eval_episodes,
+                seed=10_000 + seed,
+                scale=scale,
+            )
             eval_scores.append({"episode": episode + 1, "mean_steps": score})
             if score > best_steps:
                 best_steps = score
@@ -352,6 +379,7 @@ def train(
                     sigma,
                     episodes=eval_episodes,
                     seed=20_000 + index,
+                    scale=scale,
                 )
             )
 
@@ -385,6 +413,7 @@ def _probe_actor(
     episode: int,
     repeats: int = 5,
     angles: tuple[tuple[float, str], ...] | None = None,
+    scale: torch.Tensor | None = None,
 ) -> dict:
     """在给定极角上采冻结窗口：后突触脉冲数、两动作计数与贪心动作（D5/D8 诊断用）。
 
@@ -395,6 +424,8 @@ def _probe_actor(
         # 状态张量要跟 centers 同设备：CUDA 上跑探针时这里曾是 CPU 张量，
         # `encode_state` 直接报 device mismatch（2026-10-29 复现）。
         state = torch.tensor([0.0, 0.0, angle, 0.0], device=centers.device)
+        if scale is not None:
+            state = state / scale.to(state.device)
         features = encode_state(state, centers, sigma)
         generator = torch.Generator(device="cpu").manual_seed(seed * 10_000 + episode + (angle > 0))
         left = 0
