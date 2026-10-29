@@ -15,6 +15,7 @@ import torch
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
+from research.common.provenance import collect  # noqa: E402
 from research.eprop.predictive import PredictiveEProp  # noqa: E402
 
 OUT = REPO / "sweep_results" / "predictive_eprop"
@@ -176,6 +177,11 @@ def main(argv: list[str] | None = None) -> int:
     summary = {
         "kind": "Predictive E-prop sine generation; our adaptation, not a replication",
         "config": vars(args) | {"out_dir": str(args.out_dir)},
+        "repro": collect(
+            "Predictive E-prop：正弦生成",
+            seeds=",".join(str(seed) for seed in seeds),
+            notes=["按原文描述的改编；公式未逐字取得", "更新每 chunk 步一次，痕迹跨更新保持"],
+        ).render_block(),
         "seeds": results,
         "ready": all(result["pass"] for result in results),
     }
