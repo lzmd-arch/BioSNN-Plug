@@ -125,7 +125,7 @@
 | :--- | :--- | :--- |
 | **世界モデルコンポーネント**（[ADR-0015](docs/adr/ADR-0015-world-model-as-phase-four-component.ja.md)） | 第 4 フェーズの正式コンポーネント（Predictive E-prop を継承） | **着手済み**（第 3 フェーズは ADR-0019 で部分受入、ADR-0015 は成立）：P3 の閉ループは安定（NMSE ~2e-8）、終了ヘッド AUROC 0.63–0.67 で未達 |
 | **覚醒チャネル**（[ADR-0016](docs/adr/ADR-0016-arousal-channel-and-consolidation-experiment.ja.md)） | 動力学軸のコンポーネント化 | コンポーネント化の ADR が承認されること |
-| **液体 τ（Liquid LIF）**（[事前登録](sweep_results/liquid_lif_prereg.md) · [v7 候補 4](docs/roadmap_v7_candidates.ja.md)） | 動力学軸の探索項目（第 4 フェーズ受入の外） | 事前登録／実装／クリーンなスモーク完了。5 seed ×250ep 実行中。イベント列の第二ラウンドは発動待ち |
+| **液体 τ（Liquid LIF）**（[事前登録](sweep_results/liquid_lif_prereg.md) · [v7 候補 4](docs/roadmap_v7_candidates.ja.md)） | 動力学軸の探索項目（第 4 フェーズ受入の外） | **5 シード完了：平均 0.8754（95% CI 0.8684–0.8824）。主基準（>0.8889、CI 下界も同じ）と副基準（>0.8831）はすべて未達 → `liquid_lif_ready=false`**。活性比率 0.9992 は通過。事前登録どおりアーカイブし、イベント列の第二ラウンドは**発動しない**。[結果](sweep_results/liquid_lif/README.md) を参照 |
 | **PINN の物理事前分布**（[v7.0 候補](docs/roadmap_v7_candidates.ja.md)） | ロードマップ v7.0 候補（探索ノート） | 第 3 フェーズの受入＋ CL プローブの実装；再確認は 2027 年夏 |
 
 ## アーキテクチャ
@@ -147,7 +147,7 @@ flowchart TB
         EM["情景記憶<br/>DPAR 遅延ペア連想<br/>◐ 非局所 pseudo 0.828；字義 NN 0.938<br/>⚠️ 局所 Hebbian 0.311；容量 K=8–16"]
         MG["メタ認知ゲート<br/>メンバー不一致 ＋ 世界モデル驚き ＋ 密度ゲート<br/>◐ v3 CIFAR AUROC 0.753<br/>◐ v4 尺度 OOD のみ 0.9003；量子化 OOD は失敗"]
         WMODEL["世界モデル P3<br/>ridge 状態動力学 ＋ 終了ヘッド<br/>◐ 閉ループ NMSE ~2e-8；終了 AUROC 0.63–0.67"]
-        LIQ["液体 τ（Liquid LIF）<br/>τ=1/(a+b·r)、局所・非学習<br/>◐ 事前登録／実装／スモーク済み；5×250ep 実行中<br/>⬜ イベント列／時間課題は未検証"]
+        LIQ["液体 τ（Liquid LIF）<br/>τ=1/(a+b·r)、局所・非学習<br/>◐ 5 シード 0.8754、主基準未達<br/>⬜ イベント列／時間課題は未検証"]
     end
 
     subgraph ARB["規則間の仲裁 research/arbiter"]

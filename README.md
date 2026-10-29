@@ -117,7 +117,7 @@
 | :--- | :--- | :--- |
 | **世界模型组件**（[ADR-0015](docs/adr/ADR-0015-world-model-as-phase-four-component.md)） | 阶段四正式组件（承接 Predictive E-prop） | **已启动**（阶段三按 ADR-0019 部分验收 + ADR-0015 已立）：P3 闭环稳定（NMSE ~2e-8）；开环终止 ready（AUROC 0.999996）；滚动时域闭环 v6 AUROC 1.0；500 步纯想象闭环 0.63–0.67 仍开放 |
 | **唤醒通道**（[ADR-0016](docs/adr/ADR-0016-arousal-channel-and-consolidation-experiment.md)） | 动力学轴的组件化 | 组件化 ADR 通过 |
-| **液态 τ（Liquid LIF）**（[预注册](sweep_results/liquid_lif_prereg.md) · [v7 候选 4](docs/roadmap_v7_candidates.md)） | 动力学轴探索项（不占阶段四验收） | 预注册/实现/干净冒烟完成；5 种子 ×250ep 运行中；事件流第二轮待激活 |
+| **液态 τ（Liquid LIF）**（[预注册](sweep_results/liquid_lif_prereg.md) · [v7 候选 4](docs/roadmap_v7_candidates.md)） | 动力学轴探索项（不占阶段四验收） | **五种子完成：均值 0.8754（95% CI 0.8684–0.8824），主判据（>0.8889、CI 下界同样）与次判据（>0.8831）全不过 → `liquid_lif_ready=false`**；活跃 0.9992 过。按预注册归档，事件流第二轮**不激活**。见 [结果](sweep_results/liquid_lif/README.md) |
 | **PINN 物理先验**（[v7.0 候选](docs/roadmap_v7_candidates.md)） | 路线图 v7.0 候选（探索笔记） | 阶段三验收 + CL 探针落地；复查日期 2027 夏 |
 
 ## 架构
@@ -139,7 +139,7 @@ flowchart TB
         EM["情景记忆<br/>DPAR 延迟配对联想<br/>◐ 非局部 pseudo 0.828；字面 NN 0.938<br/>✅ 局部 delta 0.805（K4 0.922）<br/>⚠️ K8 薄过；Hebbian 0.311；容量 K=8–16"]
         MG["元认知门控<br/>成员分歧 + 世界模型惊喜 + 密度门<br/>◐ v3 CIFAR AUROC 0.753；◐ v4 仅尺度 0.9003<br/>✅ v8 重建门：量化弃权 0.898/AUROC 0.925<br/>✅ v11 三维门：时间/丢维/相关四族 OOD 全过"]
         WMODEL["世界模型 P3<br/>ridge 状态动力学 + 终止头<br/>◐ 闭环 NMSE ~2e-8；闭环终止 0.63–0.67（开放）<br/>✅ 开环固定动作终止 AUROC 0.999996/FP 0.0005"]
-        LIQ["液态 τ（Liquid LIF）<br/>τ=1/(a+b·r)，局部、不训练<br/>◐ 预注册/实现/冒烟；5×250ep 运行中<br/>⬜ 事件流/时序任务待验"]
+        LIQ["液态 τ（Liquid LIF）<br/>τ=1/(a+b·r)，局部、不训练<br/>◐ 五种子 0.8754，主判据不过<br/>⬜ 事件流/时序任务待验"]
     end
 
     subgraph ARB["跨规则仲裁 research/arbiter"]

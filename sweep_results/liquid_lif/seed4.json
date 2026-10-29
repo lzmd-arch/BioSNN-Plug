@@ -1,0 +1,43 @@
+{
+  "seed": 4,
+  "test_accuracy": 0.8711999654769897,
+  "active_fraction": 1.0,
+  "n_classes": 10,
+  "curve": [
+    {
+      "epoch": 50.0,
+      "val_accuracy": 0.8040000200271606
+    },
+    {
+      "epoch": 100.0,
+      "val_accuracy": 0.8518333435058594
+    },
+    {
+      "epoch": 150.0,
+      "val_accuracy": 0.8510000109672546
+    },
+    {
+      "epoch": 200.0,
+      "val_accuracy": 0.8585000038146973
+    },
+    {
+      "epoch": 250.0,
+      "val_accuracy": 0.8771666288375854
+    }
+  ],
+  "config": {
+    "dataset": "smnist",
+    "epochs": 250,
+    "n_rec": 256,
+    "batch_size": 64,
+    "learning_rate_in": 0.01,
+    "learning_rate_rec": 0.01,
+    "learning_rate_out": 0.05,
+    "a": 0.05,
+    "b": 0.15,
+    "rate_decay": 0.9,
+    "tau_min": 5.0,
+    "tau_max": 20.0,
+    "smoke": false
+  }
+}

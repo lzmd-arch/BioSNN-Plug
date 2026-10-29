@@ -140,7 +140,7 @@ its activation condition; until that condition holds, it does not start. They ar
 | :--- | :--- | :--- |
 | **World-model component** ([ADR-0015](docs/adr/ADR-0015-world-model-as-phase-four-component.en.md)) | Phase-four component (inherits Predictive E-prop) | **Started** (phase 3 partially accepted under ADR-0019 + ADR-0015 exists): P3 closed loop is stable (NMSE ~2e-8), termination head AUROC 0.63-0.67, not passing |
 | **Arousal channel** ([ADR-0016](docs/adr/ADR-0016-arousal-channel-and-consolidation-experiment.en.md)) | Componentising the dynamics axis | Its ADR is accepted |
-| **Liquid τ (Liquid LIF)** ([prereg](sweep_results/liquid_lif_prereg.md) · [v7 candidate 4](docs/roadmap_v7_candidates.en.md)) | Dynamics-axis exploration (outside phase-4 acceptance) | Prereg/implementation/clean smoke done; 5 seeds × 250ep running; event-stream round pending activation |
+| **Liquid τ (Liquid LIF)** ([prereg](sweep_results/liquid_lif_prereg.md) · [v7 candidate 4](docs/roadmap_v7_candidates.en.md)) | Dynamics-axis exploration (outside phase-4 acceptance) | **Five seeds done: mean 0.8754 (95% CI 0.8684-0.8824); the main criteria (>0.8889, same for the CI lower bound) and the secondary one (>0.8831) all fail -> `liquid_lif_ready=false`**; active fraction 0.9992 passes. Archived per the prereg; the event-stream round stays **inactive**. See [results](sweep_results/liquid_lif/README.md) |
 | **PINN physical prior** ([v7.0 candidate](docs/roadmap_v7_candidates.en.md)) | Roadmap v7.0 candidate (exploration note) | Phase-three acceptance + the CL probe lands; review in summer 2027 |
 
 ## Architecture
