@@ -188,6 +188,7 @@ def train(
     keep_actor: bool = False,
     trace_rule: str = "pair-stdp",
     policy: str = "spiking",
+    readout: str = "count",
     logit_scale_start: float | None = 1.0,
     logit_scale_end: float | None = 40.0,
 ) -> TrainResult:
@@ -207,6 +208,7 @@ def train(
             steps=steps,
             learning_rate=learning_rate,
             trace_rule=trace_rule,
+            readout=readout,
             generator=generator,
             device=device,
         )
@@ -350,6 +352,12 @@ def main(argv: list[str] | None = None) -> int:
         default="spiking",
         help="动作策略：spiking=脉冲计数（默认）；linear=D2 的线性 Boltzmann 对照",
     )
+    parser.add_argument(
+        "--readout",
+        choices=("count", "rate"),
+        default="count",
+        help="策略读出：count=窗口内硬计数（默认）；rate=窗口末低通发放率（D3 实验）",
+    )
     parser.add_argument("--logit-scale-start", type=float, default=1.0)
     parser.add_argument("--logit-scale-end", type=float, default=40.0)
     parser.add_argument(
@@ -461,6 +469,7 @@ def main(argv: list[str] | None = None) -> int:
             device=device,
             trace_rule=args.trace_rule,
             policy=args.policy,
+            readout=args.readout,
             logit_scale_start=args.logit_scale_start,
             logit_scale_end=args.logit_scale_end,
         )

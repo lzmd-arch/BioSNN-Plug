@@ -55,6 +55,8 @@ class SpikingActor:
         weight_norm: float = 1.0,
         normalize: bool = True,
         action_sampling: str = "boltzmann",
+        readout: str = "count",
+        readout_decay: float = 0.9,
         logit_scale: float = 1.0,
         arousal: ArousalChannel | None = None,
         device: torch.device | None = None,
@@ -70,6 +72,10 @@ class SpikingActor:
             )
         if logit_scale <= 0:
             raise ValueError(f"logit_scale 必须为正，收到 {logit_scale}。")
+        if readout not in ("count", "rate"):
+            raise ValueError(f"readout 只能是 'count' 或 'rate'，收到 {readout!r}。")
+        if not 0.0 < readout_decay < 1.0:
+            raise ValueError(f"readout_decay 应在 (0, 1)，收到 {readout_decay!r}。")
 
         device = device or torch.device("cpu")
         self.n_features = int(n_features)
@@ -80,6 +86,8 @@ class SpikingActor:
         self.weight_norm = float(weight_norm)
         self.normalize = bool(normalize)
         self.action_sampling = action_sampling
+        self.readout = readout
+        self.readout_decay = float(readout_decay)
         self.logit_scale = float(logit_scale)
         # 唤醒通道：**只调采样温度**，不碰权重。None 时行为与从前逐位相同。
         self.arousal = arousal
@@ -188,13 +196,13 @@ class SpikingActor:
         量的是一个随机策略。这里把贪心做成显式分支，不给那个坑留位置。）
         """
         pre_spikes, post_spikes = self.window_spikes(features, generator=generator)
-        spike_counts = post_spikes.sum(dim=0).squeeze(0)
-        policy = torch.softmax(self.sampling_scale() * spike_counts, dim=-1)
+        scores = self._policy_scores(post_spikes)
+        policy = torch.softmax(self.sampling_scale() * scores, dim=-1)
 
         # 先把动作定下来，再累计痕迹：符号一致的规则需要知道**被选的是哪一列**。
         # pair-stdp 不看 action，所以这个顺序对默认路径逐位不变（它不消耗随机流）。
         if greedy:
-            chosen = int(spike_counts.argmax().item())
+            chosen = int(scores.argmax().item())
         elif self.action_sampling == "boltzmann":
             # 采样在生成器所在的设备上做（CPU 生成器不能直接采 CUDA 张量）；
             # CPU 上逐位不变，CUDA 上把概率搬到 CPU 再采，随机流仍由同一个种子决定。
@@ -208,7 +216,7 @@ class SpikingActor:
         elif exploration > 0 and float(torch.rand(1, generator=generator).item()) < exploration:
             chosen = int(torch.randint(self.n_actions, (1,), generator=generator).item())
         else:
-            chosen = int(spike_counts.argmax().item())
+            chosen = int(scores.argmax().item())
 
         if learn_trace:
             if self.trace_rule == "count-aligned":
@@ -225,6 +233,20 @@ class SpikingActor:
                     pre_spikes, post_spikes, self.window, chosen, features=features
                 )
         return chosen
+
+    @torch.no_grad()
+    def _policy_scores(self, post_spikes: torch.Tensor) -> torch.Tensor:
+        """策略读出：``count``＝窗口内硬脉冲计数；``rate``＝窗口末的低通发放率。
+
+        D3 实验只换这一处（见 ``sweep_results/rstdp_spiking_rate_readout_prereg.md``）。
+        默认 ``count`` 与历史行为逐位相同。
+        """
+        if self.readout == "count":
+            return post_spikes.sum(dim=0).squeeze(0)
+        running = torch.zeros(post_spikes.shape[-1], device=post_spikes.device)
+        for t in range(post_spikes.shape[0]):
+            running = self.readout_decay * running + post_spikes[t, 0]
+        return running
 
     @torch.no_grad()
     def apply_success_signal(self, success_signal: float) -> None:

@@ -147,3 +147,52 @@ class TestValidation:
             assert "repeats" in str(exc)
         else:  # pragma: no cover
             raise AssertionError("repeats=0 应当报错")
+
+
+class TestReadoutMode:
+    """D3：连续速率读出只换策略读出；默认计数路径必须逐位不变。"""
+
+    def _actor(self, **kwargs):
+        import torch
+
+        from research.rstdp_spiking.actor import SpikingActor
+
+        return SpikingActor(
+            8, 2, steps=5, generator=torch.Generator().manual_seed(0), **kwargs
+        )
+
+    def test_default_matches_explicit_count(self):
+        import torch
+
+        features = torch.rand(8)
+        default = self._actor().step(features, generator=torch.Generator().manual_seed(1))
+        explicit = self._actor(readout="count").step(
+            features, generator=torch.Generator().manual_seed(1)
+        )
+        assert default == explicit
+
+    def test_rate_mode_returns_valid_action(self):
+        import torch
+
+        actor = self._actor(readout="rate")
+        action = actor.step(torch.rand(8), generator=torch.Generator().manual_seed(2))
+        assert action in (0, 1)
+
+    def test_rate_scores_differ_from_counts(self):
+        import torch
+
+        actor = self._actor()
+        post = torch.zeros(5, 1, 2)
+        post[0, 0, 0] = 1.0  # 早期一个脉冲：计数=1，滤波后不到 1
+        counts = actor._policy_scores(post)
+        rate_actor = self._actor(readout="rate")
+        rates = rate_actor._policy_scores(post)
+        assert counts[0] == 1.0
+        assert rates[0] < 1.0
+
+    def test_rejects_unknown_readout(self):
+        try:
+            self._actor(readout="spikes")
+        except ValueError:
+            return
+        raise AssertionError("未知 readout 应被拒绝")
