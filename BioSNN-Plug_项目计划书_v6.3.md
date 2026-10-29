@@ -1300,6 +1300,14 @@
 >    首次（脏工作区）逐种子完全一致，兼作确定性检查。见
 >    [`sweep_results/rstdp_spiking_rate_readout/README.md`](sweep_results/rstdp_spiking_rate_readout/README.md)。
 
+> 151. **2026-10-29：阶段三 D4——训练后动作完全不随状态变化（10 种子 slope 全 0）**。
+>    用最终权重在极角 ±0.2（21 点）上测 `P(动作=左)`：训练后的曲线是**常数**（多数恒推左、
+>    一个恒推右），slope 全部 0.000；未训练对照有 −0.20…+0.20 的依赖。预注册的符号/幅度
+>    判据都不过，`state_dependence_detected=false`。⚠️ 对照判据这次按有符号中位数“过”了，
+>    但那是正负抵消，不能当证据。结论：**策略塌成常数**，问题在训练动力学；
+>    下一步 D5 区分坍缩与输出层沉默。见
+>    [`sweep_results/rstdp_spiking_state_dependence/README.md`](sweep_results/rstdp_spiking_state_dependence/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
