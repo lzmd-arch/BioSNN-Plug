@@ -186,6 +186,7 @@ def train(
     eval_noise_seeds: int = 0,
     entropy_log: bool = False,
     keep_actor: bool = False,
+    actor_after: str = "best",
     trace_rule: str = "pair-stdp",
     policy: str = "spiking",
     readout: str = "count",
@@ -320,7 +321,9 @@ def train(
                 )
             )
 
-    if keep_actor and best_state is not None:
+    # 诊断（如 D4 状态依赖）应看**最终**权重：best_state 是按评测最大值选的，
+    # 会被噪声抬高，用它做诊断等于挑了一个幸运快照。
+    if keep_actor and best_state is not None and actor_after == "best":
         actor.load_state_dict(best_state)
 
     return TrainResult(
