@@ -1325,6 +1325,14 @@
 >    仓外再拷入，三臂在干净工作区复跑且逐种子与首次一致。见
 >    [`sweep_results/rstdp_spiking_temperature/README.md`](sweep_results/rstdp_spiking_temperature/README.md)。
 
+> 154. **2026-10-29：阶段三 D7 退化归因——5/5 种子都退化，5/5 `unattributed`**。
+>    臂取 D6-B（温度 0.1→0.02），5 种子、800 回合、每 10 回合评测/探针。峰值 27.9–61.0，
+>    末次 9.2–14.9，全部满足「末次 < 0.7×峰值」。三个候选（熵再坍缩、列范数漂移、Critic
+>    漂移）**都不成立**：退化前熵仍在 0.69、列 L1 仍为 1.0、|δ| 未翻倍。结合 D4/D6 的探针，
+>    末期**贪心策略的极角 slope 回到 0** 而采样熵仍高——下一候选是「状态信息没有进入动作
+>    偏好的符号」。`degradation_attributed=false`。见
+>    [`sweep_results/rstdp_spiking_degradation/README.md`](sweep_results/rstdp_spiking_degradation/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
