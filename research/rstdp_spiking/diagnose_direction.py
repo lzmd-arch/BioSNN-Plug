@@ -8,8 +8,9 @@ D8 量到末期贪心动作恒定、计数差 Δ 的极差只有 0–0.4。本�
   随状态变——若能，方向可表达；若不能，输出层对输入不敏感。
 
 B（输入整体缩放下的传递曲线）只作交叉验证；D（随机同范数方向）按**修正 1** 升为 A 的
-分母对照（`A_norm = A_spread / median(随机方向极差)`，见
-`sweep_results/rstdp_spiking_direction_prereg_amend1.md`）。
+分母对照，**修正 2** 再把 A 换成无饱和的差驱动极差
+（`A_norm = A_spread_abs / median(随机方向的 A_spread_abs)`）。两份修正见
+`sweep_results/rstdp_spiking_direction_prereg_amend{1,2}.md`。
 """
 
 from __future__ import annotations
@@ -110,11 +111,17 @@ def _measure_drive(actor, centers, sigma: float) -> dict:
             for value in values
         ]
         axis_spreads[axis] = max(ratios) - min(ratios)
+    differences = [record["difference"] for record in grid]
+    ratios = [record["r"] for record in grid]
     return {
-        "r_grid": [record["r"] for record in grid],
+        "r_grid": ratios,
         "mean_drive_grid": [record["mean_drive"] for record in grid],
-        "difference_grid": [record["difference"] for record in grid],
-        "spread": max(record["r"] for record in grid) - min(record["r"] for record in grid),
+        "difference_grid": differences,
+        # 修正 2：比值 r 由三角不等式钉在 [−2, 2]，两列驱动异号时恒为 ±2，失去分辨力。
+        # 判据改用没有分母的差驱动极差；r 只作描述量。
+        "difference_spread_abs": max(differences) - min(differences),
+        "r_saturated_fraction": sum(1 for value in ratios if abs(value) > 1.999) / len(ratios),
+        "spread": max(ratios) - min(ratios),
         "axis_spread": axis_spreads,
         "delta_w_l2": float(delta_w.norm()),
         "column_l2": [float(columns[0].norm()), float(columns[1].norm())],
@@ -189,6 +196,7 @@ def _measure_random_direction(actor, centers, sigma: float, *, seed: int) -> dic
     delta_w = weight[:, 0] - weight[:, 1]
     generator = torch.Generator(device="cpu").manual_seed(seed * 7919 + 13)
     spreads = []
+    spreads_abs = []
     for _ in range(5):
         direction = torch.randn(delta_w.shape, generator=generator)
         direction = direction * (delta_w.norm() / (direction.norm() + 1e-12))
@@ -196,18 +204,30 @@ def _measure_random_direction(actor, centers, sigma: float, *, seed: int) -> dic
             [column_mean + direction.unsqueeze(1) / 2, column_mean - direction.unsqueeze(1) / 2],
             dim=1,
         )
-        ratios = [
-            _relative_drive(encode_state(state, centers, sigma), candidate)["r"]
+        records = [
+            _relative_drive(encode_state(state, centers, sigma), candidate)
             for state in _grid_states()
         ]
+        ratios = [record["r"] for record in records]
+        differences = [record["difference"] for record in records]
         spreads.append(max(ratios) - min(ratios))
-    return {"spreads": spreads, "median": statistics.median(spreads)}
+        spreads_abs.append(max(differences) - min(differences))
+    return {
+        "spreads": spreads,
+        "median": statistics.median(spreads),
+        "spreads_abs": spreads_abs,
+        "median_abs": statistics.median(spreads_abs),
+    }
 
 
 def _verdict(drive: dict, amplification: dict, transfer: dict, random_control: dict) -> dict:
-    """按修正 1 判定：A 用随机方向标定后的相对量（原阈值并列报告，不参与判定）。"""
-    baseline = max(float(random_control["median"]), 1e-12)
-    normalized = drive["spread"] / baseline
+    """按修正 2 判定：A 用**无饱和**的差驱动极差，对同范数随机方向标定。
+
+    修正 1 用的比值 `r` 在 [−2, 2] 上被三角不等式钉死，两列驱动异号时恒为 ±2
+    （实测 5 个种子里 3 个 21/21 点都钉在 ±2），于是 `A_spread = 0` 是恒等式而非结论。
+    """
+    baseline = max(float(random_control["median_abs"]), 1e-12)
+    normalized = drive["difference_spread_abs"] / baseline
     direction = normalized >= A_NORM_MIN
     expressible = amplification["16"]["range"] >= C_RANGE_MIN
     saturated = transfer["dynamic_range"] < B_RANGE_MIN
@@ -220,6 +240,8 @@ def _verdict(drive: dict, amplification: dict, transfer: dict, random_control: d
     return {
         "direction": direction,
         "a_norm": normalized,
+        "a_spread_abs": drive["difference_spread_abs"],
+        "a_norm_ratio_version": drive["spread"] / max(float(random_control["median"]), 1e-12),
         "a_spread_raw_pass": drive["spread"] >= A_SPREAD_MIN,
         "expressible": expressible,
         "saturated": saturated,
@@ -279,7 +301,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(
             f"seed {seed}: {verdict['reason']} "
-            f"(A {drive['spread']:.4f} / x{verdict['a_norm']:.2f} rand, "
+            f"(A {drive['difference_spread_abs']:.4f} / x{verdict['a_norm']:.2f} rand, "
+            f"r-sat {drive['r_saturated_fraction']:.0%}, "
             f"C16 {amplification['16']['range']:.2f}, "
             f"B {transfer['dynamic_range']:.2f})",
             flush=True,
