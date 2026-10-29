@@ -68,7 +68,8 @@ def load_stream(path: Path) -> dict:
 
 
 def embed_turns(stream: dict, *, model: str, host: str) -> list[list[list[float]]]:
-    embedder = OllamaEmbedding(model=model, host=host, opener=_opener())
+    # 首次调用要把模型加载进显存/内存；GPU 被占着时加载会慢过默认的 60 s 超时。
+    embedder = OllamaEmbedding(model=model, host=host, timeout=240.0, opener=_opener())
     result = []
     for conversation in stream["conversations"]:
         texts = [turn["text"] for turn in conversation["turns"]]
