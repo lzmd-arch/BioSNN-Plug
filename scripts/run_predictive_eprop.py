@@ -101,6 +101,12 @@ def run_seed(seed: int, args: argparse.Namespace) -> dict:
         trial_generator = torch.Generator().manual_seed(seed * 100_003 + epoch)
         signals = [sine(sample_parameters(trial_generator), args.steps) for _ in range(args.trials)]
         batch = torch.cat(signals, dim=1)
+        progress = epoch / max(1, args.epochs)
+        if args.curriculum_fraction > 0 and progress >= 1.0 - args.curriculum_fraction:
+            tail = (progress - (1.0 - args.curriculum_fraction)) / args.curriculum_fraction
+            error_gain = max(0.0, 1.0 - tail)
+        else:
+            error_gain = 1.0
         # 误差回注丢弃：一部分 trial 完全关掉误差输入，逼网络靠自身反馈与前向预测的
         # 误差学习——否则它会学到「抄误差通道里的目标」这条自由运行时失效的捷径。
         error_gain = (
@@ -163,6 +169,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--chunk", type=int, default=10, help="每多少毫秒更新一次权重")
     parser.add_argument(
         "--save-models", action="store_true", help="把每种子权重存到 out-dir（默认不存）"
+    )
+    parser.add_argument(
+        "--curriculum-fraction",
+        type=float,
+        default=0.0,
+        help="最后这个比例的 epoch 把误差回注增益线性降到 0（0=关闭）",
     )
     parser.add_argument(
         "--error-dropout", type=float, default=0.0, help="整条 trial 关闭误差输入的概率"
