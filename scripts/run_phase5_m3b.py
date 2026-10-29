@@ -28,26 +28,31 @@ from biosnn_mcp.llm_ollama import OllamaLLM  # noqa: E402
 OUT = REPO / "sweep_results" / "phase5_m3b"
 
 
-def build_llm(kind: str, model: str):
+def build_llm(kind: str, model: str, timeout: float = 120.0):
     if kind == "mock":
         return MockLLM()
     if kind == "ollama":
+        # 系统代理会把 loopback 送进代理，所以显式给一个空 ProxyHandler。
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({})).open
-        return OllamaLLM(model=model, opener=opener)
+        return OllamaLLM(model=model, timeout=timeout, opener=opener)
     raise ValueError(f"未知 LLM 类型：{kind!r}")
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="阶段五 M3b 真实 LLM 对话评测")
     parser.add_argument("--llm", choices=["ollama", "mock"], default="ollama")
-    parser.add_argument("--model", default="qwen3:4b")
+    parser.add_argument("--model", default="qwen3-4b")
+    parser.add_argument("--timeout", type=float, default=120.0)
+    parser.add_argument("--limit", type=int, default=0, help="只跑前 N 个会话（0=全部，仅调试用）")
     parser.add_argument("--out-dir", type=Path, default=OUT)
     args = parser.parse_args(argv)
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     scenarios = build_scenarios()
+    if args.limit:
+        scenarios = scenarios[: args.limit]
     policy = TriggerPolicy()
-    llm = build_llm(args.llm, args.model)
+    llm = build_llm(args.llm, args.model, args.timeout)
     trace_path = args.out_dir / f"trace_{args.llm}.jsonl"
     if trace_path.exists():
         trace_path.unlink()
