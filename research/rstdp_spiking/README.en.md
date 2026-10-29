@@ -37,6 +37,20 @@ the original default configuration came out on top). The sections below are kept
 numbers and the conclusions drawn from them **no longer hold**. New conclusions rest on the
 10-seed comparison at the end of this page.
 
+### 2026-10-29 diagnostic conclusion: entropy collapse, not the readout
+
+- **D3 (rate readout)**: best median 65.2, last 9.55 — changing the readout did not move the
+  end-of-training level;
+- **D4 (state dependence)**: after training the action is identical at pole angles ±0.2
+  (slope 0 for all 10 seeds);
+- **D5 (collapse vs silence)**: final entropy <0.10 nats in **10/10** seeds, silent probe windows
+  **0/10** — this is entropy collapse; by episode 100 entropy is already 0.0001–0.026;
+- **Mechanism**: policy logits are 25-step spike counts and sampling is
+  `softmax(logit_scale×counts)`, while the spiking actor's `logit_scale` is fixed at 1.0
+  (the temperature schedule previously applied only to the linear policy);
+- **D6**: three-arm temperature experiment (1.0 control / 0.1→0.02 / 0.03→0.01), criteria in
+  [`sweep_results/rstdp_spiking_temperature_prereg.md`](../../sweep_results/rstdp_spiking_temperature_prereg.md).
+
 ### Records after the fix (reproducible, 2026-10-18)
 
 | Configuration | Mean | Per seed |

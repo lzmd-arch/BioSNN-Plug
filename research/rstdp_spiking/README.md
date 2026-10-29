@@ -31,6 +31,17 @@ sign-consistent 也只有 18.3），而 D1 rate-features 是 62.15 → 13.05、D
 种子重测最好快照，lr=1e-4/TD 下中位 73.8 / 76.5——问题是末期退化，不是测量造假。审计见
 [`sweep_results/stage3_sustained_audit.md`](../../sweep_results/stage3_sustained_audit.md)。
 
+### 2026-10-29 诊断结论：熵坍缩，不是读出问题
+
+- **D3（速率读出）**：best 中位 65.2、末次 9.55——换读出没有改变末期水平；
+- **D4（状态依赖）**：训练后的动作在极角 ±0.2 上完全不变（10 种子 slope 全 0）；
+- **D5（坍缩 vs 沉默）**：末期熵 <0.10 nats 的种子 **10/10**、探针沉默 **0/10**——是熵坍缩；
+  第 100 回合熵已在 0.0001–0.026；
+- **机制**：策略 logits 是 25 步脉冲计数，采样用 `softmax(logit_scale×counts)`，而脉冲
+  Actor 的 `logit_scale` 固定 1.0（温度调度此前只对线性策略生效）；
+- **D6**：把温度调度接到脉冲 Actor 的三臂实验（1.0 对照 / 0.1→0.02 / 0.03→0.01），
+  判据见 [`sweep_results/rstdp_spiking_temperature_prereg.md`](../../sweep_results/rstdp_spiking_temperature_prereg.md)。
+
 ### 修复后的 5 种子记录（可复现，2026-10-18）
 
 | 配置 | 均值 | 逐种子 |
