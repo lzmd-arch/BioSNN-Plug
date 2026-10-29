@@ -1,0 +1,221 @@
+{
+  "kind": "protocol: (1+lambda)-ES scheduling dimension vs rule gate (MockLLM)",
+  "config": {
+    "generations": 20,
+    "lam": 8,
+    "sigma": 0.1
+  },
+  "seeds": [
+    {
+      "seed": 0,
+      "theta": [
+        0.16625011323193697,
+        0.9811975748153641
+      ],
+      "distance_from_init": 0.33427910211456346,
+      "train_utility": 0.925,
+      "es": {
+        "completion": 1.0,
+        "calls": 25,
+        "utility": 0.9375
+      },
+      "rule": {
+        "completion": 1.0,
+        "calls": 29,
+        "utility": 0.9275
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 1,
+      "theta": [
+        0.10720359982158212,
+        0.9991445702139649
+      ],
+      "distance_from_init": 0.39279733165239633,
+      "train_utility": 0.925,
+      "es": {
+        "completion": 1.0,
+        "calls": 27,
+        "utility": 0.9325
+      },
+      "rule": {
+        "completion": 1.0,
+        "calls": 36,
+        "utility": 0.91
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 2,
+      "theta": [
+        0.02906740858392426,
+        0.8922362913758214
+      ],
+      "distance_from_init": 0.48310508438050764,
+      "train_utility": 0.925,
+      "es": {
+        "completion": 1.0,
+        "calls": 27,
+        "utility": 0.9325
+      },
+      "rule": {
+        "completion": 1.0,
+        "calls": 31,
+        "utility": 0.9225
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 3,
+      "theta": [
+        0.146608787596612,
+        0.9290047636116042
+      ],
+      "distance_from_init": 0.3604520392420893,
+      "train_utility": 0.925,
+      "es": {
+        "completion": 1.0,
+        "calls": 27,
+        "utility": 0.9325
+      },
+      "rule": {
+        "completion": 1.0,
+        "calls": 30,
+        "utility": 0.925
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 4,
+      "theta": [
+        0.17992247526817273,
+        1.035725276980788
+      ],
+      "distance_from_init": 0.32206508232623965,
+      "train_utility": 0.925,
+      "es": {
+        "completion": 1.0,
+        "calls": 23,
+        "utility": 0.9425
+      },
+      "rule": {
+        "completion": 1.0,
+        "calls": 29,
+        "utility": 0.9275
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 5,
+      "theta": [
+        0.1683939444960365,
+        1.0935988222320199
+      ],
+      "distance_from_init": 0.3445624987866773,
+      "train_utility": 0.925,
+      "es": {
+        "completion": 1.0,
+        "calls": 28,
+        "utility": 0.9299999999999999
+      },
+      "rule": {
+        "completion": 1.0,
+        "calls": 32,
+        "utility": 0.92
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 6,
+      "theta": [
+        0.18553551254358433,
+        1.2100487322525748
+      ],
+      "distance_from_init": 0.3781644930346318,
+      "train_utility": 0.925,
+      "es": {
+        "completion": 1.0,
+        "calls": 29,
+        "utility": 0.9275
+      },
+      "rule": {
+        "completion": 1.0,
+        "calls": 34,
+        "utility": 0.915
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 7,
+      "theta": [
+        0.1642572922839634,
+        0.9111362851489134
+      ],
+      "distance_from_init": 0.347303794395672,
+      "train_utility": 0.925,
+      "es": {
+        "completion": 1.0,
+        "calls": 30,
+        "utility": 0.925
+      },
+      "rule": {
+        "completion": 1.0,
+        "calls": 34,
+        "utility": 0.915
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 8,
+      "theta": [
+        0.12582582843985218,
+        0.9535183292425214
+      ],
+      "distance_from_init": 0.3770502040566078,
+      "train_utility": 0.925,
+      "es": {
+        "completion": 1.0,
+        "calls": 23,
+        "utility": 0.9425
+      },
+      "rule": {
+        "completion": 1.0,
+        "calls": 30,
+        "utility": 0.925
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 9,
+      "theta": [
+        0.14274451426430518,
+        0.9447537474233445
+      ],
+      "distance_from_init": 0.3615019094168257,
+      "train_utility": 0.925,
+      "es": {
+        "completion": 1.0,
+        "calls": 24,
+        "utility": 0.94
+      },
+      "rule": {
+        "completion": 1.0,
+        "calls": 31,
+        "utility": 0.9225
+      },
+      "deterministic": true
+    }
+  ],
+  "counts": {
+    "utility_not_worse": 10,
+    "calls_not_higher": 10
+  },
+  "gate": {
+    "utility_not_worse": true,
+    "calls_not_higher": true,
+    "deterministic": true,
+    "moved_from_init": true,
+    "ready": true
+  }
+}
