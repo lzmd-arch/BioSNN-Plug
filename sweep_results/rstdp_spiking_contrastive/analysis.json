@@ -1,0 +1,154 @@
+{
+  "arms": [
+    {
+      "path": "D:\\Projects\\d9_final\\A\\summary.json",
+      "gamma": 0.0,
+      "seeds": 10,
+      "last_median": 9.5,
+      "last_values": [
+        14.9,
+        9.2,
+        9.2,
+        9.7,
+        10.3,
+        9.3,
+        9.6,
+        9.5,
+        9.4,
+        9.5
+      ],
+      "spread_median": 0.20000000000000054,
+      "spread_values": [
+        0.0,
+        0.20000000000000107,
+        0.1999999999999993,
+        0.39999999999999947,
+        0.3999999999999986,
+        0.7999999999999998,
+        0.2,
+        0.1999999999999993,
+        0.1999999999999993,
+        0.8000000000000007
+      ],
+      "slope_positive_seeds": 0,
+      "slope_values": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -0.19999999999999996,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "verdict": {
+        "criterion_1_last": false,
+        "criterion_2_spread": false,
+        "criterion_3_slope": false,
+        "ready": false
+      }
+    },
+    {
+      "path": "D:\\Projects\\d9_final\\B\\summary.json",
+      "gamma": 0.1,
+      "seeds": 10,
+      "last_median": 9.5,
+      "last_values": [
+        9.2,
+        9.2,
+        9.9,
+        9.2,
+        9.7,
+        9.7,
+        9.5,
+        9.5,
+        9.6,
+        9.5
+      ],
+      "spread_median": 0.6000000000000001,
+      "spread_values": [
+        0.8000000000000007,
+        0.7999999999999998,
+        1.0,
+        1.0,
+        0.40000000000000036,
+        0.39999999999999947,
+        0.9999999999999998,
+        0.3999999999999999,
+        0.40000000000000036,
+        0.39999999999999947
+      ],
+      "slope_positive_seeds": 0,
+      "slope_values": [
+        0.0,
+        0.0,
+        -0.2,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "verdict": {
+        "criterion_1_last": false,
+        "criterion_2_spread": true,
+        "criterion_3_slope": false,
+        "ready": false
+      }
+    },
+    {
+      "path": "D:\\Projects\\d9_final\\C\\summary.json",
+      "gamma": 0.5,
+      "seeds": 10,
+      "last_median": 9.6,
+      "last_values": [
+        9.5,
+        9.6,
+        9.6,
+        9.7,
+        9.7,
+        9.7,
+        9.5,
+        9.5,
+        9.4,
+        9.8
+      ],
+      "spread_median": 0.40000000000000036,
+      "spread_values": [
+        0.7999999999999998,
+        0.8000000000000007,
+        0.40000000000000036,
+        0.5999999999999996,
+        0.0,
+        0.0,
+        0.8000000000000007,
+        0.1999999999999993,
+        0.40000000000000036,
+        0.1999999999999993
+      ],
+      "slope_positive_seeds": 0,
+      "slope_values": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "verdict": {
+        "criterion_1_last": false,
+        "criterion_2_spread": false,
+        "criterion_3_slope": false,
+        "ready": false
+      }
+    }
+  ]
+}
