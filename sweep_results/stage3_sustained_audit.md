@@ -1,7 +1,7 @@
 # 阶段三口径复核：best_steps 之外的「持续学会」（2026-10-29）
 
 **性质：后验分析，不产生新数据。** 只读 `sweep_results/**/summary.json`，脚本
-[`../../scripts/stage3_sustained_audit.py`](../../scripts/stage3_sustained_audit.py)。
+[`../scripts/stage3_sustained_audit.py`](../scripts/stage3_sustained_audit.py)。
 不改变任何既有预注册判定（它们本来就全部未过），只回答一件事：
 **「最好成绩」和「最后还在不在学」是不是同一个数。**
 
