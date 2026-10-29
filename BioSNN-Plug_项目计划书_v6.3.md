@@ -1250,6 +1250,12 @@
 >    迁移 **0.902**、图像→文本 **0.736**。**边界**：合成属性集，不外推 Flickr8k；这不是
 >    迁移能力验收。见 [`sweep_results/cross_modal_transfer/README.md`](sweep_results/cross_modal_transfer/README.md)。
 
+> 144. **2026-10-29：阶段五 M3a——mock 结果回注/巩固协议，1.000（平凡）**。
+>    12 个 knowledge 问题：规则触发 + MockLLM，回答写入 DictMemory，下一轮按 id 取回；
+>    巩固成功率 **1.000**、trace 12/12、0 网络，`m3a_ready=true`。**边界**：写进去再取
+>    出来是必然 1.000；没有语义巩固、跨会话、真 LLM；不计入阶段五验收。见
+>    [`sweep_results/phase5_m3/README.md`](sweep_results/phase5_m3/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

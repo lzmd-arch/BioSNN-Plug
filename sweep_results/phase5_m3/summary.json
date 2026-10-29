@@ -1,0 +1,105 @@
+{
+  "kind": "mock consolidation protocol; not a real-LLM capability result",
+  "consolidation_rate": 1.0,
+  "llm_calls": 12,
+  "trace_summary": {
+    "schema_version": 1,
+    "turns": 12,
+    "llm_calls": 12,
+    "retrieved": 12,
+    "consolidated": 12
+  },
+  "gate": {
+    "consolidation_rate": 1.0,
+    "consolidation_ok": true,
+    "trace_ok": true,
+    "no_network": true,
+    "m3a_ready": true
+  },
+  "decisions": [
+    {
+      "turn": 1,
+      "question": "what is the capital of France",
+      "call": true,
+      "stored": true,
+      "retrieved": true
+    },
+    {
+      "turn": 2,
+      "question": "how does photosynthesis work",
+      "call": true,
+      "stored": true,
+      "retrieved": true
+    },
+    {
+      "turn": 3,
+      "question": "who wrote the tempest",
+      "call": true,
+      "stored": true,
+      "retrieved": true
+    },
+    {
+      "turn": 4,
+      "question": "what is the boiling point of water",
+      "call": true,
+      "stored": true,
+      "retrieved": true
+    },
+    {
+      "turn": 5,
+      "question": "how far is the moon",
+      "call": true,
+      "stored": true,
+      "retrieved": true
+    },
+    {
+      "turn": 6,
+      "question": "what causes thunder",
+      "call": true,
+      "stored": true,
+      "retrieved": true
+    },
+    {
+      "turn": 7,
+      "question": "what is a prime number",
+      "call": true,
+      "stored": true,
+      "retrieved": true
+    },
+    {
+      "turn": 8,
+      "question": "who painted the starry night",
+      "call": true,
+      "stored": true,
+      "retrieved": true
+    },
+    {
+      "turn": 9,
+      "question": "what is the largest ocean",
+      "call": true,
+      "stored": true,
+      "retrieved": true
+    },
+    {
+      "turn": 10,
+      "question": "how do vaccines work",
+      "call": true,
+      "stored": true,
+      "retrieved": true
+    },
+    {
+      "turn": 11,
+      "question": "what is the speed of light",
+      "call": true,
+      "stored": true,
+      "retrieved": true
+    },
+    {
+      "turn": 12,
+      "question": "what is the tallest mountain",
+      "call": true,
+      "stored": true,
+      "retrieved": true
+    }
+  ]
+}
