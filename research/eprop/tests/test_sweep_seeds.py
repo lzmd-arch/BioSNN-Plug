@@ -69,7 +69,7 @@ class TestPerSeedRecording:
         """
         calls: list[int] = []
 
-        def fake_train(args, device, history=None):
+        def fake_train(args, device, history=None, metrics=None):
             calls.append(args.seed)
             if history is not None:
                 history.extend(
@@ -100,7 +100,7 @@ class TestPerSeedRecording:
         """
         seen: list[int] = []
 
-        def fake_train(args, device, history=None):
+        def fake_train(args, device, history=None, metrics=None):
             seen.append(args.eval_every)
             return 0.5, 0.7, 10
 
@@ -111,7 +111,7 @@ class TestPerSeedRecording:
     def test_an_explicit_eval_every_is_respected(self, tmp_path, monkeypatch):
         seen: list[int] = []
 
-        def fake_train(args, device, history=None):
+        def fake_train(args, device, history=None, metrics=None):
             seen.append(args.eval_every)
             return 0.5, 0.7, 10
 
@@ -120,7 +120,7 @@ class TestPerSeedRecording:
         assert seen == [7]
 
     def test_running_one_seed_does_not_require_the_others(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(sweep_seeds, "train", lambda args, device, history=None: (0.5, 0.7, 20))
+        monkeypatch.setattr(sweep_seeds, "train", lambda args, device, history=None, metrics=None: (0.5, 0.7, 20))
         out_dir = tmp_path / "w2_seeds"
         assert main(["--seeds", "3", "--out-dir", str(out_dir)]) == 0
         assert [p.name for p in sorted(out_dir.glob("*.json"))] == ["seed3.json"]
