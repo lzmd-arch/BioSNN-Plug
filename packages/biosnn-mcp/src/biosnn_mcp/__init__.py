@@ -2,6 +2,7 @@
 
 from .core import CognitiveCore, InMemoryCore, MemoryEntry, ToolError
 from .llm import LLMAdapter, MockLLM
+from .llm_ollama import OllamaLLM
 from .server import PROTOCOL_VERSION, TOOLS, handle_message, serve_stdio
 from .trace import SCHEMA_VERSION, DialogueTrace, TurnRecord
 from .trigger import TriggerDecision, TriggerPolicy
@@ -16,6 +17,7 @@ __all__ = [
     "LLMAdapter",
     "MemoryEntry",
     "MockLLM",
+    "OllamaLLM",
     "ToolError",
     "TriggerDecision",
     "TriggerPolicy",
