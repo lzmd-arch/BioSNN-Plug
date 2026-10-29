@@ -52,10 +52,12 @@ def _opener():
     return urllib.request.build_opener(urllib.request.ProxyHandler({})).open
 
 
-def load_stream(path: Path) -> dict:
+def load_stream(path: Path, *, expected_sha256: str) -> dict:
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    if digest != EXPECTED_STREAM_SHA256:
-        raise SystemExit(f"fixture 的 sha256 与 M3l 记录不一致：{digest}；换数据要新预注册。")
+    if digest != expected_sha256:
+        raise SystemExit(
+            f"fixture 的 sha256 与预期不一致：{digest}（预期 {expected_sha256}）；换数据要新预注册。"
+        )
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -149,10 +151,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--stream", type=Path, default=DEFAULT_STREAM)
     parser.add_argument("--model", default="nomic-embed-text")
     parser.add_argument("--host", default="http://127.0.0.1:11434")
+    parser.add_argument(
+        "--expect-sha256",
+        default=EXPECTED_STREAM_SHA256,
+        help="fixture 的 sha256（默认 M3l 那份；M3o 复测时传新 fixture 的）",
+    )
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
 
-    stream = load_stream(args.stream)
+    stream = load_stream(args.stream, expected_sha256=args.expect_sha256)
     target_turns = list(stream["target_turns"])
     labels = [turn in target_turns for turn in range(stream["turns_per_conversation"])]
     vectors = embed_conversations(stream, model=args.model, host=args.host)
@@ -213,7 +220,7 @@ def main(argv: list[str] | None = None) -> int:
     ]
     summary = {
         "kind": "phase5-m3n: which embedding-novelty score separates memorable turns",
-        "stream_sha256": EXPECTED_STREAM_SHA256,
+        "stream_sha256": args.expect_sha256,
         "criteria": {
             "auc_min": AUC_MIN,
             "per_conversation_min": PER_CONVERSATION_MIN,

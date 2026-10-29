@@ -92,11 +92,19 @@ def generate(
     return text.strip()
 
 
-def build(*, model: str, host: str, conversations: int = 5, num_gpu: int | None = None) -> dict:
+def build(
+    *,
+    model: str,
+    host: str,
+    conversations: int = 5,
+    num_gpu: int | None = None,
+    topics: tuple[str, ...] = TOPICS,
+    seed_offset: int = 0,
+) -> dict:
     records = []
     prompts = []
     for index in range(conversations):
-        topic = TOPICS[index % len(TOPICS)]
+        topic = topics[index % len(topics)]
         turns = []
         history: list[str] = []
         for turn in range(TURNS_PER_CONVERSATION):
@@ -110,7 +118,7 @@ def build(*, model: str, host: str, conversations: int = 5, num_gpu: int | None 
             text = generate(
                 prompt,
                 model=model,
-                seed=1000 * (index + 1) + turn,
+                seed=seed_offset + 1000 * (index + 1) + turn,
                 host=host,
                 num_gpu=num_gpu,
             )
@@ -125,6 +133,8 @@ def build(*, model: str, host: str, conversations: int = 5, num_gpu: int | None 
         "model": model,
         "options": {"temperature": 0, "top_k": 1, "think": False},
         "target_turns": list(TARGET_TURNS),
+        "topics": list(topics),
+        "seed_offset": seed_offset,
         "turns_per_conversation": TURNS_PER_CONVERSATION,
         "prompt_sha256": hashlib.sha256("\n\n".join(prompts).encode("utf-8")).hexdigest(),
         "conversations": records,
@@ -139,14 +149,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--num-gpu", type=int, default=None, help="Ollama 的 num_gpu；0 = 强制 CPU（GPU 忙时用）"
     )
+    parser.add_argument("--topics", default=None, help="逗号分隔的话题列表（默认用内置五条）")
+    parser.add_argument("--seed-offset", type=int, default=0, help="生成种子的整体偏移")
     parser.add_argument("--out", type=Path, default=OUT / "stream.json")
     args = parser.parse_args(argv)
 
+    topics = tuple(part.strip() for part in args.topics.split(",")) if args.topics else TOPICS
     record = build(
         model=args.model,
         host=args.host,
         conversations=args.conversations,
         num_gpu=args.num_gpu,
+        topics=topics,
+        seed_offset=args.seed_offset,
     )
     payload = json.dumps(record, ensure_ascii=False, indent=2) + "\n"
     args.out.parent.mkdir(parents=True, exist_ok=True)
