@@ -80,6 +80,7 @@ class EPropLearner(torch.nn.Module):
         decay_out: float = 0.95,
         loss_timesteps: str = "last",
         selective_fraction: float | None = None,
+        selective_mode: str = "input",
         generator: torch.Generator | None = None,
     ) -> None:
         super().__init__()
@@ -87,6 +88,8 @@ class EPropLearner(torch.nn.Module):
             raise ValueError(f"loss_timesteps 只能是 'last' 或 'all'，收到 {loss_timesteps!r}。")
         if selective_fraction is not None and not 0.0 < selective_fraction <= 1.0:
             raise ValueError(f"selective_fraction 应在 (0, 1]，收到 {selective_fraction!r}。")
+        if selective_mode not in ("input", "loss"):
+            raise ValueError(f"selective_mode 只能是 'input' 或 'loss'，收到 {selective_mode!r}。")
 
         self.cell = ALIFCell(
             n_in,
@@ -114,6 +117,7 @@ class EPropLearner(torch.nn.Module):
         self.decay_out = float(decay_out)
         self.loss_timesteps = loss_timesteps
         self.selective_fraction = selective_fraction
+        self.selective_mode = selective_mode
         self.last_update_fraction = 1.0
 
     # ---------------------------------------------------------------- 前向
@@ -198,6 +202,17 @@ class EPropLearner(torch.nn.Module):
             signal[-1:] = gradient
         return signal
 
+    @torch.no_grad()
+    def step_losses(self, rollout: Rollout, targets: torch.Tensor) -> torch.Tensor:
+        """逐时刻交叉熵，``(T, batch)``；只用于选择时间步，不参与梯度。"""
+        logits = rollout.filtered @ self.w_out
+        steps, batch, n_out = logits.shape
+        repeated = targets.reshape(1, batch).expand(steps, batch).reshape(-1)
+        losses = torch.nn.functional.cross_entropy(
+            logits.reshape(-1, n_out), repeated, reduction="none"
+        )
+        return losses.reshape(steps, batch)
+
     # ---------------------------------------------------------------- 更新
 
     @torch.no_grad()
@@ -211,12 +226,17 @@ class EPropLearner(torch.nn.Module):
         loss = self.loss_value(rollout, targets)
         signal = self.learning_signal(rollout, targets)
         if self.selective_fraction is not None:
-            # 事件优先级：只让输入活动最高的时间步进入权重更新。
-            activity = inputs.sum(dim=-1)  # (T, batch)
-            flat = activity.flatten()
+            # 事件优先级：只让"值得算"的时间步进入权重更新。
+            # input 模式按输入活动取 top-k；loss 模式按每步损失取 top-k（ESPP §III-C 的
+            # 损失阈值那一半，见 sweep_results/event_priority_v2_prereg.md）。
+            if self.selective_mode == "loss":
+                per_step = self.step_losses(rollout, targets)  # (T, batch)
+            else:
+                per_step = inputs.sum(dim=-1)  # (T, batch)
+            flat = per_step.flatten()
             count = max(1, round(self.selective_fraction * flat.numel()))
             threshold = torch.topk(flat, count).values.min()
-            keep = activity >= threshold
+            keep = per_step >= threshold
             signal = signal * keep.unsqueeze(-1).to(signal.dtype)
             self.last_update_fraction = float(keep.float().mean().item())
 

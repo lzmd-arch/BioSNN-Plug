@@ -76,7 +76,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--selective-fraction",
         type=float,
         default=None,
-        help="只让输入活动最高的这个比例时间步进入权重更新（默认 None=全更新）",
+        help="只让这个比例的时间步进入权重更新（默认 None=全更新）",
+    )
+    parser.add_argument(
+        "--selective-mode",
+        choices=["input", "loss"],
+        default="input",
+        help="选步准则：input=输入活动（v1），loss=每步损失（ESPP 损失阈值那一半，v2）",
     )
     parser.add_argument("--device", default=None, choices=[None, "cpu", "cuda"])
     parser.add_argument("--smoke", action="store_true", help="CI 冒烟：缩到 CPU 一分钟内")
@@ -150,6 +156,7 @@ def train(
         learning_rate_out=args.learning_rate_out,
         decay_out=args.decay_out,
         selective_fraction=args.selective_fraction,
+        selective_mode=args.selective_mode,
         generator=torch.Generator().manual_seed(book.derive("权重初始化")),
         **(learner_kwargs or {}),
     ).to(device)

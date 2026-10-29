@@ -227,6 +227,19 @@ uv run python -m research.eprop.sweep_bptt --seeds 0-2 --epochs 30 --device cuda
 | Eq. (28) | `ΔW_ij = −η Σ_t L_j^t e_ij^t` | `eprop.EPropLearner.update` |
 | 学习信号 | `L_j^t = (W_out·∂E/∂y)_j^t` | `eprop.EPropLearner.learning_signal` |
 
+## Predictive E-prop（对照路线，`predictive.py`）
+
+按 [Noè et al., 2026] 的**描述**实现的最小对照：第三因子不再来自任务标签，而是
+`L_t = (−e_t)·B`，其中 `e_t = x_t − ŷ_t` 是网络自己的预测误差，`B` 是固定随机矩阵
+（广播对齐）。误差经固定 `W_in` 回注、自身输出经固定反馈矩阵回注；读出是脉冲的
+**双指数滤波**再乘 `W_out`。
+
+⚠️ **原文公式在 bioRxiv 页面上是图片，未逐字取得**，所以这是「按描述的改编」，不是
+逐位复现：更新在 trial 末（或每 `chunk` 步）执行、没有 OU 噪声、没有混用 LIF/ALIF、
+没有 TBPTT 基线。判据与结果见
+[`../../sweep_results/predictive_eprop_prereg.md`](../../sweep_results/predictive_eprop_prereg.md)
+与 `sweep_results/predictive_eprop/`。
+
 ## 「局部」的准确表述
 
 计划书 §9 的「无全局反向传播」在本实现里是**可查的**，不只是文档承诺：
