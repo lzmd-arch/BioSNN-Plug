@@ -48,7 +48,7 @@
 | :--- | :--- | :--- | :--- |
 | MCP | M0 只读（主仓）+ Axo 适配器本地 | 未推送 Axo；无写工具 | 推送/发布按需 |
 | mock LLM/trace | M1 已实现 18 测试 | 触发模块/准确率未测 | M2 触发实现 + 预注册 |
-| 上下文编码/巩固 | **M3c 群体编码 + M3d 睡眠噪声巩固协议均已实现**（`context.py`/`consolidate.py`，纯 stdlib，56 测试）；M3a mock 巩固 1.000（平凡） | 都还是协议层：未接真实 memcore/SQLite，未用真实 LLM 嵌入 | M3e：接真实记忆库 + 用 Ollama 嵌入跑巩固 |
+| 上下文编码/巩固 | M3c/M3d 协议 + **M3e 真实嵌入闭环**（Ollama→编码→SQLite→巩固）：同义合并 **6/8**、**误合并 6 对** → `m3e_ready=false` | 全局中点阈值在 nomic 短句上不可分；未接真实 memcore、无语义改写 | 新预注册：局部自适应阈值 + 更大语料复验 |
 | ES 仲裁第 4 维 | 无 | 调度维度 | M3 |
 | 对话评测 | M2 触发 0.733、M3a mock 1.000（平凡）；M3b 装置与预注册已落盘（`phase5_m3b_prereg.md`、`biosnn_mcp.dialogue`），**真 LLM 运行待 Ollama** | 真 LLM 对话/语义巩固/任务完成率 | 起 Ollama 后跑 `scripts/run_phase5_m3b.py`，判据不回改 |
 

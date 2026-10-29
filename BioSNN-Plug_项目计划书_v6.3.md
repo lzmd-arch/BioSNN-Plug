@@ -1341,6 +1341,14 @@
 >    下一步二选一：列权重差在状态特征上的投影（初始化/归一化）vs LIF 饱和（工作点）。
 >    见 [`sweep_results/rstdp_spiking_readout/README.md`](sweep_results/rstdp_spiking_readout/README.md)。
 
+> 156. **2026-10-29：阶段五 M3e——真实嵌入闭环能合并不改写，但误合并 6 对（`m3e_ready=false`）**。
+>    Ollama `nomic-embed-text` → z-score+top-k 群体编码 → SQLite → 睡眠噪声巩固；32 条
+>    （8 簇 × 3 改写 + 8 条不同事实）。阈值用另一组 12 句标定（同义均值 0.958、异义 0.468、
+>    中点 0.713，不回调）：同义簇合并 **6/8**、**异簇误合并 6 对**，平均回放余弦漂移 0.9988。
+>    正式数字只来自修复后的一次——首跑因噪声按逐维 `σ·‖x‖` 施加（768 维总扰动 1.39×）
+>    得到 0 合并，已修实现并加守卫，判据与协议未改。见
+>    [`sweep_results/phase5_m3e/README.md`](sweep_results/phase5_m3e/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

@@ -35,6 +35,15 @@ def test_deterministic_with_seed():
     assert report_a.merged_pairs == report_b.merged_pairs
 
 
+def test_noise_scale_is_relative_to_signal():
+    """σ 是**总**扰动比例：小 σ 时回放余弦应接近 1（曾因逐维 σ·‖x‖ 被压到 0.58）。"""
+    dimension = 128
+    vector = tuple(1.0 / (dimension**0.5) for _ in range(dimension))
+    item = _item("a", vector)
+    _, report = SleepConsolidator(noise_sigma=0.05, merge_threshold=-1.0).consolidate([item])
+    assert report.mean_cosine_drift > 0.995
+
+
 def test_empty_input():
     survivors, report = SleepConsolidator().consolidate([])
     assert survivors == []

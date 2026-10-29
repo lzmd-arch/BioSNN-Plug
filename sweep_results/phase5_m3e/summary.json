@@ -1,0 +1,73 @@
+{
+  "kind": "real-embedding episodic write + sleep-noise consolidation (protocol)",
+  "model": "nomic-embed-text",
+  "calibration": {
+    "mean_same": 0.9583519554404192,
+    "mean_different": 0.46811111399995237,
+    "threshold": 0.7132315347201857,
+    "min_same": 0.9184226770249417,
+    "max_different": 0.515111159935084
+  },
+  "noise_sigma": 0.05,
+  "seed": 0,
+  "counts": {
+    "entries": 32,
+    "survivors": 14,
+    "merged_pairs": 18,
+    "false_merges": 6
+  },
+  "merged_clusters": 6,
+  "false_merges": [
+    [
+      "cluster3:0",
+      "cluster5:0"
+    ],
+    [
+      "cluster3:0",
+      "cluster5:1"
+    ],
+    [
+      "cluster3:0",
+      "cluster5:2"
+    ],
+    [
+      "cluster0:0",
+      "cluster7:0"
+    ],
+    [
+      "cluster0:0",
+      "cluster7:1"
+    ],
+    [
+      "cluster0:0",
+      "cluster7:2"
+    ]
+  ],
+  "survivor_per_cluster": {
+    "c0": 1,
+    "c1": 1,
+    "c2": 1,
+    "c3": 1,
+    "c4": 1,
+    "c6": 1,
+    "d0": 1,
+    "d1": 1,
+    "d2": 1,
+    "d3": 1,
+    "d4": 1,
+    "d5": 1,
+    "d6": 1,
+    "d7": 1
+  },
+  "report": {
+    "rounds_used": 2,
+    "mean_cosine_drift": 0.9987577475926585
+  },
+  "gate": {
+    "paraphrase_merge": false,
+    "no_false_merges": false,
+    "deterministic": true,
+    "localhost_only": true,
+    "m3e_ready": false
+  }
+}

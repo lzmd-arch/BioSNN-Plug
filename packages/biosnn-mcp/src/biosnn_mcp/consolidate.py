@@ -100,7 +100,9 @@ class SleepConsolidator:
         norm = math.sqrt(sum(value * value for value in item.embedding))
         if norm == 0.0:
             return item.embedding
-        scale = self.noise_sigma * norm
+        # 每维标准差 = σ·‖x‖/√dim，使**总**噪声范数 ≈ σ·‖x‖（逐维用 σ·‖x‖ 会让
+        # 总噪声随 √dim 放大：768 维时达到信号的 1.4 倍，回放余弦被压到 0.58）。
+        scale = self.noise_sigma * norm / math.sqrt(len(item.embedding))
         noisy = [value + rng.gauss(0.0, scale) for value in item.embedding]
         noisy_norm = math.sqrt(sum(value * value for value in noisy))
         if noisy_norm == 0.0:

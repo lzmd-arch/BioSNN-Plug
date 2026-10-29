@@ -2,6 +2,8 @@
 
 from .consolidate import ConsolidationReport, MemoryItem, SleepConsolidator
 from .context import ContextCode, ZScoreTopKEncoder
+from .embeddings import HashEmbedding, OllamaEmbedding
+from .episodic import EpisodicStore
 from .core import CognitiveCore, InMemoryCore, MemoryEntry, ToolError
 from .dialogue import Scenario, Turn, WritableMemory, build_scenarios, run_session
 from .llm import LLMAdapter, MockLLM
@@ -16,8 +18,11 @@ __all__ = [
     "TOOLS",
     "CognitiveCore",
     "ConsolidationReport",
+    "EpisodicStore",
+    "HashEmbedding",
     "ContextCode",
     "MemoryItem",
+    "OllamaEmbedding",
     "SleepConsolidator",
     "DialogueTrace",
     "InMemoryCore",
