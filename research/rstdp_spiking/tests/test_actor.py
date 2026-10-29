@@ -157,9 +157,7 @@ class TestReadoutMode:
 
         from research.rstdp_spiking.actor import SpikingActor
 
-        return SpikingActor(
-            8, 2, steps=5, generator=torch.Generator().manual_seed(0), **kwargs
-        )
+        return SpikingActor(8, 2, steps=5, generator=torch.Generator().manual_seed(0), **kwargs)
 
     def test_default_matches_explicit_count(self):
         import torch
