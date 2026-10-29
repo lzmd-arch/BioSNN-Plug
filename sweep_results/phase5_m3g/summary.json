@@ -1,0 +1,210 @@
+{
+  "kind": "protocol: (1+lambda)-ES scheduling dimension vs rule gate (MockLLM)",
+  "config": {
+    "generations": 20,
+    "lam": 8,
+    "sigma": 0.1
+  },
+  "seeds": [
+    {
+      "seed": 0,
+      "theta": [
+        0.5,
+        1.0
+      ],
+      "train_utility": 0.6975,
+      "es": {
+        "completion": 0.5,
+        "calls": 20,
+        "utility": 0.45
+      },
+      "rule": {
+        "completion": 0.5,
+        "calls": 20,
+        "utility": 0.45
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 1,
+      "theta": [
+        0.5,
+        1.0
+      ],
+      "train_utility": 0.6975,
+      "es": {
+        "completion": 0.625,
+        "calls": 25,
+        "utility": 0.5625
+      },
+      "rule": {
+        "completion": 0.625,
+        "calls": 25,
+        "utility": 0.5625
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 2,
+      "theta": [
+        0.5,
+        1.0
+      ],
+      "train_utility": 0.6975,
+      "es": {
+        "completion": 0.675,
+        "calls": 27,
+        "utility": 0.6075
+      },
+      "rule": {
+        "completion": 0.675,
+        "calls": 27,
+        "utility": 0.6075
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 3,
+      "theta": [
+        0.5,
+        1.0
+      ],
+      "train_utility": 0.6975,
+      "es": {
+        "completion": 0.675,
+        "calls": 27,
+        "utility": 0.6075
+      },
+      "rule": {
+        "completion": 0.675,
+        "calls": 27,
+        "utility": 0.6075
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 4,
+      "theta": [
+        0.5,
+        1.0
+      ],
+      "train_utility": 0.6975,
+      "es": {
+        "completion": 0.65,
+        "calls": 26,
+        "utility": 0.585
+      },
+      "rule": {
+        "completion": 0.65,
+        "calls": 26,
+        "utility": 0.585
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 5,
+      "theta": [
+        0.5,
+        1.0
+      ],
+      "train_utility": 0.6975,
+      "es": {
+        "completion": 0.725,
+        "calls": 29,
+        "utility": 0.6525
+      },
+      "rule": {
+        "completion": 0.725,
+        "calls": 29,
+        "utility": 0.6525
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 6,
+      "theta": [
+        0.5,
+        1.0
+      ],
+      "train_utility": 0.6975,
+      "es": {
+        "completion": 0.7,
+        "calls": 28,
+        "utility": 0.6299999999999999
+      },
+      "rule": {
+        "completion": 0.7,
+        "calls": 28,
+        "utility": 0.6299999999999999
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 7,
+      "theta": [
+        0.5,
+        1.0
+      ],
+      "train_utility": 0.6975,
+      "es": {
+        "completion": 0.7,
+        "calls": 28,
+        "utility": 0.6299999999999999
+      },
+      "rule": {
+        "completion": 0.7,
+        "calls": 28,
+        "utility": 0.6299999999999999
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 8,
+      "theta": [
+        0.5,
+        1.0
+      ],
+      "train_utility": 0.6975,
+      "es": {
+        "completion": 0.75,
+        "calls": 30,
+        "utility": 0.675
+      },
+      "rule": {
+        "completion": 0.75,
+        "calls": 30,
+        "utility": 0.675
+      },
+      "deterministic": true
+    },
+    {
+      "seed": 9,
+      "theta": [
+        0.5,
+        1.0
+      ],
+      "train_utility": 0.6975,
+      "es": {
+        "completion": 0.525,
+        "calls": 21,
+        "utility": 0.47250000000000003
+      },
+      "rule": {
+        "completion": 0.525,
+        "calls": 21,
+        "utility": 0.47250000000000003
+      },
+      "deterministic": true
+    }
+  ],
+  "counts": {
+    "utility_not_worse": 10,
+    "calls_not_higher": 10
+  },
+  "gate": {
+    "utility_not_worse": true,
+    "calls_not_higher": true,
+    "deterministic": true,
+    "m3g_ready": true
+  }
+}

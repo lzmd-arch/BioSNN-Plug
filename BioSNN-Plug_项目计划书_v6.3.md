@@ -1356,6 +1356,14 @@
 >    不是多近邻分不清。下一步需局部自适应阈值或第二判据。见
 >    [`sweep_results/phase5_m3f/README.md`](sweep_results/phase5_m3f/README.md)。
 
+> 158. **2026-10-29：阶段五 M3g——ES 调度维度判据全过，但是平凡解（ES 停在初始点）**。
+>    (1+λ)-ES（λ=8、σ=0.1、20 代）优化 `(score_threshold, cooldown)`，与规则门在留出会话上
+>    比较：效用不差 10/10、调用不更贵 10/10、确定性通过 → 按预注册 `m3g_ready=true`。
+>    **但 10 个种子的 ES 全部停在初始点 (0.5, 1.0)**：检索分只有 0/1 两档，阈值不可辨识，
+>    效用曲面是平的——「等于规则门」是构造性的，不能当 ES 调度能力证据。预注册缺
+>    可辨识性检查（应要求 ‖θ−θ₀‖ 下限）。见
+>    [`sweep_results/phase5_m3g/README.md`](sweep_results/phase5_m3g/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
