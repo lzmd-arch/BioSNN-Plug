@@ -1,0 +1,421 @@
+{
+  "kind": "diagnostic: first-spike latency readout at realistic differential amplitudes",
+  "n_features": 64,
+  "angles": [
+    -0.2,
+    -0.18,
+    -0.16,
+    -0.14,
+    -0.12,
+    -0.1,
+    -0.08,
+    -0.06,
+    -0.04,
+    -0.02,
+    0.0,
+    0.02,
+    0.04,
+    0.06,
+    0.08,
+    0.1,
+    0.12,
+    0.14,
+    0.16,
+    0.18,
+    0.2
+  ],
+  "fixed": {
+    "threshold": 1.0,
+    "n_refractory": 2,
+    "baseline_period": 5,
+    "weight_norm": 1.0,
+    "steps": 25,
+    "windows": 32,
+    "sign_mode": "signed"
+  },
+  "lambdas": [
+    0.0,
+    0.01,
+    0.03,
+    0.05,
+    0.1
+  ],
+  "criteria": {
+    "decision_lambda": 0.05,
+    "separability_min": 2.0,
+    "null_max": 0.5,
+    "censored_max": 0.2
+  },
+  "seeds_latency_above": 0,
+  "censored_ok": true,
+  "null_ok": true,
+  "latency_readout_viable": false,
+  "seeds": [
+    {
+      "seed": 0,
+      "per_lambda": {
+        "0.00": {
+          "latency_spread": 0.0,
+          "latency_sd": 0.0,
+          "latency_separability": 0.0,
+          "count_spread": 0.0,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            3.011904761904762,
+            3.011904761904762
+          ]
+        },
+        "0.01": {
+          "latency_spread": 0.0625,
+          "latency_sd": 0.0,
+          "latency_separability": 0.0,
+          "count_spread": 0.03125,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            3.013392857142857,
+            3.011904761904762
+          ]
+        },
+        "0.03": {
+          "latency_spread": 0.21875,
+          "latency_sd": 0.17399263633843817,
+          "latency_separability": 1.2572371141874243,
+          "count_spread": 0.03125,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            3.017857142857143,
+            3.0148809523809526
+          ]
+        },
+        "0.05": {
+          "latency_spread": 0.21875,
+          "latency_sd": 0.2914805954090255,
+          "latency_separability": 0.7504787743864564,
+          "count_spread": 0.09375,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            3.025297619047619,
+            3.0148809523809526
+          ]
+        },
+        "0.10": {
+          "latency_spread": 0.21875,
+          "latency_sd": 0.41339864235384227,
+          "latency_separability": 0.5291502622129182,
+          "count_spread": 0.21875,
+          "count_sd": 0.24206145913796356,
+          "count_separability": 0.9036961141150639,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            3.0863095238095237,
+            3.0163690476190474
+          ]
+        }
+      },
+      "latency_ok": false,
+      "censored_ok": true,
+      "null_ok": true
+    },
+    {
+      "seed": 1,
+      "per_lambda": {
+        "0.00": {
+          "latency_spread": 0.0,
+          "latency_sd": 0.0,
+          "latency_separability": 0.0,
+          "count_spread": 0.0,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.467261904761905,
+            4.467261904761905
+          ]
+        },
+        "0.01": {
+          "latency_spread": 0.03125,
+          "latency_sd": 0.0,
+          "latency_separability": 0.0,
+          "count_spread": 0.125,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.4538690476190474,
+            4.464285714285714
+          ]
+        },
+        "0.03": {
+          "latency_spread": 0.09375,
+          "latency_sd": 0.17399263633843817,
+          "latency_separability": 0.5388159060803247,
+          "count_spread": 0.09375,
+          "count_sd": 0.17399263633843817,
+          "count_separability": 0.5388159060803247,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.434523809523809,
+            4.455357142857143
+          ]
+        },
+        "0.05": {
+          "latency_spread": 0.15625,
+          "latency_sd": 0.17399263633843817,
+          "latency_separability": 0.8980265101338746,
+          "count_spread": 0.09375,
+          "count_sd": 0.17399263633843817,
+          "count_separability": 0.5388159060803247,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.404761904761905,
+            4.446428571428571
+          ]
+        },
+        "0.10": {
+          "latency_spread": 0.1875,
+          "latency_sd": 0.3045873232752801,
+          "latency_separability": 0.6155870112510925,
+          "count_spread": 0.15625,
+          "count_sd": 0.2914805954090255,
+          "count_separability": 0.5360562674188973,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.366071428571429,
+            4.436011904761905
+          ]
+        }
+      },
+      "latency_ok": false,
+      "censored_ok": true,
+      "null_ok": true
+    },
+    {
+      "seed": 2,
+      "per_lambda": {
+        "0.00": {
+          "latency_spread": 0.0,
+          "latency_sd": 0.0,
+          "latency_separability": 0.0,
+          "count_spread": 0.0,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.872023809523809,
+            4.872023809523809
+          ]
+        },
+        "0.01": {
+          "latency_spread": 0.0625,
+          "latency_sd": 0.0,
+          "latency_separability": 0.0,
+          "count_spread": 0.15625,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.8601190476190474,
+            4.885416666666667
+          ]
+        },
+        "0.03": {
+          "latency_spread": 0.125,
+          "latency_sd": 0.17399263633843817,
+          "latency_separability": 0.7184212081070996,
+          "count_spread": 0.1875,
+          "count_sd": 0.24206145913796356,
+          "count_separability": 0.7745966692414834,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.833333333333333,
+            4.898809523809524
+          ]
+        },
+        "0.05": {
+          "latency_spread": 0.125,
+          "latency_sd": 0.24206145913796356,
+          "latency_separability": 0.5163977794943222,
+          "count_spread": 0.25,
+          "count_sd": 0.2914805954090255,
+          "count_separability": 0.8576900278702358,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.803571428571429,
+            4.907738095238095
+          ]
+        },
+        "0.10": {
+          "latency_spread": 0.1875,
+          "latency_sd": 0.3630921887069453,
+          "latency_separability": 0.5163977794943223,
+          "count_spread": 0.34375,
+          "count_sd": 0.4330127018922193,
+          "count_separability": 0.7938566201357354,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.6875,
+            4.941964285714286
+          ]
+        }
+      },
+      "latency_ok": false,
+      "censored_ok": true,
+      "null_ok": true
+    },
+    {
+      "seed": 3,
+      "per_lambda": {
+        "0.00": {
+          "latency_spread": 0.0,
+          "latency_sd": 0.0,
+          "latency_separability": 0.0,
+          "count_spread": 0.0,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            3.4047619047619047,
+            3.4047619047619047
+          ]
+        },
+        "0.01": {
+          "latency_spread": 0.0625,
+          "latency_sd": 0.17399263633843817,
+          "latency_separability": 0.3592106040535498,
+          "count_spread": 0.09375,
+          "count_sd": 0.17399263633843817,
+          "count_separability": 0.5388159060803247,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            3.4419642857142856,
+            3.4092261904761907
+          ]
+        },
+        "0.03": {
+          "latency_spread": 0.21875,
+          "latency_sd": 0.24206145913796356,
+          "latency_separability": 0.9036961141150639,
+          "count_spread": 0.25,
+          "count_sd": 0.33071891388307384,
+          "count_separability": 0.7559289460184544,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            3.5238095238095237,
+            3.4077380952380953
+          ]
+        },
+        "0.05": {
+          "latency_spread": 0.21875,
+          "latency_sd": 0.2914805954090255,
+          "latency_separability": 0.7504787743864564,
+          "count_spread": 0.21875,
+          "count_sd": 0.3630921887069453,
+          "count_separability": 0.6024640760767093,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            3.59375,
+            3.412202380952381
+          ]
+        },
+        "0.10": {
+          "latency_spread": 0.3125,
+          "latency_sd": 0.41339864235384227,
+          "latency_separability": 0.7559289460184545,
+          "count_spread": 0.375,
+          "count_sd": 0.4841229182759271,
+          "count_separability": 0.7745966692414834,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            3.7886904761904763,
+            3.40625
+          ]
+        }
+      },
+      "latency_ok": false,
+      "censored_ok": true,
+      "null_ok": true
+    },
+    {
+      "seed": 4,
+      "per_lambda": {
+        "0.00": {
+          "latency_spread": 0.0,
+          "latency_sd": 0.0,
+          "latency_separability": 0.0,
+          "count_spread": 0.0,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.994047619047619,
+            4.994047619047619
+          ]
+        },
+        "0.01": {
+          "latency_spread": 0.0625,
+          "latency_sd": 0.0,
+          "latency_separability": 0.0,
+          "count_spread": 0.0,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.994047619047619,
+            4.994047619047619
+          ]
+        },
+        "0.03": {
+          "latency_spread": 0.09375,
+          "latency_sd": 0.0,
+          "latency_separability": 0.0,
+          "count_spread": 0.03125,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.994047619047619,
+            4.991071428571429
+          ]
+        },
+        "0.05": {
+          "latency_spread": 0.09375,
+          "latency_sd": 0.17399263633843817,
+          "latency_separability": 0.5388159060803247,
+          "count_spread": 0.03125,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.994047619047619,
+            4.991071428571429
+          ]
+        },
+        "0.10": {
+          "latency_spread": 0.09375,
+          "latency_sd": 0.17399263633843817,
+          "latency_separability": 0.5388159060803247,
+          "count_spread": 0.03125,
+          "count_sd": 0.0,
+          "count_separability": 0.0,
+          "censored_fraction": 0.0,
+          "column_counts_mean": [
+            4.995535714285714,
+            4.988095238095238
+          ]
+        }
+      },
+      "latency_ok": false,
+      "censored_ok": true,
+      "null_ok": true
+    }
+  ],
+  "repro": "```text\n实验名称：W3 脉冲化：D15 首发放潜伏期读出\n日期：2026-10-29 17:40:53 中国标准时间\nGit commit：76f9444bac3ff59a49add006c54eb497c4b99701\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：CPU（Intel64 Family 6 Model 183 Stepping 1, GenuineIntel，无 GPU 参与）\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=9dc262ffcb62739dbe58df80d6314d5f83de95f66864d5462eb877933e37a783\n运行命令：diagnose_latency.py --seeds 0-4 --out D:/Projects/d15_final\n耗时：0.0 s\n备注：构造同 D12（signed, weight_norm=1）；λ 取真实幅度 0/0.01/0.03/0.05/0.10\n备注：读出：首发放时刻差（整窗未发放的窗口删失并报比例）；对照：硬计数\n```"
+}
