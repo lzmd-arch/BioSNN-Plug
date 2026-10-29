@@ -329,7 +329,7 @@ def main(argv: list[str] | None = None) -> int:
             seeds=",".join(str(seed) for seed in seeds),
             notes=[
                 "臂：D6-B（logit_scale 0.1→0.02，count-aligned）",
-                "A 相对差驱动（按修正 1 用随机方向标定）/ B 输入缩放传递曲线 / "
+                "A 差驱动极差（修正 2：对同范数随机方向标定）/ B 输入缩放传递曲线 / "
                 "C 差方向放大（逐列 L1 归一化）/ D 随机方向对照",
             ],
             device=torch.device("cpu"),
