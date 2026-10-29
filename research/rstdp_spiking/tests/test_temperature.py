@@ -41,3 +41,27 @@ def test_enabled_applies_schedule():
     result = _run(True)
     # episodes=2：第二个回合 progress=0.5 → sqrt(1.0 × 0.01) = 0.1
     assert result.actor.logit_scale == pytest.approx(0.1, rel=1e-6)
+
+
+def test_cli_accepts_new_flags(tmp_path):
+    """CLI 必须真的注册这三个开关（曾经漏加，,--help 不报错但运行即崩）。"""
+    from research.rstdp_spiking.cartpole import main
+
+    code = main(
+        [
+            "--smoke",
+            "--spiking-temperature",
+            "--entropy-log",
+            "--probe-every",
+            "5",
+            "--logit-scale-start",
+            "0.1",
+            "--logit-scale-end",
+            "0.02",
+            "--device",
+            "cpu",
+            "--out",
+            str(tmp_path / "smoke"),
+        ]
+    )
+    assert code == 0

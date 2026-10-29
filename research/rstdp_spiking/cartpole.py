@@ -402,6 +402,24 @@ def main(argv: list[str] | None = None) -> int:
         default="count",
         help="策略读出：count=窗口内硬计数（默认）；rate=窗口末低通发放率（D3 实验）",
     )
+    parser.add_argument(
+        "--spiking-temperature",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="把 logit_scale 温度调度也应用到脉冲 Actor（默认否，历史行为不变）",
+    )
+    parser.add_argument(
+        "--entropy-log",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="每回合记录 Boltzmann 熵（诊断用，默认关）",
+    )
+    parser.add_argument(
+        "--probe-every",
+        type=int,
+        default=0,
+        help="每多少回合在极角 ±0.2 上采窗口探针（0=不采，诊断用）",
+    )
     parser.add_argument("--logit-scale-start", type=float, default=1.0)
     parser.add_argument("--logit-scale-end", type=float, default=40.0)
     parser.add_argument(
@@ -560,6 +578,8 @@ def main(argv: list[str] | None = None) -> int:
             "logit_scale_start": args.logit_scale_start,
             "logit_scale_end": args.logit_scale_end,
             "spiking_temperature": args.spiking_temperature,
+            "entropy_log": args.entropy_log,
+            "probe_every": args.probe_every,
         },
         "per_seed": [
             {
