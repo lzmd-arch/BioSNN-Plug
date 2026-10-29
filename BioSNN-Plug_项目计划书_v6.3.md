@@ -1421,6 +1421,18 @@
 >    这一条）、抬高计数增益（阈值/不应期/`baseline_period`/窗口长度）。
 >    见 [`sweep_results/rstdp_spiking_direction/README.md`](sweep_results/rstdp_spiking_direction/README.md)。
 
+> 165. **2026-10-29：阶段三 D11——计数读出分不开 10% 的差驱动（`readout_gain_calibrated=false`）**。
+>    纯标定、不训练：构造公共列与差方向（ρ 精确标到 0/0.05/0.10），21 点网格、54 个配置
+>    （threshold × n_refractory × baseline_period × steps）× 5 种子。ρ=0.10 时各种子最好
+>    Δ 极差 **0.90 / 1.65 / 0.70 / 0.70 / 3.45** 计数（门槛 2.0，只有种子 4 过）；
+>    ρ=0 空对照全部 **0.0**（不是噪声）；5 种子全可用的配置 **0 个**。
+>    **机制**：列按 L1 归一化后净每步驱动只有 ≈0.047（正负权重抵消 95%+），而阈值 1.0——
+>    稳态膜电位 ≈0.96 贴着阈值，发放节律由 `baseline_period=5` 的偏置撑着，输入只推移相位；
+>    阈值降到 0.5 是唯一正收益档（最好 0.7–3.45），但 54 个配置里 27–42 个掉出反退化带。
+>    阶段三卡点因此定成一句话：**读出分辨率不够**，不是没学到方向、也不是温度/熵。
+>    下一步 D12：在同一构造探针上扫 `weight_norm ∈ {1,3,5,10}` 与「符号与输入对齐」对照。
+>    见 [`sweep_results/rstdp_spiking_readout_gain/README.md`](sweep_results/rstdp_spiking_readout_gain/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
