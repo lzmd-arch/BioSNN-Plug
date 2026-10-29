@@ -16,7 +16,7 @@ answers "how much performance does spiking cost".
 ## ⚠️ 2026-10-29 measurement re-check: `best_steps` is not "current level"
 
 The "best evaluation" figures on this page take the **maximum over 32 evaluation points (10 episodes
-each)** — the best moment seen in training, not the level at the end of training. Recomputed on the **last evaluation**, the 27 historical
+each)** — the best moment seen in training, not the level at the end of training. Recomputed on the **last evaluation**, the 26 historical
 arms have medians of only **9.2–18.3 steps** (the highest, sign-consistent, is 18.3), while D1
 rate-features goes 62.15 → 13.05 and the D2 linear policy 179.8 → 9.6. **No arm holds its level at the end.** The preregistered verdicts (all failures) are unchanged, but
 do not use the `best` figures on this page to write "just short of the line". ⚠️ The best peak is
