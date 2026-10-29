@@ -1276,11 +1276,13 @@
 >    约 90 倍（18 s → 0.2 s），正式运行用 `think=false`。见
 >    [`sweep_results/phase5_m3b/README.md`](sweep_results/phase5_m3b/README.md)。
 
-> 148. **2026-10-29：阶段三口径复核——`best_steps` 是评测噪声极值，27 个历史臂末次中位只有 9–18 步**。
+> 148. **2026-10-29：阶段三口径复核——27 个历史臂末次中位只有 9–18 步（峰值存在但末期没保住）**。
 >    `best_steps` = 32 个评测点（每点 10 回合）取最大；复核全部历史 summary：末次中位
 >    9.2–18.3（最高为 sign-consistent 18.3），而 D1 rate-features 62.15→13.05、D2 线性
->    策略 179.8→9.6。**没有一条臂持续学会**；既有的预注册判定（全部未过）不变，但历史
->    比较不能再只读 best。`cartpole.py` 起同报 `last_steps`/`final3_mean_steps`；审计表见
+>    策略 179.8→9.6。**没有一条臂在末期保持住**；既有的预注册判定（全部未过）不变，但
+>    历史比较不能再只读 best。⚠️ best 不是纯噪声：诊断 ③ 用 20 个新评测种子重测最好快照，
+>    lr=1e-4/TD 下中位 73.8/76.5——峰值是真的，问题是末期退化。`cartpole.py` 起同报
+>    `last_steps`/`final3_mean_steps`；审计表见
 >    [`sweep_results/stage3_sustained_audit.md`](sweep_results/stage3_sustained_audit.md)。
 
 > 149. **2026-10-29：阶段四 Predictive E-prop 对照——重建全过，自由运行只 1/3 种子成立**。

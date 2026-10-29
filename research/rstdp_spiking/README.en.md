@@ -16,11 +16,12 @@ answers "how much performance does spiking cost".
 ## ⚠️ 2026-10-29 measurement re-check: `best_steps` is not "current level"
 
 The "best evaluation" figures on this page take the **maximum over 32 evaluation points (10 episodes
-each)**, which evaluation noise inflates. Recomputed on the **last evaluation**, the 27 historical
+each)** — the best moment seen in training, not the level at the end of training. Recomputed on the **last evaluation**, the 27 historical
 arms have medians of only **9.2–18.3 steps** (the highest, sign-consistent, is 18.3), while D1
-rate-features goes 62.15 → 13.05 and the D2 linear policy 179.8 → 9.6. **No arm learns
-sustainably.** The preregistered verdicts (all failures) are unchanged, but do not use the `best`
-figures on this page to write "just short of the line". See
+rate-features goes 62.15 → 13.05 and the D2 linear policy 179.8 → 9.6. **No arm holds its level at the end.** The preregistered verdicts (all failures) are unchanged, but
+do not use the `best` figures on this page to write "just short of the line". ⚠️ The best peak is
+not noise: diagnosis ③ re-evaluated the best snapshot on 20 fresh eval seeds and got medians
+73.8 / 76.5 (lr=1e-4/TD) — the problem is end-of-training degradation, not measurement. See
 [`sweep_results/stage3_sustained_audit.md`](../../sweep_results/stage3_sustained_audit.md).
 
 ## ⚠️ Every number on this page dated before 2026-10-18 is void
