@@ -1293,6 +1293,13 @@
 >    `predictive_eprop_ready=false`。**自持振荡跨种子不稳定**，不能写成复现成功；
 >    Lorenz/TBPTT 未测。见 [`sweep_results/predictive_eprop/README.md`](sweep_results/predictive_eprop/README.md)。
 
+> 150. **2026-10-29：阶段三 D3 连续速率读出——best 65.2 但末次只有 9.55，未过预注册判据**。
+>    只换策略读出（硬计数→低通发放率），10 种子：best 中位 **65.2**（count-aligned 9.5）、
+>    末次中位 **9.55**（9.5）、末三段 **11.42**；配对 vs D1 中位差 **+5.95**、7/10 变好
+>    （门槛 +20）。**读出不是持续控制的瓶颈**：峰值提高了，末期仍退化。干净工作区重跑与
+>    首次（脏工作区）逐种子完全一致，兼作确定性检查。见
+>    [`sweep_results/rstdp_spiking_rate_readout/README.md`](sweep_results/rstdp_spiking_rate_readout/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
