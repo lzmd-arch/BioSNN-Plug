@@ -79,9 +79,7 @@ def workpoint(
         start = turn * ms_per_turn
         if any(start <= moment <= start + hit_window_ms for moment in triggers):
             hits += 1
-    windows = [
-        (turn * ms_per_turn, turn * ms_per_turn + hit_window_ms) for turn in target_turns
-    ]
+    windows = [(turn * ms_per_turn, turn * ms_per_turn + hit_window_ms) for turn in target_turns]
     false_triggers = sum(
         1 for moment in triggers if not any(low <= moment <= high for low, high in windows)
     )
