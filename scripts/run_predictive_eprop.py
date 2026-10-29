@@ -125,10 +125,11 @@ def run_seed(seed: int, args: argparse.Namespace) -> dict:
         "amplitude": 0.5 <= metrics["amplitude_ratio"] <= 2.0,
         "free_running_dtw": metrics["dtw"] <= 0.5 * baseline_metrics["dtw"],
     }
-    torch.save(
-        {"w_rec": model.cell.w_rec.detach(), "w_out": model.w_out.detach()},
-        args.out_dir / f"seed{seed}_model.pt",
-    )
+    if args.save_models:
+        torch.save(
+            {"w_rec": model.cell.w_rec.detach(), "w_out": model.w_out.detach()},
+            args.out_dir / f"seed{seed}_model.pt",
+        )
     return {
         "seed": seed,
         "parameters": parameters,
@@ -159,6 +160,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--learning-rate-out", type=float, default=1e-2)
     parser.add_argument("--lambda-reg", type=float, default=1e-4)
     parser.add_argument("--chunk", type=int, default=10, help="每多少毫秒更新一次权重")
+    parser.add_argument(
+        "--save-models", action="store_true", help="把每种子权重存到 out-dir（默认不存）"
+    )
     parser.add_argument(
         "--error-dropout", type=float, default=0.0, help="整条 trial 关闭误差输入的概率"
     )

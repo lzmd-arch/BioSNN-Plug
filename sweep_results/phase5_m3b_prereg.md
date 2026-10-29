@@ -18,8 +18,9 @@
 
 ## 会话与判定
 
-- 20 个会话，每个 ≤ 10 轮；每个会话含 2–4 个 `knowledge` 轮、2–3 个 `chat` 轮、
-  2–3 个 `memory` 轮（问上一轮刚巩固的事实）；
+- 20 个会话，每个 5 轮：2 个 `knowledge` 轮、2 个 `chat` 轮、1 个 `memory` 轮
+  （问本会话第一个 knowledge 轮刚巩固的答案）；所有会话合计 40 个 knowledge 轮；
+  （本条在**任何真 LLM 数据之前**按实现定稿；判据不变）
 - `knowledge` 轮给**关键短语**（如 capital of France → `paris`），模型回答小写化后包含
   该短语即判完成；
 - `chat` / `memory` 轮不应触发 LLM；触发即记一次误触发；
