@@ -168,7 +168,7 @@ def _measure_amplification(actor, centers, sigma: float, *, seed: int) -> dict:
                 "mean": statistics.fmean(means),
                 "delta_w_relative": float(
                     (amplified[:, 0] - amplified[:, 1]).norm()
-                    / (amplified.mean(dim=1).norm() + 1e-12)
+                    / (((amplified[:, 0] + amplified[:, 1]) / 2).norm() + 1e-12)
                 ),
             }
     finally:

@@ -220,5 +220,5 @@ The following problems belong to the **body of `BioSNN-Plug_项目计划书_v6.2
 
 | Item | Description | Status |
 | :--- | :--- | :--- |
-| Loihi 3 | A February 2026 blog mentions it; earlier authoritative sources say it has not been announced — the two contradict each other | `unverified`: verify before any external citation; if it cannot be verified, do not put it in the manuscript |
+| Loihi 3 | A February 2026 blog mentions it; earlier authoritative sources say it has not been announced — the two contradict each other. **Rechecked 2026-10-29**: Intel's own neuromorphic page (`intel.com/content/www/us/en/research/neuromorphic-computing.html`) names only Loihi 2, Hala Point and Kapoho Point — **no mention of Loihi 3**; the pages claiming it shipped are content-farm articles with no primary source | `unverified` (absent from the vendor's own page): verify before any external citation; if it cannot be verified, do not put it in the manuscript |
 | Spiking-LLM energy figures | QuantaSpike / SDLLM / SpikingMamba report energy under different scopes (whole system / chip / per step) | `partial`: check the scope paper by paper; **never merge numbers across papers** |

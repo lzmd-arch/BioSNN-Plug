@@ -182,5 +182,5 @@ Tihomirov et al. 2025，与 [12] 冲突。对抗性复核推翻了这两个归�
 
 | 项 | 描述 | 状态 |
 | :--- | :--- | :--- |
-| Loihi 3 | 2026-02 有一篇博客提到它，早前权威来源说尚未发布——两种说法互相矛盾 | `unverified`：对外引用前必须先核，核不到就不要写进正文 |
+| Loihi 3 | 2026-02 有一篇博客提到它，早前权威来源说尚未发布——两种说法互相矛盾。**2026-10-29 复核**：Intel 官方 neuromorphic 页面（`intel.com/content/www/us/en/research/neuromorphic-computing.html`）只列 Loihi 2 / Hala Point / Kapoho Point，**没有 Loihi 3 的任何表述**；声称它已发布的都是内容农场的二手文章，无一手来源 | `unverified`（官方页面缺席）：对外引用前必须先核，核不到就不要写进正文 |
 | Spiking-LLM 能耗口径 | QuantaSpike / SDLLM / SpikingMamba 等各自报的能耗，口径不同（整系统 / 芯片 / 单步） | `partial`：逐篇核口径，**不得跨论文合并数字** |
