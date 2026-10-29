@@ -1531,6 +1531,17 @@
 >    见 [`sweep_results/phase5_m3n/README.md`](sweep_results/phase5_m3n/README.md)、
 >    [`sweep_results/phase5_m3o/README.md`](sweep_results/phase5_m3o/README.md)。
 
+> 175. **2026-10-30：事件优先级 v2——按损失选步比按输入幅度更糟（−23.58pp，10/10 种子变差）**。
+>    sMNIST、30 epoch、lr 2e-3、10 种子、CUDA（正式运行落在 `v2_final6`，见修正 1；`v2_final{,2..5}`
+>    全是空目录）。baseline 均值 **0.7751**（与 v1 的 CUDA 基线 0.7748 相差 0.03pp）、selective **0.5394**，
+>    配对下降 **23.58pp**（中位 23.64，10/10 种子变差）；实测选中比例 **0.413**（请求 0.3，出界）。
+>    判据 1（≤2pp）与判据 2（≤0.35）都不过、判据 3（不发散）过 → `event_priority_v2_ready=false`。
+>    **与 v1 并列**：按输入活动掉 15.35pp、按每步损失掉 23.58pp——ESPP 的两半（输入阈值 + 损失阈值）
+>    在本实现里都没有兑现「只跑 18–27% 时间步仍保精度」。选中比例超界的原因是掩码用
+>    `per_step >= threshold`，**并列值会被一起算进去**（训练早期逐时刻损失高度接近）。
+>    下一步：改按名次建掩码、改「值得算」的定义（或两阈值同时生效），在此之前不写能效收益。
+>    见 [`sweep_results/event_priority_v2/README.md`](sweep_results/event_priority_v2/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
