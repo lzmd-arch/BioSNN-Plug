@@ -98,6 +98,8 @@ class SpikingTrigger:
         self._hits = 0
         self._impulse_history: list[int] = []
         self._cooldown_left = 0
+        #: 上一步的群体发放率（只供 `rate_z` 读，不参与任何判定）。
+        self._last_rate = 0.0
 
     def _step_inputs(self, salience: float) -> list[float]:
         inputs = []
@@ -151,6 +153,7 @@ class SpikingTrigger:
         self._v = new_v
         self._z_prev = spikes
         rate = sum(spikes) / self.n_neurons
+        self._last_rate = rate
         delta = rate - self._rate_mean
         self._rate_mean = self.ema_decay * self._rate_mean + (1 - self.ema_decay) * rate
         self._rate_var = self.ema_decay * self._rate_var + (1 - self.ema_decay) * delta * delta
@@ -174,3 +177,12 @@ class SpikingTrigger:
             self._cooldown_left = self.cooldown
             return True
         return False
+
+    @property
+    def rate_z(self) -> float:
+        """当前步群体发放率相对慢均值的 z 分数（诊断量；不影响触发逻辑）。
+
+        M3l 用它把「这一轮触发群体的瞬时激活有多异常」变成一个可排序的分数，
+        好做逐轮 ROC——触发本身仍只由 `process` 的返回值决定。
+        """
+        return (self._last_rate - self._rate_mean) / math.sqrt(self._rate_var + 1e-9)
