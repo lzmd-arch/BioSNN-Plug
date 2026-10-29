@@ -509,6 +509,7 @@ def main(argv: list[str] | None = None) -> int:
             "warmup": args.warmup,
             "trace_rule": "rate-centered" if args.policy == "linear" else args.trace_rule,
             "policy": args.policy,
+            "readout": args.readout,
             "logit_scale_start": args.logit_scale_start,
             "logit_scale_end": args.logit_scale_end,
         },
@@ -516,6 +517,15 @@ def main(argv: list[str] | None = None) -> int:
             {
                 "seed": r.seed,
                 "best_steps": r.best_steps,
+                # best_steps 是 32 次评测取最大，**会被评测噪声抬高**；末次与末三段均值
+                # 才是「有没有持续学会」。两者同报，别再只拿 best 下结论。
+                "last_steps": r.eval_scores[-1]["mean_steps"] if r.eval_scores else None,
+                "final3_mean_steps": (
+                    sum(point["mean_steps"] for point in r.eval_scores[-3:])
+                    / min(3, len(r.eval_scores))
+                    if r.eval_scores
+                    else None
+                ),
                 "selected_episode": r.selected_episode,
                 "eval_scores": r.eval_scores,
                 "returns": r.returns,
@@ -523,6 +533,19 @@ def main(argv: list[str] | None = None) -> int:
             for r in results
         ],
         "mean_best_steps": sum(r.best_steps for r in results) / len(results),
+        "mean_last_steps": (
+            sum(r.eval_scores[-1]["mean_steps"] for r in results if r.eval_scores)
+            / max(1, sum(1 for r in results if r.eval_scores))
+        ),
+        "mean_final3_steps": (
+            sum(
+                sum(point["mean_steps"] for point in r.eval_scores[-3:])
+                / min(3, len(r.eval_scores))
+                for r in results
+                if r.eval_scores
+            )
+            / max(1, sum(1 for r in results if r.eval_scores))
+        ),
         "passed": sum(r.best_steps >= ACCEPTANCE_STEPS for r in results),
         "repro": collect(
             "W3 脉冲化：CartPole（第三阶段）",
