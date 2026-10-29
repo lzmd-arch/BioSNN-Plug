@@ -1308,6 +1308,14 @@
 >    下一步 D5 区分坍缩与输出层沉默。见
 >    [`sweep_results/rstdp_spiking_state_dependence/README.md`](sweep_results/rstdp_spiking_state_dependence/README.md)。
 
+> 152. **2026-10-29：阶段三 D5——10/10 种子熵坍缩，不是输出层沉默**。
+>    与 count-aligned 同配置、800 回合：末期 100 回合平均熵 **<0.10 nats 的种子 10/10**
+>    （第 100 回合已在 0.0001–0.026），探针窗口沉默 **0/10**，峰值/末次评测 **9.55 / 9.5**。
+>    机制：策略 logits 是 25 步脉冲计数（0–25），采样 `softmax(1.0×counts)`，而脉冲 Actor 的
+>    `logit_scale` 全程固定 1.0（温度调度此前只对线性策略生效）→ 一开始就近乎 one-hot。
+>    预注册判定 `collapse`；下一步 D6 三臂温度实验。见
+>    [`sweep_results/rstdp_spiking_collapse/README.md`](sweep_results/rstdp_spiking_collapse/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
