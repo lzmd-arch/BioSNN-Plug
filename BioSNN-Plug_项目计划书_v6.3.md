@@ -1283,6 +1283,14 @@
 >    比较不能再只读 best。`cartpole.py` 起同报 `last_steps`/`final3_mean_steps`；审计表见
 >    [`sweep_results/stage3_sustained_audit.md`](sweep_results/stage3_sustained_audit.md)。
 
+> 149. **2026-10-29：阶段四 Predictive E-prop 对照——重建全过，自由运行只 1/3 种子成立**。
+>    按原文描述的改编（公式为图片、未逐字复现）；广播对齐第三因子 + 双指数读出 + 每 10 ms
+>    更新。3 种子：重建 MSE 比 **0.011–0.022×**（判据 0.1×）全过；自由运行幅度
+>    **0.584 / 0.536 / 0.119**、DTW **0.088 / 0.137 / 0.231**（未训练对照 0.228–0.268）。
+>    seed0 三条全过，seed1 的 DTW 差 0.004、seed2 幅度塌到 0.119，故
+>    `predictive_eprop_ready=false`。**自持振荡跨种子不稳定**，不能写成复现成功；
+>    Lorenz/TBPTT 未测。见 [`sweep_results/predictive_eprop/README.md`](sweep_results/predictive_eprop/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

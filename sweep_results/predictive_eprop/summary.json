@@ -1,0 +1,115 @@
+{
+  "kind": "Predictive E-prop sine generation; our adaptation, not a replication",
+  "config": {
+    "seeds": "0,1,2",
+    "n_rec": 300,
+    "beta": 0.07,
+    "gain": 1.0,
+    "steps": 500,
+    "eval_steps": 2000,
+    "batch": 4,
+    "trials": 4,
+    "epochs": 150,
+    "learning_rate_rec": 0.0003,
+    "learning_rate_out": 0.01,
+    "lambda_reg": 0.0001,
+    "chunk": 10,
+    "save_models": false,
+    "error_dropout": 0.0,
+    "log_every": 25,
+    "out_dir": "sweep_results\\predictive_eprop"
+  },
+  "seeds": [
+    {
+      "seed": 0,
+      "parameters": {
+        "amplitude": 0.7481282949447632,
+        "period": 353.64434814453125,
+        "phase": 0.5559201240539551,
+        "offset": 0.0
+      },
+      "initial_mse": 0.42095786333084106,
+      "final_mse": 0.00481696892529726,
+      "loss_first": 0.38980844616889954,
+      "loss_last": 0.014093236066401005,
+      "free_running": {
+        "dtw": 0.08759741016593761,
+        "amplitude_ratio": 0.5839262008666992,
+        "mean_spike_rate_hz": 106.49833083152771
+      },
+      "baseline_free_running": {
+        "dtw": 0.2277721304539591,
+        "amplitude_ratio": 0.020575478672981262,
+        "mean_spike_rate_hz": 21.058334037661552
+      },
+      "criteria": {
+        "reconstruction": true,
+        "amplitude": true,
+        "free_running_dtw": true
+      },
+      "pass": true,
+      "elapsed_s": 359.07419430004666
+    },
+    {
+      "seed": 1,
+      "parameters": {
+        "amplitude": 0.878815770149231,
+        "period": 255.8621826171875,
+        "phase": 2.5325589179992676,
+        "offset": 0.0
+      },
+      "initial_mse": 0.40788140892982483,
+      "final_mse": 0.009125949814915657,
+      "loss_first": 0.3001834750175476,
+      "loss_last": 0.015367913991212845,
+      "free_running": {
+        "dtw": 0.13673270606307777,
+        "amplitude_ratio": 0.5363011956214905,
+        "mean_spike_rate_hz": 92.33999997377396
+      },
+      "baseline_free_running": {
+        "dtw": 0.26802706100512297,
+        "amplitude_ratio": 0.03711765259504318,
+        "mean_spike_rate_hz": 28.459999710321426
+      },
+      "criteria": {
+        "reconstruction": true,
+        "amplitude": true,
+        "free_running_dtw": false
+      },
+      "pass": false,
+      "elapsed_s": 381.514062799979
+    },
+    {
+      "seed": 2,
+      "parameters": {
+        "amplitude": 0.8073475360870361,
+        "period": 276.20257568359375,
+        "phase": 4.00310754776001,
+        "offset": 0.0
+      },
+      "initial_mse": 0.377564400434494,
+      "final_mse": 0.006035772617906332,
+      "loss_first": 0.35753506422042847,
+      "loss_last": 0.023759009316563606,
+      "free_running": {
+        "dtw": 0.231297555310186,
+        "amplitude_ratio": 0.11872772127389908,
+        "mean_spike_rate_hz": 123.89666587114334
+      },
+      "baseline_free_running": {
+        "dtw": 0.25501772384019566,
+        "amplitude_ratio": 0.014070689678192139,
+        "mean_spike_rate_hz": 21.133333444595337
+      },
+      "criteria": {
+        "reconstruction": true,
+        "amplitude": false,
+        "free_running_dtw": false
+      },
+      "pass": false,
+      "elapsed_s": 342.84551160002593
+    }
+  ],
+  "ready": false
+}
