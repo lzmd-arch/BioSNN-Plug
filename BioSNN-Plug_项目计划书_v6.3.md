@@ -1256,6 +1256,12 @@
 >    出来是必然 1.000；没有语义巩固、跨会话、真 LLM；不计入阶段五验收。见
 >    [`sweep_results/phase5_m3/README.md`](sweep_results/phase5_m3/README.md)。
 
+> 145. **2026-10-29：event-driven e-prop 100k 子集冒烟——600 样本 575.5 s**。
+>    n_rec=100,000、batch=4、600/60000 样本、1 epoch：**575.5 s**（3.84 s/update），
+>    测试 **0.4100**（不作精度结论）；稀疏权重 3.2M，无 OOM。**边界**：仅 600 样本；
+>    按此外推完整 epoch 约 16 h，500k 训练仍未验证。见
+>    [`sweep_results/event_driven_100k/README.md`](sweep_results/event_driven_100k/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
