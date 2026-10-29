@@ -1,0 +1,852 @@
+{
+  "kind": "phase5-m3p: 20 conversations with difficulty stratification",
+  "stream_sha256": "ad1d278bacb3887e91190740353ce40ce6e0617419464f93811d64dea804bcce",
+  "conversations": 20,
+  "stratification": {
+    "rule_score": "R5",
+    "median": 0.78,
+    "hard_indices": [
+      0,
+      1,
+      5,
+      7,
+      10,
+      11,
+      12,
+      15,
+      17,
+      19
+    ],
+    "easy_indices": [
+      2,
+      3,
+      4,
+      6,
+      8,
+      9,
+      13,
+      14,
+      16,
+      18
+    ]
+  },
+  "criteria_thresholds": {
+    "auc_min": 0.8,
+    "per_conversation_min": 0.7,
+    "conversations_min": 16,
+    "paired_signs_min": 15,
+    "hard_pooled_min": 0.75
+  },
+  "scores": [
+    {
+      "score": "R5",
+      "per_conversation_auc": [
+        0.5866666666666667,
+        0.64,
+        0.8266666666666667,
+        0.92,
+        0.8133333333333334,
+        0.7466666666666667,
+        0.9333333333333333,
+        0.7333333333333333,
+        0.84,
+        0.9066666666666666,
+        0.5333333333333333,
+        0.56,
+        0.4266666666666667,
+        0.8266666666666667,
+        0.96,
+        0.64,
+        0.8533333333333334,
+        0.7066666666666667,
+        1.0,
+        0.68
+      ],
+      "criteria": {
+        "mean_auc": 0.7566666666666666,
+        "conversations_at_or_above": 13,
+        "criterion_1": false,
+        "paired_signs_vs_R5": 0,
+        "criterion_2": true,
+        "hard_pooled": 0.6253333333333334,
+        "criterion_3": false,
+        "ready": false
+      }
+    },
+    {
+      "score": "Rmean",
+      "per_conversation_auc": [
+        0.84,
+        0.72,
+        0.9066666666666666,
+        0.8133333333333334,
+        0.8133333333333334,
+        0.8666666666666667,
+        0.9733333333333334,
+        0.9333333333333333,
+        0.8,
+        0.7866666666666666,
+        0.7333333333333333,
+        0.68,
+        0.5333333333333333,
+        0.8666666666666667,
+        0.9066666666666666,
+        0.7733333333333333,
+        0.8,
+        0.76,
+        1.0,
+        0.68
+      ],
+      "criteria": {
+        "mean_auc": 0.8093333333333333,
+        "conversations_at_or_above": 17,
+        "criterion_1": true,
+        "paired_signs_vs_R5": 12,
+        "criterion_2": false,
+        "hard_pooled": 0.752,
+        "criterion_3": true,
+        "ready": false
+      }
+    },
+    {
+      "score": "Rcentroid",
+      "per_conversation_auc": [
+        0.76,
+        0.6133333333333333,
+        0.72,
+        0.7466666666666667,
+        0.8666666666666667,
+        0.9066666666666666,
+        0.92,
+        0.9866666666666667,
+        0.8133333333333334,
+        0.8533333333333334,
+        0.5733333333333334,
+        0.6266666666666667,
+        0.4666666666666667,
+        0.8133333333333334,
+        0.96,
+        0.7733333333333333,
+        0.76,
+        0.7733333333333333,
+        1.0,
+        0.5733333333333334
+      ],
+      "criteria": {
+        "mean_auc": 0.7753333333333334,
+        "conversations_at_or_above": 15,
+        "criterion_1": false,
+        "paired_signs_vs_R5": 9,
+        "criterion_2": false,
+        "hard_pooled": 0.7053333333333334,
+        "criterion_3": false,
+        "ready": false
+      }
+    }
+  ],
+  "trigger_reference": [
+    {
+      "conversation": 0,
+      "seed": 0,
+      "hits": 0,
+      "false": 3,
+      "trigger_auc": 0.48
+    },
+    {
+      "conversation": 0,
+      "seed": 1,
+      "hits": 0,
+      "false": 3,
+      "trigger_auc": 0.6133333333333333
+    },
+    {
+      "conversation": 0,
+      "seed": 2,
+      "hits": 0,
+      "false": 4,
+      "trigger_auc": 0.6533333333333333
+    },
+    {
+      "conversation": 0,
+      "seed": 3,
+      "hits": 0,
+      "false": 3,
+      "trigger_auc": 0.4666666666666667
+    },
+    {
+      "conversation": 0,
+      "seed": 4,
+      "hits": 0,
+      "false": 3,
+      "trigger_auc": 0.5866666666666667
+    },
+    {
+      "conversation": 1,
+      "seed": 0,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.64
+    },
+    {
+      "conversation": 1,
+      "seed": 1,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.5733333333333334
+    },
+    {
+      "conversation": 1,
+      "seed": 2,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.7066666666666667
+    },
+    {
+      "conversation": 1,
+      "seed": 3,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.6666666666666666
+    },
+    {
+      "conversation": 1,
+      "seed": 4,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.64
+    },
+    {
+      "conversation": 2,
+      "seed": 0,
+      "hits": 2,
+      "false": 4,
+      "trigger_auc": 0.8
+    },
+    {
+      "conversation": 2,
+      "seed": 1,
+      "hits": 2,
+      "false": 4,
+      "trigger_auc": 0.8133333333333334
+    },
+    {
+      "conversation": 2,
+      "seed": 2,
+      "hits": 2,
+      "false": 4,
+      "trigger_auc": 0.8266666666666667
+    },
+    {
+      "conversation": 2,
+      "seed": 3,
+      "hits": 3,
+      "false": 3,
+      "trigger_auc": 0.7866666666666666
+    },
+    {
+      "conversation": 2,
+      "seed": 4,
+      "hits": 2,
+      "false": 4,
+      "trigger_auc": 0.84
+    },
+    {
+      "conversation": 3,
+      "seed": 0,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.88
+    },
+    {
+      "conversation": 3,
+      "seed": 1,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.88
+    },
+    {
+      "conversation": 3,
+      "seed": 2,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.8666666666666667
+    },
+    {
+      "conversation": 3,
+      "seed": 3,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.8933333333333333
+    },
+    {
+      "conversation": 3,
+      "seed": 4,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.88
+    },
+    {
+      "conversation": 4,
+      "seed": 0,
+      "hits": 4,
+      "false": 2,
+      "trigger_auc": 0.7733333333333333
+    },
+    {
+      "conversation": 4,
+      "seed": 1,
+      "hits": 4,
+      "false": 2,
+      "trigger_auc": 0.8266666666666667
+    },
+    {
+      "conversation": 4,
+      "seed": 2,
+      "hits": 2,
+      "false": 3,
+      "trigger_auc": 0.8133333333333334
+    },
+    {
+      "conversation": 4,
+      "seed": 3,
+      "hits": 3,
+      "false": 3,
+      "trigger_auc": 0.8
+    },
+    {
+      "conversation": 4,
+      "seed": 4,
+      "hits": 4,
+      "false": 2,
+      "trigger_auc": 0.8266666666666667
+    },
+    {
+      "conversation": 5,
+      "seed": 0,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.6666666666666666
+    },
+    {
+      "conversation": 5,
+      "seed": 1,
+      "hits": 3,
+      "false": 3,
+      "trigger_auc": 0.76
+    },
+    {
+      "conversation": 5,
+      "seed": 2,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.72
+    },
+    {
+      "conversation": 5,
+      "seed": 3,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.72
+    },
+    {
+      "conversation": 5,
+      "seed": 4,
+      "hits": 2,
+      "false": 3,
+      "trigger_auc": 0.68
+    },
+    {
+      "conversation": 6,
+      "seed": 0,
+      "hits": 3,
+      "false": 3,
+      "trigger_auc": 0.7466666666666667
+    },
+    {
+      "conversation": 6,
+      "seed": 1,
+      "hits": 3,
+      "false": 4,
+      "trigger_auc": 0.7333333333333333
+    },
+    {
+      "conversation": 6,
+      "seed": 2,
+      "hits": 3,
+      "false": 4,
+      "trigger_auc": 0.7733333333333333
+    },
+    {
+      "conversation": 6,
+      "seed": 3,
+      "hits": 4,
+      "false": 2,
+      "trigger_auc": 0.7733333333333333
+    },
+    {
+      "conversation": 6,
+      "seed": 4,
+      "hits": 3,
+      "false": 3,
+      "trigger_auc": 0.72
+    },
+    {
+      "conversation": 7,
+      "seed": 0,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.84
+    },
+    {
+      "conversation": 7,
+      "seed": 1,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.84
+    },
+    {
+      "conversation": 7,
+      "seed": 2,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.8666666666666667
+    },
+    {
+      "conversation": 7,
+      "seed": 3,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.8666666666666667
+    },
+    {
+      "conversation": 7,
+      "seed": 4,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.84
+    },
+    {
+      "conversation": 8,
+      "seed": 0,
+      "hits": 5,
+      "false": 1,
+      "trigger_auc": 0.92
+    },
+    {
+      "conversation": 8,
+      "seed": 1,
+      "hits": 4,
+      "false": 1,
+      "trigger_auc": 0.8933333333333333
+    },
+    {
+      "conversation": 8,
+      "seed": 2,
+      "hits": 5,
+      "false": 1,
+      "trigger_auc": 0.88
+    },
+    {
+      "conversation": 8,
+      "seed": 3,
+      "hits": 5,
+      "false": 1,
+      "trigger_auc": 0.9333333333333333
+    },
+    {
+      "conversation": 8,
+      "seed": 4,
+      "hits": 4,
+      "false": 2,
+      "trigger_auc": 0.92
+    },
+    {
+      "conversation": 9,
+      "seed": 0,
+      "hits": 4,
+      "false": 1,
+      "trigger_auc": 0.84
+    },
+    {
+      "conversation": 9,
+      "seed": 1,
+      "hits": 4,
+      "false": 1,
+      "trigger_auc": 0.76
+    },
+    {
+      "conversation": 9,
+      "seed": 2,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.8533333333333334
+    },
+    {
+      "conversation": 9,
+      "seed": 3,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.8533333333333334
+    },
+    {
+      "conversation": 9,
+      "seed": 4,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.8
+    },
+    {
+      "conversation": 10,
+      "seed": 0,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.4666666666666667
+    },
+    {
+      "conversation": 10,
+      "seed": 1,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.52
+    },
+    {
+      "conversation": 10,
+      "seed": 2,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.64
+    },
+    {
+      "conversation": 10,
+      "seed": 3,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.5333333333333333
+    },
+    {
+      "conversation": 10,
+      "seed": 4,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.5866666666666667
+    },
+    {
+      "conversation": 11,
+      "seed": 0,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.5066666666666667
+    },
+    {
+      "conversation": 11,
+      "seed": 1,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.5066666666666667
+    },
+    {
+      "conversation": 11,
+      "seed": 2,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.6266666666666667
+    },
+    {
+      "conversation": 11,
+      "seed": 3,
+      "hits": 2,
+      "false": 2,
+      "trigger_auc": 0.4533333333333333
+    },
+    {
+      "conversation": 11,
+      "seed": 4,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.4666666666666667
+    },
+    {
+      "conversation": 12,
+      "seed": 0,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.5733333333333334
+    },
+    {
+      "conversation": 12,
+      "seed": 1,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.6
+    },
+    {
+      "conversation": 12,
+      "seed": 2,
+      "hits": 4,
+      "false": 1,
+      "trigger_auc": 0.5466666666666666
+    },
+    {
+      "conversation": 12,
+      "seed": 3,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.5466666666666666
+    },
+    {
+      "conversation": 12,
+      "seed": 4,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.5466666666666666
+    },
+    {
+      "conversation": 13,
+      "seed": 0,
+      "hits": 3,
+      "false": 3,
+      "trigger_auc": 0.7733333333333333
+    },
+    {
+      "conversation": 13,
+      "seed": 1,
+      "hits": 3,
+      "false": 3,
+      "trigger_auc": 0.8
+    },
+    {
+      "conversation": 13,
+      "seed": 2,
+      "hits": 3,
+      "false": 3,
+      "trigger_auc": 0.7466666666666667
+    },
+    {
+      "conversation": 13,
+      "seed": 3,
+      "hits": 3,
+      "false": 3,
+      "trigger_auc": 0.76
+    },
+    {
+      "conversation": 13,
+      "seed": 4,
+      "hits": 3,
+      "false": 3,
+      "trigger_auc": 0.76
+    },
+    {
+      "conversation": 14,
+      "seed": 0,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.92
+    },
+    {
+      "conversation": 14,
+      "seed": 1,
+      "hits": 4,
+      "false": 1,
+      "trigger_auc": 0.92
+    },
+    {
+      "conversation": 14,
+      "seed": 2,
+      "hits": 4,
+      "false": 2,
+      "trigger_auc": 0.92
+    },
+    {
+      "conversation": 14,
+      "seed": 3,
+      "hits": 4,
+      "false": 2,
+      "trigger_auc": 0.92
+    },
+    {
+      "conversation": 14,
+      "seed": 4,
+      "hits": 5,
+      "false": 1,
+      "trigger_auc": 0.92
+    },
+    {
+      "conversation": 15,
+      "seed": 0,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.7733333333333333
+    },
+    {
+      "conversation": 15,
+      "seed": 1,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.72
+    },
+    {
+      "conversation": 15,
+      "seed": 2,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.7733333333333333
+    },
+    {
+      "conversation": 15,
+      "seed": 3,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.76
+    },
+    {
+      "conversation": 15,
+      "seed": 4,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.7733333333333333
+    },
+    {
+      "conversation": 16,
+      "seed": 0,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.8666666666666667
+    },
+    {
+      "conversation": 16,
+      "seed": 1,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.72
+    },
+    {
+      "conversation": 16,
+      "seed": 2,
+      "hits": 4,
+      "false": 0,
+      "trigger_auc": 0.7866666666666666
+    },
+    {
+      "conversation": 16,
+      "seed": 3,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.8666666666666667
+    },
+    {
+      "conversation": 16,
+      "seed": 4,
+      "hits": 3,
+      "false": 1,
+      "trigger_auc": 0.8133333333333334
+    },
+    {
+      "conversation": 17,
+      "seed": 0,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.6266666666666667
+    },
+    {
+      "conversation": 17,
+      "seed": 1,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.6266666666666667
+    },
+    {
+      "conversation": 17,
+      "seed": 2,
+      "hits": 4,
+      "false": 2,
+      "trigger_auc": 0.6933333333333334
+    },
+    {
+      "conversation": 17,
+      "seed": 3,
+      "hits": 4,
+      "false": 2,
+      "trigger_auc": 0.6666666666666666
+    },
+    {
+      "conversation": 17,
+      "seed": 4,
+      "hits": 4,
+      "false": 2,
+      "trigger_auc": 0.64
+    },
+    {
+      "conversation": 18,
+      "seed": 0,
+      "hits": 4,
+      "false": 0,
+      "trigger_auc": 0.9333333333333333
+    },
+    {
+      "conversation": 18,
+      "seed": 1,
+      "hits": 4,
+      "false": 1,
+      "trigger_auc": 0.8266666666666667
+    },
+    {
+      "conversation": 18,
+      "seed": 2,
+      "hits": 4,
+      "false": 0,
+      "trigger_auc": 0.8933333333333333
+    },
+    {
+      "conversation": 18,
+      "seed": 3,
+      "hits": 4,
+      "false": 0,
+      "trigger_auc": 0.9733333333333334
+    },
+    {
+      "conversation": 18,
+      "seed": 4,
+      "hits": 5,
+      "false": 0,
+      "trigger_auc": 0.9066666666666666
+    },
+    {
+      "conversation": 19,
+      "seed": 0,
+      "hits": 3,
+      "false": 3,
+      "trigger_auc": 0.72
+    },
+    {
+      "conversation": 19,
+      "seed": 1,
+      "hits": 4,
+      "false": 2,
+      "trigger_auc": 0.7733333333333333
+    },
+    {
+      "conversation": 19,
+      "seed": 2,
+      "hits": 2,
+      "false": 3,
+      "trigger_auc": 0.76
+    },
+    {
+      "conversation": 19,
+      "seed": 3,
+      "hits": 3,
+      "false": 2,
+      "trigger_auc": 0.7066666666666667
+    },
+    {
+      "conversation": 19,
+      "seed": 4,
+      "hits": 2,
+      "false": 3,
+      "trigger_auc": 0.6933333333333334
+    }
+  ],
+  "trigger_hits_median": 3.0,
+  "trigger_false_median": 2.0,
+  "m3p_ready": false
+}
