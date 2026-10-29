@@ -1,5 +1,6 @@
 """BioSNN-Plug 阶段五 M0：只读 MCP 工具骨架。"""
 
+from .context import ContextCode, ZScoreTopKEncoder
 from .core import CognitiveCore, InMemoryCore, MemoryEntry, ToolError
 from .dialogue import Scenario, Turn, WritableMemory, build_scenarios, run_session
 from .llm import LLMAdapter, MockLLM
@@ -13,6 +14,7 @@ __all__ = [
     "SCHEMA_VERSION",
     "TOOLS",
     "CognitiveCore",
+    "ContextCode",
     "DialogueTrace",
     "InMemoryCore",
     "LLMAdapter",
@@ -25,6 +27,7 @@ __all__ = [
     "OllamaLLM",
     "ToolError",
     "TriggerDecision",
+    "ZScoreTopKEncoder",
     "TriggerPolicy",
     "TurnRecord",
     "run_session",
