@@ -56,6 +56,7 @@ class SpikingTrigger:
         ema_tau: float = 200.0,
         k: float = 3.0,
         n_hits: int = 5,
+        hit_window: int = 1,
         cooldown: int = 200,
         seed: int = 0,
     ) -> None:
@@ -69,6 +70,8 @@ class SpikingTrigger:
             raise ValueError("noise_sigma 与 lateral_eta 必须非负。")
         if not isinstance(n_hits, int) or isinstance(n_hits, bool) or n_hits < 1:
             raise ValueError(f"n_hits 必须是 ≥1 的整数，收到 {n_hits!r}。")
+        if not isinstance(hit_window, int) or isinstance(hit_window, bool) or hit_window < 1:
+            raise ValueError(f"hit_window 必须是 ≥1 的整数，收到 {hit_window!r}。")
         if not isinstance(cooldown, int) or isinstance(cooldown, bool) or cooldown < 0:
             raise ValueError(f"cooldown 必须是非负整数，收到 {cooldown!r}。")
 
@@ -82,6 +85,8 @@ class SpikingTrigger:
         self.ema_decay = math.exp(-1.0 / ema_tau)
         self.k = float(k)
         self.n_hits = n_hits
+        # hit_window=1 表示「连续 n_hits 步」（M3i 的判定）；>1 表示滑窗累计（M3j）。
+        self.hit_window = hit_window
         self.cooldown = cooldown
         self._rng = random.Random(seed)
 
@@ -91,6 +96,7 @@ class SpikingTrigger:
         self._rate_mean = 0.0
         self._rate_var = 0.0
         self._hits = 0
+        self._impulse_history: list[int] = []
         self._cooldown_left = 0
 
     def _step_inputs(self, salience: float) -> list[float]:
@@ -151,10 +157,18 @@ class SpikingTrigger:
         if self._cooldown_left > 0:
             self._cooldown_left -= 1
             self._hits = 0
+            self._impulse_history.clear()
             return False
-        self._hits = self._hits + 1 if impulse else 0
+        if self.hit_window == 1:
+            self._hits = self._hits + 1 if impulse else 0
+        else:
+            self._impulse_history.append(1 if impulse else 0)
+            if len(self._impulse_history) > self.hit_window:
+                self._impulse_history.pop(0)
+            self._hits = sum(self._impulse_history)
         if self._hits >= self.n_hits:
             self._hits = 0
+            self._impulse_history.clear()
             self._cooldown_left = self.cooldown
             return True
         return False

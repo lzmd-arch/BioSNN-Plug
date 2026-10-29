@@ -1,0 +1,85 @@
+{
+  "kind": "protocol: spiking trigger with lateral STDP vs rule gate",
+  "hit_window": 10,
+  "events": [
+    3000,
+    5000,
+    7000,
+    9000
+  ],
+  "rule": {
+    "hits": 4,
+    "false": 0,
+    "total": 8
+  },
+  "seeds": [
+    {
+      "seed": 0,
+      "triggers": [
+        3004,
+        5005,
+        7006
+      ],
+      "hits": 3,
+      "false": 0,
+      "deterministic": true,
+      "not_worse": false
+    },
+    {
+      "seed": 1,
+      "triggers": [
+        3006,
+        5008,
+        7008
+      ],
+      "hits": 3,
+      "false": 0,
+      "deterministic": true,
+      "not_worse": false
+    },
+    {
+      "seed": 2,
+      "triggers": [
+        3003,
+        5005,
+        7008,
+        9008
+      ],
+      "hits": 4,
+      "false": 0,
+      "deterministic": true,
+      "not_worse": true
+    },
+    {
+      "seed": 3,
+      "triggers": [
+        3005,
+        5006,
+        7005,
+        9012
+      ],
+      "hits": 4,
+      "false": 0,
+      "deterministic": true,
+      "not_worse": true
+    },
+    {
+      "seed": 4,
+      "triggers": [
+        3004,
+        5004
+      ],
+      "hits": 2,
+      "false": 0,
+      "deterministic": true,
+      "not_worse": false
+    }
+  ],
+  "gate": {
+    "hits": false,
+    "false": true,
+    "deterministic": true,
+    "not_worse_than_rule": false,
+    "ready": false
+  }
+}

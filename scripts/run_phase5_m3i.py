@@ -56,6 +56,7 @@ def score_triggers(triggers: list[int]) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="M3i 脉冲触发")
     parser.add_argument("--seeds", default="0-4")
+    parser.add_argument("--hit-window", type=int, default=1, help="M3j：冲动累计窗口（1=连续）")
     parser.add_argument("--out-dir", type=Path, default=OUT)
     args = parser.parse_args(argv)
     seeds = _parse_seeds(args.seeds)
@@ -64,9 +65,9 @@ def main(argv: list[str] | None = None) -> int:
     rule = score_triggers(rule_triggers(stream))
     rows = []
     for seed in seeds:
-        trigger = SpikingTrigger(seed=seed)
+        trigger = SpikingTrigger(seed=seed, hit_window=args.hit_window)
         moments = [index for index, salience in enumerate(stream) if trigger.process(salience)]
-        trigger_again = SpikingTrigger(seed=seed)
+        trigger_again = SpikingTrigger(seed=seed, hit_window=args.hit_window)
         moments_again = [
             index for index, salience in enumerate(stream) if trigger_again.process(salience)
         ]
@@ -92,9 +93,10 @@ def main(argv: list[str] | None = None) -> int:
         "deterministic": all(row["deterministic"] for row in rows),
         "not_worse_than_rule": all(row["not_worse"] for row in rows),
     }
-    gate["m3i_ready"] = all(gate.values())
+    gate["ready"] = all(gate.values())
     summary = {
         "kind": "protocol: spiking trigger with lateral STDP vs rule gate",
+        "hit_window": args.hit_window,
         "events": EVENTS,
         "rule": rule,
         "seeds": rows,
