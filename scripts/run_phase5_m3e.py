@@ -27,13 +27,41 @@ OUT = REPO / "sweep_results" / "phase5_m3e"
 
 # 8 个事实簇 × 3 条同义改写 + 8 条互不相同的事实（运行后不改）。
 CLUSTERS: list[list[str]] = [
-    ["paris is the capital of france", "the capital of france is paris", "france's capital city is paris"],
-    ["water boils at 100 celsius at sea level", "at sea level water boils at 100 celsius", "the boiling point of water at sea level is 100 celsius"],
-    ["shakespeare wrote hamlet", "hamlet was written by shakespeare", "the author of hamlet is shakespeare"],
-    ["jupiter is the largest planet", "the largest planet is jupiter", "jupiter is the biggest planet in the solar system"],
-    ["gold has the chemical symbol au", "the chemical symbol for gold is au", "au is the symbol of gold"],
-    ["the pacific is the largest ocean", "the largest ocean is the pacific", "the pacific ocean is the biggest ocean"],
-    ["bell invented the telephone", "the telephone was invented by bell", "alexander graham bell invented the telephone"],
+    [
+        "paris is the capital of france",
+        "the capital of france is paris",
+        "france's capital city is paris",
+    ],
+    [
+        "water boils at 100 celsius at sea level",
+        "at sea level water boils at 100 celsius",
+        "the boiling point of water at sea level is 100 celsius",
+    ],
+    [
+        "shakespeare wrote hamlet",
+        "hamlet was written by shakespeare",
+        "the author of hamlet is shakespeare",
+    ],
+    [
+        "jupiter is the largest planet",
+        "the largest planet is jupiter",
+        "jupiter is the biggest planet in the solar system",
+    ],
+    [
+        "gold has the chemical symbol au",
+        "the chemical symbol for gold is au",
+        "au is the symbol of gold",
+    ],
+    [
+        "the pacific is the largest ocean",
+        "the largest ocean is the pacific",
+        "the pacific ocean is the biggest ocean",
+    ],
+    [
+        "bell invented the telephone",
+        "the telephone was invented by bell",
+        "alexander graham bell invented the telephone",
+    ],
     ["tokyo is the capital of japan", "the capital of japan is tokyo", "japan's capital is tokyo"],
 ]
 
@@ -55,7 +83,10 @@ CALIBRATION_SAME = [
     ("everest is the tallest mountain", "the tallest mountain is everest"),
     ("a triangle has three sides", "three sides make a triangle"),
     ("shakespeare wrote macbeth", "macbeth was written by shakespeare"),
-    ("the atlantic separates europe and america", "europe and america are separated by the atlantic"),
+    (
+        "the atlantic separates europe and america",
+        "europe and america are separated by the atlantic",
+    ),
 ]
 CALIBRATION_DIFFERENT = [
     ("the sky appears blue during the day", "a triangle has three sides"),
@@ -137,7 +168,9 @@ def main(argv: list[str] | None = None) -> int:
         survivor_clusters[cluster_of[item.id]] = survivor_clusters.get(cluster_of[item.id], 0) + 1
 
     paraphrase_clusters = [f"c{index}" for index in range(len(CLUSTERS))]
-    merged_clusters = sum(1 for cluster in paraphrase_clusters if survivor_clusters.get(cluster) == 1)
+    merged_clusters = sum(
+        1 for cluster in paraphrase_clusters if survivor_clusters.get(cluster) == 1
+    )
     false_merges = [
         pair for pair in report.merged_pairs if cluster_of[pair[0]] != cluster_of[pair[1]]
     ]

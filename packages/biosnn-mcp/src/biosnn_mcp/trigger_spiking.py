@@ -112,8 +112,10 @@ class SpikingTrigger:
         if not 0.0 <= salience <= 1.0:
             raise ValueError(f"salience 应在 [0, 1]，收到 {salience!r}。")
         inputs = self._step_inputs(salience)
-        spikes = [1 if self._v[index] + inputs[index] >= self.threshold else 0
-                  for index in range(self.n_neurons)]
+        spikes = [
+            1 if self._v[index] + inputs[index] >= self.threshold else 0
+            for index in range(self.n_neurons)
+        ]
 
         # 侧向 STDP：因果对（z_prev[i] 且 z[j]）增强抑制，反因果对减弱。
         firing_prev = [index for index, value in enumerate(self._z_prev) if value]

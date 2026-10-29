@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from biosnn_mcp import SchedulingPolicy
 
 
@@ -24,7 +23,8 @@ def test_cooldown_rounds_and_floor():
 
 
 @pytest.mark.parametrize(
-    "kwargs", [{"score_threshold": -0.1}, {"score_threshold": 1.1}, {"cooldown": -0.1}, {"cooldown": 6.0}]
+    "kwargs",
+    [{"score_threshold": -0.1}, {"score_threshold": 1.1}, {"cooldown": -0.1}, {"cooldown": 6.0}],
 )
 def test_rejects_out_of_range(kwargs):
     with pytest.raises(ValueError):

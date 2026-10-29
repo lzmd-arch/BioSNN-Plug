@@ -59,5 +59,7 @@ def test_think_false_is_sent_only_when_requested():
 
 
 def test_thinking_block_is_stripped():
-    llm = OllamaLLM(opener=lambda request, timeout: _Response({"response": "<think>hmm</think>paris"}))
+    llm = OllamaLLM(
+        opener=lambda request, timeout: _Response({"response": "<think>hmm</think>paris"})
+    )
     assert llm.generate("hi") == "paris"

@@ -89,9 +89,7 @@ def test_baseline_never_calls_llm():
 def test_memory_turns_never_trigger():
     scenario = build_scenarios()[1]
     trace = DialogueTrace(None)
-    run_session(
-        scenario, llm=GoldLLM(), policy=TriggerPolicy(), use_llm=True, trace=trace
-    )
+    run_session(scenario, llm=GoldLLM(), policy=TriggerPolicy(), use_llm=True, trace=trace)
     memory_turns = [turn for turn in scenario.turns if turn.intent == "memory"]
     records = {record.turn: record for record in trace.records}
     for index, turn in enumerate(scenario.turns, start=1):

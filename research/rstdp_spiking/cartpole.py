@@ -391,7 +391,7 @@ def _probe_actor(
     ``angles`` 缺省为 ``(0.2, "pos"), (-0.2, "neg")``，与历史探针一致；D8 传入整条网格。
     """
     record: dict = {"episode": episode}
-    for angle, label in (angles or ((0.2, "pos"), (-0.2, "neg"))):
+    for angle, label in angles or ((0.2, "pos"), (-0.2, "neg")):
         state = torch.tensor([0.0, 0.0, angle, 0.0])
         features = encode_state(state, centers, sigma)
         generator = torch.Generator(device="cpu").manual_seed(seed * 10_000 + episode + (angle > 0))
@@ -412,14 +412,14 @@ def _probe_actor(
         record[f"counts_{label}"] = [value / repeats for value in per_action]
         record[f"delta_mean_{label}"] = sum(deltas) / repeats
         record[f"delta_sd_{label}"] = (
-            (sum((value - sum(deltas) / repeats) ** 2 for value in deltas) / repeats) ** 0.5
-        )
+            sum((value - sum(deltas) / repeats) ** 2 for value in deltas) / repeats
+        ) ** 0.5
     weights = actor.layer.weight.detach()
     record["column_l1"] = [float(value) for value in weights.abs().sum(dim=0)]
     probe_labels = [label for _, label in (angles or ((0.2, "pos"), (-0.2, "neg")))]
-    record["zero_window_fraction"] = (
-        sum(1 for label in probe_labels if record[f"spikes_{label}"] == 0.0) / len(probe_labels)
-    )
+    record["zero_window_fraction"] = sum(
+        1 for label in probe_labels if record[f"spikes_{label}"] == 0.0
+    ) / len(probe_labels)
     return record
 
 
@@ -614,9 +614,7 @@ def main(argv: list[str] | None = None) -> int:
             entropy_log=args.entropy_log,
             probe_every=args.probe_every,
             probe_angles=(
-                tuple(
-                    (round(-0.2 + 0.02 * index, 2), f"a{index}") for index in range(21)
-                )
+                tuple((round(-0.2 + 0.02 * index, 2), f"a{index}") for index in range(21))
                 if args.probe_grid
                 else None
             ),
@@ -717,10 +715,10 @@ def main(argv: list[str] | None = None) -> int:
                     "best_steps": r.best_steps,
                     "selected_episode": r.selected_episode,
                     "probes": list(r.probes),
-                "critic_absdelta": list(r.critic_absdelta),
-                "entropy_last100": (
-                    sum(r.entropies[-100:]) / len(r.entropies[-100:]) if r.entropies else None
-                ),
+                    "critic_absdelta": list(r.critic_absdelta),
+                    "entropy_last100": (
+                        sum(r.entropies[-100:]) / len(r.entropies[-100:]) if r.entropies else None
+                    ),
                     "eval_scores": r.eval_scores,
                     "returns": r.returns,
                 },

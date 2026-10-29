@@ -2,10 +2,10 @@
 
 from .consolidate import ConsolidationReport, MemoryItem, SleepConsolidator
 from .context import ContextCode, ZScoreTopKEncoder
-from .embeddings import HashEmbedding, OllamaEmbedding
-from .episodic import EpisodicStore
 from .core import CognitiveCore, InMemoryCore, MemoryEntry, ToolError
 from .dialogue import Scenario, Turn, WritableMemory, build_scenarios, run_session
+from .embeddings import HashEmbedding, OllamaEmbedding
+from .episodic import EpisodicStore
 from .llm import LLMAdapter, MockLLM
 from .llm_ollama import OllamaLLM
 from .scheduling import SchedulingPolicy
@@ -20,31 +20,31 @@ __all__ = [
     "TOOLS",
     "CognitiveCore",
     "ConsolidationReport",
+    "ContextCode",
+    "DialogueTrace",
     "EpisodicStore",
     "HashEmbedding",
-    "ContextCode",
-    "MemoryItem",
-    "OllamaEmbedding",
-    "SleepConsolidator",
-    "DialogueTrace",
     "InMemoryCore",
     "LLMAdapter",
     "MemoryEntry",
+    "MemoryItem",
     "MockLLM",
+    "OllamaEmbedding",
+    "OllamaLLM",
     "Scenario",
     "SchedulingPolicy",
+    "SleepConsolidator",
     "SpikingTrigger",
-    "Turn",
-    "WritableMemory",
-    "build_scenarios",
-    "OllamaLLM",
     "ToolError",
     "TriggerDecision",
-    "ZScoreTopKEncoder",
     "TriggerPolicy",
+    "Turn",
     "TurnRecord",
-    "run_session",
+    "WritableMemory",
+    "ZScoreTopKEncoder",
+    "build_scenarios",
     "handle_message",
+    "run_session",
     "serve_stdio",
 ]
 

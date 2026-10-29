@@ -79,8 +79,41 @@ CHAT: list[str] = [
 ]
 
 STOPWORDS = frozenset(
-    "a an and are at be by do does for from has have how in is it its many of on or "
-    "that the there to what when where which who why with".split()
+    [
+        "a",
+        "an",
+        "and",
+        "are",
+        "at",
+        "be",
+        "by",
+        "do",
+        "does",
+        "for",
+        "from",
+        "has",
+        "have",
+        "how",
+        "in",
+        "is",
+        "it",
+        "its",
+        "many",
+        "of",
+        "on",
+        "or",
+        "that",
+        "the",
+        "there",
+        "to",
+        "what",
+        "when",
+        "where",
+        "which",
+        "who",
+        "why",
+        "with",
+    ]
 )
 
 

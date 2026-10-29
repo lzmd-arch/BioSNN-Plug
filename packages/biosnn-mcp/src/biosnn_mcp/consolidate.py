@@ -150,9 +150,7 @@ class SleepConsolidator:
                         reverse=True,
                     )
                     best_score, best_index = scored[0]
-                    margin_ok = (
-                        len(scored) == 1 or best_score - scored[1][0] >= self.merge_margin
-                    )
+                    margin_ok = len(scored) == 1 or best_score - scored[1][0] >= self.merge_margin
                     if best_score >= self.merge_threshold and margin_ok:
                         merged = True
                         merged_this_round += 1

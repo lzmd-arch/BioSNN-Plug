@@ -38,7 +38,6 @@ def build_llm(kind: str, model: str, timeout: float = 120.0, *, think: bool = Fa
     raise ValueError(f"未知 LLM 类型：{kind!r}")
 
 
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="阶段五 M3b 真实 LLM 对话评测")
     parser.add_argument("--llm", choices=["ollama", "mock"], default="ollama")

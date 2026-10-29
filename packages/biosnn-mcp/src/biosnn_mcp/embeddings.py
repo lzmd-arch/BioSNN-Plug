@@ -38,9 +38,7 @@ class OllamaEmbedding:
         self.model = model
         self.host = host.rstrip("/")
         self.timeout = float(timeout)
-        self._open = opener or urllib.request.build_opener(
-            urllib.request.ProxyHandler({})
-        ).open
+        self._open = opener or urllib.request.build_opener(urllib.request.ProxyHandler({})).open
 
     def embed(self, texts: Sequence[str]) -> list[list[float]]:
         """批量嵌入；返回与输入等长的向量列表。"""

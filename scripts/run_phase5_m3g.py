@@ -90,7 +90,13 @@ def perturb(policy: SchedulingPolicy, rng: random.Random, sigma: float) -> Sched
 
 
 def evolve(
-    train_sessions, *, seed: int, generations: int = 20, lam: int = 8, sigma: float = 0.1, graded: bool = False
+    train_sessions,
+    *,
+    seed: int,
+    generations: int = 20,
+    lam: int = 8,
+    sigma: float = 0.1,
+    graded: bool = False,
 ):
     rng = random.Random(seed)
     current = SchedulingPolicy()
@@ -108,7 +114,9 @@ def evolve(
         top_score, top_policy = max(scored, key=lambda pair: pair[0])
         if top_score > best_score:
             best_score, current = top_score, top_policy
-        history.append({"best_utility": best_score, "theta": [current.score_threshold, current.cooldown]})
+        history.append(
+            {"best_utility": best_score, "theta": [current.score_threshold, current.cooldown]}
+        )
     return current, best_score, history
 
 
@@ -149,9 +157,7 @@ def main(argv: list[str] | None = None) -> int:
             graded=args.graded,
         )
         deterministic = policy == policy_again
-        distance = (
-            (policy.score_threshold - 0.5) ** 2 + (policy.cooldown - 1.0) ** 2
-        ) ** 0.5
+        distance = ((policy.score_threshold - 0.5) ** 2 + (policy.cooldown - 1.0) ** 2) ** 0.5
         rows.append(
             {
                 "seed": seed,

@@ -120,7 +120,9 @@ class TestPerSeedRecording:
         assert seen == [7]
 
     def test_running_one_seed_does_not_require_the_others(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(sweep_seeds, "train", lambda args, device, history=None, metrics=None: (0.5, 0.7, 20))
+        monkeypatch.setattr(
+            sweep_seeds, "train", lambda args, device, history=None, metrics=None: (0.5, 0.7, 20)
+        )
         out_dir = tmp_path / "w2_seeds"
         assert main(["--seeds", "3", "--out-dir", str(out_dir)]) == 0
         assert [p.name for p in sorted(out_dir.glob("*.json"))] == ["seed3.json"]

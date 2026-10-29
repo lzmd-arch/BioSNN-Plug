@@ -44,11 +44,7 @@ def rule_triggers(stream: list[float], threshold: float = 0.25, cooldown: int = 
 
 
 def score_triggers(triggers: list[int]) -> dict:
-    hits = sum(
-        1
-        for start in EVENTS
-        if any(start <= moment <= start + 200 for moment in triggers)
-    )
+    hits = sum(1 for start in EVENTS if any(start <= moment <= start + 200 for moment in triggers))
     false_triggers = sum(1 for moment in triggers if moment < BASELINE_END)
     return {"hits": hits, "false": false_triggers, "total": len(triggers)}
 
