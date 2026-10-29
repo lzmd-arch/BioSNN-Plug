@@ -43,7 +43,7 @@ def _signature(seed_row: dict) -> dict:
 
     entropies = seed_row["entropies"]
     before_onset = entropies[max(0, onset_episode - 21) : max(1, onset_episode - 1)]
-    entropy_recollapse = _mean(before_onset) < 0.05
+    entropy_recollapse = bool(before_onset) and _mean(before_onset) < 0.05
 
     def probe_at(episode: int) -> dict | None:
         candidates = [p for p in seed_row["probes"] if p["episode"] <= episode]
