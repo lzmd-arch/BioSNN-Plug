@@ -249,6 +249,19 @@ uv run python -m research.eprop.sweep_bptt --seeds 0-2 --epochs 30 --device cuda
 | Eq. (28) | `ΔW_ij = −η Σ_t L_j^t e_ij^t` | `eprop.EPropLearner.update` |
 | 学習信号 | `L_j^t = (W_out·∂E/∂y)_j^t` | `eprop.EPropLearner.learning_signal` |
 
+## Predictive E-prop（対照ルート、`predictive.py`）
+
+[Noè et al., 2026] の**記述**に従った最小の対照：第三因子をタスクのラベルではなく
+`L_t = (−e_t)·B` とします。ここで `e_t = x_t − ŷ_t` はネットワーク自身の予測誤差、`B` は
+固定のランダム行列（ブロードキャスト整合）。誤差は固定 `W_in` で、自身の出力は固定の
+フィードバック行列で戻されます。読み出しはスパイクの**二重指数フィルタ**に `W_out` を
+掛けたものです。
+
+⚠️ **原文の式は bioRxiv のページ上では画像で、逐語では取得できていません**。したがって
+これは「記述からの適応」であり逐次再現ではありません：更新は trial 末（または `chunk` 步
+ごと）、OU ノイズなし、LIF/ALIF の混在なし、TBPTT ベースラインなし。判定基準と結果は
+[`../../sweep_results/predictive_eprop_prereg.md`](../../sweep_results/predictive_eprop_prereg.md)
+と `sweep_results/predictive_eprop/` を参照。
 ## 「局所」の正確な表現
 
 §9 の「大域的な逆伝播なし」は本実装では**検証可能**であり、文章上の約束ではありません：

@@ -256,6 +256,20 @@ The secondary dataset SHD needs a separate ~169 MB download:
 | Eq. (28) | `ΔW_ij = −η Σ_t L_j^t e_ij^t` | `eprop.EPropLearner.update` |
 | Learning signal | `L_j^t = (W_out·∂E/∂y)_j^t` | `eprop.EPropLearner.learning_signal` |
 
+## Predictive E-prop (control route, `predictive.py`)
+
+A minimal control following the **description** in [Noè et al., 2026]: the third factor no longer
+comes from the task label but from `L_t = (−e_t)·B`, where `e_t = x_t − ŷ_t` is the network's own
+prediction error and `B` is a fixed random matrix (broadcast alignment). The error is fed back
+through a fixed `W_in`, the network's own output through a fixed feedback matrix; the readout is a
+**double-exponential filter** of spikes times `W_out`.
+
+⚠️ **The paper's equations are images on the bioRxiv page and were not obtained verbatim**, so this
+is an "adaptation from the description", not a bit-exact replication: updates run at trial end (or
+every `chunk` steps), no OU noise, no mixed LIF/ALIF, no TBPTT baseline. Criteria and results:
+[`../../sweep_results/predictive_eprop_prereg.md`](../../sweep_results/predictive_eprop_prereg.md)
+and `sweep_results/predictive_eprop/`.
+
 ## What "local" precisely means
 
 §9's "no global backpropagation" is **checkable** in this implementation, not just a
