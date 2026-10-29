@@ -1316,6 +1316,15 @@
 >    预注册判定 `collapse`；下一步 D6 三臂温度实验。见
 >    [`sweep_results/rstdp_spiking_collapse/README.md`](sweep_results/rstdp_spiking_collapse/README.md)。
 
+> 153. **2026-10-29：阶段三 D6 温度三臂——熵修好，末期仍只有 9.5 步**。
+>    只把温度调度接到脉冲 Actor：A 1.0→1.0、B 0.1→0.02、C 0.03→0.01；10 种子、800 回合。
+>    末期熵中位 **0.001 / 0.691 / 0.693**（熵 ≥0.3 的种子 0/10、10/10、10/10），best 中位
+>    **9.5 / 37.95 / 27.6**；但**末次中位三臂都是 9.5**，极角 slope>0 的种子 0/0/1。判据
+>    （熵保持 + 末次 ≥30 + slope ≥7/10）无一臂全过 → `temperature_fix_ready=false`。
+>    **温度是必要非充分条件**：坍缩修好了，峰值是真的，末期退化仍在；转 D7 归因。输出先写
+>    仓外再拷入，三臂在干净工作区复跑且逐种子与首次一致。见
+>    [`sweep_results/rstdp_spiking_temperature/README.md`](sweep_results/rstdp_spiking_temperature/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

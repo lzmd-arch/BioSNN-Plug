@@ -48,8 +48,10 @@ numbers and the conclusions drawn from them **no longer hold**. New conclusions 
 - **Mechanism**: policy logits are 25-step spike counts and sampling is
   `softmax(logit_scale×counts)`, while the spiking actor's `logit_scale` is fixed at 1.0
   (the temperature schedule previously applied only to the linear policy);
-- **D6**: three-arm temperature experiment (1.0 control / 0.1→0.02 / 0.03→0.01), criteria in
-  [`sweep_results/rstdp_spiking_temperature_prereg.md`](../../sweep_results/rstdp_spiking_temperature_prereg.md).
+- **D6 (temperature)**: entropy median 0.001 → 0.691 / 0.693 (collapse fixed), best median
+  9.5 → 37.95 / 27.6, but **last stays 9.5 and slope>0 in 0/0/1 seeds**;
+  `temperature_fix_ready=false` — temperature is necessary but not sufficient. Results in
+  [`sweep_results/rstdp_spiking_temperature/README.md`](../../sweep_results/rstdp_spiking_temperature/README.md).
 
 ### Records after the fix (reproducible, 2026-10-18)
 

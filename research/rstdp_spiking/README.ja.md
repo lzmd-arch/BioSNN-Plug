@@ -44,9 +44,10 @@
 - **機構**：方策 logits は 25 ステップのスパイク数で、サンプリングは
   `softmax(logit_scale×counts)`。スパイク Actor の `logit_scale` は 1.0 固定
   （温度スケジュールはこれまで線形方策にのみ適用されていた）；
-- **D6**：スパイク Actor に温度スケジュールを適用する三腕実験（1.0 対照 / 0.1→0.02 /
-  0.03→0.01）。判定基準は
-  [`sweep_results/rstdp_spiking_temperature_prereg.md`](../../sweep_results/rstdp_spiking_temperature_prereg.md)。
+- **D6（温度）**：エントロピー中央値 0.001 → 0.691 / 0.693（崩壊は解消）、best 中央値
+  9.5 → 37.95 / 27.6。しかし**最終は依然 9.5、slope>0 のシードは 0/0/1**。
+  `temperature_fix_ready=false`——温度は必要条件であって十分条件ではない。結果は
+  [`sweep_results/rstdp_spiking_temperature/README.md`](../../sweep_results/rstdp_spiking_temperature/README.md)。
 
 ### 修正後の 5 シード記録（再現可能、2026-10-18）
 

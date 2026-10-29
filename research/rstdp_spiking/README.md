@@ -39,8 +39,10 @@ sign-consistent 也只有 18.3），而 D1 rate-features 是 62.15 → 13.05、D
   第 100 回合熵已在 0.0001–0.026；
 - **机制**：策略 logits 是 25 步脉冲计数，采样用 `softmax(logit_scale×counts)`，而脉冲
   Actor 的 `logit_scale` 固定 1.0（温度调度此前只对线性策略生效）；
-- **D6**：把温度调度接到脉冲 Actor 的三臂实验（1.0 对照 / 0.1→0.02 / 0.03→0.01），
-  判据见 [`sweep_results/rstdp_spiking_temperature_prereg.md`](../../sweep_results/rstdp_spiking_temperature_prereg.md)。
+- **D6（温度）**：三臂实验——熵中位 0.001 → 0.691 / 0.693（坍缩修好），best 中位
+  9.5 → 37.95 / 27.6，但**末次仍 9.5、slope>0 的种子 0/0/1**；`temperature_fix_ready=false`，
+  **温度是必要非充分条件**。结果见
+  [`sweep_results/rstdp_spiking_temperature/README.md`](../../sweep_results/rstdp_spiking_temperature/README.md)。
 
 ### 修复后的 5 种子记录（可复现，2026-10-18）
 
