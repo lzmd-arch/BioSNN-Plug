@@ -392,7 +392,9 @@ def _probe_actor(
     """
     record: dict = {"episode": episode}
     for angle, label in angles or ((0.2, "pos"), (-0.2, "neg")):
-        state = torch.tensor([0.0, 0.0, angle, 0.0])
+        # 状态张量要跟 centers 同设备：CUDA 上跑探针时这里曾是 CPU 张量，
+        # `encode_state` 直接报 device mismatch（2026-10-29 复现）。
+        state = torch.tensor([0.0, 0.0, angle, 0.0], device=centers.device)
         features = encode_state(state, centers, sigma)
         generator = torch.Generator(device="cpu").manual_seed(seed * 10_000 + episode + (angle > 0))
         left = 0
