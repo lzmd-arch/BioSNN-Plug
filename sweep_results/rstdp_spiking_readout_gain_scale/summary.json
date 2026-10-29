@@ -1,0 +1,1909 @@
+{
+  "kind": "calibration: count-readout gain vs per-column budget and differential share",
+  "n_features": 64,
+  "angles": [
+    -0.2,
+    -0.18,
+    -0.16,
+    -0.14,
+    -0.12,
+    -0.1,
+    -0.08,
+    -0.06,
+    -0.04,
+    -0.02,
+    0.0,
+    0.02,
+    0.04,
+    0.06,
+    0.08,
+    0.1,
+    0.12,
+    0.14,
+    0.16,
+    0.18,
+    0.2
+  ],
+  "grid": {
+    "sign_modes": [
+      "signed",
+      "aligned"
+    ],
+    "weight_norms": [
+      1.0,
+      3.0,
+      5.0
+    ],
+    "lambdas": [
+      0.0,
+      0.05,
+      0.1,
+      0.2,
+      0.3
+    ],
+    "fixed": {
+      "threshold": 1.0,
+      "n_refractory": 2,
+      "baseline_period": 5,
+      "steps": 25
+    }
+  },
+  "criteria": {
+    "decision_lambda": 0.1,
+    "gain_min": 2.0,
+    "null_max": 0.5,
+    "count_band": [
+      2.0,
+      15.0
+    ]
+  },
+  "configs": [
+    {
+      "sign_mode": "signed",
+      "weight_norm": 1.0,
+      "seeds_usable": 0,
+      "median_delta_range_lambda_0.10": 0.30000000000000004,
+      "median_first_lambda_reaching_gain": null,
+      "seeds_reaching_gain": 0,
+      "median_column_counts_lambda_0.10": [
+        4.378571428571428,
+        4.447619047619049
+      ]
+    },
+    {
+      "sign_mode": "aligned",
+      "weight_norm": 1.0,
+      "seeds_usable": 0,
+      "median_delta_range_lambda_0.10": 0.2,
+      "median_first_lambda_reaching_gain": null,
+      "seeds_reaching_gain": 0,
+      "median_column_counts_lambda_0.10": [
+        6.273809523809524,
+        6.838095238095238
+      ]
+    },
+    {
+      "sign_mode": "signed",
+      "weight_norm": 3.0,
+      "seeds_usable": 0,
+      "median_delta_range_lambda_0.10": 0.35000000000000003,
+      "median_first_lambda_reaching_gain": null,
+      "seeds_reaching_gain": 0,
+      "median_column_counts_lambda_0.10": [
+        4.861904761904762,
+        4.978571428571429
+      ]
+    },
+    {
+      "sign_mode": "aligned",
+      "weight_norm": 3.0,
+      "seeds_usable": 0,
+      "median_delta_range_lambda_0.10": 0.35,
+      "median_first_lambda_reaching_gain": null,
+      "seeds_reaching_gain": 0,
+      "median_column_counts_lambda_0.10": [
+        10.711904761904764,
+        11.42142857142857
+      ]
+    },
+    {
+      "sign_mode": "signed",
+      "weight_norm": 5.0,
+      "seeds_usable": 0,
+      "median_delta_range_lambda_0.10": 0.39999999999999997,
+      "median_first_lambda_reaching_gain": null,
+      "seeds_reaching_gain": 0,
+      "median_column_counts_lambda_0.10": [
+        5.283333333333333,
+        5.435714285714286
+      ]
+    },
+    {
+      "sign_mode": "aligned",
+      "weight_norm": 5.0,
+      "seeds_usable": 0,
+      "median_delta_range_lambda_0.10": 0.2,
+      "median_first_lambda_reaching_gain": null,
+      "seeds_reaching_gain": 0,
+      "median_column_counts_lambda_0.10": [
+        12.011904761904763,
+        12.02857142857143
+      ]
+    }
+  ],
+  "recommended": null,
+  "readout_gain_calibrated": false,
+  "seeds": [
+    {
+      "seed": 0,
+      "sign_mode": "signed",
+      "weight_norm": 1.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            3.007142857142857,
+            3.007142857142857
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.05,
+          "column_counts": [
+            3.0214285714285714,
+            3.0095238095238095
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 16
+        },
+        "0.10": {
+          "delta_range": 0.35,
+          "column_counts": [
+            3.1000000000000005,
+            3.007142857142857
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 4
+        },
+        "0.20": {
+          "delta_range": 0.30000000000000004,
+          "column_counts": [
+            3.3523809523809525,
+            3.0190476190476185
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.35,
+          "column_counts": [
+            3.7666666666666666,
+            3.05
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 0,
+      "sign_mode": "signed",
+      "weight_norm": 3.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            0.9523809523809522,
+            0.9523809523809522
+          ],
+          "in_band": false,
+          "zero_fraction": 0.1595238095238095,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.25,
+          "column_counts": [
+            1.1452380952380954,
+            0.9952380952380951
+          ],
+          "in_band": false,
+          "zero_fraction": 0.06428571428571428,
+          "constant_points": 0
+        },
+        "0.10": {
+          "delta_range": 0.4,
+          "column_counts": [
+            1.3499999999999999,
+            1.0523809523809522
+          ],
+          "in_band": false,
+          "zero_fraction": 0.01904761904761905,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.4,
+          "column_counts": [
+            1.8714285714285712,
+            1.2261904761904763
+          ],
+          "in_band": false,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.44999999999999996,
+          "column_counts": [
+            2.3547619047619044,
+            1.4119047619047618
+          ],
+          "in_band": false,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 0,
+      "sign_mode": "signed",
+      "weight_norm": 5.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            0.038095238095238106,
+            0.038095238095238106
+          ],
+          "in_band": false,
+          "zero_fraction": 0.9619047619047619,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.25,
+          "column_counts": [
+            0.08809523809523812,
+            0.0380952380952381
+          ],
+          "in_band": false,
+          "zero_fraction": 0.9119047619047619,
+          "constant_points": 7
+        },
+        "0.10": {
+          "delta_range": 0.25,
+          "column_counts": [
+            0.16428571428571428,
+            0.04761904761904763
+          ],
+          "in_band": false,
+          "zero_fraction": 0.8380952380952381,
+          "constant_points": 1
+        },
+        "0.20": {
+          "delta_range": 0.65,
+          "column_counts": [
+            0.5690476190476191,
+            0.05
+          ],
+          "in_band": false,
+          "zero_fraction": 0.48333333333333334,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.44999999999999996,
+          "column_counts": [
+            1.2380952380952381,
+            0.09285714285714286
+          ],
+          "in_band": false,
+          "zero_fraction": 0.11904761904761904,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 0,
+      "sign_mode": "aligned",
+      "weight_norm": 1.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            6.966666666666667,
+            6.966666666666667
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.45,
+          "column_counts": [
+            6.726190476190476,
+            6.9214285714285735
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 1
+        },
+        "0.10": {
+          "delta_range": 0.45000000000000007,
+          "column_counts": [
+            6.273809523809524,
+            6.838095238095238
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.55,
+          "column_counts": [
+            6.0,
+            6.619047619047619
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.39999999999999997,
+          "column_counts": [
+            5.857142857142858,
+            6.249999999999998
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 0,
+      "sign_mode": "aligned",
+      "weight_norm": 3.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            11.702380952380953,
+            11.702380952380953
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.4,
+          "column_counts": [
+            11.226190476190476,
+            11.57619047619048
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.10": {
+          "delta_range": 0.4,
+          "column_counts": [
+            10.711904761904764,
+            11.42142857142857
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.55,
+          "column_counts": [
+            9.588095238095239,
+            11.061904761904762
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.3999999999999999,
+          "column_counts": [
+            8.442857142857143,
+            10.764285714285714
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 0,
+      "sign_mode": "aligned",
+      "weight_norm": 5.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            12.05952380952381,
+            12.05952380952381
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.1,
+          "column_counts": [
+            12.033333333333335,
+            12.042857142857146
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 15
+        },
+        "0.10": {
+          "delta_range": 0.2,
+          "column_counts": [
+            12.011904761904763,
+            12.02857142857143
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 14
+        },
+        "0.20": {
+          "delta_range": 0.15,
+          "column_counts": [
+            11.950000000000001,
+            12.014285714285714
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 7
+        },
+        "0.30": {
+          "delta_range": 0.55,
+          "column_counts": [
+            11.049999999999999,
+            12.007142857142858
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 1,
+      "sign_mode": "signed",
+      "weight_norm": 1.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            4.457142857142857,
+            4.457142857142857
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.05,
+          "column_counts": [
+            4.430952380952381,
+            4.452380952380953
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 12
+        },
+        "0.10": {
+          "delta_range": 0.2,
+          "column_counts": [
+            4.378571428571428,
+            4.447619047619049
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 4
+        },
+        "0.20": {
+          "delta_range": 0.35,
+          "column_counts": [
+            4.285714285714286,
+            4.430952380952381
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 1
+        },
+        "0.30": {
+          "delta_range": 0.4,
+          "column_counts": [
+            4.147619047619047,
+            4.421428571428572
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 1,
+      "sign_mode": "signed",
+      "weight_norm": 3.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            4.988095238095237,
+            4.988095238095237
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.25,
+          "column_counts": [
+            4.928571428571428,
+            4.992857142857143
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 4
+        },
+        "0.10": {
+          "delta_range": 0.25,
+          "column_counts": [
+            4.861904761904762,
+            4.978571428571429
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 2
+        },
+        "0.20": {
+          "delta_range": 0.4,
+          "column_counts": [
+            4.716666666666667,
+            4.952380952380952
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.5,
+          "column_counts": [
+            4.607142857142857,
+            4.914285714285715
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 1,
+      "sign_mode": "signed",
+      "weight_norm": 5.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            5.483333333333333,
+            5.483333333333333
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.30000000000000004,
+          "column_counts": [
+            5.369047619047619,
+            5.457142857142857
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 3
+        },
+        "0.10": {
+          "delta_range": 0.39999999999999997,
+          "column_counts": [
+            5.283333333333333,
+            5.435714285714286
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 1
+        },
+        "0.20": {
+          "delta_range": 0.45,
+          "column_counts": [
+            5.059523809523809,
+            5.402380952380952
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.7999999999999999,
+          "column_counts": [
+            4.819047619047618,
+            5.383333333333333
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 1,
+      "sign_mode": "aligned",
+      "weight_norm": 1.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            7.026190476190475,
+            7.026190476190475
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.1,
+          "column_counts": [
+            6.976190476190476,
+            7.011904761904762
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 9
+        },
+        "0.10": {
+          "delta_range": 0.4,
+          "column_counts": [
+            6.795238095238095,
+            6.997619047619047
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.09999999999999998,
+          "column_counts": [
+            6.019047619047619,
+            6.96904761904762
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.25,
+          "column_counts": [
+            5.985714285714286,
+            6.876190476190477
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 1,
+      "sign_mode": "aligned",
+      "weight_norm": 3.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            11.964285714285714,
+            11.964285714285714
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.25,
+          "column_counts": [
+            11.776190476190475,
+            11.928571428571427
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.10": {
+          "delta_range": 0.35,
+          "column_counts": [
+            11.342857142857142,
+            11.89047619047619
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.5,
+          "column_counts": [
+            10.085714285714284,
+            11.745238095238095
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.3999999999999999,
+          "column_counts": [
+            8.811904761904762,
+            11.5
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 1,
+      "sign_mode": "aligned",
+      "weight_norm": 5.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            12.185714285714285,
+            12.185714285714285
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.15,
+          "column_counts": [
+            12.121428571428574,
+            12.166666666666668
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 9
+        },
+        "0.10": {
+          "delta_range": 0.2,
+          "column_counts": [
+            12.066666666666666,
+            12.145238095238096
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 5
+        },
+        "0.20": {
+          "delta_range": 0.2,
+          "column_counts": [
+            12.004761904761905,
+            12.114285714285714
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 1
+        },
+        "0.30": {
+          "delta_range": 0.39999999999999997,
+          "column_counts": [
+            11.554761904761904,
+            12.080952380952382
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 2,
+      "sign_mode": "signed",
+      "weight_norm": 1.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            4.873809523809523,
+            4.873809523809523
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.35,
+          "column_counts": [
+            4.7785714285714285,
+            4.911904761904763
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 2
+        },
+        "0.10": {
+          "delta_range": 0.30000000000000004,
+          "column_counts": [
+            4.638095238095237,
+            4.9333333333333345
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.39999999999999997,
+          "column_counts": [
+            4.307142857142856,
+            4.976190476190477
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.19999999999999996,
+          "column_counts": [
+            4.071428571428571,
+            4.988095238095239
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 2,
+      "sign_mode": "signed",
+      "weight_norm": 3.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            5.590476190476191,
+            5.590476190476191
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.4,
+          "column_counts": [
+            5.385714285714286,
+            5.680952380952381
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.10": {
+          "delta_range": 0.45,
+          "column_counts": [
+            5.1642857142857155,
+            5.740476190476191
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.35,
+          "column_counts": [
+            4.783333333333333,
+            5.876190476190476
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.34999999999999987,
+          "column_counts": [
+            4.338095238095238,
+            6.040476190476191
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 2,
+      "sign_mode": "signed",
+      "weight_norm": 5.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            6.495238095238095,
+            6.495238095238095
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.4,
+          "column_counts": [
+            6.150000000000001,
+            6.614285714285713
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.10": {
+          "delta_range": 0.3500000000000001,
+          "column_counts": [
+            5.8,
+            6.745238095238095
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.5,
+          "column_counts": [
+            5.138095238095238,
+            6.976190476190477
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.6000000000000001,
+          "column_counts": [
+            4.409523809523809,
+            7.190476190476189
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 2,
+      "sign_mode": "aligned",
+      "weight_norm": 1.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            6.054761904761905,
+            6.054761904761905
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.05,
+          "column_counts": [
+            6.009523809523809,
+            6.011904761904761
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 20
+        },
+        "0.10": {
+          "delta_range": 0.05,
+          "column_counts": [
+            5.997619047619048,
+            6.0
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 20
+        },
+        "0.20": {
+          "delta_range": 0.1,
+          "column_counts": [
+            5.964285714285715,
+            5.997619047619048
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 10
+        },
+        "0.30": {
+          "delta_range": 0.4,
+          "column_counts": [
+            5.683333333333333,
+            5.91904761904762
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 2,
+      "sign_mode": "aligned",
+      "weight_norm": 3.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            10.078571428571431,
+            10.078571428571431
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.2,
+          "column_counts": [
+            9.757142857142858,
+            9.81904761904762
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 6
+        },
+        "0.10": {
+          "delta_range": 0.25,
+          "column_counts": [
+            9.445238095238095,
+            9.573809523809526
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 3
+        },
+        "0.20": {
+          "delta_range": 0.5,
+          "column_counts": [
+            8.802380952380952,
+            9.085714285714285
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.35000000000000003,
+          "column_counts": [
+            8.135714285714286,
+            8.535714285714285
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 2,
+      "sign_mode": "aligned",
+      "weight_norm": 5.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            12.0,
+            12.0
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.1,
+          "column_counts": [
+            11.959523809523809,
+            11.976190476190476
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 15
+        },
+        "0.10": {
+          "delta_range": 0.2,
+          "column_counts": [
+            11.880952380952383,
+            11.923809523809524
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 6
+        },
+        "0.20": {
+          "delta_range": 0.35000000000000003,
+          "column_counts": [
+            11.452380952380953,
+            11.69047619047619
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.8,
+          "column_counts": [
+            10.628571428571428,
+            11.145238095238094
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 3,
+      "sign_mode": "signed",
+      "weight_norm": 1.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            3.435714285714286,
+            3.435714285714286
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.4,
+          "column_counts": [
+            3.6285714285714286,
+            3.440476190476191
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 1
+        },
+        "0.10": {
+          "delta_range": 0.5499999999999999,
+          "column_counts": [
+            3.8119047619047626,
+            3.4285714285714284
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.5,
+          "column_counts": [
+            3.9809523809523815,
+            3.411904761904762
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.55,
+          "column_counts": [
+            3.9976190476190476,
+            3.4380952380952383
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 3,
+      "sign_mode": "signed",
+      "weight_norm": 3.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            1.9261904761904762,
+            1.9261904761904762
+          ],
+          "in_band": false,
+          "zero_fraction": 0.002380952380952381,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.4,
+          "column_counts": [
+            2.1357142857142857,
+            1.9380952380952379
+          ],
+          "in_band": false,
+          "zero_fraction": 0.0,
+          "constant_points": 1
+        },
+        "0.10": {
+          "delta_range": 0.35,
+          "column_counts": [
+            2.3547619047619044,
+            1.9309523809523808
+          ],
+          "in_band": false,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.25,
+          "column_counts": [
+            2.8619047619047615,
+            1.9238095238095236
+          ],
+          "in_band": false,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.3500000000000001,
+          "column_counts": [
+            3.238095238095238,
+            1.9261904761904762
+          ],
+          "in_band": false,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 3,
+      "sign_mode": "signed",
+      "weight_norm": 5.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            0.6666666666666666,
+            0.6666666666666666
+          ],
+          "in_band": false,
+          "zero_fraction": 0.41904761904761906,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.30000000000000004,
+          "column_counts": [
+            0.9380952380952382,
+            0.6523809523809524
+          ],
+          "in_band": false,
+          "zero_fraction": 0.24047619047619048,
+          "constant_points": 0
+        },
+        "0.10": {
+          "delta_range": 0.44999999999999996,
+          "column_counts": [
+            1.2857142857142858,
+            0.6261904761904762
+          ],
+          "in_band": false,
+          "zero_fraction": 0.10952380952380952,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.55,
+          "column_counts": [
+            1.9404761904761905,
+            0.5809523809523809
+          ],
+          "in_band": false,
+          "zero_fraction": 0.014285714285714285,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.44999999999999973,
+          "column_counts": [
+            2.6642857142857146,
+            0.5500000000000002
+          ],
+          "in_band": false,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 3,
+      "sign_mode": "aligned",
+      "weight_norm": 1.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            6.0,
+            6.0
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.0,
+          "column_counts": [
+            6.0,
+            6.0
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.10": {
+          "delta_range": 0.0,
+          "column_counts": [
+            6.0,
+            6.0
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.20": {
+          "delta_range": 0.35,
+          "column_counts": [
+            5.814285714285715,
+            5.997619047619048
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 1
+        },
+        "0.30": {
+          "delta_range": 0.35,
+          "column_counts": [
+            5.152380952380951,
+            5.954761904761906
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 3,
+      "sign_mode": "aligned",
+      "weight_norm": 3.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            9.738095238095237,
+            9.738095238095237
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.35000000000000003,
+          "column_counts": [
+            9.335714285714285,
+            9.545238095238096
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.10": {
+          "delta_range": 0.45000000000000007,
+          "column_counts": [
+            9.011904761904763,
+            9.29047619047619
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.5,
+          "column_counts": [
+            8.299999999999999,
+            8.928571428571427
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.44999999999999996,
+          "column_counts": [
+            7.628571428571428,
+            8.538095238095238
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 3,
+      "sign_mode": "aligned",
+      "weight_norm": 5.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            11.985714285714286,
+            11.985714285714286
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.2,
+          "column_counts": [
+            11.911904761904761,
+            11.973809523809523
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 5
+        },
+        "0.10": {
+          "delta_range": 0.3,
+          "column_counts": [
+            11.719047619047618,
+            11.916666666666666
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.5000000000000001,
+          "column_counts": [
+            10.892857142857142,
+            11.716666666666665
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.5,
+          "column_counts": [
+            9.847619047619048,
+            11.238095238095237
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 4,
+      "sign_mode": "signed",
+      "weight_norm": 1.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            4.995238095238095,
+            4.995238095238095
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.05,
+          "column_counts": [
+            5.0,
+            4.995238095238095
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 19
+        },
+        "0.10": {
+          "delta_range": 0.05,
+          "column_counts": [
+            5.0,
+            4.990476190476191
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 17
+        },
+        "0.20": {
+          "delta_range": 0.15,
+          "column_counts": [
+            4.997619047619048,
+            4.959523809523811
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 10
+        },
+        "0.30": {
+          "delta_range": 0.2,
+          "column_counts": [
+            4.997619047619048,
+            4.826190476190476
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 4,
+      "sign_mode": "signed",
+      "weight_norm": 3.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            6.385714285714287,
+            6.385714285714287
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.25,
+          "column_counts": [
+            6.328571428571429,
+            6.226190476190476
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 2
+        },
+        "0.10": {
+          "delta_range": 0.35000000000000003,
+          "column_counts": [
+            6.283333333333333,
+            6.059523809523808
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.35,
+          "column_counts": [
+            6.173809523809524,
+            5.742857142857143
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.6499999999999999,
+          "column_counts": [
+            6.064285714285714,
+            5.392857142857143
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 4,
+      "sign_mode": "signed",
+      "weight_norm": 5.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            7.795238095238096,
+            7.795238095238096
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.45,
+          "column_counts": [
+            7.707142857142857,
+            7.526190476190477
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 2
+        },
+        "0.10": {
+          "delta_range": 0.44999999999999996,
+          "column_counts": [
+            7.623809523809521,
+            7.259523809523809
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.20": {
+          "delta_range": 0.35,
+          "column_counts": [
+            7.4523809523809526,
+            6.730952380952382
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        },
+        "0.30": {
+          "delta_range": 0.5000000000000001,
+          "column_counts": [
+            7.297619047619045,
+            6.171428571428573
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 4,
+      "sign_mode": "aligned",
+      "weight_norm": 1.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            7.0,
+            7.0
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.1,
+          "column_counts": [
+            6.988095238095238,
+            6.988095238095238
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 19
+        },
+        "0.10": {
+          "delta_range": 0.2,
+          "column_counts": [
+            6.9071428571428575,
+            6.940476190476192
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 8
+        },
+        "0.20": {
+          "delta_range": 0.35,
+          "column_counts": [
+            6.354761904761904,
+            6.435714285714286
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 4
+        },
+        "0.30": {
+          "delta_range": 0.1,
+          "column_counts": [
+            6.007142857142857,
+            6.009523809523809
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 16
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 4,
+      "sign_mode": "aligned",
+      "weight_norm": 3.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            11.947619047619046,
+            11.947619047619046
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.15000000000000002,
+          "column_counts": [
+            11.790476190476191,
+            11.799999999999999
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 10
+        },
+        "0.10": {
+          "delta_range": 0.25,
+          "column_counts": [
+            11.540476190476191,
+            11.552380952380952
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 12
+        },
+        "0.20": {
+          "delta_range": 0.44999999999999996,
+          "column_counts": [
+            10.8047619047619,
+            10.883333333333335
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 3
+        },
+        "0.30": {
+          "delta_range": 0.39999999999999997,
+          "column_counts": [
+            9.957142857142857,
+            10.126190476190475
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 0
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    },
+    {
+      "seed": 4,
+      "sign_mode": "aligned",
+      "weight_norm": 5.0,
+      "per_lambda": {
+        "0.00": {
+          "delta_range": 0.0,
+          "column_counts": [
+            12.123809523809523,
+            12.123809523809523
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 21
+        },
+        "0.05": {
+          "delta_range": 0.1,
+          "column_counts": [
+            12.095238095238095,
+            12.095238095238097
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 17
+        },
+        "0.10": {
+          "delta_range": 0.1,
+          "column_counts": [
+            12.066666666666668,
+            12.061904761904763
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 17
+        },
+        "0.20": {
+          "delta_range": 0.15000000000000002,
+          "column_counts": [
+            12.023809523809526,
+            12.01904761904762
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 15
+        },
+        "0.30": {
+          "delta_range": 0.1,
+          "column_counts": [
+            11.997619047619045,
+            12.0
+          ],
+          "in_band": true,
+          "zero_fraction": 0.0,
+          "constant_points": 16
+        }
+      },
+      "usable": false,
+      "first_lambda_reaching_gain": null
+    }
+  ],
+  "repro": "```text\n实验名称：W3 脉冲化：D12 计数读出增益（预算与差分占比）\n日期：2026-10-29 17:22:58 中国标准时间\nGit commit：9925ff66df9923d266ffa29814a06a87e28772ba\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：CPU（Intel64 Family 6 Model 183 Stepping 1, GenuineIntel，无 GPU 参与）\n随机种子：0,1,2,3,4\n依赖快照：uv.lock sha256=9dc262ffcb62739dbe58df80d6314d5f83de95f66864d5462eb877933e37a783\n运行命令：diagnose_gain_scale.py --seeds 0-4 --out D:/Projects/d12_final\n耗时：0.0 s\n备注：构造 w = weight_norm·((1−λ)·m ± λ·d)，21 点网格、每点 20 窗口\n备注：网格：sign_mode × weight_norm × λ(0/0.05/0.10/0.20/0.30)\n```"
+}
