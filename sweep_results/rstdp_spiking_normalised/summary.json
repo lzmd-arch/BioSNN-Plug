@@ -1,0 +1,121 @@
+{
+  "kind": "D18: normalised per-axis encoding, re-running the D4/D8/D9 probes",
+  "calibration": [
+    {
+      "sigma": 0.2,
+      "rel_median": 2.6826507374581823,
+      "cosine_median": 3.3150732159370477e-10,
+      "distance_to_target": 1.3426507374581822,
+      "passes": true
+    },
+    {
+      "sigma": 0.35,
+      "rel_median": 1.4024243217411652,
+      "cosine_median": 0.0008338767802342772,
+      "distance_to_target": 0.06242432174116508,
+      "passes": true
+    },
+    {
+      "sigma": 0.5,
+      "rel_median": 0.9587360110704611,
+      "cosine_median": 0.040990784764289856,
+      "distance_to_target": 0.38126398892953894,
+      "passes": true
+    }
+  ],
+  "sigma": 0.35,
+  "scale": [
+    2.4,
+    3.0,
+    0.21,
+    3.0
+  ],
+  "half_widths": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "seeds": [
+    {
+      "seed": 0,
+      "slope": -0.4,
+      "delta_spread": 6.800000000000001,
+      "last_steps": 9.6,
+      "best_steps": 60.2
+    },
+    {
+      "seed": 1,
+      "slope": 0.0,
+      "delta_spread": 5.6000000000000005,
+      "last_steps": 9.2,
+      "best_steps": 100.9
+    },
+    {
+      "seed": 2,
+      "slope": 0.0,
+      "delta_spread": 3.4000000000000004,
+      "last_steps": 10.1,
+      "best_steps": 43.7
+    },
+    {
+      "seed": 3,
+      "slope": -1.0,
+      "delta_spread": 9.2,
+      "last_steps": 12.5,
+      "best_steps": 217.4
+    },
+    {
+      "seed": 4,
+      "slope": -0.2,
+      "delta_spread": 5.6000000000000005,
+      "last_steps": 269.1,
+      "best_steps": 269.1
+    },
+    {
+      "seed": 5,
+      "slope": 0.0,
+      "delta_spread": 1.0,
+      "last_steps": 9.6,
+      "best_steps": 22.5
+    },
+    {
+      "seed": 6,
+      "slope": -0.4,
+      "delta_spread": 5.6000000000000005,
+      "last_steps": 10.1,
+      "best_steps": 34.0
+    },
+    {
+      "seed": 7,
+      "slope": 0.0,
+      "delta_spread": 11.4,
+      "last_steps": 11.7,
+      "best_steps": 20.6
+    },
+    {
+      "seed": 8,
+      "slope": -0.2,
+      "delta_spread": 7.6,
+      "last_steps": 9.6,
+      "best_steps": 184.9
+    },
+    {
+      "seed": 9,
+      "slope": 0.0,
+      "delta_spread": 11.200000000000001,
+      "last_steps": 9.5,
+      "best_steps": 76.8
+    }
+  ],
+  "slope_positive_seeds": 0,
+  "delta_spread_median": 6.200000000000001,
+  "last_median": 9.85,
+  "criteria": {
+    "slope_positive_min": 7,
+    "spread_median_min": 0.5,
+    "last_median_min": 30.0
+  },
+  "d18_ready": false,
+  "repro": "```text\n实验名称：W3 脉冲化：D18 归一化编码重跑核心探针\n日期：2026-10-30 05:58:36 中国标准时间\nGit commit：8f9d1f4c0033466dd15cf6f137daff7d5868b62b\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：CPU（Intel64 Family 6 Model 183 Stepping 1, GenuineIntel，无 GPU 参与）\n随机种子：0,1,2,3,4,5,6,7,8,9\n依赖快照：uv.lock sha256=9dc262ffcb62739dbe58df80d6314d5f83de95f66864d5462eb877933e37a783\n运行命令：diagnose_normalised.py --seeds 0-9 --out D:/Projects/d18_final\n耗时：0.0 s\n备注：状态按物理半宽归一化，中心在单位立方体上，σ'=0.35\n备注：其余与 D6-B 完全同参（count-aligned、温度 0.1→0.02、800 回合）\n```"
+}
