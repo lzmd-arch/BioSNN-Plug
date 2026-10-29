@@ -44,6 +44,17 @@ def test_noise_scale_is_relative_to_signal():
     assert report.mean_cosine_drift > 0.995
 
 
+def test_margin_blocks_ambiguous_merge():
+    """最近邻与次近邻太接近时不合并（M3f）；margin=0 时历史行为照旧合并。"""
+    items = [_item("a", (1.0, 0.0, 0.0)), _item("b", (0.0, 1.0, 0.0)), _item("c", (0.7, 0.7, 0.02))]
+    strict, _ = SleepConsolidator(
+        noise_sigma=0.0, merge_threshold=0.6, merge_margin=0.1
+    ).consolidate(items)
+    legacy, _ = SleepConsolidator(noise_sigma=0.0, merge_threshold=0.6).consolidate(items)
+    assert len(strict) == 3
+    assert len(legacy) == 2
+
+
 def test_empty_input():
     survivors, report = SleepConsolidator().consolidate([])
     assert survivors == []

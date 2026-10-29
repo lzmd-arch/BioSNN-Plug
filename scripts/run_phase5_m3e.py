@@ -95,6 +95,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="M3e 真实嵌入的情景写入与睡眠巩固")
     parser.add_argument("--model", default="nomic-embed-text")
     parser.add_argument("--noise-sigma", type=float, default=0.05)
+    parser.add_argument(
+        "--margin", type=float, default=0.0, help="M3f：最近邻与次近邻的最小余弦间隔（0=历史行为）"
+    )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--out-dir", type=Path, default=OUT)
     args = parser.parse_args(argv)
@@ -120,6 +123,7 @@ def main(argv: list[str] | None = None) -> int:
         consolidator = SleepConsolidator(
             noise_sigma=args.noise_sigma,
             merge_threshold=calibration["threshold"],
+            merge_margin=args.margin,
             rounds=3,
             seed=args.seed,
         )
@@ -153,6 +157,7 @@ def main(argv: list[str] | None = None) -> int:
         "model": args.model,
         "calibration": calibration,
         "noise_sigma": args.noise_sigma,
+        "merge_margin": args.margin,
         "seed": args.seed,
         "counts": {
             "entries": len(rows),

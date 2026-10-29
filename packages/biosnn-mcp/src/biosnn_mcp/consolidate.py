@@ -17,8 +17,8 @@ from __future__ import annotations
 
 import math
 import random
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Sequence
 
 __all__ = ["ConsolidationReport", "MemoryItem", "SleepConsolidator"]
 
@@ -81,6 +81,7 @@ class SleepConsolidator:
         *,
         noise_sigma: float = 0.05,
         merge_threshold: float = 0.95,
+        merge_margin: float = 0.0,
         rounds: int = 3,
         seed: int = 0,
     ) -> None:
@@ -88,10 +89,14 @@ class SleepConsolidator:
             raise ValueError(f"noise_sigma 应在 [0, 1]，收到 {noise_sigma!r}。")
         if not -1.0 <= merge_threshold <= 1.0:
             raise ValueError(f"merge_threshold 应在 [-1, 1]，收到 {merge_threshold!r}。")
+        if not 0.0 <= merge_margin <= 2.0:
+            raise ValueError(f"merge_margin 应在 [0, 2]，收到 {merge_margin!r}。")
         if not isinstance(rounds, int) or isinstance(rounds, bool) or rounds < 1:
             raise ValueError(f"rounds 必须是 ≥1 的整数，收到 {rounds!r}。")
         self.noise_sigma = float(noise_sigma)
         self.merge_threshold = float(merge_threshold)
+        # M3f：并入前还要求「最近邻与次近邻的余弦间隔 ≥ margin」，0 = 历史行为逐位不变。
+        self.merge_margin = float(merge_margin)
         self.rounds = rounds
         self.seed = int(seed)
 
@@ -135,6 +140,35 @@ class SleepConsolidator:
             merged_this_round = 0
             for item, noisy in zip(current, replayed, strict=True):
                 merged = False
+                if self.merge_margin > 0 and survivors:
+                    # 先选最近邻，再检查它与次近邻的间隔；间隔不足就不合并。
+                    scored = sorted(
+                        (
+                            (_cosine(noisy, survivor.embedding), index)
+                            for index, survivor in enumerate(survivors)
+                        ),
+                        reverse=True,
+                    )
+                    best_score, best_index = scored[0]
+                    margin_ok = (
+                        len(scored) == 1 or best_score - scored[1][0] >= self.merge_margin
+                    )
+                    if best_score >= self.merge_threshold and margin_ok:
+                        merged = True
+                        merged_this_round += 1
+                        survivor = survivors[best_index]
+                        report.merged_pairs.append((survivor.id, item.id))
+                        survivors[best_index] = MemoryItem(
+                            id=survivor.id,
+                            text=survivor.text,
+                            embedding=tuple(
+                                (a + b) / 2.0
+                                for a, b in zip(survivor.embedding, noisy, strict=True)
+                            ),
+                        )
+                    if not merged:
+                        survivors.append(MemoryItem(id=item.id, text=item.text, embedding=noisy))
+                    continue
                 for index, survivor in enumerate(survivors):
                     if _cosine(noisy, survivor.embedding) >= self.merge_threshold:
                         merged = True
