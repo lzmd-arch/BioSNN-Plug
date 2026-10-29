@@ -195,6 +195,7 @@ def train(
     readout: str = "count",
     logit_scale_start: float | None = 1.0,
     logit_scale_end: float | None = 40.0,
+    spiking_temperature: bool = False,
 ) -> TrainResult:
     """训练一个种子。返回逐回合回报与评测曲线。"""
     import gymnasium
@@ -265,7 +266,11 @@ def train(
     best_state: dict[str, torch.Tensor] | None = None
 
     for episode in range(episodes):
-        if policy == "linear" and logit_scale_start is not None and logit_scale_end is not None:
+        if (
+            (policy == "linear" or spiking_temperature)
+            and logit_scale_start is not None
+            and logit_scale_end is not None
+        ):
             progress = episode / episodes
             actor.logit_scale = math.exp(
                 math.log(logit_scale_start)
@@ -511,6 +516,9 @@ def main(argv: list[str] | None = None) -> int:
             readout=args.readout,
             logit_scale_start=args.logit_scale_start,
             logit_scale_end=args.logit_scale_end,
+            spiking_temperature=args.spiking_temperature,
+            entropy_log=args.entropy_log,
+            probe_every=args.probe_every,
         )
         results.append(outcome)
         print(
@@ -551,6 +559,7 @@ def main(argv: list[str] | None = None) -> int:
             "readout": args.readout,
             "logit_scale_start": args.logit_scale_start,
             "logit_scale_end": args.logit_scale_end,
+            "spiking_temperature": args.spiking_temperature,
         },
         "per_seed": [
             {
@@ -567,6 +576,9 @@ def main(argv: list[str] | None = None) -> int:
                 ),
                 "selected_episode": r.selected_episode,
                 "probes": list(r.probes),
+                "entropy_last100": (
+                    sum(r.entropies[-100:]) / len(r.entropies[-100:]) if r.entropies else None
+                ),
                 "eval_scores": r.eval_scores,
                 "returns": r.returns,
             }
@@ -611,6 +623,9 @@ def main(argv: list[str] | None = None) -> int:
                     "best_steps": r.best_steps,
                     "selected_episode": r.selected_episode,
                     "probes": list(r.probes),
+                "entropy_last100": (
+                    sum(r.entropies[-100:]) / len(r.entropies[-100:]) if r.entropies else None
+                ),
                     "eval_scores": r.eval_scores,
                     "returns": r.returns,
                 },
