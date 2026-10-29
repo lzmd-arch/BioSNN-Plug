@@ -76,6 +76,8 @@ class TrainResult:
     """每回合 Boltzmann 动作分布的平均熵（诊断 ② 用）。空 = 没记。"""
     probes: tuple[dict, ...] = ()
     """每 ``probe_every`` 回合在固定极角 ±0.2 上的窗口探针（D5 诊断用）。空 = 没记。"""
+    critic_absdelta: tuple[float, ...] = ()
+    """每回合 |δ| 的均值（D7 退化归因用）。空 = 没记。"""
     actor: Any = field(default=None, repr=False, compare=False)
     """``keep_actor=True`` 时的最终 actor（已载入最好权重）。诊断 ① 用。"""
     centers: Any = field(default=None, repr=False, compare=False)
@@ -97,6 +99,7 @@ def run_episode(
     greedy: bool = False,
     env_seed: int | None = None,
     critic: LinearCritic | PopulationCritic | None = None,
+    delta_sink: list[float] | None = None,
 ) -> float:
     """跑一个回合，返回存活步数。
 
@@ -114,6 +117,8 @@ def run_episode(
         if learn and critic is not None:
             # 逐步的演员-评论家：δ 就是成功信号，每一步都更新
             delta = critic.update(features, float(reward), next_features, terminated=terminated)
+            if delta_sink is not None:
+                delta_sink.append(abs(float(delta)))
             actor.apply_success_signal(delta)
         features = next_features
         steps += 1
@@ -257,6 +262,7 @@ def train(
     returns: list[float] = []
     entropies: list[float] = []
     probes: list[dict] = []
+    critic_absdelta: list[float] = []
     eval_scores: list[dict] = []
     baseline = 0.0
     best_steps = -1.0
@@ -276,6 +282,7 @@ def train(
                 math.log(logit_scale_start)
                 + progress * (math.log(logit_scale_end) - math.log(logit_scale_start))
             )
+        episode_deltas: list[float] = []
         steps_alive = run_episode(
             env,
             actor,
@@ -285,12 +292,15 @@ def train(
             learn=True,
             greedy=False,
             critic=critic,
+            delta_sink=episode_deltas,
             # ⚠️ 训练回合也必须给环境种子。不给的话 env.reset(seed=None) 会用 gymnasium
             # 在 make() 时由系统熵初始化的内部 RNG，**同一种子两次运行轨迹完全不同**
             # （实测：两次数值全不一样）。这曾让本模块所有数字都不是逐位可复现的。
             env_seed=seed * 100_000 + episode,
         )
         returns.append(steps_alive)
+        if episode_deltas:
+            critic_absdelta.append(sum(episode_deltas) / len(episode_deltas))
         if entropy_log:
             entropies.append(actor.episode_entropy)
 
@@ -347,6 +357,7 @@ def train(
         eval_noise=tuple(noise),
         entropies=tuple(entropies),
         probes=tuple(probes),
+        critic_absdelta=tuple(critic_absdelta),
         actor=actor if keep_actor else None,
         centers=centers if keep_actor else None,
     )
@@ -377,6 +388,11 @@ def _probe_actor(
             left += int(counts.argmax().item() == 0)
         record[f"p_left_{label}"] = left / repeats
         record[f"spikes_{label}"] = spikes / repeats
+    weights = actor.layer.weight.detach()
+    record["column_l1"] = [float(value) for value in weights.abs().sum(dim=0)]
+    record["zero_window_fraction"] = (
+        sum(1 for probe_angle in ("pos", "neg") if record[f"spikes_{probe_angle}"] == 0.0) / 2
+    )
     return record
 
 
@@ -596,6 +612,7 @@ def main(argv: list[str] | None = None) -> int:
                 ),
                 "selected_episode": r.selected_episode,
                 "probes": list(r.probes),
+                "critic_absdelta": list(r.critic_absdelta),
                 "entropy_last100": (
                     sum(r.entropies[-100:]) / len(r.entropies[-100:]) if r.entropies else None
                 ),
@@ -643,6 +660,7 @@ def main(argv: list[str] | None = None) -> int:
                     "best_steps": r.best_steps,
                     "selected_episode": r.selected_episode,
                     "probes": list(r.probes),
+                "critic_absdelta": list(r.critic_absdelta),
                 "entropy_last100": (
                     sum(r.entropies[-100:]) / len(r.entropies[-100:]) if r.entropies else None
                 ),
