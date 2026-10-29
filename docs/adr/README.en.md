@@ -53,3 +53,8 @@ and link the two to each other.
 | [ADR-0018](ADR-0018-task-aware-cl-gate.en.md) | The phase-3 CL gate becomes task-aware CIL (task-incremental); pure-CIL negatives kept | Accepted |
 | [ADR-0019](ADR-0019-stage-four-entry-decoupled-from-relearn.en.md) | Phase-4 entry decoupled from relearn 3×; 3× recorded as unmet and open | Accepted |
 | [ADR-0020](ADR-0020-phase-five-m0-readonly-mcp.en.md) | Phase 5 M0: read-only MCP skeleton (no LLM, no writes) | Accepted |
+| [ADR-0021](ADR-0021-criterion-death-conditions.en.md) | Write a criterion's death condition first | Accepted |
+| [ADR-0022](ADR-0022-restatement-dashboard.en.md) | Criterion-restatement dashboard (single register) | Accepted |
+| [ADR-0023](ADR-0023-llm-ablation-arm.en.md) | LLM collaboration claims need three arms | Accepted |
+| [ADR-0024](ADR-0024-stub-llm-probe.en.md) | Probe autonomous triggering with a stub LLM first | Accepted |
+| [ADR-0025](ADR-0025-p3-flagship-observation-vs-intervention.en.md) | "Observation vs intervention learning" as the phase-4 flagship | Accepted |

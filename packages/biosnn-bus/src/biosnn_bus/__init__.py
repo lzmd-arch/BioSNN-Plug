@@ -61,8 +61,10 @@ from .errors import (
     PluginRegistrationError,
     UnknownModalityError,
 )
+from .host import BioSNNHost, TriggerEvent
 from .membrane import PassThroughMembrane
 from .plugin import ModalityPlugin
+from .providers import GeminiProvider, LLMProvider, OpenAIProvider, ProviderError, VLLMProvider
 from .registry import (
     ENTRY_POINT_GROUP,
     discover_plugins,
@@ -79,21 +81,28 @@ __version__ = "0.4.0"
 __all__ = [
     "ENTRY_POINT_GROUP",
     "BioSNNBusError",
+    "BioSNNHost",
     "ConcatenateFusion",
     "FusionChannel",
     "FusionStrategy",
+    "GeminiProvider",
+    "LLMProvider",
     "Membrane",
     "ModalityPlugin",
+    "OpenAIProvider",
     "PassThroughMembrane",
     "PluginContractError",
     "PluginNotFoundError",
     "PluginRegistrationError",
     "ProjectedFusionStrategy",
+    "ProviderError",
     "SparseRandomProjection",
     "SpikeBus",
     "SpikeTrain",
     "TemporalAttentionFusion",
+    "TriggerEvent",
     "UnknownModalityError",
+    "VLLMProvider",
     "__version__",
     "discover_plugins",
     "get_plugin",

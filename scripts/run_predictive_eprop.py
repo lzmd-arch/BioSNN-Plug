@@ -109,7 +109,10 @@ def run_seed(seed: int, args: argparse.Namespace) -> dict:
             error_gain = 1.0
         # 误差回注丢弃：一部分 trial 完全关掉误差输入，逼网络靠自身反馈与前向预测的
         # 误差学习。**不能覆盖课程值**：只有抽中丢弃才置 0，否则保留上面的 error_gain。
-        if args.error_dropout and torch.rand(1, generator=trial_generator).item() < args.error_dropout:
+        if (
+            args.error_dropout
+            and torch.rand(1, generator=trial_generator).item() < args.error_dropout
+        ):
             error_gain = 0.0
         losses.append(model.update(batch, chunk=args.chunk, error_gain=error_gain))
         if (epoch + 1) % args.log_every == 0:

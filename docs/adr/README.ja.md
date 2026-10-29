@@ -52,3 +52,8 @@ Michael Nygard の古典的な 4 段構成を採用します：
 | [ADR-0018](ADR-0018-task-aware-cl-gate.ja.md) | 第 3 フェーズ CL ゲートをタスク認識 CIL（task-incremental）へ；純粋 CIL の陰性結果は保持 | 採用済み |
 | [ADR-0019](ADR-0019-stage-four-entry-decoupled-from-relearn.ja.md) | 第 4 フェーズ入口を再学習 3× から切り離す；3× は未達の開放項目 | 採用済み |
 | [ADR-0020](ADR-0020-phase-five-m0-readonly-mcp.ja.md) | フェーズ5 M0：読み取り専用 MCP 骨格（LLM 接続なし・書き込みなし） | 採用済み |
+| [ADR-0021](ADR-0021-criterion-death-conditions.ja.md) | 判定基準の死亡条件を先に書く | 採用済み |
+| [ADR-0022](ADR-0022-restatement-dashboard.ja.md) | 判定基準書き換えダッシュボード（唯一の登録先） | 採用済み |
+| [ADR-0023](ADR-0023-llm-ablation-arm.ja.md) | LLM 協調の主張には三腕アブレーションを必須とする | 採用済み |
+| [ADR-0024](ADR-0024-stub-llm-probe.ja.md) | まず stub-LLM で自律トリガを探針する | 採用済み |
+| [ADR-0025](ADR-0025-p3-flagship-observation-vs-intervention.ja.md) | 「観察学習 vs 介入学習」を第 4 フェーズの旗艦とする | 採用済み |

@@ -49,3 +49,8 @@
 | [ADR-0018](ADR-0018-task-aware-cl-gate.md) | 阶段三 CL 门口径改为任务感知 CIL（task-incremental）；纯 CIL 阴性结果保留 | 已采纳 |
 | [ADR-0019](ADR-0019-stage-four-entry-decoupled-from-relearn.md) | 阶段四入口与「重学快 3×」解耦；3× 记为未达的开放项 | 已采纳 |
 | [ADR-0020](ADR-0020-phase-five-m0-readonly-mcp.md) | 阶段五 M0：只读 MCP 骨架（不接 LLM、不写记忆） | 已采纳 |
+| [ADR-0021](ADR-0021-criterion-death-conditions.md) | 判据死亡条件必须先写 | 已采纳 |
+| [ADR-0022](ADR-0022-restatement-dashboard.md) | 判据重述仪表板（唯一登记处） | 已采纳 |
+| [ADR-0023](ADR-0023-llm-ablation-arm.md) | LLM 协同结论必须带三臂消融 | 已采纳 |
+| [ADR-0024](ADR-0024-stub-llm-probe.md) | 先用 stub-LLM 做自主触发探针 | 已采纳 |
+| [ADR-0025](ADR-0025-p3-flagship-observation-vs-intervention.md) | 「观察学习 vs 干预学习」设为阶段四旗舰 | 已采纳 |

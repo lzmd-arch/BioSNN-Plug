@@ -121,6 +121,27 @@ print(bus)
 
 理由见 [ADR-0001](https://github.com/lzmd-arch/BioSNN-Plug/blob/main/docs/adr/ADR-0001-skeleton-as-separate-library.md)。
 
+## SpikeBus 规范 v0.1（宿主契约，2026-10-29 草案）
+
+**范围**：插件作者与宿主（产品）之间的接缝；**不**标准化学习机制、神经元模型或调度策略。
+
+| 宿主原语 | 语义 | 参数 | 返回 / 错误 |
+| :--- | :--- | :--- | :--- |
+| `inject(modality, raw, t=None)` | 把一个模态的原始输入推进总线 | `modality: str`、`raw: Any`、`t: int \| None` | `None`；未知模态 → `UnknownModality` |
+| `read_state()` | 读当前融合态的**只读快照** | — | `dict`（通道、维度、时间步）；调用方不得原地修改 |
+| `wait_trigger(timeout_ms)` | 阻塞到 SNN 认为「值得行动」 | `timeout_ms ≥ 0` | `TriggerEvent(t, salience, associations)` 或超时 `None` |
+
+**数据契约**：时间轴为整数毫秒、同一 step 内各模态对齐；脉冲为布尔，浮点发放率必须在
+`[0, 1]`；禁止 NaN/inf；融合后维度恒为 `bus_dim`。
+
+**插件契约**：`encode` / `decode` / `get_membrane` 三方法，`modality_name` 唯一、
+`spike_dim ≥ 1`；不依赖 torch（`[torch]` 只做可选桥接）。
+
+**版本**：语义化版本；`v0.x` 允许破坏性变更并须在 release notes 写明；宿主应固定 minor。
+
+**一致性测试（conformance，进 CI）**：C1 注册后 `step` 返回 `(bus_dim,)`；C2 未知模态报错；
+C3 时间对齐；C4 维度恒定；C5 快照只读。
+
 ## 许可证
 
 Apache-2.0。文档采用 CC-BY 4.0。

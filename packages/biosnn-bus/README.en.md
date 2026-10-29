@@ -126,6 +126,28 @@ The spike bus's current default fusion strategy is **plain concatenation** (`Con
 
 See [ADR-0001](https://github.com/lzmd-arch/BioSNN-Plug/blob/main/docs/adr/ADR-0001-skeleton-as-separate-library.md) for the reasoning.
 
+## SpikeBus spec v0.1 (host contract, draft 2026-10-29)
+
+**Scope**: the seam between plugin authors and hosts (products); it does **not** standardize
+learning rules, neuron models or scheduling policies.
+
+| Host primitive | Semantics | Arguments | Returns / errors |
+| :--- | :--- | :--- | :--- |
+| `inject(modality, raw, t=None)` | push one modality's raw input into the bus | `modality: str`, `raw: Any`, `t: int \| None` | `None`; unknown modality -> `UnknownModality` |
+| `read_state()` | read a **read-only snapshot** of the fused state | — | `dict` (channels, dimension, timestep); callers must not mutate in place |
+| `wait_trigger(timeout_ms)` | block until the SNN considers an action worth taking | `timeout_ms >= 0` | `TriggerEvent(t, salience, associations)`, or `None` on timeout |
+
+**Data contract**: integer millisecond timeline; all modalities aligned within a step; spikes are
+boolean and float rates must lie in `[0, 1]`; NaN/inf forbidden; the fused dimension is always `bus_dim`.
+
+**Plugin contract**: `encode` / `decode` / `get_membrane`; unique `modality_name`; `spike_dim >= 1`;
+no torch dependency (`[torch]` is an optional bridge only).
+
+**Versioning**: semver; `v0.x` may break and must say so in release notes; hosts should pin the minor.
+
+**Conformance tests (CI)**: C1 `step` returns `(bus_dim,)` after registration; C2 unknown modality
+raises; C3 time alignment; C4 constant dimension; C5 snapshot is read-only.
+
 ## License
 
 Apache-2.0. Documentation is CC-BY 4.0.

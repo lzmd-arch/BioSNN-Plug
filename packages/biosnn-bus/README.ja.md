@@ -126,6 +126,29 @@ print(bus)
 
 理由は [ADR-0001](https://github.com/lzmd-arch/BioSNN-Plug/blob/main/docs/adr/ADR-0001-skeleton-as-separate-library.ja.md) を参照してください。
 
+## SpikeBus 仕様 v0.1（ホスト契約、2026-10-29 草案）
+
+**範囲**：プラグイン作者とホスト（製品）の接縫。学習規則・ニューロンモデル・スケジューリングは
+**標準化しない**。
+
+| ホスト原語 | 意味 | 引数 | 返り値／エラー |
+| :--- | :--- | :--- | :--- |
+| `inject(modality, raw, t=None)` | 一つのモダリティの生入力をバスへ送る | `modality: str`、`raw: Any`、`t: int \| None` | `None`；未知のモダリティ → `UnknownModality` |
+| `read_state()` | 融合状態の**読み取り専用スナップショット** | — | `dict`（チャネル、次元、時刻）；呼び出し側は破壊的変更をしてはならない |
+| `wait_trigger(timeout_ms)` | SNN が「行動する価値がある」と判断するまでブロック | `timeout_ms >= 0` | `TriggerEvent(t, salience, associations)`、タイムアウトなら `None` |
+
+**データ契約**：時間軸は整数ミリ秒、同一ステップ内で各モダリティを整列；スパイクはブール、
+浮動小数点の発火率は `[0, 1]`；NaN/inf 禁止；融合後の次元は常に `bus_dim`。
+
+**プラグイン契約**：`encode` / `decode` / `get_membrane`、`modality_name` は一意、
+`spike_dim >= 1`；torch 非依存（`[torch]` は任意のブリッジのみ）。
+
+**バージョン**：セマンティックバージョニング。`v0.x` は破壊的変更を許し、リリースノートに明記する
+こと。ホストは minor を固定する。
+
+**適合性テスト（CI）**：C1 登録後の `step` は `(bus_dim,)` を返す；C2 未知モダリティは例外；
+C3 時刻整列；C4 次元の恒常性；C5 スナップショットは読み取り専用。
+
 ## ライセンス
 
 Apache-2.0。ドキュメントは CC-BY 4.0 を採用しています。
