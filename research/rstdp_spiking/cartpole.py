@@ -193,6 +193,7 @@ def train(
     eval_noise_seeds: int = 0,
     entropy_log: bool = False,
     probe_every: int = 0,
+    probe_angles: tuple[tuple[float, str], ...] | None = None,
     keep_actor: bool = False,
     actor_after: str = "best",
     trace_rule: str = "pair-stdp",
@@ -313,7 +314,16 @@ def train(
             critic.reset_trace()
 
         if probe_every and (episode + 1) % probe_every == 0:
-            probes.append(_probe_actor(actor, centers, sigma, seed=seed, episode=episode + 1))
+            probes.append(
+                _probe_actor(
+                    actor,
+                    centers,
+                    sigma,
+                    seed=seed,
+                    episode=episode + 1,
+                    angles=probe_angles,
+                )
+            )
 
         if warmup <= episode and (episode + 1) % eval_every == 0:
             score = evaluate(actor, centers, sigma, episodes=eval_episodes, seed=10_000 + seed)
@@ -372,26 +382,41 @@ def _probe_actor(
     seed: int,
     episode: int,
     repeats: int = 5,
+    angles: tuple[tuple[float, str], ...] | None = None,
 ) -> dict:
-    """在固定极角 ±0.2 上采几个冻结窗口：后突触脉冲数与贪心动作（D5 诊断用）。"""
+    """在给定极角上采冻结窗口：后突触脉冲数、两动作计数与贪心动作（D5/D8 诊断用）。
+
+    ``angles`` 缺省为 ``(0.2, "pos"), (-0.2, "neg")``，与历史探针一致；D8 传入整条网格。
+    """
     record: dict = {"episode": episode}
-    for label, angle in (("pos", 0.2), ("neg", -0.2)):
+    for angle, label in (angles or ((0.2, "pos"), (-0.2, "neg"))):
         state = torch.tensor([0.0, 0.0, angle, 0.0])
         features = encode_state(state, centers, sigma)
         generator = torch.Generator(device="cpu").manual_seed(seed * 10_000 + episode + (angle > 0))
         left = 0
         spikes = 0.0
+        per_action = [0.0, 0.0]
+        deltas: list[float] = []
         for _ in range(repeats):
             _, post = actor.window_spikes(features, generator=generator)
             counts = post.sum(dim=0).squeeze(0)
             spikes += float(counts.sum())
             left += int(counts.argmax().item() == 0)
+            per_action[0] += float(counts[0])
+            per_action[1] += float(counts[1])
+            deltas.append(float(counts[0] - counts[1]))
         record[f"p_left_{label}"] = left / repeats
         record[f"spikes_{label}"] = spikes / repeats
+        record[f"counts_{label}"] = [value / repeats for value in per_action]
+        record[f"delta_mean_{label}"] = sum(deltas) / repeats
+        record[f"delta_sd_{label}"] = (
+            (sum((value - sum(deltas) / repeats) ** 2 for value in deltas) / repeats) ** 0.5
+        )
     weights = actor.layer.weight.detach()
     record["column_l1"] = [float(value) for value in weights.abs().sum(dim=0)]
+    probe_labels = [label for _, label in (angles or ((0.2, "pos"), (-0.2, "neg")))]
     record["zero_window_fraction"] = (
-        sum(1 for probe_angle in ("pos", "neg") if record[f"spikes_{probe_angle}"] == 0.0) / 2
+        sum(1 for label in probe_labels if record[f"spikes_{label}"] == 0.0) / len(probe_labels)
     )
     return record
 
