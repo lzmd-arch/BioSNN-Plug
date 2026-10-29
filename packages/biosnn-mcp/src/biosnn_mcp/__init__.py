@@ -12,6 +12,7 @@ from .scheduling import SchedulingPolicy
 from .server import PROTOCOL_VERSION, TOOLS, handle_message, serve_stdio
 from .trace import SCHEMA_VERSION, DialogueTrace, TurnRecord
 from .trigger import TriggerDecision, TriggerPolicy
+from .trigger_spiking import SpikingTrigger
 
 __all__ = [
     "PROTOCOL_VERSION",
@@ -32,6 +33,7 @@ __all__ = [
     "MockLLM",
     "Scenario",
     "SchedulingPolicy",
+    "SpikingTrigger",
     "Turn",
     "WritableMemory",
     "build_scenarios",

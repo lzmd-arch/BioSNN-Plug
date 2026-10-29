@@ -1378,6 +1378,13 @@
 >    **边界**：cooldown 不可辨识（无梯度）、完成率构造性、MockLLM、仍是协议层。
 >    见 [`sweep_results/phase5_m3h/README.md`](sweep_results/phase5_m3h/README.md)。
 
+> 160. **2026-10-29：阶段五 M3i——STDP 侧向触发能接但抓不住事件（命中 1–2/4，`m3i_ready=false`）**。
+>    64 个 LIF + 背景噪声 + 侧向 STDP（因果对增强抑制）+ 发放率冲动检测 + 连续 5 步才触发；
+>    10 s 合成流、4 次显著性事件。结果：命中 **1–2/4**（规则门 4/4）、基线误触发 **0**、
+>    两次运行逐位相同。原因：事件一起群体几乎同时发放，侧向抑制在一两步内造成**整步静默**
+>    （实测 z 59 → 0），打断「连续冲动」计数。接线正确，判据与侧向抑制不兼容。
+>    见 [`sweep_results/phase5_m3i/README.md`](sweep_results/phase5_m3i/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
