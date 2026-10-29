@@ -1,0 +1,117 @@
+{
+  "kind": "Predictive E-prop sine generation; our adaptation, not a replication",
+  "config": {
+    "seeds": "0,1,2",
+    "n_rec": 300,
+    "beta": 0.07,
+    "gain": 1.0,
+    "steps": 500,
+    "eval_steps": 2000,
+    "batch": 4,
+    "trials": 4,
+    "epochs": 150,
+    "learning_rate_rec": 0.0003,
+    "learning_rate_out": 0.01,
+    "lambda_reg": 0.0001,
+    "chunk": 10,
+    "save_models": false,
+    "curriculum_fraction": 0.3,
+    "error_dropout": 0.0,
+    "log_every": 25,
+    "out_dir": "D:\\Projects\\predictive_curriculum"
+  },
+  "repro": "```text\n实验名称：Predictive E-prop：正弦生成\n日期：2026-10-29 12:41:31 中国标准时间\nGit commit：27ca6886bf644aa505d686aab1b1a152f9c4271e\nGit 状态：干净\nPython：3.12.14\n操作系统 / 架构：Windows 11 / AMD64\n硬件：NVIDIA GeForce RTX 5060，8,124 MB，sm_120\n随机种子：0,1,2\n依赖快照：uv.lock sha256=9dc262ffcb62739dbe58df80d6314d5f83de95f66864d5462eb877933e37a783\n运行命令：run_predictive_eprop.py --seeds 0,1,2 --epochs 150 --trials 4 --steps 500 --chunk 10 --gain 1.0 --learning-rate-rec 3e-4 --learning-rate-out 1e-2 --curriculum-fraction 0.3 --log-every 25 --out-dir D:/Projects/predictive_curriculum\n耗时：0.0 s\n备注：按原文描述的改编；公式未逐字取得\n备注：更新每 chunk 步一次，痕迹跨更新保持\n```",
+  "seeds": [
+    {
+      "seed": 0,
+      "parameters": {
+        "amplitude": 0.7481282949447632,
+        "period": 353.64434814453125,
+        "phase": 0.5559201240539551,
+        "offset": 0.0
+      },
+      "initial_mse": 0.42095786333084106,
+      "final_mse": 0.10633985698223114,
+      "loss_first": 0.38980844616889954,
+      "loss_last": 0.266970694065094,
+      "free_running": {
+        "dtw": 0.22668077204376458,
+        "amplitude_ratio": 0.0201751459389925,
+        "mean_spike_rate_hz": 196.5566724538803
+      },
+      "baseline_free_running": {
+        "dtw": 0.2277721304539591,
+        "amplitude_ratio": 0.020575478672981262,
+        "mean_spike_rate_hz": 21.058334037661552
+      },
+      "criteria": {
+        "reconstruction": false,
+        "amplitude": false,
+        "free_running_dtw": false
+      },
+      "pass": false,
+      "elapsed_s": 451.7274781000451
+    },
+    {
+      "seed": 1,
+      "parameters": {
+        "amplitude": 0.878815770149231,
+        "period": 255.8621826171875,
+        "phase": 2.5325589179992676,
+        "offset": 0.0
+      },
+      "initial_mse": 0.40788140892982483,
+      "final_mse": 0.16855956614017487,
+      "loss_first": 0.3001834750175476,
+      "loss_last": 0.31846731901168823,
+      "free_running": {
+        "dtw": 0.2760627253241837,
+        "amplitude_ratio": 0.00753159262239933,
+        "mean_spike_rate_hz": 127.33499705791473
+      },
+      "baseline_free_running": {
+        "dtw": 0.26802706100512297,
+        "amplitude_ratio": 0.03711765259504318,
+        "mean_spike_rate_hz": 28.459999710321426
+      },
+      "criteria": {
+        "reconstruction": false,
+        "amplitude": false,
+        "free_running_dtw": false
+      },
+      "pass": false,
+      "elapsed_s": 464.3638209999772
+    },
+    {
+      "seed": 2,
+      "parameters": {
+        "amplitude": 0.8073475360870361,
+        "period": 276.20257568359375,
+        "phase": 4.00310754776001,
+        "offset": 0.0
+      },
+      "initial_mse": 0.377564400434494,
+      "final_mse": 0.08900890499353409,
+      "loss_first": 0.35753506422042847,
+      "loss_last": 0.19967809319496155,
+      "free_running": {
+        "dtw": 0.1777133776633418,
+        "amplitude_ratio": 0.31214386224746704,
+        "mean_spike_rate_hz": 155.8716595172882
+      },
+      "baseline_free_running": {
+        "dtw": 0.25501772384019566,
+        "amplitude_ratio": 0.014070689678192139,
+        "mean_spike_rate_hz": 21.133333444595337
+      },
+      "criteria": {
+        "reconstruction": false,
+        "amplitude": false,
+        "free_running_dtw": false
+      },
+      "pass": false,
+      "elapsed_s": 732.7732520999853
+    }
+  ],
+  "ready": false
+}

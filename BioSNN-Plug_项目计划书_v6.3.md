@@ -1399,6 +1399,14 @@
 >    **边界**：合成显著性流、构造性对照、协议层，不外推到真实对话。见
 >    [`sweep_results/phase5_m3k/README.md`](sweep_results/phase5_m3k/README.md)。
 
+> 163. **2026-10-29：阶段四 Predictive E-prop 误差课程——关掉误差输入会把重建也弄坏**。
+>    最后 30% epoch 把误差回注增益线性降到 0：三种子重建终值 **0.089–0.169**（无课程
+>    0.0048–0.0091），幅度 **0.008–0.312**，DTW 与未训练对照持平或更差；三条判据全不过，
+>    且违反「不退化」条款 → `predictive_curriculum_ready=false`。结论：误差通道不是
+>    「抄近路」，而是**承重驱动**；自由运行不稳的根因是网络依赖误差输入，不是课程缺失。
+>    首跑因 runner 的 dropout 分支覆盖课程值而无效（逐位等于对照组），已修、干净重跑。
+>    见 [`sweep_results/predictive_eprop_curriculum/README.md`](sweep_results/predictive_eprop_curriculum/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
