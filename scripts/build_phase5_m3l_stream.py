@@ -60,7 +60,15 @@ def _opener():
     return urllib.request.build_opener(urllib.request.ProxyHandler({})).open
 
 
-def generate(prompt: str, *, model: str, seed: int, host: str, timeout: float = 180.0) -> str:
+def generate(
+    prompt: str,
+    *,
+    model: str,
+    seed: int,
+    host: str,
+    timeout: float = 180.0,
+    num_gpu: int | None = None,
+) -> str:
     payload = {
         "model": model,
         "prompt": prompt,
@@ -74,6 +82,8 @@ def generate(prompt: str, *, model: str, seed: int, host: str, timeout: float = 
         headers={"Content-Type": "application/json"},
         method="POST",
     )
+    if num_gpu is not None:
+        payload["options"]["num_gpu"] = int(num_gpu)  # 0 = 强制走 CPU（GPU 忙时用）
     with _opener()(request, timeout=timeout) as response:
         body = json.loads(response.read().decode("utf-8"))
     text = str(body.get("response", ""))
@@ -82,7 +92,7 @@ def generate(prompt: str, *, model: str, seed: int, host: str, timeout: float = 
     return text.strip()
 
 
-def build(*, model: str, host: str, conversations: int = 5) -> dict:
+def build(*, model: str, host: str, conversations: int = 5, num_gpu: int | None = None) -> dict:
     records = []
     prompts = []
     for index in range(conversations):
@@ -102,6 +112,7 @@ def build(*, model: str, host: str, conversations: int = 5) -> dict:
                 model=model,
                 seed=1000 * (index + 1) + turn,
                 host=host,
+                num_gpu=num_gpu,
             )
             lines = [line.strip() for line in text.splitlines() if line.strip()]
             utterance = lines[0] if lines else "（空回复）"
@@ -125,10 +136,18 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--model", default="qwen3-4b:latest")
     parser.add_argument("--host", default=os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434"))
     parser.add_argument("--conversations", type=int, default=5)
+    parser.add_argument(
+        "--num-gpu", type=int, default=None, help="Ollama 的 num_gpu；0 = 强制 CPU（GPU 忙时用）"
+    )
     parser.add_argument("--out", type=Path, default=OUT / "stream.json")
     args = parser.parse_args(argv)
 
-    record = build(model=args.model, host=args.host, conversations=args.conversations)
+    record = build(
+        model=args.model,
+        host=args.host,
+        conversations=args.conversations,
+        num_gpu=args.num_gpu,
+    )
     payload = json.dumps(record, ensure_ascii=False, indent=2) + "\n"
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(payload, encoding="utf-8", newline="\n")
