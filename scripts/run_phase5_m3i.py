@@ -57,6 +57,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="M3i 脉冲触发")
     parser.add_argument("--seeds", default="0-4")
     parser.add_argument("--hit-window", type=int, default=1, help="M3j：冲动累计窗口（1=连续）")
+    parser.add_argument("--lateral-eta", type=float, default=0.01, help="M3k：侧向 STDP 步长")
     parser.add_argument("--out-dir", type=Path, default=OUT)
     args = parser.parse_args(argv)
     seeds = _parse_seeds(args.seeds)
@@ -65,9 +66,13 @@ def main(argv: list[str] | None = None) -> int:
     rule = score_triggers(rule_triggers(stream))
     rows = []
     for seed in seeds:
-        trigger = SpikingTrigger(seed=seed, hit_window=args.hit_window)
+        trigger = SpikingTrigger(
+            seed=seed, hit_window=args.hit_window, lateral_eta=args.lateral_eta
+        )
         moments = [index for index, salience in enumerate(stream) if trigger.process(salience)]
-        trigger_again = SpikingTrigger(seed=seed, hit_window=args.hit_window)
+        trigger_again = SpikingTrigger(
+            seed=seed, hit_window=args.hit_window, lateral_eta=args.lateral_eta
+        )
         moments_again = [
             index for index, salience in enumerate(stream) if trigger_again.process(salience)
         ]
@@ -97,6 +102,7 @@ def main(argv: list[str] | None = None) -> int:
     summary = {
         "kind": "protocol: spiking trigger with lateral STDP vs rule gate",
         "hit_window": args.hit_window,
+        "lateral_eta": args.lateral_eta,
         "events": EVENTS,
         "rule": rule,
         "seeds": rows,
