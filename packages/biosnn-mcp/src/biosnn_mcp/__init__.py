@@ -1,5 +1,6 @@
 """BioSNN-Plug 阶段五 M0：只读 MCP 工具骨架。"""
 
+from .consolidate import ConsolidationReport, MemoryItem, SleepConsolidator
 from .context import ContextCode, ZScoreTopKEncoder
 from .core import CognitiveCore, InMemoryCore, MemoryEntry, ToolError
 from .dialogue import Scenario, Turn, WritableMemory, build_scenarios, run_session
@@ -14,7 +15,10 @@ __all__ = [
     "SCHEMA_VERSION",
     "TOOLS",
     "CognitiveCore",
+    "ConsolidationReport",
     "ContextCode",
+    "MemoryItem",
+    "SleepConsolidator",
     "DialogueTrace",
     "InMemoryCore",
     "LLMAdapter",
