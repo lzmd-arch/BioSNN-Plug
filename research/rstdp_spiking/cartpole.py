@@ -202,6 +202,7 @@ def train(
     logit_scale_start: float | None = 1.0,
     logit_scale_end: float | None = 40.0,
     spiking_temperature: bool = False,
+    contrastive_gamma: float = 0.0,
 ) -> TrainResult:
     """训练一个种子。返回逐回合回报与评测曲线。"""
     import gymnasium
@@ -220,6 +221,7 @@ def train(
             learning_rate=learning_rate,
             trace_rule=trace_rule,
             readout=readout,
+            contrastive_gamma=contrastive_gamma,
             generator=generator,
             device=device,
         )
@@ -450,6 +452,12 @@ def main(argv: list[str] | None = None) -> int:
         help="策略读出：count=窗口内硬计数（默认）；rate=窗口末低通发放率（D3 实验）",
     )
     parser.add_argument(
+        "--contrastive-gamma",
+        type=float,
+        default=0.0,
+        help="D9：每步更新后从各动作列减去 γ×列均值（0=历史行为）",
+    )
+    parser.add_argument(
         "--spiking-temperature",
         action=argparse.BooleanOptionalAction,
         default=False,
@@ -596,6 +604,7 @@ def main(argv: list[str] | None = None) -> int:
             logit_scale_start=args.logit_scale_start,
             logit_scale_end=args.logit_scale_end,
             spiking_temperature=args.spiking_temperature,
+            contrastive_gamma=args.contrastive_gamma,
             entropy_log=args.entropy_log,
             probe_every=args.probe_every,
         )
@@ -639,6 +648,7 @@ def main(argv: list[str] | None = None) -> int:
             "logit_scale_start": args.logit_scale_start,
             "logit_scale_end": args.logit_scale_end,
             "spiking_temperature": args.spiking_temperature,
+            "contrastive_gamma": args.contrastive_gamma,
             "entropy_log": args.entropy_log,
             "probe_every": args.probe_every,
         },

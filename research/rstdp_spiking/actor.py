@@ -57,6 +57,7 @@ class SpikingActor:
         action_sampling: str = "boltzmann",
         readout: str = "count",
         readout_decay: float = 0.9,
+        contrastive_gamma: float = 0.0,
         logit_scale: float = 1.0,
         arousal: ArousalChannel | None = None,
         device: torch.device | None = None,
@@ -76,6 +77,8 @@ class SpikingActor:
             raise ValueError(f"readout 只能是 'count' 或 'rate'，收到 {readout!r}。")
         if not 0.0 < readout_decay < 1.0:
             raise ValueError(f"readout_decay 应在 (0, 1)，收到 {readout_decay!r}。")
+        if not 0.0 <= contrastive_gamma < 1.0:
+            raise ValueError(f"contrastive_gamma 应在 [0, 1)，收到 {contrastive_gamma!r}。")
 
         device = device or torch.device("cpu")
         self.n_features = int(n_features)
@@ -88,6 +91,8 @@ class SpikingActor:
         self.action_sampling = action_sampling
         self.readout = readout
         self.readout_decay = float(readout_decay)
+        # D9：列间去相关（局部、无梯度）。0 = 历史行为逐位不变。
+        self.contrastive_gamma = float(contrastive_gamma)
         self.logit_scale = float(logit_scale)
         # 唤醒通道：**只调采样温度**，不碰权重。None 时行为与从前逐位相同。
         self.arousal = arousal
@@ -258,6 +263,10 @@ class SpikingActor:
         痕迹的清理由 :meth:`end_episode` 负责。
         """
         self.trace.apply(self.layer.weight, self.learning_rate, float(success_signal))
+        if self.contrastive_gamma:
+            # w_j ← w_j − γ·mean_k(w_k)：去掉所有动作列共有的成分，只留差分方向。
+            column_mean = self.layer.weight.mean(dim=1, keepdim=True)
+            self.layer.weight.sub_(self.contrastive_gamma * column_mean)
         if self.normalize:
             self._normalize()
 

@@ -194,3 +194,52 @@ class TestReadoutMode:
         except ValueError:
             return
         raise AssertionError("未知 readout 应被拒绝")
+
+
+class TestContrastiveGamma:
+    """D9：列间去相关项；γ=0 必须与历史行为逐位相同。"""
+
+    def _actor(self, gamma: float):
+        import torch
+
+        from research.rstdp_spiking.actor import SpikingActor
+
+        return SpikingActor(
+            8,
+            2,
+            steps=5,
+            trace_rule="count-aligned",
+            contrastive_gamma=gamma,
+            generator=torch.Generator().manual_seed(5),
+        )
+
+    def test_zero_gamma_matches_default(self):
+        import torch
+
+        features = torch.rand(8)
+        default = self._actor(0.0)
+        default.step(features, generator=torch.Generator().manual_seed(6))
+        default.apply_success_signal(0.5)
+        explicit = self._actor(0.0)
+        explicit.step(features, generator=torch.Generator().manual_seed(6))
+        explicit.apply_success_signal(0.5)
+        assert torch.equal(default.layer.weight, explicit.layer.weight)
+
+    def test_positive_gamma_changes_weights(self):
+        import torch
+
+        features = torch.rand(8)
+        control = self._actor(0.0)
+        control.step(features, generator=torch.Generator().manual_seed(6))
+        control.apply_success_signal(0.5)
+        contrastive = self._actor(0.5)
+        contrastive.step(features, generator=torch.Generator().manual_seed(6))
+        contrastive.apply_success_signal(0.5)
+        assert not torch.equal(control.layer.weight, contrastive.layer.weight)
+
+    def test_rejects_out_of_range(self):
+        try:
+            self._actor(1.0)
+        except ValueError:
+            return
+        raise AssertionError("contrastive_gamma=1.0 应被拒绝")
