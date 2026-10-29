@@ -1,0 +1,430 @@
+{
+  "kind": "real-LLM dialogue evaluation (ollama, qwen3-4b)",
+  "metrics": {
+    "first_call_turn_max": 3,
+    "trigger_accuracy": 1.0,
+    "consolidation_rate": 1.0,
+    "llm_completion_rate": 0.975,
+    "baseline_completion_rate": 0.35,
+    "completion_ratio": 2.785714285714286
+  },
+  "gate": {
+    "first_call": true,
+    "trigger_accuracy": true,
+    "consolidation": true,
+    "completion_uplift": true,
+    "m3b_ready": true
+  },
+  "sessions": {
+    "llm": [
+      {
+        "scenario": "session00",
+        "turns": 5,
+        "first_call_turn": 3,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": null,
+        "answers": {
+          "answer:at what temperature celsius does water boil at sea level": "100"
+        }
+      },
+      {
+        "scenario": "session01",
+        "turns": 5,
+        "first_call_turn": 1,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": 1.0,
+        "answers": {
+          "answer:who wrote hamlet": "Shakespeare"
+        }
+      },
+      {
+        "scenario": "session02",
+        "turns": 5,
+        "first_call_turn": 1,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": 1.0,
+        "answers": {
+          "answer:what is the chemical symbol for gold": "Au",
+          "answer:what is the largest ocean on earth": "Pacific"
+        }
+      },
+      {
+        "scenario": "session03",
+        "turns": 5,
+        "first_call_turn": 3,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": null,
+        "answers": {
+          "answer:what is the capital of japan": "Tokyo"
+        }
+      },
+      {
+        "scenario": "session04",
+        "turns": 5,
+        "first_call_turn": 1,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": 1.0,
+        "answers": {
+          "answer:at what temperature celsius does water freeze": "0"
+        }
+      },
+      {
+        "scenario": "session05",
+        "turns": 5,
+        "first_call_turn": 1,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": 1.0,
+        "answers": {
+          "answer:who wrote pride and prejudice": "Austen",
+          "answer:what is the tallest mountain on earth": "Mount Everest"
+        }
+      },
+      {
+        "scenario": "session06",
+        "turns": 5,
+        "first_call_turn": 3,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": null,
+        "answers": {
+          "answer:which planet is closest to the sun": "Mercury"
+        }
+      },
+      {
+        "scenario": "session07",
+        "turns": 5,
+        "first_call_turn": 1,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": 1.0,
+        "answers": {
+          "answer:which organ pumps blood through the body": "heart"
+        }
+      },
+      {
+        "scenario": "session08",
+        "turns": 5,
+        "first_call_turn": 1,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": 1.0,
+        "answers": {
+          "answer:who wrote the novel 1984": "George Orwell",
+          "answer:what is the capital of australia": "Canberra"
+        }
+      },
+      {
+        "scenario": "session09",
+        "turns": 5,
+        "first_call_turn": 3,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": null,
+        "answers": {
+          "answer:who painted the mona lisa": "Leonardo da Vinci"
+        }
+      },
+      {
+        "scenario": "session10",
+        "turns": 5,
+        "first_call_turn": 1,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": 1.0,
+        "answers": {
+          "answer:which is the largest desert on earth": "Antarctic"
+        }
+      },
+      {
+        "scenario": "session11",
+        "turns": 5,
+        "first_call_turn": 1,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": 1.0,
+        "answers": {
+          "answer:what is the capital of canada": "Ottawa",
+          "answer:who discovered penicillin": "Fleming"
+        }
+      },
+      {
+        "scenario": "session12",
+        "turns": 5,
+        "first_call_turn": 3,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": null,
+        "answers": {
+          "answer:what is the main gas in earth's atmosphere": "Nitrogen"
+        }
+      },
+      {
+        "scenario": "session13",
+        "turns": 5,
+        "first_call_turn": 1,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": 1.0,
+        "answers": {
+          "answer:who wrote romeo and juliet": "William Shakespeare"
+        }
+      },
+      {
+        "scenario": "session14",
+        "turns": 5,
+        "first_call_turn": 1,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": 1.0,
+        "answers": {
+          "answer:how many strings does a violin have": "4",
+          "answer:who developed the theory of relativity": "Einstein"
+        }
+      },
+      {
+        "scenario": "session15",
+        "turns": 5,
+        "first_call_turn": 3,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": null,
+        "answers": {
+          "answer:what is the capital of egypt": "Cairo"
+        }
+      },
+      {
+        "scenario": "session16",
+        "turns": 5,
+        "first_call_turn": 1,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": 1.0,
+        "answers": {
+          "answer:who wrote the origin of species": "Charles Darwin"
+        }
+      },
+      {
+        "scenario": "session17",
+        "turns": 5,
+        "first_call_turn": 1,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 0.5,
+        "consolidation_rate": 1.0,
+        "answers": {
+          "answer:what is the largest island in the world": "Greenland",
+          "answer:what is the capital of brazil": "Brasília"
+        }
+      },
+      {
+        "scenario": "session18",
+        "turns": 5,
+        "first_call_turn": 3,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": null,
+        "answers": {
+          "answer:what is the smallest prime number": "2"
+        }
+      },
+      {
+        "scenario": "session19",
+        "turns": 5,
+        "first_call_turn": 3,
+        "trigger_accuracy": 1.0,
+        "completion_rate": 1.0,
+        "consolidation_rate": null,
+        "answers": {
+          "answer:at what temperature celsius does water boil at sea level": "100"
+        }
+      }
+    ],
+    "baseline": [
+      {
+        "scenario": "session00",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session01",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session02",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.6,
+        "completion_rate": 0.0,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session03",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session04",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session05",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.6,
+        "completion_rate": 0.0,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session06",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session07",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session08",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.6,
+        "completion_rate": 0.0,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session09",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session10",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session11",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.6,
+        "completion_rate": 0.0,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session12",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session13",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session14",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.6,
+        "completion_rate": 0.0,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session15",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session16",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session17",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.6,
+        "completion_rate": 0.0,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session18",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      },
+      {
+        "scenario": "session19",
+        "turns": 5,
+        "first_call_turn": null,
+        "trigger_accuracy": 0.8,
+        "completion_rate": 0.5,
+        "consolidation_rate": null,
+        "answers": {}
+      }
+    ]
+  }
+}

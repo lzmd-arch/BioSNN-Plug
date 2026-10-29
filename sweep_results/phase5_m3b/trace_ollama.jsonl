@@ -1,0 +1,200 @@
+{"turn": 1, "user": "what is the capital of france", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the capital of france"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 2, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 3, "user": "at what temperature celsius does water boil at sea level", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "100", "consolidation": {}}
+{"turn": 4, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 5, "user": "what is the capital of france", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:what is the capital of france"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 101, "user": "who wrote hamlet", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Shakespeare", "consolidation": {}}
+{"turn": 102, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 103, "user": "what is the largest planet in the solar system", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the largest planet in the solar system"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 104, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 105, "user": "who wrote hamlet", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:who wrote hamlet"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 201, "user": "what is the chemical symbol for gold", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Au", "consolidation": {}}
+{"turn": 202, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 203, "user": "what is the largest ocean on earth", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Pacific", "consolidation": {}}
+{"turn": 204, "user": "good morning", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 205, "user": "what is the chemical symbol for gold", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:what is the chemical symbol for gold"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 301, "user": "who invented the telephone", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:who invented the telephone"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 302, "user": "good morning", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 303, "user": "what is the capital of japan", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Tokyo", "consolidation": {}}
+{"turn": 304, "user": "thanks for your help", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 305, "user": "who invented the telephone", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:who invented the telephone"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 401, "user": "at what temperature celsius does water freeze", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "0", "consolidation": {}}
+{"turn": 402, "user": "thanks for your help", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 403, "user": "how many continents are there", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:how many continents are there"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 404, "user": "what can you do", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 405, "user": "at what temperature celsius does water freeze", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:at what temperature celsius does water freeze"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 501, "user": "who wrote pride and prejudice", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Austen", "consolidation": {}}
+{"turn": 502, "user": "what can you do", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 503, "user": "what is the tallest mountain on earth", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Mount Everest", "consolidation": {}}
+{"turn": 504, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 505, "user": "who wrote pride and prejudice", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:who wrote pride and prejudice"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 601, "user": "what is the currency of japan", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the currency of japan"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 602, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 603, "user": "which planet is closest to the sun", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Mercury", "consolidation": {}}
+{"turn": 604, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 605, "user": "what is the currency of japan", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:what is the currency of japan"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 701, "user": "which organ pumps blood through the body", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "heart", "consolidation": {}}
+{"turn": 702, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 703, "user": "what is the largest mammal", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the largest mammal"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 704, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 705, "user": "which organ pumps blood through the body", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:which organ pumps blood through the body"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 801, "user": "who wrote the novel 1984", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "George Orwell", "consolidation": {}}
+{"turn": 802, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 803, "user": "what is the capital of australia", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Canberra", "consolidation": {}}
+{"turn": 804, "user": "good morning", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 805, "user": "who wrote the novel 1984", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:who wrote the novel 1984"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 901, "user": "how many sides does a hexagon have", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:how many sides does a hexagon have"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 902, "user": "good morning", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 903, "user": "who painted the mona lisa", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Leonardo da Vinci", "consolidation": {}}
+{"turn": 904, "user": "thanks for your help", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 905, "user": "how many sides does a hexagon have", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:how many sides does a hexagon have"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1001, "user": "which is the largest desert on earth", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Antarctic", "consolidation": {}}
+{"turn": 1002, "user": "thanks for your help", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1003, "user": "what is the hardest natural substance", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the hardest natural substance"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1004, "user": "what can you do", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1005, "user": "which is the largest desert on earth", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:which is the largest desert on earth"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1101, "user": "what is the capital of canada", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Ottawa", "consolidation": {}}
+{"turn": 1102, "user": "what can you do", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1103, "user": "who discovered penicillin", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Fleming", "consolidation": {}}
+{"turn": 1104, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1105, "user": "what is the capital of canada", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:what is the capital of canada"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1201, "user": "which country is largest by area", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:which country is largest by area"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1202, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1203, "user": "what is the main gas in earth's atmosphere", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Nitrogen", "consolidation": {}}
+{"turn": 1204, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1205, "user": "which country is largest by area", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:which country is largest by area"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1301, "user": "who wrote romeo and juliet", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "William Shakespeare", "consolidation": {}}
+{"turn": 1302, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1303, "user": "what is the capital of italy", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the capital of italy"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1304, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1305, "user": "who wrote romeo and juliet", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:who wrote romeo and juliet"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1401, "user": "how many strings does a violin have", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "4", "consolidation": {}}
+{"turn": 1402, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1403, "user": "who developed the theory of relativity", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Einstein", "consolidation": {}}
+{"turn": 1404, "user": "good morning", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1405, "user": "how many strings does a violin have", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:how many strings does a violin have"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1501, "user": "what is the largest bone in the human body", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the largest bone in the human body"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1502, "user": "good morning", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1503, "user": "what is the capital of egypt", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Cairo", "consolidation": {}}
+{"turn": 1504, "user": "thanks for your help", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1505, "user": "what is the largest bone in the human body", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:what is the largest bone in the human body"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1601, "user": "who wrote the origin of species", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Charles Darwin", "consolidation": {}}
+{"turn": 1602, "user": "thanks for your help", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1603, "user": "what is the chemical symbol for sodium", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the chemical symbol for sodium"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1604, "user": "what can you do", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1605, "user": "who wrote the origin of species", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:who wrote the origin of species"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1701, "user": "what is the largest island in the world", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Greenland", "consolidation": {}}
+{"turn": 1702, "user": "what can you do", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1703, "user": "what is the capital of brazil", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "Brasília", "consolidation": {}}
+{"turn": 1704, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1705, "user": "what is the largest island in the world", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:what is the largest island in the world"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1801, "user": "who composed the ninth symphony", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:who composed the ninth symphony"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1802, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1803, "user": "what is the smallest prime number", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "2", "consolidation": {}}
+{"turn": 1804, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1805, "user": "who composed the ninth symphony", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:who composed the ninth symphony"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1901, "user": "what is the capital of france", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the capital of france"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1902, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1903, "user": "at what temperature celsius does water boil at sea level", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "100", "consolidation": {}}
+{"turn": 1904, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 1905, "user": "what is the capital of france", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:what is the capital of france"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10001, "user": "what is the capital of france", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the capital of france"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10002, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10003, "user": "at what temperature celsius does water boil at sea level", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10004, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10005, "user": "what is the capital of france", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:what is the capital of france"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10101, "user": "who wrote hamlet", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10102, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10103, "user": "what is the largest planet in the solar system", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the largest planet in the solar system"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10104, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10105, "user": "who wrote hamlet", "state": {"intent": "memory", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10201, "user": "what is the chemical symbol for gold", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10202, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10203, "user": "what is the largest ocean on earth", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10204, "user": "good morning", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10205, "user": "what is the chemical symbol for gold", "state": {"intent": "memory", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10301, "user": "who invented the telephone", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:who invented the telephone"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10302, "user": "good morning", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10303, "user": "what is the capital of japan", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10304, "user": "thanks for your help", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10305, "user": "who invented the telephone", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:who invented the telephone"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10401, "user": "at what temperature celsius does water freeze", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10402, "user": "thanks for your help", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10403, "user": "how many continents are there", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:how many continents are there"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10404, "user": "what can you do", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10405, "user": "at what temperature celsius does water freeze", "state": {"intent": "memory", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10501, "user": "who wrote pride and prejudice", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10502, "user": "what can you do", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10503, "user": "what is the tallest mountain on earth", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10504, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10505, "user": "who wrote pride and prejudice", "state": {"intent": "memory", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10601, "user": "what is the currency of japan", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the currency of japan"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10602, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10603, "user": "which planet is closest to the sun", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10604, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10605, "user": "what is the currency of japan", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:what is the currency of japan"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10701, "user": "which organ pumps blood through the body", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10702, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10703, "user": "what is the largest mammal", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the largest mammal"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10704, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10705, "user": "which organ pumps blood through the body", "state": {"intent": "memory", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10801, "user": "who wrote the novel 1984", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10802, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10803, "user": "what is the capital of australia", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10804, "user": "good morning", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10805, "user": "who wrote the novel 1984", "state": {"intent": "memory", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10901, "user": "how many sides does a hexagon have", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:how many sides does a hexagon have"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10902, "user": "good morning", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10903, "user": "who painted the mona lisa", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 10904, "user": "thanks for your help", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 10905, "user": "how many sides does a hexagon have", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:how many sides does a hexagon have"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11001, "user": "which is the largest desert on earth", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11002, "user": "thanks for your help", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11003, "user": "what is the hardest natural substance", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the hardest natural substance"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11004, "user": "what can you do", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11005, "user": "which is the largest desert on earth", "state": {"intent": "memory", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11101, "user": "what is the capital of canada", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11102, "user": "what can you do", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11103, "user": "who discovered penicillin", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11104, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11105, "user": "what is the capital of canada", "state": {"intent": "memory", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11201, "user": "which country is largest by area", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:which country is largest by area"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11202, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11203, "user": "what is the main gas in earth's atmosphere", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11204, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11205, "user": "which country is largest by area", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:which country is largest by area"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11301, "user": "who wrote romeo and juliet", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11302, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11303, "user": "what is the capital of italy", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the capital of italy"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11304, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11305, "user": "who wrote romeo and juliet", "state": {"intent": "memory", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11401, "user": "how many strings does a violin have", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11402, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11403, "user": "who developed the theory of relativity", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11404, "user": "good morning", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11405, "user": "how many strings does a violin have", "state": {"intent": "memory", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11501, "user": "what is the largest bone in the human body", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the largest bone in the human body"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11502, "user": "good morning", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11503, "user": "what is the capital of egypt", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11504, "user": "thanks for your help", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11505, "user": "what is the largest bone in the human body", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:what is the largest bone in the human body"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11601, "user": "who wrote the origin of species", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11602, "user": "thanks for your help", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11603, "user": "what is the chemical symbol for sodium", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the chemical symbol for sodium"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11604, "user": "what can you do", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11605, "user": "who wrote the origin of species", "state": {"intent": "memory", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11701, "user": "what is the largest island in the world", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11702, "user": "what can you do", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11703, "user": "what is the capital of brazil", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11704, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11705, "user": "what is the largest island in the world", "state": {"intent": "memory", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11801, "user": "who composed the ninth symphony", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:who composed the ninth symphony"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11802, "user": "hello there", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11803, "user": "what is the smallest prime number", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11804, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11805, "user": "who composed the ninth symphony", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:who composed the ninth symphony"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11901, "user": "what is the capital of france", "state": {"intent": "knowledge", "score": 1.0}, "retrieved": ["answer:what is the capital of france"], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11902, "user": "how are you today", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11903, "user": "at what temperature celsius does water boil at sea level", "state": {"intent": "knowledge", "score": 0.0}, "retrieved": [], "trigger": "called", "llm_response": "i don't know", "consolidation": {}}
+{"turn": 11904, "user": "tell me a joke", "state": {"intent": "chat", "score": 0.0}, "retrieved": [], "trigger": "skipped", "llm_response": null, "consolidation": {}}
+{"turn": 11905, "user": "what is the capital of france", "state": {"intent": "memory", "score": 1.0}, "retrieved": ["answer:what is the capital of france"], "trigger": "skipped", "llm_response": null, "consolidation": {}}

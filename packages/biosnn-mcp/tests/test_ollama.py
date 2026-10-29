@@ -43,3 +43,21 @@ def test_missing_response_is_error():
     except RuntimeError:
         return
     raise AssertionError("缺少 response 应报错")
+
+
+def test_think_false_is_sent_only_when_requested():
+    seen = {}
+
+    def opener(request, timeout):
+        seen["body"] = json.loads(request.data.decode("utf-8"))
+        return _Response({"response": "ok"})
+
+    OllamaLLM(opener=opener).generate("hi")
+    assert "think" not in seen["body"]
+    OllamaLLM(think=False, opener=opener).generate("hi")
+    assert seen["body"]["think"] is False
+
+
+def test_thinking_block_is_stripped():
+    llm = OllamaLLM(opener=lambda request, timeout: _Response({"response": "<think>hmm</think>paris"}))
+    assert llm.generate("hi") == "paris"
