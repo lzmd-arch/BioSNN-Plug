@@ -136,3 +136,13 @@ Plan B 的两条候选在 ③②① 之后剩下"Actor 的信用分配"与"固�
 
 这条线不阻塞认知层：阶段四入口的卡口是 AF（巩固实验），不是脉冲化 CartPole。
 但它是阶段三验收里唯一"实现了却没通过"的项，**不能靠时间过去而消失**。
+
+## 2026-10-29 追加：口径复核与 D3/D4/D5
+
+- **口径复核**（[`sweep_results/stage3_sustained_audit.md`](../../sweep_results/stage3_sustained_audit.md)）：
+  27 个历史臂的 `best_steps` 与末次并列，末次中位只有 9.2–18.3——**峰值存在，末期没保住**。
+  诊断 ③ 的「最好快照」重测（73.8/76.5）说明 best 不是噪声；问题在末期退化。
+- **D3**（速率读出）：best 65.2、末次 9.55 → 读出不是瓶颈。
+- **D4**（状态依赖）：训练后的 Actor 在极角 ±0.2 上动作不变（slope 0）→ 没有状态依赖策略。
+- **D5**（坍缩 vs 沉默）：见 [`sweep_results/rstdp_spiking_collapse_prereg.md`](../../sweep_results/rstdp_spiking_collapse_prereg.md)；
+  结论出来后再决定修探索还是修工作点。
