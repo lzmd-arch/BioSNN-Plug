@@ -67,7 +67,11 @@ def main(argv: list[str] | None = None) -> int:
             1 for probe in result.probes if probe["spikes_pos"] == 0 and probe["spikes_neg"] == 0
         )
         silent_fraction = silent / len(result.probes) if result.probes else 0.0
-        peak = max(result.eval_scores, key=lambda point: point["mean_steps"])
+        peak = (
+            max(result.eval_scores, key=lambda point: point["mean_steps"])
+            if result.eval_scores
+            else {"episode": None, "mean_steps": None}
+        )
         rows.append(
             {
                 "seed": seed,
@@ -76,7 +80,9 @@ def main(argv: list[str] | None = None) -> int:
                 "silent_fraction": silent_fraction,
                 "peak_episode": peak["episode"],
                 "peak_steps": peak["mean_steps"],
-                "last_steps": result.eval_scores[-1]["mean_steps"],
+                "last_steps": (
+                    result.eval_scores[-1]["mean_steps"] if result.eval_scores else None
+                ),
                 "probes": list(result.probes),
                 "eval_scores": result.eval_scores,
                 "entropies": list(result.entropies),
@@ -84,8 +90,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(
             f"seed {seed}: final entropy {final_entropy:.3f}, silent {silent_fraction:.2f}, "
-            f"peak {peak['mean_steps']:.1f}@{peak['episode']}, last "
-            f"{result.eval_scores[-1]['mean_steps']:.1f}",
+            f"peak {peak['mean_steps']}@{peak['episode']}, last "
+            f"{result.eval_scores[-1]['mean_steps'] if result.eval_scores else None}",
             flush=True,
         )
 
@@ -94,8 +100,12 @@ def main(argv: list[str] | None = None) -> int:
         "kind": "diagnostic: collapse vs silence at end of training",
         "seeds": rows,
         "verdict": verdict,
-        "median_peak": statistics.median([row["peak_steps"] for row in rows]),
-        "median_last": statistics.median([row["last_steps"] for row in rows]),
+        "median_peak": _median(
+            [row["peak_steps"] for row in rows if row["peak_steps"] is not None]
+        ),
+        "median_last": _median(
+            [row["last_steps"] for row in rows if row["last_steps"] is not None]
+        ),
         "repro": collect(
             "W3 脉冲化：D5 坍缩/沉默诊断",
             seeds=",".join(str(seed) for seed in seeds),
@@ -109,6 +119,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(json.dumps(verdict, ensure_ascii=False, indent=2))
     return 0
+
+
+def _median(values: list[float]) -> float | None:
+    return statistics.median(values) if values else None
 
 
 def _parse_seeds(text: str) -> list[int]:
