@@ -74,6 +74,8 @@ class TrainResult:
     """同一份最终权重、20 个评测种子各跑一次的平均步数（诊断 ③ 用）。空 = 没跑。"""
     entropies: tuple[float, ...] = ()
     """每回合 Boltzmann 动作分布的平均熵（诊断 ② 用）。空 = 没记。"""
+    probes: tuple[dict, ...] = ()
+    """每 ``probe_every`` 回合在固定极角 ±0.2 上的窗口探针（D5 诊断用）。空 = 没记。"""
     actor: Any = field(default=None, repr=False, compare=False)
     """``keep_actor=True`` 时的最终 actor（已载入最好权重）。诊断 ① 用。"""
     centers: Any = field(default=None, repr=False, compare=False)
@@ -185,6 +187,7 @@ def train(
     device: torch.device,
     eval_noise_seeds: int = 0,
     entropy_log: bool = False,
+    probe_every: int = 0,
     keep_actor: bool = False,
     actor_after: str = "best",
     trace_rule: str = "pair-stdp",
@@ -252,6 +255,7 @@ def train(
 
     returns: list[float] = []
     entropies: list[float] = []
+    probes: list[dict] = []
     eval_scores: list[dict] = []
     baseline = 0.0
     best_steps = -1.0
@@ -292,6 +296,9 @@ def train(
         actor.end_episode()
         if hasattr(critic, "reset_trace"):
             critic.reset_trace()
+
+        if probe_every and (episode + 1) % probe_every == 0:
+            probes.append(_probe_actor(actor, centers, sigma, seed=seed, episode=episode + 1))
 
         if warmup <= episode and (episode + 1) % eval_every == 0:
             score = evaluate(actor, centers, sigma, episodes=eval_episodes, seed=10_000 + seed)
@@ -334,9 +341,38 @@ def train(
         selected_episode=selected_episode,
         eval_noise=tuple(noise),
         entropies=tuple(entropies),
+        probes=tuple(probes),
         actor=actor if keep_actor else None,
         centers=centers if keep_actor else None,
     )
+
+
+@torch.no_grad()
+def _probe_actor(
+    actor: SpikingActor,
+    centers: torch.Tensor,
+    sigma: float,
+    *,
+    seed: int,
+    episode: int,
+    repeats: int = 5,
+) -> dict:
+    """在固定极角 ±0.2 上采几个冻结窗口：后突触脉冲数与贪心动作（D5 诊断用）。"""
+    record: dict = {"episode": episode}
+    for label, angle in (("pos", 0.2), ("neg", -0.2)):
+        state = torch.tensor([0.0, 0.0, angle, 0.0])
+        features = encode_state(state, centers, sigma)
+        generator = torch.Generator(device="cpu").manual_seed(seed * 10_000 + episode + (angle > 0))
+        left = 0
+        spikes = 0.0
+        for _ in range(repeats):
+            _, post = actor.window_spikes(features, generator=generator)
+            counts = post.sum(dim=0).squeeze(0)
+            spikes += float(counts.sum())
+            left += int(counts.argmax().item() == 0)
+        record[f"p_left_{label}"] = left / repeats
+        record[f"spikes_{label}"] = spikes / repeats
+    return record
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -530,6 +566,7 @@ def main(argv: list[str] | None = None) -> int:
                     else None
                 ),
                 "selected_episode": r.selected_episode,
+                "probes": list(r.probes),
                 "eval_scores": r.eval_scores,
                 "returns": r.returns,
             }
@@ -573,6 +610,7 @@ def main(argv: list[str] | None = None) -> int:
                     "seed": r.seed,
                     "best_steps": r.best_steps,
                     "selected_episode": r.selected_episode,
+                    "probes": list(r.probes),
                     "eval_scores": r.eval_scores,
                     "returns": r.returns,
                 },
