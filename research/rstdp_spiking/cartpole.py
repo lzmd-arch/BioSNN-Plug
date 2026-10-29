@@ -470,6 +470,12 @@ def main(argv: list[str] | None = None) -> int:
         help="每回合记录 Boltzmann 熵（诊断用，默认关）",
     )
     parser.add_argument(
+        "--probe-grid",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="探针扫 21 点极角网格（D8/D9 用）；默认只测 ±0.2",
+    )
+    parser.add_argument(
         "--probe-every",
         type=int,
         default=0,
@@ -607,6 +613,13 @@ def main(argv: list[str] | None = None) -> int:
             contrastive_gamma=args.contrastive_gamma,
             entropy_log=args.entropy_log,
             probe_every=args.probe_every,
+            probe_angles=(
+                tuple(
+                    (round(-0.2 + 0.02 * index, 2), f"a{index}") for index in range(21)
+                )
+                if args.probe_grid
+                else None
+            ),
         )
         results.append(outcome)
         print(
@@ -651,6 +664,7 @@ def main(argv: list[str] | None = None) -> int:
             "contrastive_gamma": args.contrastive_gamma,
             "entropy_log": args.entropy_log,
             "probe_every": args.probe_every,
+            "probe_grid": args.probe_grid,
         },
         "per_seed": [
             {
