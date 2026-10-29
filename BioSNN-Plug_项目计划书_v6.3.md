@@ -1333,6 +1333,14 @@
 >    偏好的符号」。`degradation_attributed=false`。见
 >    [`sweep_results/rstdp_spiking_degradation/README.md`](sweep_results/rstdp_spiking_degradation/README.md)。
 
+> 155. **2026-10-29：阶段三 D8——末期读出对状态没有差分响应（5/5 `no_state_information`）**。
+>    臂 D6-B、5 种子；每 100 回合在 21 点极角网格上记 `Δ = counts_left − counts_right`。
+>    末期 Δ 在整条网格上的极差只有 **0.0 / 0.2 / 0.2 / 0.4 / 0.4** 个计数，信噪比
+>    **∞ / 15.0 / 11.0 / 13.1 / 23.0**（20 窗口）——贪心动作恒定是读出的**常数偏好**，
+>    不是噪声淹没；四轴扫描同样平坦。结合 D4/D7：状态调制没有进入两列的计数差。
+>    下一步二选一：列权重差在状态特征上的投影（初始化/归一化）vs LIF 饱和（工作点）。
+>    见 [`sweep_results/rstdp_spiking_readout/README.md`](sweep_results/rstdp_spiking_readout/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
