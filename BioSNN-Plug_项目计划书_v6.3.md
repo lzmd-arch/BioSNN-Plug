@@ -1262,6 +1262,12 @@
 >    按此外推完整 epoch 约 16 h，500k 训练仍未验证。见
 >    [`sweep_results/event_driven_100k/README.md`](sweep_results/event_driven_100k/README.md)。
 
+> 146. **2026-10-29：event-driven 10k 完整 1 epoch——60k 样本 40 min，测试 0.697**。
+>    n_rec=10,000、fan_in=32、batch=8、完整 60k/60k、1 epoch：**2,397.1 s**（7,500 updates，
+>    0.32 s/update），测试 **0.6970**（1 epoch，不作与 W2 的精度比较）；稀疏权重 320k。
+>    6000 子集为 205.6 s/0.520。**边界**：10k、1 epoch、单种子；500k 训练仍未验。见
+>    [`sweep_results/event_driven_10k/README.md`](sweep_results/event_driven_10k/README.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
