@@ -7,7 +7,9 @@ D8 量到末期贪心动作恒定、计数差 Δ 的极差只有 0–0.4。本�
 * **C 差分方向放大**：把 `w_j` 相对列均值放大 `m` 倍后重新 L1 归一化，看计数差能否重新
   随状态变——若能，方向可表达；若不能，输出层对输入不敏感。
 
-B（输入整体缩放下的传递曲线）与 D（随机同范数方向）只作交叉验证，不进判据。
+B（输入整体缩放下的传递曲线）只作交叉验证；D（随机同范数方向）按**修正 1** 升为 A 的
+分母对照（`A_norm = A_spread / median(随机方向极差)`，见
+`sweep_results/rstdp_spiking_direction_prereg_amend1.md`）。
 """
 
 from __future__ import annotations
@@ -37,6 +39,9 @@ AMPLIFICATIONS = (1, 2, 4, 8, 16)
 REPEATS = 20
 
 #: 预注册阈值（改这里必须改预注册文件）。
+#: A 按修正 1：对同范数随机方向标定（`A_norm = A_spread / median(随机方向极差)`）。
+A_NORM_MIN = 2.0
+#: 原始阈值，只并列报告，不参与判定（见 prereg_amend1）。
 A_SPREAD_MIN = 0.05
 B_RANGE_MIN = 1.0
 C_RANGE_MIN = 0.5
@@ -199,8 +204,11 @@ def _measure_random_direction(actor, centers, sigma: float, *, seed: int) -> dic
     return {"spreads": spreads, "median": statistics.median(spreads)}
 
 
-def _verdict(drive: dict, amplification: dict, transfer: dict) -> dict:
-    direction = drive["spread"] >= A_SPREAD_MIN
+def _verdict(drive: dict, amplification: dict, transfer: dict, random_control: dict) -> dict:
+    """按修正 1 判定：A 用随机方向标定后的相对量（原阈值并列报告，不参与判定）。"""
+    baseline = max(float(random_control["median"]), 1e-12)
+    normalized = drive["spread"] / baseline
+    direction = normalized >= A_NORM_MIN
     expressible = amplification["16"]["range"] >= C_RANGE_MIN
     saturated = transfer["dynamic_range"] < B_RANGE_MIN
     if not direction:
@@ -211,6 +219,8 @@ def _verdict(drive: dict, amplification: dict, transfer: dict) -> dict:
         reason = "amplitude_too_small"
     return {
         "direction": direction,
+        "a_norm": normalized,
+        "a_spread_raw_pass": drive["spread"] >= A_SPREAD_MIN,
         "expressible": expressible,
         "saturated": saturated,
         "reason": reason,
@@ -254,7 +264,7 @@ def main(argv: list[str] | None = None) -> int:
         transfer = _measure_transfer(result.actor, result.centers, 1.0, seed=seed)
         amplification = _measure_amplification(result.actor, result.centers, 1.0, seed=seed)
         random_control = _measure_random_direction(result.actor, result.centers, 1.0, seed=seed)
-        verdict = _verdict(drive, amplification, transfer)
+        verdict = _verdict(drive, amplification, transfer, random_control)
         rows.append(
             {
                 "seed": seed,
@@ -269,7 +279,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(
             f"seed {seed}: {verdict['reason']} "
-            f"(A {drive['spread']:.3f}, C16 {amplification['16']['range']:.2f}, "
+            f"(A {drive['spread']:.4f} / x{verdict['a_norm']:.2f} rand, "
+            f"C16 {amplification['16']['range']:.2f}, "
             f"B {transfer['dynamic_range']:.2f})",
             flush=True,
         )
@@ -282,7 +293,8 @@ def main(argv: list[str] | None = None) -> int:
         "arm": "D6-B (count-aligned, spiking_temperature 0.1->0.02)",
         "angles": ANGLES,
         "thresholds": {
-            "A_spread_min": A_SPREAD_MIN,
+            "A_norm_min": A_NORM_MIN,
+            "A_spread_min_reference_only": A_SPREAD_MIN,
             "B_range_min": B_RANGE_MIN,
             "C_range_min": C_RANGE_MIN,
         },
@@ -294,7 +306,8 @@ def main(argv: list[str] | None = None) -> int:
             seeds=",".join(str(seed) for seed in seeds),
             notes=[
                 "臂：D6-B（logit_scale 0.1→0.02，count-aligned）",
-                "A 相对差驱动 / B 输入缩放传递曲线 / C 差方向放大（逐列 L1 归一化）/ D 随机方向对照",
+                "A 相对差驱动（按修正 1 用随机方向标定）/ B 输入缩放传递曲线 / "
+                "C 差方向放大（逐列 L1 归一化）/ D 随机方向对照",
             ],
             device=torch.device("cpu"),
         ).render_block(),
