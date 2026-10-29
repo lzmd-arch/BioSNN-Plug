@@ -1276,6 +1276,13 @@
 >    约 90 倍（18 s → 0.2 s），正式运行用 `think=false`。见
 >    [`sweep_results/phase5_m3b/README.md`](sweep_results/phase5_m3b/README.md)。
 
+> 148. **2026-10-29：阶段三口径复核——`best_steps` 是评测噪声极值，27 个历史臂末次中位只有 9–18 步**。
+>    `best_steps` = 32 个评测点（每点 10 回合）取最大；复核全部历史 summary：末次中位
+>    9.2–18.3（最高为 sign-consistent 18.3），而 D1 rate-features 62.15→13.05、D2 线性
+>    策略 179.8→9.6。**没有一条臂持续学会**；既有的预注册判定（全部未过）不变，但历史
+>    比较不能再只读 best。`cartpole.py` 起同报 `last_steps`/`final3_mean_steps`；审计表见
+>    [`sweep_results/stage3_sustained_audit.md`](sweep_results/stage3_sustained_audit.md)。
+
 ## 一、项目定位
 
 ### 1.1 项目名称
