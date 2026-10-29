@@ -1,7 +1,9 @@
 # 预注册：阶段四神经发生探针（2026-10-29）
 
-**性质：新研究项；本文先定协议，尚未实现/运行。** 目标不是“加神经元”本身，而是验证
+**性质：新研究项；本文先定协议。** 目标不是“加神经元”本身，而是验证
 **控制器**：容量不足时增长、任务完成后旧能力不丢、增长有界。
+
+**状态（2026-10-29 补记，判据未改）**：已实现并跑数——v1 线性 delta 读出见 [`neurogenesis_probe/README.md`](neurogenesis_probe/README.md)（最后任务 0.432、旧任务 0.310，`ready=false`）；v2 NCM 读出见 [`neurogenesis_ncm/README.md`](neurogenesis_ncm/README.md)（0.766 / 0.277，`ready=false`）。
 
 ## 任务（最小非平凡版）
 
@@ -30,10 +32,9 @@
 
 ## 未做
 
-- 本文件落盘时**没有实现/数据**；下一步是实现 `research/continual/neurogenesis.py` 与
-  5 种子 runner，再按本判据跑。多模态真实插件版本是后续，不在本探针外推。
+- 本文件落盘时没有实现/数据；同日已按本判据实现并跑完 v1 与 v2，见上面的状态补记。多模态真实插件版本是后续，不在本探针外推。
 
-## 产物（待建）
+## 产物
 
 - `research/continual/neurogenesis.py`；
 - `research/continual/run_neurogenesis.py`；

@@ -524,7 +524,7 @@
 >    下一步设计与**计数策略同向**的局部资格，不是改用线性策略。见
 >    [`sweep_results/rstdp_spiking_policy_control/linear_rate/README.md`](sweep_results/rstdp_spiking_policy_control/linear_rate/README.md)。
 
-> 55. **2026-10-26：计数同向资格的预注册（v3，尚未实现/跑数）**。机制：
+> 55. **2026-10-26：计数同向资格的预注册（v3；已实现并跑数，结果见 134——0/10、中位 9.5）**。机制：
 >    `E ← λE + x ⊗ [z ⊙ (1[a] − π)]`——`x` 是**输入脉冲计数**，`z` 是 **LIF 发放计数**，
 >    `π` 是 Actor 的实际采样分布；这是"资格 = E[z]·(1[a]−π_count)"的形状展开，
 >    是计数策略梯度的局部近似。对照臂是已跑的 D1（62.15）与 D2（179.80，仅作 sanity）；
@@ -1171,10 +1171,10 @@
 >    仓库没有功率计与逐样本能耗采集，**不能**声称硬件 10×；只能写“代理达标、硬件未测”。
 >    见 [`sweep_results/phase4_energy/README.md`](sweep_results/phase4_energy/README.md)。
 
-> 131. **2026-10-29：阶段四神经发生——预注册已落，未实现**。
+> 131. **2026-10-29：阶段四神经发生——预注册已落**（本条只作立项记录；同日已实现并跑数，见 133 与 NCM v2）。
 >    最小协议：冻结双模态特征 + 4 个顺序冲突任务；初始 64 个 LIF，准确率 <0.90 时 +16、
->    上限 2×；旧读出冻结；判据为新任务≥0.90、旧任务掉≤2pp、增长有界。**没有实现/数据**，
->    不写成 ready。见
+>    上限 2×；旧读出冻结；判据为新任务≥0.90、旧任务掉≤2pp、增长有界。立项时没有实现/数据，
+>    **同日已实现**（133 线性增长臂、`neurogenesis_ncm` 的 NCM 增长臂），两条都 `ready=false`。见
 >    [`sweep_results/neurogenesis_prereg.md`](sweep_results/neurogenesis_prereg.md)。
 
 > 132. **2026-10-29：事件驱动 e-prop 最小实现——稀疏 fan-in，LIF/最后一步等价**。
