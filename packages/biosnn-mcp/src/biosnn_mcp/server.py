@@ -24,10 +24,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TextIO
 
+from ._version import __version__
 from .core import CognitiveCore, InMemoryCore, ToolError
 
 PROTOCOL_VERSION = "2024-11-05"
-SERVER_INFO = {"name": "biosnn-mcp", "version": "0.2.0"}
+SERVER_INFO = {"name": "biosnn-mcp", "version": __version__}
 
 _EMPTY_SCHEMA = {"type": "object", "properties": {}, "additionalProperties": False}
 

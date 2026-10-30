@@ -32,6 +32,13 @@ class TestHandshake:
         assert reply["result"]["capabilities"] == {"tools": {}}
         assert reply["result"]["serverInfo"]["name"] == "biosnn-mcp"
 
+    def test_server_info_version_matches_the_package(self):
+        """版本号只有一个来源：`serverInfo.version` 与 `__version__` 必须一致。"""
+        import biosnn_mcp
+
+        reply = handle_message(_core(), {"jsonrpc": "2.0", "id": 11, "method": "initialize"})
+        assert reply["result"]["serverInfo"]["version"] == biosnn_mcp.__version__
+
     def test_initialized_notification_has_no_reply(self):
         assert (
             handle_message(_core(), {"jsonrpc": "2.0", "method": "notifications/initialized"})

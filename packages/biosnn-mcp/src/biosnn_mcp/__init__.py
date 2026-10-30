@@ -43,10 +43,11 @@ __all__ = [
     "TurnRecord",
     "WritableMemory",
     "ZScoreTopKEncoder",
+    "__version__",
     "build_scenarios",
     "handle_message",
     "run_session",
     "serve_stdio",
 ]
 
-__version__ = "0.2.0"
+from ._version import __version__  # 单一版本源
