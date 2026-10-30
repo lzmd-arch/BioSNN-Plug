@@ -495,6 +495,28 @@ jobs:
           assert len(audit) == 2 and all(entry["ok"] for entry in audit), audit
           print("biosnn-mcp wheel OK：可写/只读两条路径与审计都符合预期")
           PY
+      - name: 写版本入口的 smoke（同一个 wheel 的第二个入口）
+        run: |
+          # 提议进队列 → 门控落库 → 撤回落回；入口与只读版来自同一次构建
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"propose.memory.write","arguments":{"text":"ci write smoke with 3 numbers","proposal_id":"ci-1","source":"user"}}}' \
+            '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"memory.revert","arguments":{"seq":1,"reason":"ci"}}}' \
+            | /tmp/mcp/bin/biosnn-mcp-write --state-dir /tmp/mcp/state > /tmp/mcp/writeversion.jsonl
+          /tmp/mcp/bin/python - <<'PY'
+          import json
+
+          replies = [
+              json.loads(line) for line in open("/tmp/mcp/writeversion.jsonl", encoding="utf-8")
+          ]
+          tools = [tool["name"] for tool in replies[0]["result"]["tools"]]
+          assert len(tools) == 13 and tools[-1] == "gate.configure", tools
+          accepted = json.loads(replies[1]["result"]["content"][0]["text"])
+          assert accepted["status"] == "accepted", accepted
+          reverted = json.loads(replies[2]["result"]["content"][0]["text"])
+          assert reverted["reverted"] is True, reverted
+          print("biosnn-mcp-write OK：13 个工具、提议被接受、撤销成功")
+          PY
       - name: 在干净环境里跑 MCP 测试套件
         run: |
           uv pip install --python /tmp/mcp/bin/python pytest

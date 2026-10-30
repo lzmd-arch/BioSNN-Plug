@@ -64,6 +64,14 @@ Same package, same version, one extra entry point. The difference is one sentenc
 longer land straight in the in-memory stand-in -- they enter a queue, and the consolidation gate
 decides whether the memory is kept**.
 
+| | `biosnn-mcp` (default) | `biosnn-mcp-write` |
+| :--- | :--- | :--- |
+| Tools | 9 | 13 |
+| Where write tools go | the in-memory stand-in | queue -> gate -> persistent file |
+| Undo | no such layer | `memory.revert` |
+| Audit | optional `--audit-log` | `<state>/audit.jsonl` by default |
+| Fits | letting other programs look, trying the tool surface | letting proposals become memory |
+
 ```bash
 biosnn-mcp-write --state-dir ~/.biosnn-mcp    # queue, store and audit log default to this directory
 ```

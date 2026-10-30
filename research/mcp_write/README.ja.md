@@ -51,3 +51,17 @@ python scripts/e2e_write_mcp.py --keep     # 保持して store.json / audit.jso
 | コード版 | `83a4530`（P1）＋本スクリプトを含むコミット |
 | コマンド | `python scripts/e2e_write_mcp.py` |
 | 結果 | 14/14 通過、終了コード 0 |
+## P5：パッケージ検証（2026-10-31）
+
+リリースのためではなく、**同じ wheel に二つの入口が入っていて、どちらも動く**ことの確認です。
+
+| 手順 | 結果 |
+| :--- | :--- |
+| `uv build --wheel packages/biosnn-mcp` | `biosnn_mcp-0.3.0-py3-none-any.whl` |
+| まっさらな venv に導入 | `biosnn-mcp.exe` と `biosnn-mcp-write.exe` の両方が現れる |
+| `biosnn-mcp-write --help` | 正常（`--state-dir / --store / --queue / --audit-log`） |
+| 導入済みの入口で stdio セッション | `tools/list` は 13 個のツール；提案は `accepted`；検索が当たる；`memory.revert` は `reverted: true`；監査 7 行 |
+
+CI に「書き込み入口の smoke」を一條追加しました：wheel を作り、きれいな venv に入れ、
+`biosnn-mcp-write` で propose → accept → revert を通し、13 個のツールと二つの判定を検証します。
+**公開はしていません**——バージョン番号と tag はユーザーが決めることです。

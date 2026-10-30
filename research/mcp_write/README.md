@@ -49,3 +49,17 @@ python scripts/e2e_write_mcp.py --keep     # 保留目录，用来翻 store.json
 | 代码版本 | `83a4530`（P1 落地）+ 本脚本所在提交 |
 | 命令 | `python scripts/e2e_write_mcp.py` |
 | 结果 | 14/14 通过，退出码 0 |
+## P5：打包验证（2026-10-31）
+
+不是为了发版，是为了证明**同一个 wheel 里两个入口都在、都能用**。
+
+| 步骤 | 结果 |
+| :--- | :--- |
+| `uv build --wheel packages/biosnn-mcp` | `biosnn_mcp-0.3.0-py3-none-any.whl` |
+| 装进全新 venv | `biosnn-mcp.exe` 与 `biosnn-mcp-write.exe` 两个入口都出现 |
+| `biosnn-mcp-write --help` | 正常（`--state-dir / --store / --queue / --audit-log`） |
+| 通过装好的入口跑 stdio 会话 | `tools/list` 返回 13 个工具；提议被判 `accepted`；检索命中；`memory.revert` 返回 `reverted: true`；审计 7 行 |
+
+CI 里另加了一条腿「写版本入口的 smoke」：构建 wheel、装进干净 venv、用
+`biosnn-mcp-write` 走一遍 propose → accept → revert，断言 13 个工具与两条判定。
+**发布本身没有做**——版本号与 tag 由用户决定。

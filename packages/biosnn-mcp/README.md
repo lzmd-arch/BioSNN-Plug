@@ -61,6 +61,14 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"state.quer
 同一个包、同一版本号，多一个入口。区别只有一句：**提议不再只落在内存替身核，而是进队列，
 由巩固门控决定要不要记**。
 
+| | `biosnn-mcp`（默认） | `biosnn-mcp-write` |
+| :--- | :--- | :--- |
+| 工具数 | 9 | 13 |
+| 写工具去向 | 内存替身核 | 队列 → 门控 → 持久化文件 |
+| 撤销 | 没有这一层 | `memory.revert` |
+| 审计 | 可选 `--audit-log` | 默认 `<state>/audit.jsonl` |
+| 适合 | 让别的程序看、试工具面 | 让提议真的成为记忆 |
+
 ```bash
 biosnn-mcp-write --state-dir ~/.biosnn-mcp    # 队列 / 存储 / 审计默认都在这个目录
 ```

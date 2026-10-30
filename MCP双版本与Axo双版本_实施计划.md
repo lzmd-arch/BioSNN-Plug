@@ -287,7 +287,8 @@ MCP 客户端 ──propose.*──▶ 提议队列（SQLite，本机）
 | P4a | 完成 | Axo 仓 `ab3b009`：`MemorySettings.propose_enabled`（默认关，键 `memory/propose_enabled`），与同一组设置共命名空间，往返测试通过（Axo 套件 236 条全绿） |
 | P4b | 完成 | Axo 仓 `1d60580`：设置页勾选框、`ui/propose_ledger.py`（台账 + 撤销）、记忆窗口的「提议台账」按钮、`ProposeConsumer.revert` 与 applied 表；A3 撤销回到写前已验 |
 | P4c | 完成 | Axo 仓 `f276a8a`：`paths.propose_queue_path/propose_audit_path`、`build_consumer`（关着返回 None）、主窗口 `_sync_propose_consumer`（打开窗口与保存设置时各同步一次）、按钮上的待审数；角标放在记忆窗口按钮而非状态栏（全局状态栏上的数字对不开记忆窗口的人没有意义） |
-| P5–P6 | 未开始 | — |
+| P5 | 完成 | wheel `biosnn_mcp-0.3.0` 双入口装进干净 venv 后逐个验过（13 工具、accept、revert、7 行审计）；CI 新增「写版本入口的 smoke」腿；三语 README 加两版对照表；`research/mcp_write` 记录验证数字。**未发版** |
+| P6 | 未开始 | 系统级验收（S1–S4）与三语说明 |
 
 P1 的验收按 §3.4 的 W1–W6 逐条写成测试（`packages/biosnn-mcp/tests/test_mcp_queue.py`，
 测试名带编号）：

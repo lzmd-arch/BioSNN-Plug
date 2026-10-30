@@ -52,3 +52,17 @@ stdin/stdout -- exactly what an MCP client sees, not a direct Python-API call.
 | Code version | `83a4530` (P1) plus the commit carrying this script |
 | Command | `python scripts/e2e_write_mcp.py` |
 | Result | 14/14 passed, exit code 0 |
+## P5: packaging check (2026-10-31)
+
+Not a release -- the point is that **one wheel carries both entry points and both work**.
+
+| Step | Result |
+| :--- | :--- |
+| `uv build --wheel packages/biosnn-mcp` | `biosnn_mcp-0.3.0-py3-none-any.whl` |
+| install into a clean venv | both `biosnn-mcp.exe` and `biosnn-mcp-write.exe` appear |
+| `biosnn-mcp-write --help` | fine (`--state-dir / --store / --queue / --audit-log`) |
+| stdio session through the installed entry point | `tools/list` returns 13 tools; the proposal is `accepted`; search hits; `memory.revert` returns `reverted: true`; 7 audit lines |
+
+A CI leg was added ("write entry smoke"): build the wheel, install into a clean venv, run
+propose -> accept -> revert through `biosnn-mcp-write`, asserting 13 tools and both verdicts.
+**Nothing was published** -- the version number and the tag are the user's call.
