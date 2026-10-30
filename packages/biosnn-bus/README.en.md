@@ -148,6 +148,18 @@ no torch dependency (`[torch]` is an optional bridge only).
 **Conformance tests (CI)**: C1 `step` returns `(bus_dim,)` after registration; C2 unknown modality
 raises; C3 time alignment; C4 constant dimension; C5 snapshot is read-only.
 
+**Read/write boundary (three-face matrix, settled 2026-10-30)**: openness follows the trust boundary — **whoever is accountable for a write is the only one who gets to write**.
+
+| Face | Who may write | Constraint |
+| :--- | :--- | :--- |
+| Perception | any plugin (writing "sensation" is open) | TAAF fusion + per-call audit + **plugins off by default** |
+| Memory | **the dynamics core only** (neither the host nor the LLM writes directly) | outside callers may only `propose`, through a two-stage queue + consolidation-gated consumption |
+| Knowledge | maximally open (docs, spec, data) | but the mechanism core stays closed and is outside the bus contract |
+
+Three lines about MCP: **read-only is a position** (the LLM never writes directly), **propose is the valve** (a two-stage queue), **the bus is the only door**. Naming rule: **a tool that never really writes must not be called `write_*`** (see ADR-0027).
+
+**Encoding credit**: the dimension-agnostic text encoding (z-score standardised top-k population code) comes from the EMBER group (Savage, 2026, arXiv:2604.12167); this repo's `text_zscore` is a **later implementation that cites it**, so the attribution runs EMBER → BioSNN. Any description of that encoding in this spec credits the EMBER group.
+
 ## License
 
 Apache-2.0. Documentation is CC-BY 4.0.
