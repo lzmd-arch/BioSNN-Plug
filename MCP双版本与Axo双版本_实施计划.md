@@ -286,7 +286,7 @@ MCP 客户端 ──propose.*──▶ 提议队列（SQLite，本机）
 | P3 | 完成 | Axo 仓 `ca57c56`：`src/axo/propose_consumer.py` + `tests/test_propose_consumer.py`（11 条，A1/A2/A4/A6 + 只读库拒绝 + 幂等）；README 与 `docs/security.md` 记清只读版未改、界面未接线 |
 | P4a | 完成 | Axo 仓 `ab3b009`：`MemorySettings.propose_enabled`（默认关，键 `memory/propose_enabled`），与同一组设置共命名空间，往返测试通过（Axo 套件 236 条全绿） |
 | P4b | 完成 | Axo 仓 `1d60580`：设置页勾选框、`ui/propose_ledger.py`（台账 + 撤销）、记忆窗口的「提议台账」按钮、`ProposeConsumer.revert` 与 applied 表；A3 撤销回到写前已验 |
-| P4c | 未开始 | 主窗口在开关打开时创建消费者并注入 + 状态栏待审角标（在那之前「提议台账」按钮不可点，属已知缺口） |
+| P4c | 完成 | Axo 仓 `f276a8a`：`paths.propose_queue_path/propose_audit_path`、`build_consumer`（关着返回 None）、主窗口 `_sync_propose_consumer`（打开窗口与保存设置时各同步一次）、按钮上的待审数；角标放在记忆窗口按钮而非状态栏（全局状态栏上的数字对不开记忆窗口的人没有意义） |
 | P5–P6 | 未开始 | — |
 
 P1 的验收按 §3.4 的 W1–W6 逐条写成测试（`packages/biosnn-mcp/tests/test_mcp_queue.py`，
