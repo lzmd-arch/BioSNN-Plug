@@ -656,6 +656,106 @@ reward spread, and
 the global-baseline arm's post-training performance falls monotonically as that
 spread grows.
 
+\subsection{The spiking execution layer: sixteen diagnostics, one cause}
+\label{sec:spiking-diagnostics}
+
+The rate-based line of \S\ref{sec:results} passes its acceptance batch. The
+project's central claim, however, is that the \emph{spiking} version of the same
+actor can do the same job. It cannot --- and the way it fails turned out to be
+more useful than a pass would have been.
+
+\paragraph{The failure.} Under the same CartPole protocol and the same seeds, the
+count-aligned spiking actor reaches a mean best-greedy score of 39.4 steps and a
+last-evaluation median of \textbf{9.5} steps, against the rate version's 237.8;
+\textbf{0 of 10 seeds} clear the 200-step threshold at the end of training. A
+single seed peaks at 86 steps, so this is not one broken run.
+
+\paragraph{What the probe measures.} Every round below uses one probe. On a
+21-point grid over the pole angle $\theta \in [-0.2, 0.2]$, with the other three
+state components fixed at zero, we draw 20 frozen decision windows per point and
+record $\Delta = \text{counts}_{\text{left}} - \text{counts}_{\text{right}}$, the
+angle \emph{slope} $\Pr(\text{left}\mid \theta{=}{+}0.2) -
+\Pr(\text{left}\mid \theta{=}{-}0.2)$, and, where needed, the membrane potentials
+and first-spike latencies. A policy that uses the state at all must show a
+non-zero slope on this grid; a readout that carries state information must show
+a non-zero spread of $\Delta$ across it.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+Round & Question & Answer \
+\midrule
+D3  & does the readout matter (count vs.\ low-pass rate)? & both stall (best 65.2, last 9.55) \
+D4  & does the greedy action depend on the angle?        & slope $=0$ in every seed \
+D5  & is the output distribution collapsed?              & yes, entropy collapses \
+D6  & does a temperature schedule repair it?             & entropy recovers, last median stays 9.5 \
+D7  & attributable to entropy, column norm or critic?    & 5/5 \emph{unattributed} \
+D8  & how much state information does the readout keep?  & 5/5 none: $\Delta$ spread 0.0--0.4 counts, SNR 11--23 \
+D9  & does removing the common-mode column component?    & spread 0.20$\to$0.60, slope still 0/10 \
+D10 & does a trained differential direction exist?       & yes in 4/5 (2.95--13.4$\times$ random), size 0.5--7.3\% \
+D11 & threshold, refractory, bias, window?               & 54 configurations, best 0.7--3.45 counts, 0/5 usable \
+D12 & larger weight budget, no sign cancellation?        & $\lambda{=}0.30$: at most 0.80 counts \
+D13 & other readouts (rate, membrane potential)?         & separability 0.58--0.65, flat in $\lambda$ \
+D14 & averaging $K$ independent windows?                 & SNR 0.57$\to$2.12 at $K{=}8$ (3/5 seeds); a noise-free front end makes $\Delta \equiv 0$ \
+D15 & first-spike latency?                               & 0.75 / 0.90 / 0.52 / 0.75 / 0.54, still short \
+D16 & orthogonalise the difference against the mean state? & its sign still never crosses zero (0/5) \
+D17 & can the encoder resolve the angle at all?          & \textbf{no}: 2.9\% relative change \
+D18 & re-run with a per-axis normalised encoder          & readout response 30$\times$ larger; policy unchanged \
+\bottomrule
+\end{tabular}
+\caption{Diagnostic rounds on the spiking execution layer. Each round is a
+separate pre-registration; rounds that changed their criterion did so before the
+data of that round were seen and left an amendment document behind. D9--D16 are
+reported in an order different from the order in which they ran.}
+\label{tab:spiking-diagnostics}
+\end{table}
+
+\paragraph{The thing we were not looking at.} Rounds D3--D16 rule out the
+explanations one would try first: the readout, the sampling temperature, the
+output entropy, the column norm, the critic, the weight budget, the sign
+structure of the columns, averaging, latency, and orthogonalisation. What none of
+them rules out is the input. D17 measured how much the encoder's output pattern
+actually moves when the angle moves across its entire range and found a
+\textbf{2.9\%} relative change, against 1.1--1.4 on the position, velocity and
+angular-velocity axes (cosine between the two ends of the angle range:
+\textbf{0.9988}). The cause is a scaling mismatch inherited from the physical
+half-widths: the angle's half-width is 0.21 while the population width is 1.0, so
+every angle-axis centre lands inside a fraction of one tuning width and the
+population responds almost identically everywhere. A linear readout fed this
+input cannot report an angle dependence, whatever its features, its budget or its
+contrastive term.
+
+\paragraph{The fix is necessary, and not sufficient.} Re-encoding the state
+per-axis (normalised by its physical half-width, population width tuned so the
+angle's sensitivity matches the three axes that already worked) changes the
+readout's behaviour by an order of magnitude: the end-of-training spread of
+$\Delta$ over the grid rises from a median of 0.2 to \textbf{6.2} counts, a
+30-fold change (D18). The \emph{policy} does not follow. The slope is positive in
+\textbf{0 of 10 seeds} (four are negative), and the last-evaluation median stays
+at 9.85 steps. One seed of that batch holds 269 steps at the end of training ---
+the first time any seed in this line ends above the threshold --- which is a
+reason to keep the fixed encoder, not a result: one seed in ten is exactly what
+the pre-registered criterion was written to exclude.
+
+\paragraph{What the failure is, then.} The differential drive between the two
+action columns is present, varies with the state, survives every reweighting we
+tried, and still keeps the same \emph{sign} across the whole probe grid. A
+count-based readout whose difference never changes sign produces a constant
+greedy action no matter how large that difference becomes. The bottleneck is
+therefore the credit assignment: nothing in the learning signal tells the two
+columns which one should win \emph{for a given state}. Mismatched input scaling
+was a real defect and is now fixed; it was not the cause of the failure to learn.
+
+\paragraph{Boundaries.} The probe varies one axis at a time, so it bounds
+\emph{angle} dependence, not overall state dependence. D18's encoder change was
+selected on a sensitivity criterion fixed before training, not on performance.
+The 269-step seed is reported because it exists, not because it replicates. And
+none of this says that no spiking execution layer can learn CartPole; it says
+that this one, measured at matched budgets, does not, and that the reason is not
+in the places one would look first.
+
 \subsection{SHD: an honest negative result}
 The e-prop configuration that works on sequential MNIST does not learn SHD:
 
