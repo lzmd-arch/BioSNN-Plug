@@ -113,7 +113,7 @@
 - **TAAF は実装済みだが、既定の融合戦略は依然として連結**：`TemporalAttentionFusion` は**明示的に選ぶ**融合戦略（`SpikeBus(strategy=...)`）で、既定は単純連結のままです。注意：その注意重みは**各経路の発火率から計算し、学習しません**（rate-based gating）——このレッドラインは **AST による構造的アサーション**で固定しています。[ADR-0012](docs/adr/ADR-0012-taaf-locality-and-bus-output-contract.ja.md) 参照。
 - **知覚層は凍結した事前学習済みフロントエンドを使ってよい**（境界宣言、[計画書 §2.3](BioSNN-Plug_项目计划书_v6.3.md) 参照）：「純粋な局所学習」という主張の範囲は**シナプス学習規則**であって、**入力エンコーダではありません**。判定は「パラメータが勾配に入るか」であって「モデルが大きいか」ではない——凍結した 2GB の事前学習済み embedding は、固定ランダム射影とこの点で等価です。逆に、100 行のローカルエンコーダが逆伝播で自身のパラメータを学習するなら、この境界に**違反**します。テキストプラグインの `nomic-embed-text`（Ollama、768 次元）は凍結です。
 - （スケルトンライブラリがなぜ独立したパッケージなのか、なぜこれらを意図的に含めないのかは [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.ja.md) 参照。）
-- スケルトンライブラリは**PyPI にリリース済み**です：`pip install biosnn-bus`（PyPI は `0.3.0`、`audio_cochlea` 音声プラグインを含む）。リリースは PyPI の trusted publishing（OIDC、トークンを保存しません）で行い、手順は [release.yml](.github/workflows/release.yml) にあります。
+- **2 つのパッケージが PyPI に公開済み**です：骨格ライブラリ `pip install biosnn-bus`（**0.4.0**：`ProjectedFusionStrategy` 能力プロトコル、`EmbeddingBackend` 注入点の公開、`SpikeBus.step()` の dtype 契約統一）；第 5 フェーズの MCP サーバ `pip install biosnn-mcp`（**0.2.0**：読み取り 4 + 提案 5 ツール、既定は読み取り専用、呼び出しごとに監査）。どちらも PyPI の trusted publishing（OIDC、トークンを保存しません）で、[release.yml](.github/workflows/release.yml)・[release-mcp.yml](.github/workflows/release-mcp.yml) に手順があります。
 
 ## 探索項目（現行スケジュール外）
 
@@ -130,42 +130,42 @@
 
 ## アーキテクチャ
 
-データは下から上へ流れる。✅ は現在のリポジトリで既に動き、事前登録した基準で ready／通過したもの；◐ は実装済みだが限定した口径でのみ ready、または境界が残るもの；⬜ は未着手のもの——同じ図に描いているのは、この図が同時にロードマップでもあるためだ。第 4 フェーズのエンドツーエンド基準は別ノードに示す。
+データは下から上へ流れる。✅ は現在のリポジトリで既に動き、事前登録した基準で ready／通過したもの；◐ は実装済みだが限定した口径でのみ ready、または境界が残るもの；⬜ は未着手のもの——同じ図に描いているのは、この図が同時にロードマップでもあるためだ。第 4 フェーズのエンドツーエンド基準は別ノードに示す。**各ノードには現在のバージョンの結果だけを書く**——過去バージョンの比較と負の結果は各 `sweep_results/*/README.md` にあり、図には並べない。
 
 ```mermaid
 flowchart TB
-    subgraph L5["LLM 調度・連携層"]
-        MCP["MCP / API インターフェース<br/>差し替え可能な推論エンジン<br/>◐ 第 5 フェーズ：MCP＋実 LLM 対話＋スパイク発火<br/>⬜ 実ストリームでの発火 ROC は未達"]
+    subgraph L5["LLM 連携層"]
+        MCP["MCP サーバ biosnn-mcp 0.2.0（PyPI）<br/>読み取り 4 + 提案 5（propose.*、代替コアのみ）<br/>既定は読み取り専用 · --allow-write · 呼び出しごとに監査<br/>✅ 実 LLM 対話（M3b、四基準すべて通過）<br/>◐ 実ストリームの発火 ROC 未達；Axo 側は読み取り専用"]
     end
 
     subgraph L4["実行層"]
-        ACT["行動生成 ＋ モダリティデコーダ<br/>R-STDP ＋ 報酬予測 Critic<br/>◐ 第 1 フェーズ：学習規則を検証済み（W3）<br/>⬜ モダリティデコーダ"]
+        ACT["行動生成 + モダリティ復号器<br/>R-STDP + 集団 Critic<br/>◐ レート版は検証済み（W3、中央値 237.8）<br/>◐ スパイク版は 10 シードで 0/10 が 200 超え<br/>⬜ モダリティ復号器"]
     end
 
     subgraph L3["認知層（認知コア）"]
-        WM["多重時間スケール作業記憶<br/>漏れ積分器 ＋ 局所 RLS（逆伝播なし）<br/>✅ v4：三手がかり R² 0.9990<br/>◐ スパイキング v5：カウント表現が情報を失う"]
-        EM["情景記憶<br/>DPAR 遅延ペア連想<br/>◐ 非局所 pseudo 0.828；字義 NN 0.938<br/>⚠️ 局所 Hebbian 0.311；容量 K=8–16"]
-        MG["メタ認知ゲート<br/>メンバー不一致 ＋ 世界モデル驚き ＋ 密度ゲート<br/>◐ v3 CIFAR AUROC 0.753<br/>◐ v4 尺度 OOD のみ 0.9003；量子化 OOD は失敗"]
-        WMODEL["世界モデル P3<br/>ridge 状態動力学 ＋ 終了ヘッド<br/>◐ 閉ループ NMSE ~2e-8；終了 AUROC 0.63–0.67"]
-        LIQ["液体 τ（Liquid LIF）<br/>τ=1/(a+b·r)、局所・非学習<br/>◐ 5 シード 0.8754、主基準未達<br/>⬜ イベント列／時間課題は未検証"]
+        WM["マルチタイムスケール作業記憶<br/>漏れ積分器 + 局所 RLS（逆伝播なし）<br/>✅ スパイク痕跡 v9：カウント／低域通過コード 0.9269 / 0.9276"]
+        EM["エピソード記憶<br/>DPAR 遅延対連合<br/>✅ 局所 delta v5：0.805（K4 0.922）<br/>⚠️ 容量 K=8〜16"]
+        MG["メタ認知ゲート<br/>メンバー不一致 + 世界モデル驚き + 密度ゲート<br/>✅ v11 三次元ゲート：時間／次元欠落／相関の OOD 族すべて通過"]
+        WMODEL["世界モデル P3<br/>ridge 状態力学 + 終了ヘッド<br/>✅ v6 移動ホライズン閉ループ：AUROC 1.0 / FP 0.0009<br/>⚠️ 500 ステップの純想像閉ループは 0.63–0.67（開放）"]
+        LIQ["液体 τ（Liquid LIF）<br/>τ=1/(a+b·r)、局所・非学習<br/>◐ 5 シード 0.8754（95% CI 0.8684–0.8824）、主基準は未達<br/>⬜ イベント列／時間課題は未検証"]
     end
 
-    subgraph ARB["規則間の仲裁 research/arbiter"]
-        CF["衝突判定：コサイン > 90 度<br/>✅ 実装済み"]
-        ES["P4：静的混合 +0.179<br/>適応型アービタは測定不能<br/>（1 回の適合に約 7 時間）"]
+    subgraph ARB["ルール間仲裁 research/arbiter"]
+        CF["衝突判定：余弦 > 90 度<br/>✅ 実装済み"]
+        ES["P4：静的 50/50 混合 +0.179<br/>適応仲裁は本ベンチマークで測定不能<br/>（完全な探針は約 7 時間／フィット）"]
     end
 
-    subgraph L2["スケルトンライブラリ biosnn-bus"]
-        BUS["SpikeBus<br/>融合チャネルでグループ化 · 時間格子を整列<br/>射影してから融合 · スパースランダム射影<br/>TAAF 時間注意誘導融合（rate-based gating、学習なし）<br/>✅ 実装済み"]
+    subgraph L2["骨格ライブラリ biosnn-bus"]
+        BUS["SpikeBus<br/>融合チャネルでグループ化 · 時間グリッド整列<br/>先に投影してから融合 · 疎なランダム投影<br/>TAAF 時間注意融合（rate-based gating、非学習）<br/>✅ 実装済み"]
     end
 
     subgraph L1["知覚層（プラグイン化）"]
         IMG["画像 image_diff<br/>DVS イベント符号化<br/>✅ 実装済み"]
         MN["MNIST mnist_pulse<br/>発火率符号化<br/>✅ 実装済み"]
-        TXT["テキスト text_zscore<br/>凍結 embedding ＋ z-score top-k<br/>✅ 実装済み"]
-        AUD["音声 audio_cochlea<br/>対数帯域分解 ＋ 発火率<br/>✅ 実装済み（0.3.0 で公開済み）"]
-        THIRD["サードパーティプラグイン<br/>entry points で接続<br/>✅ 仕組みは整備済み"]
-        HEB["学習規則：核化 IB-Hebbian ＋ 除法正規化<br/>◐ 第 1 フェーズ検証済み（W1、MNIST 97.79%）"]
+        TXT["テキスト text_zscore<br/>凍結 embedding + z-score top-k<br/>✅ 実装済み"]
+        AUD["音声 audio_cochlea<br/>対数帯域分解 + 発火率<br/>✅ 実装済み"]
+        THIRD["サードパーティ製プラグイン<br/>entry points で接続<br/>✅ 仕組みは準備済み"]
+        HEB["学習規則：カーネル化 IB-Hebbian + 除算正規化<br/>◐ 第 1 フェーズで検証済み（W1、MNIST 97.79%）"]
     end
 
     IMG --> BUS
@@ -173,23 +173,34 @@ flowchart TB
     TXT --> BUS
     AUD -.-> BUS
     THIRD -.-> BUS
+
     BUS --> WM
-    BUS -.->|知覚層を接続| HEB
+    BUS -.->|スパイクバスへ接続| HEB
     HEB -.->|特徴| WM
     WM --> EM
     WM --> WMODEL
     LIQ -.->|動的時間定数の候補| WM
-    LIQ -.->|調質候補（ADR-0016 下流）| EM
+    LIQ -.->|調整候補（ADR-0016 下流）| EM
     EM --> MG
     WMODEL --> MG
     MG --> ACT
-    MG -.->|呼び出しを起動| MCP
-    MCP -.->|結果を符号化して再注入| EM
+    MG -.->|呼び出しを発火| MCP
+    MCP -.->|結果を符号化して戻す| EM
     ARB -.->|層間衝突を調停| WM
     ARB -.->|層間衝突を調停| ACT
 
-    subgraph S4["第 4 フェーズのエンドツーエンド検証（コンポーネント ready とは別）"]
-        E2E["e2e v3–v12：4/5 → 6/6（v5/v12）<br/>v14 状態レベル 14/18、v16 入力レベル 18/18<br/>⚠️ 入力ゲート ≠ 状態レベル・メタ認知；コンポーネント未全通過"]
+    subgraph W4["クロスモーダル検索 research/retrieval"]
+        FAC["連想層：外積 Hebb / delta / リッジ上界 / kNN<br/>✅ 実装済み（前二者は局所規則、後二者は上界の探針）"]
+        CRIT["二つのものさし<br/>✅ 絶対 R@1：未達で識別力なしと判定<br/>✅ 回復率：合成 75.2%、Flickr8k 78.7%"]
+        FE["フロントエンド受入：キャプション内容語の線形探針<br/>✅ 画像側 AUC 0.790（テキスト側の自己確認 1.000）"]
+    end
+
+    BUS -.->|二つの表現| FAC
+    FAC --> CRIT
+    FE -.->|上界が低い理由| CRIT
+
+    subgraph S4["第 4 フェーズのエンドツーエンド検証（コンポーネント ready には計上しない）"]
+        E2E["状態レベル E2E v18：18/18<br/>✅ 状態レベルの予測ノルム z ゲート（s=2 棄権 0.837–0.907、カバレッジ 0.795–0.814）<br/>⚠️ 純想像 P3 の閉ループは依然として開放境界"]
     end
     WM -.-> E2E
     EM -.-> E2E
@@ -214,7 +225,8 @@ flowchart TB
 numpy だけに依存し、GPU は不要です：
 
 ```bash
-pip install biosnn-bus
+pip install biosnn-bus      # 骨格ライブラリ（モダリティプラグイン + スパイクバス）
+pip install biosnn-mcp      # 第 5 フェーズ MCP サーバ（stdio）
 ```
 
 （`main` 上の**未リリース**の変更を入れる場合のみ Git 経由で：`pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"`）
@@ -268,6 +280,7 @@ print(output)
 
 ```text
 packages/biosnn-bus/   スケルトンライブラリ：独立した配布パッケージ、semver に従い、研究コードに一切依存しない
+packages/biosnn-mcp/   第 5 フェーズ MCP サーバ：stdio JSON-RPC、既定は読み取り専用、呼び出しごとに監査、PyPI 公開済み
 research/              研究コード：第 1 フェーズから埋める、12 か月の破壊的変更免責期間
 examples/              実行できるサンプル；スクリプトが唯一の真実の源で、notebook はそこから生成する
 docs/                  プラグインガイド、ADR、再現チェックリスト、引用リスト

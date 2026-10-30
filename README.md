@@ -106,7 +106,7 @@
 - **TAAF 已实现，但默认策略仍是拼接**：`TemporalAttentionFusion` 是**显式选用**的融合策略（`SpikeBus(strategy=...)`），默认仍是平凡拼接。⚠️ 它的注意力权重**由各路发放率现算、不训练**（rate-based gating）——这条红线用 **AST 结构断言**钉死，见 [ADR-0012](docs/adr/ADR-0012-taaf-locality-and-bus-output-contract.md)。
 - **感知层允许冻结预训练前端**（边界声明，见[计划书 §2.3](BioSNN-Plug_项目计划书_v6.3.md)）：「纯局部学习」的主张范围是**突触学习规则**，不是**输入编码器**。判据是「参数进不进梯度」，不是「模型大不大」——冻结的 2GB 预训练 embedding 与固定随机投影等价；反过来，100 行的本地编码器若用反向传播训自己参数，就**违反**这条边界。文本插件用的 `nomic-embed-text`（Ollama，768 维）就是冻结的。
 - （骨架库为何独立成包、为何刻意不包含这些东西，见 [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.md)。）
-- 骨架库**已发布到 PyPI**：`pip install biosnn-bus`（PyPI 上是 `0.3.0`，含 `audio_cochlea` 音频插件）。发布走 PyPI trusted publishing（OIDC，不存 token），流程见 [release.yml](.github/workflows/release.yml)。
+- **两个包都已发布到 PyPI**：骨架库 `pip install biosnn-bus`（**0.4.0**：`ProjectedFusionStrategy` 能力协议、公开 `EmbeddingBackend` 注入点、统一 `SpikeBus.step()` 的 dtype 契约）；阶段五 MCP 服务器 `pip install biosnn-mcp`（**0.2.0**：4 只读 + 5 提议工具、默认只读、逐调用审计）。都走 PyPI trusted publishing（OIDC，不存 token）：[release.yml](.github/workflows/release.yml)、[release-mcp.yml](.github/workflows/release-mcp.yml)。
 
 ## 探索项（不进当前排期）
 
@@ -122,29 +122,29 @@
 
 ## 架构
 
-数据自下而上流动。✅ 是当前仓库里已经能跑、并在其预注册判据下 ready/通过的；◐ 是已实现但只在限定口径下 ready 或仍有边界；⬜ 是尚未开始。画在同一张图上，因为这张图同时是路线图；阶段四的端到端判据单独标在下方节点里。
+数据自下而上流动。✅ 是当前仓库里已经能跑、并在其预注册判据下 ready/通过的；◐ 是已实现但只在限定口径下 ready 或仍有边界；⬜ 是尚未开始。画在同一张图上，因为这张图同时是路线图；阶段四的端到端判据单独标在下方节点里。**每个节点只写当前版本的结果**——历史版本的对照与负结果在各自的 `sweep_results/*/README.md`，图上不再并列。
 
 ```mermaid
 flowchart TB
     subgraph L5["LLM 调度与协同层"]
-        MCP["MCP / API 接口<br/>可替换的推理引擎<br/>◐ 第五阶段 M0–M3l：MCP + 真 LLM 对话 + 脉冲触发<br/>⬜ 真实对话流上的触发 ROC 未过"]
+        MCP["MCP 服务器 biosnn-mcp 0.2.0（PyPI）<br/>4 只读 + 5 提议（propose.*，只碰内存替身核）<br/>默认只读 · --allow-write · 逐调用审计<br/>✅ 真 LLM 对话（M3b 四判据全过）<br/>◐ 真实对话流上的触发 ROC 未过；Axo 侧只读"]
     end
 
     subgraph L4["执行层"]
-        ACT["动作生成 + 模态解码器<br/>R-STDP + 奖励预测 Critic<br/>◐ 第一阶段：速率版学习规则已验证（W3，中位数 237.8）<br/>◐ 第三阶段：脉冲版入口 + 两种 Critic 已实现<br/>&nbsp;&nbsp;&nbsp;⚠️ 10 种子下 0/10 过 200，且三主臂区间重叠<br/>⬜ 模态解码器"]
+        ACT["动作生成 + 模态解码器<br/>R-STDP + 群体 Critic<br/>◐ 速率版已验证（W3，中位 237.8）<br/>◐ 脉冲版 10 种子 0/10 过 200<br/>⬜ 模态解码器"]
     end
 
     subgraph L3["认知层（认知核心）"]
-        WM["多时间尺度工作记忆<br/>漏积分器 + 局部 RLS（无反向传播）<br/>✅ v4：三线索 R² 0.9990<br/>✅ v9：脉冲迹 0.9269/0.9276（计数/低通码）<br/>◐ v5–v8 负结果；v8 为平凡解"]
-        EM["情景记忆<br/>DPAR 延迟配对联想<br/>◐ 非局部 pseudo 0.828；字面 NN 0.938<br/>✅ 局部 delta 0.805（K4 0.922）<br/>⚠️ K8 薄过；Hebbian 0.311；容量 K=8–16"]
-        MG["元认知门控<br/>成员分歧 + 世界模型惊喜 + 密度门<br/>◐ v3 CIFAR AUROC 0.753；◐ v4 仅尺度 0.9003<br/>✅ v8 重建门：量化弃权 0.898/AUROC 0.925<br/>✅ v11 三维门：时间/丢维/相关四族 OOD 全过"]
-        WMODEL["世界模型 P3<br/>ridge 状态动力学 + 终止头<br/>◐ 闭环 NMSE ~2e-8；闭环终止 0.63–0.67（开放）<br/>✅ 开环固定动作终止 AUROC 0.999996/FP 0.0005"]
-        LIQ["液态 τ（Liquid LIF）<br/>τ=1/(a+b·r)，局部、不训练<br/>◐ 五种子 0.8754，主判据不过<br/>⬜ 事件流/时序任务待验"]
+        WM["多时间尺度工作记忆<br/>漏积分器 + 局部 RLS（无反向传播）<br/>✅ 脉冲迹 v9：计数/低通码 0.9269 / 0.9276"]
+        EM["情景记忆<br/>DPAR 延迟配对联想<br/>✅ 局部 delta v5：0.805（K4 0.922）<br/>⚠️ 容量 K=8–16"]
+        MG["元认知门控<br/>成员分歧 + 世界模型惊喜 + 密度门<br/>✅ v11 三维门：时间/丢维/相关多族 OOD 全过"]
+        WMODEL["世界模型 P3<br/>ridge 状态动力学 + 终止头<br/>✅ v6 滚动时域闭环：AUROC 1.0 / FP 0.0009<br/>⚠️ 500 步纯想象闭环 0.63–0.67（开放）"]
+        LIQ["液态 τ（Liquid LIF）<br/>τ=1/(a+b·r)，局部、不训练<br/>◐ 五种子 0.8754（95% CI 0.8684–0.8824），主判据不过<br/>⬜ 事件流/时序任务未验"]
     end
 
     subgraph ARB["跨规则仲裁 research/arbiter"]
         CF["冲突判定：余弦 > 90°<br/>✅ 已实现"]
-        ES["P4：静态混合 +0.179<br/>自适应仲裁不可测<br/>（完整探针约七小时/次拟合）"]
+        ES["P4：静态 50/50 混合 +0.179<br/>自适应仲裁在本基准不可测<br/>（完整探针约七小时/次拟合）"]
     end
 
     subgraph L2["骨架库 biosnn-bus"]
@@ -155,7 +155,7 @@ flowchart TB
         IMG["图像 image_diff<br/>DVS 事件编码<br/>✅ 已实现"]
         MN["MNIST mnist_pulse<br/>发放率编码<br/>✅ 已实现"]
         TXT["文本 text_zscore<br/>冻结 embedding + z-score top-k<br/>✅ 已实现"]
-        AUD["音频 audio_cochlea<br/>对数频带分解 + 发放率<br/>✅ 已实现（0.3.0 已发布）"]
+        AUD["音频 audio_cochlea<br/>对数频带分解 + 发放率<br/>✅ 已实现"]
         THIRD["第三方插件<br/>entry points 接入<br/>✅ 机制已就绪"]
         HEB["学习规则：核化 IB-Hebbian + 除法归一化<br/>◐ 第一阶段已验证（W1，MNIST 97.79%）"]
     end
@@ -192,7 +192,7 @@ flowchart TB
     FE -.->|说明上界为何低| CRIT
 
     subgraph S4["阶段四端到端验证（不计入组件 ready）"]
-        E2E["e2e v3–v12：4/5 → 6/6（v5/v12）<br/>v14 14/18；v16 输入级 18/18；v18 状态级 18/18<br/>⚠️ 纯想象 P3 闭环仍是开放边界"]
+        E2E["状态级 E2E v18：18/18<br/>✅ 状态级预测范数 z 门（s=2 弃权 0.837–0.907、覆盖 0.795–0.814）<br/>⚠️ 纯想象 P3 闭环仍是开放边界"]
     end
     WM -.-> E2E
     EM -.-> E2E
@@ -205,10 +205,11 @@ flowchart TB
 
 ## 快速开始
 
-只依赖 numpy，无需 GPU：
+只依赖 numpy，无需 GPU；MCP 服务器零第三方依赖：
 
 ```bash
-pip install biosnn-bus
+pip install biosnn-bus      # 骨架库（模态插件 + 脉冲总线）
+pip install biosnn-mcp      # 阶段五 MCP 服务器（stdio）
 ```
 
 > ⚠️ **依赖安全提醒（2026-10）**：CA 厂商 eMudhra 的中间证书私钥被攻破（签发根为 emSign ECC Root CA - G3），`certifi < 2026.10.19` 仍信任这条链；本仓已锁到 `certifi 2026.10.19`，自己环境里的旧包请执行 `pip install -U "certifi>=2026.10.19"`（用 uv 的重新 `uv sync`）。
@@ -264,6 +265,7 @@ print(output)
 
 ```text
 packages/biosnn-bus/   骨架库：独立分发包，遵循 semver，不依赖任何研究代码
+packages/biosnn-mcp/   阶段五 MCP 服务器：stdio JSON-RPC，默认只读、逐调用审计，已发布 PyPI
 research/              研究代码：第一阶段起填充，12 个月破坏性变更免责期
 examples/              可跑的示例；脚本是唯一真相源，notebook 由它生成
 docs/                  插件指南、ADR、复现清单、引用清单

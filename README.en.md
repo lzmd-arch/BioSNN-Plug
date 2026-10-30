@@ -129,7 +129,7 @@ Three boundaries worth stating plainly:
   (Ollama, 768-d) is frozen.
 - (Why the skeleton library is a separate package, and why it deliberately includes none of
   these things, see [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.en.md).)
-- The skeleton library **is on PyPI**: `pip install biosnn-bus` (PyPI serves `0.3.0`, which adds the `audio_cochlea` plugin). Releases go through PyPI trusted publishing (OIDC, no stored tokens); the pipeline is in [release.yml](.github/workflows/release.yml).
+- **Both packages are on PyPI**: the skeleton library `pip install biosnn-bus` (**0.4.0**: the `ProjectedFusionStrategy` capability protocol, the public `EmbeddingBackend` injection point, and a unified `SpikeBus.step()` dtype contract); the phase-five MCP server `pip install biosnn-mcp` (**0.2.0**: 4 read-only + 5 proposal tools, read-only by default, per-call audit). Both go through PyPI trusted publishing (OIDC, no stored tokens): [release.yml](.github/workflows/release.yml), [release-mcp.yml](.github/workflows/release-mcp.yml).
 
 ## Exploration items (not in the current schedule)
 
@@ -146,29 +146,29 @@ its activation condition; until that condition holds, it does not start. They ar
 
 ## Architecture
 
-Data flows bottom-up. ✅ marks what already runs and is ready/passing under its preregistered criteria; ◐ marks what is implemented but ready only under a restricted protocol or still bounded; ⬜ marks what has not been started. All are on the same diagram because it doubles as the roadmap; phase-4 end-to-end criteria are marked separately below.
+Data flows bottom-up. ✅ marks what already runs and is ready/passing under its preregistered criteria; ◐ marks what is implemented but ready only under a restricted protocol or still bounded; ⬜ marks what has not been started. All are on the same diagram because it doubles as the roadmap; phase-4 end-to-end criteria are marked separately below. **Each node shows only the current version's result** - historical comparisons and negative results live in the per-run `sweep_results/*/README.md`, not side by side here.
 
 ```mermaid
 flowchart TB
     subgraph L5["LLM orchestration layer"]
-        MCP["MCP / API interface<br/>replaceable inference engine<br/>◐ phase 5: MCP + real LLM dialogue + spiking trigger<br/>⬜ trigger ROC on a real stream unmet"]
+        MCP["MCP server biosnn-mcp 0.2.0 (PyPI)<br/>4 read-only + 5 proposals (propose.*, stand-in core only)<br/>read-only by default · --allow-write · per-call audit<br/>✅ real LLM dialogue (M3b, all four criteria pass)<br/>◐ trigger ROC on a real stream unmet; Axo side read-only"]
     end
 
     subgraph L4["Execution layer"]
-        ACT["Action generation + modality decoders<br/>R-STDP + reward-prediction Critic<br/>◐ phase 1: learning rule verified (W3)<br/>⬜ modality decoders"]
+        ACT["Action generation + modality decoders<br/>R-STDP + population Critic<br/>◐ rate-based verified (W3, median 237.8)<br/>◐ spiking: 10 seeds, 0/10 above 200<br/>⬜ modality decoders"]
     end
 
     subgraph L3["Cognitive layer (cognitive core)"]
-        WM["Multi-timescale working memory<br/>leaky integrators + local RLS (no backprop)<br/>✅ v4: three-cue R² 0.9990<br/>◐ spiking v5: count representation loses information"]
-        EM["Episodic memory<br/>DPAR delayed paired association<br/>◐ non-local pseudo 0.828; literal NN 0.938<br/>⚠️ local Hebbian 0.311; capacity K=8-16"]
-        MG["Metacognitive gating<br/>member disagreement + world-model surprise + density gate<br/>◐ v3 CIFAR AUROC 0.753<br/>◐ v4 scale OOD only 0.9003; quantization OOD fails"]
-        WMODEL["World model P3<br/>ridge state dynamics + termination head<br/>◐ closed-loop NMSE ~2e-8; termination AUROC 0.63-0.67"]
-        LIQ["Liquid τ (Liquid LIF)<br/>τ=1/(a+b·r), local, not trained<br/>◐ prereg/implementation/smoke; 5×250ep running<br/>⬜ event-stream/timing tasks pending"]
+        WM["Multi-timescale working memory<br/>leaky integrators + local RLS (no backprop)<br/>✅ spiking traces v9: count/low-pass codes 0.9269 / 0.9276"]
+        EM["Episodic memory<br/>DPAR delayed paired association<br/>✅ local delta v5: 0.805 (K4 0.922)<br/>⚠️ capacity K=8-16"]
+        MG["Metacognitive gating<br/>member disagreement + world-model surprise + density gate<br/>✅ v11 three-way gate: time / dim-dropout / correlated OOD families all pass"]
+        WMODEL["World model P3<br/>ridge state dynamics + termination head<br/>✅ v6 receding-horizon loop: AUROC 1.0 / FP 0.0009<br/>⚠️ 500-step pure-imagination loop 0.63-0.67 (open)"]
+        LIQ["Liquid tau (Liquid LIF)<br/>tau=1/(a+b·r), local, not trained<br/>◐ five seeds 0.8754 (95% CI 0.8684-0.8824), main criteria fail<br/>⬜ event-stream / timing tasks untested"]
     end
 
     subgraph ARB["Cross-rule arbitration research/arbiter"]
         CF["Conflict detection: cosine > 90 degrees<br/>✅ implemented"]
-        ES["P4: static mixture +0.179<br/>adaptive arbitration not measurable<br/>(~7 h per fit)"]
+        ES["P4: static 50/50 mixture +0.179<br/>adaptive arbitration not measurable in this benchmark<br/>(~7 h per fit)"]
     end
 
     subgraph L2["biosnn-bus skeleton library"]
@@ -179,7 +179,7 @@ flowchart TB
         IMG["Image image_diff<br/>DVS event coding<br/>✅ implemented"]
         MN["MNIST mnist_pulse<br/>firing-rate coding<br/>✅ implemented"]
         TXT["Text text_zscore<br/>frozen embedding + z-score top-k<br/>✅ implemented"]
-        AUD["Audio audio_cochlea<br/>log-spaced bands + firing rates<br/>✅ implemented (shipped in 0.3.0)"]
+        AUD["Audio audio_cochlea<br/>log-spaced bands + firing rates<br/>✅ implemented"]
         THIRD["Third-party plugins<br/>attached via entry points<br/>✅ mechanism in place"]
         HEB["Learning rule: kernelised IB-Hebbian + divisive normalization<br/>◐ phase 1 verified (W1, MNIST 97.79%)"]
     end
@@ -189,8 +189,9 @@ flowchart TB
     TXT --> BUS
     AUD -.-> BUS
     THIRD -.-> BUS
+
     BUS --> WM
-    BUS -.->|wire the perception layer| HEB
+    BUS -.->|wire into the spike bus| HEB
     HEB -.->|features| WM
     WM --> EM
     WM --> WMODEL
@@ -204,8 +205,18 @@ flowchart TB
     ARB -.->|arbitrate inter-layer conflicts| WM
     ARB -.->|arbitrate inter-layer conflicts| ACT
 
-    subgraph S4["Phase-4 end-to-end validation (not component ready)"]
-        E2E["e2e v3–v12: 4/5 → 6/6 (v5/v12)<br/>v14 state-level 14/18; v16 input-level 18/18<br/>⚠️ input gate ≠ state-level metacognition; components not all passed"]
+    subgraph W4["Cross-modal retrieval research/retrieval"]
+        FAC["Association layer: outer-product Hebb / delta / ridge upper bound / kNN<br/>✅ implemented (first two are local rules, last two are upper-bound probes)"]
+        CRIT["Two yardsticks<br/>✅ absolute R@1: unmet, ruled non-discriminative<br/>✅ recovery rate: synthetic 75.2%, Flickr8k 78.7%"]
+        FE["Front-end acceptance: caption content-word linear probe<br/>✅ image side AUC 0.790 (text-side self-check 1.000)"]
+    end
+
+    BUS -.->|two representations| FAC
+    FAC --> CRIT
+    FE -.->|explains why the bound is low| CRIT
+
+    subgraph S4["Phase-4 end-to-end validation (not counted as component ready)"]
+        E2E["State-level E2E v18: 18/18<br/>✅ state-level predicted-norm z gate (s=2 abstain 0.837-0.907, coverage 0.795-0.814)<br/>⚠️ pure-imagination P3 loop remains the open boundary"]
     end
     WM -.-> E2E
     EM -.-> E2E
@@ -230,7 +241,8 @@ the [project plan](BioSNN-Plug_项目计划书_v6.2.md) section 2 and section 3.
 Depends only on numpy, no GPU needed:
 
 ```bash
-pip install biosnn-bus
+pip install biosnn-bus      # skeleton library (modality plugins + spike bus)
+pip install biosnn-mcp      # phase-five MCP server (stdio)
 ```
 
 (To install **unreleased** changes from `main`, use Git instead: `pip install "biosnn-bus @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-bus"`)
@@ -286,6 +298,7 @@ repository** — see the [plugin guide](docs/plugin_guide.en.md#third-party-plug
 
 ```text
 packages/biosnn-bus/   The skeleton library: an independent distribution package, follows semver, depends on no research code
+packages/biosnn-mcp/   Phase-five MCP server: stdio JSON-RPC, read-only by default, per-call audit, on PyPI
 research/              Research code: filled in from phase 1, 12-month breaking-change grace period
 examples/              Runnable examples; the script is the single source of truth, the notebook is generated from it
 docs/                  Plugin guide, ADRs, reproducibility checklist, reference list
