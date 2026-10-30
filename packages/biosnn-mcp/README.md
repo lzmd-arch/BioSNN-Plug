@@ -56,6 +56,28 @@ MCP 客户端配置（Claude Desktop / 任何 stdio 客户端）：
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"state.query","arguments":{}}}' | biosnn-mcp
 ```
 
+## 写版本（`biosnn-mcp-write`）
+
+同一个包、同一版本号，多一个入口。区别只有一句：**提议不再只落在内存替身核，而是进队列，
+由巩固门控决定要不要记**。
+
+```bash
+biosnn-mcp-write --state-dir ~/.biosnn-mcp    # 队列 / 存储 / 审计默认都在这个目录
+```
+
+| 环节 | 做什么 |
+| :--- | :--- |
+| `propose.memory.write` | 带客户端生成的 `proposal_id`（幂等键）进队列，**不直接落库** |
+| 门控 | 余弦 ≥ 0.90 判重复；显著度 ≥ 0.60 且配额未满自动接受；0.30–0.60 或超配额转待审；< 0.30 拒绝 |
+| 落库 | 只有门控接受的那一条会写进 `<state>/store.json`，并留前像 |
+| `memory.revert` | 用前像把库恢复原样，撤销本身也进审计 |
+| `queue.status` / `queue.list` / `gate.configure` | 看队列、看判定理由、改阈值（要 reason） |
+
+审计默认写 `<state>/audit.jsonl`：`proposal.received` / `gate.accepted` / `memory.applied` /
+`memory.revert` / `gate.configure` 各占一行。
+
+**只读版一个字没改**：`biosnn-mcp` 的工具表、拒绝语义、审计字段与 0.2.0 相同，由测试钉住。
+
 ## 工具
 
 | 工具 | 层 | 参数 | 说明 |

@@ -23,7 +23,9 @@ JSONL（时间、工具、参数、成功与否），使调用可审计、可回
 from __future__ import annotations
 
 import argparse
+import copy
 import json
+import os
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -32,6 +34,7 @@ from typing import Any, TextIO
 
 from ._version import __version__
 from .core import CognitiveCore, InMemoryCore, ToolError
+from .writecore import WriteCore
 
 PROTOCOL_VERSION = "2024-11-05"
 SERVER_INFO = {"name": "biosnn-mcp", "version": __version__}
@@ -123,6 +126,94 @@ TOOLS: list[dict[str, Any]] = [
 ]
 
 
+#: 写版本（``biosnn-mcp-write``）**新增**的四个工具；只读版的工具表一个字都不改（W6）。
+WRITE_TOOLS: list[dict[str, Any]] = [
+    {
+        "name": "queue.status",
+        "description": "Read proposal-queue depth, quota headroom and the gate configuration (read-only).",
+        "inputSchema": _EMPTY_SCHEMA,
+    },
+    {
+        "name": "queue.list",
+        "description": "List proposals with their verdicts and reasons (read-only).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": ["pending", "accepted", "rejected", "reverted"],
+                },
+                "limit": {"type": "integer", "minimum": 1, "maximum": 100},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "memory.revert",
+        "description": "Undo one accepted write by restoring its pre-write snapshot; the revert is audited. Requires a reason.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "seq": {"type": "integer", "minimum": 1},
+                "reason": {"type": "string", "minLength": 1},
+            },
+            "required": ["seq", "reason"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "gate.configure",
+        "description": "Adjust gate thresholds or quotas. A reason is required and enters the audit log.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "reason": {"type": "string", "minLength": 1},
+                "changes": {
+                    "type": "object",
+                    "properties": {
+                        "duplicate_cosine": {"type": "number", "minimum": -1, "maximum": 1},
+                        "accept_salience": {"type": "number", "minimum": 0, "maximum": 1},
+                        "floor_salience": {"type": "number", "minimum": 0, "maximum": 1},
+                        "quota_hourly": {"type": "integer", "minimum": 0},
+                        "quota_daily": {"type": "integer", "minimum": 0},
+                    },
+                    "additionalProperties": False,
+                },
+            },
+            "required": ["reason", "changes"],
+            "additionalProperties": False,
+        },
+    },
+]
+
+
+def write_tools() -> list[dict[str, Any]]:
+    """写版本的工具表：只读版的 9 个原样保留，两个 propose 工具多一个 ``proposal_id``。"""
+    tools = copy.deepcopy(TOOLS)
+    for tool in tools:
+        if tool["name"] == "propose.memory.write":
+            tool["description"] = (
+                "Propose a memory entry to the queue; the consolidation gate decides. "
+                "Requires a client-generated proposal_id (idempotency key)."
+            )
+            tool["inputSchema"]["properties"]["proposal_id"] = {
+                "type": "string",
+                "minLength": 1,
+            }
+            tool["inputSchema"]["properties"]["source"] = {
+                "type": "string",
+                "enum": ["user", "client", "llm"],
+            }
+            tool["inputSchema"]["required"] = ["text", "proposal_id"]
+        elif tool["name"] == "propose.memory.consolidate":
+            tool["inputSchema"]["properties"]["proposal_id"] = {
+                "type": "string",
+                "minLength": 1,
+            }
+            tool["inputSchema"]["required"] = ["proposal_id"]
+    return tools + copy.deepcopy(WRITE_TOOLS)
+
+
 @dataclass
 class AuditLog:
     """工具调用审计：每次 ``tools/call`` 一行。``path=None`` 时只留在内存里（测试用）。"""
@@ -173,7 +264,36 @@ def _reject_unknown(arguments: dict[str, Any], allowed: set[str]) -> None:
         raise ToolError(f"收到未知参数：{sorted(unknown)}")
 
 
+def _is_write_core(core: CognitiveCore) -> bool:
+    """写版本的核带队列；只读版的核没有这些方法。"""
+    return hasattr(core, "queue_status")
+
+
 def _call_tool(core: CognitiveCore, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    if name in ("queue.status", "queue.list", "memory.revert", "gate.configure"):
+        if not _is_write_core(core):
+            raise KeyError(name)
+        if name == "queue.status":
+            if arguments:
+                raise ToolError("queue.status 不接受参数。")
+            return _text_result(core.queue_status())
+        if name == "queue.list":
+            _reject_unknown(arguments, {"status", "limit"})
+            return _text_result(
+                core.queue_list(
+                    status=arguments.get("status"),
+                    limit=int(arguments.get("limit", 20)),
+                )
+            )
+        if name == "memory.revert":
+            _reject_unknown(arguments, {"seq", "reason"})
+            if "seq" not in arguments or "reason" not in arguments:
+                raise ToolError("memory.revert 需要 seq 与 reason。")
+            return _text_result(core.revert(arguments.get("seq"), arguments.get("reason")))
+        _reject_unknown(arguments, {"reason", "changes"})
+        if "reason" not in arguments or "changes" not in arguments:
+            raise ToolError("gate.configure 需要 reason 与 changes。")
+        return _text_result(core.configure_gate(arguments.get("reason"), arguments.get("changes")))
     if name == "state.query":
         if arguments:
             raise ToolError("state.query 不接受参数。")
@@ -191,10 +311,22 @@ def _call_tool(core: CognitiveCore, name: str, arguments: dict[str, Any]) -> dic
         hits = core.search(arguments.get("query"), arguments.get("top_k", 5))
         return _text_result({"hits": hits, "count": len(hits)})
     if name == "propose.memory.write":
-        _reject_unknown(arguments, {"text", "id", "tags"})
+        _reject_unknown(arguments, {"text", "id", "tags", "proposal_id", "source"})
         tags = arguments.get("tags") or []
         if not isinstance(tags, list):
             raise ToolError("tags 必须是数组。")
+        if _is_write_core(core):
+            if "proposal_id" not in arguments:
+                raise ToolError("写版本需要 proposal_id（客户端生成的幂等键）。")
+            return _text_result(
+                core.propose_write(
+                    arguments.get("text"),
+                    arguments.get("id"),
+                    tuple(tags),
+                    proposal_id=arguments.get("proposal_id"),
+                    source=str(arguments.get("source", "client")),
+                )
+            )
         payload = core.write(
             arguments.get("text"),
             arguments.get("id"),
@@ -202,7 +334,19 @@ def _call_tool(core: CognitiveCore, name: str, arguments: dict[str, Any]) -> dic
         )
         return _text_result(payload)
     if name == "propose.memory.consolidate":
-        _reject_unknown(arguments, {"threshold", "rounds", "noise_sigma", "seed"})
+        _reject_unknown(arguments, {"threshold", "rounds", "noise_sigma", "seed", "proposal_id"})
+        if _is_write_core(core):
+            if "proposal_id" not in arguments:
+                raise ToolError("写版本需要 proposal_id（客户端生成的幂等键）。")
+            return _text_result(
+                core.propose_consolidate(
+                    proposal_id=arguments.get("proposal_id"),
+                    threshold=float(arguments.get("threshold", 0.95)),
+                    rounds=int(arguments.get("rounds", 3)),
+                    noise_sigma=float(arguments.get("noise_sigma", 0.05)),
+                    seed=int(arguments.get("seed", 0)),
+                )
+            )
         payload = core.consolidate(
             threshold=float(arguments.get("threshold", 0.95)),
             rounds=int(arguments.get("rounds", 3)),
@@ -230,6 +374,7 @@ def handle_message(
     message: dict[str, Any],
     *,
     audit: AuditLog | None = None,
+    tools: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any] | None:
     """处理一条 JSON-RPC 消息；通知返回 None。"""
     if message.get("jsonrpc") != "2.0":
@@ -253,7 +398,7 @@ def handle_message(
     if method == "ping":
         return _result(message_id, {})
     if method == "tools/list":
-        return _result(message_id, {"tools": TOOLS})
+        return _result(message_id, {"tools": tools if tools is not None else TOOLS})
     if method == "tools/call":
         if not isinstance(params, dict):
             return _error(message_id, -32602, "params 必须是对象。")
@@ -291,6 +436,7 @@ def serve_stdio(
     stdin: TextIO | None = None,
     stdout: TextIO | None = None,
     audit: AuditLog | None = None,
+    tools: list[dict[str, Any]] | None = None,
 ) -> None:
     """按行读 JSON-RPC；空行跳过，每条响应一行。"""
     source = stdin or sys.stdin
@@ -306,7 +452,7 @@ def serve_stdio(
             sink.write(json.dumps(_error(None, -32700, f"解析失败：{error}")) + "\n")
             sink.flush()
             continue
-        response = handle_message(core, message, audit=audit)
+        response = handle_message(core, message, audit=audit, tools=tools)
         if response is not None:
             sink.write(json.dumps(response, ensure_ascii=False) + "\n")
             sink.flush()
@@ -332,4 +478,45 @@ def main(argv: list[str] | None = None) -> int:
     core = InMemoryCore(writes_enabled=args.allow_write)
     audit = AuditLog(path=args.audit_log)
     serve_stdio(core, audit=audit)
+    return 0
+
+
+def main_write(argv: list[str] | None = None) -> int:
+    """写版本的入口：提议进队列，门控处置，落库到 biosnn 侧的持久化文件。
+
+    与只读版共用同一份源码与同一个版本号（决策 1）；工具表只是多了四个，
+    只读版的九个原样保留（W6）。
+    """
+    parser = argparse.ArgumentParser(
+        prog="biosnn-mcp-write",
+        description=(
+            "BioSNN-Plug phase-5 MCP server, write mode "
+            "(proposals -> consolidation gate -> persistent stand-in store)"
+        ),
+    )
+    parser.add_argument(
+        "--state-dir",
+        type=Path,
+        default=None,
+        help="状态目录（默认取 $BIOSNN_MCP_STATE，否则 ~/.biosnn-mcp）",
+    )
+    parser.add_argument(
+        "--store", type=Path, default=None, help="记忆持久化文件（默认 <state>/store.json）"
+    )
+    parser.add_argument(
+        "--queue", type=Path, default=None, help="提议队列（默认 <state>/proposals.sqlite3）"
+    )
+    parser.add_argument(
+        "--audit-log", type=Path, default=None, help="审计日志（默认 <state>/audit.jsonl）"
+    )
+    args = parser.parse_args(argv)
+
+    state = args.state_dir or Path(
+        os.environ.get("BIOSNN_MCP_STATE") or (Path.home() / ".biosnn-mcp")
+    )
+    store = args.store or state / "store.json"
+    queue = args.queue or state / "proposals.sqlite3"
+    audit = AuditLog(path=args.audit_log or state / "audit.jsonl")
+    core = WriteCore(store, queue, audit=audit)
+    serve_stdio(core, audit=audit, tools=write_tools())
     return 0

@@ -58,6 +58,29 @@ MCP クライアント設定（Claude Desktop など stdio クライアント）
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"state.query","arguments":{}}}' | biosnn-mcp
 ```
 
+## 書き込み版（`biosnn-mcp-write`）
+
+同じパッケージ・同じバージョンで、入口がもう一つ増えるだけです。違いは一文で言えます：
+**提案はもうメモリ上の代替核に直接落ちず、キューに入り、統合ゲートが記録するかどうかを決めます**。
+
+```bash
+biosnn-mcp-write --state-dir ~/.biosnn-mcp    # キュー・保存先・監査ログの既定の置き場所
+```
+
+| 段階 | 何が起きるか |
+| :--- | :--- |
+| `propose.memory.write` | クライアント生成の `proposal_id`（冪等キー）付きでキューに入る。**直接は書き込まない** |
+| ゲート | コサイン ≥ 0.90 は重複、顕著度 ≥ 0.60 かつ配額に余裕があれば自動承認、0.30–0.60 または配額超過は保留、< 0.30 は却下 |
+| 反映 | 承認された提案だけが `<state>/store.json` に書かれ、前像を残す |
+| `memory.revert` | 前像で元に戻す。取り消し自体も監査に残る |
+| `queue.status` / `queue.list` / `gate.configure` | キューの状態、判定理由の確認、しきい値の変更（reason 必須） |
+
+監査ログは既定で `<state>/audit.jsonl` に、`proposal.received` / `gate.accepted` /
+`memory.applied` / `memory.revert` / `gate.configure` が 1 行ずつ記録されます。
+
+**読み取り専用版は一字も変わっていません**：ツール表・拒否の意味・監査の項目は 0.2.0 と同じで、
+テストで固定しています。
+
 ## ツール
 
 | ツール | 層 | 引数 | 用途 |

@@ -58,6 +58,30 @@ A hand-written JSON-RPC line works too:
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"state.query","arguments":{}}}' | biosnn-mcp
 ```
 
+## Write mode (`biosnn-mcp-write`)
+
+Same package, same version, one extra entry point. The difference is one sentence: **proposals no
+longer land straight in the in-memory stand-in -- they enter a queue, and the consolidation gate
+decides whether the memory is kept**.
+
+```bash
+biosnn-mcp-write --state-dir ~/.biosnn-mcp    # queue, store and audit log default to this directory
+```
+
+| Step | What happens |
+| :--- | :--- |
+| `propose.memory.write` | Enters the queue with a client-generated `proposal_id` (idempotency key); it does **not** write |
+| Gate | cosine >= 0.90 is a duplicate; salience >= 0.60 with quota left is accepted automatically; 0.30-0.60 or over quota is held for review; < 0.30 is rejected |
+| Apply | Only an accepted proposal is written to `<state>/store.json`, keeping its pre-image |
+| `memory.revert` | Restores the pre-image; the revert is audited too |
+| `queue.status` / `queue.list` / `gate.configure` | Read the queue, read the verdicts, change thresholds (a reason is required) |
+
+The audit log defaults to `<state>/audit.jsonl` and gets one line each for `proposal.received`,
+`gate.accepted`, `memory.applied`, `memory.revert` and `gate.configure`.
+
+**The read-only server is unchanged**: its tool table, refusal semantics and audit fields are the
+same as 0.2.0, and tests pin that.
+
 ## Tools
 
 | Tool | Layer | Arguments | Purpose |
