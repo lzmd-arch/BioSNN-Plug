@@ -96,6 +96,19 @@ conventions are left implicit.
   \item \textbf{Open assets}: all code, configurations and scripts are public
     (the skeleton library on PyPI); the evidence ledger behind every number is
     versioned with the paper's source.
+  \item \textbf{A diagnostic finding about measurement}: the spiking execution
+    layer's failure to learn CartPole is traced, over sixteen pre-registered
+    rounds, to credit assignment --- after a fixed encoding raises the readout's
+    state response thirty-fold and leaves the policy's angle dependence at zero
+    (Section~\ref{sec:spiking-diagnostics}).
+  \item \textbf{The same rule at scale}: an event-driven e-prop whose updates are
+    elementwise identical to dense e-prop on the same sparsity mask, with a
+    500\,000-neuron forward pass in 5.02\,s and a single update in 5.27\,s on one
+    consumer GPU (Section~\ref{sec:event-driven}).
+  \item \textbf{A failure library}: four pre-registered cognitive-layer probes ---
+    event-priority updates, neurogenesis, a liquid time constant, and predictive
+    coding as the third factor --- reported with their criteria and, where we
+    could find it, their mechanism (Section~\ref{sec:failure-library}).
 \end{itemize}
 
 \subsection{Positioning: what this paper is not}
@@ -756,6 +769,45 @@ none of this says that no spiking execution layer can learn CartPole; it says
 that this one, measured at matched budgets, does not, and that the reason is not
 in the places one would look first.
 
+\subsection{Event-driven e-prop: the same rule at sparse fan-in}
+\label{sec:event-driven}
+
+The diagnostics above end on a credit-assignment failure, not a capacity failure,
+which makes the scale question the next one a reader will ask: if the limit is
+the learning signal rather than the substrate, does the learning rule at least
+\emph{scale}? Standard e-prop keeps an eligibility trace of shape
+$(\text{features},\ \text{features})$ per time step, which is quadratic in the
+population. An event-driven variant removes that factor without changing the
+rule.
+
+\paragraph{How.} Fix a fan-in $k$ per neuron and a LIF neuron with
+$\beta = 0$, and take the loss at the final step only. Two facts make the
+quadratic tensor unnecessary: the eligibility trace of the membrane potential,
+$\varepsilon_v$, does not depend on the postsynaptic index, so it can be kept per
+presynaptic neuron; and the weight update is an outer product between that trace
+and a per-neuron learning signal. Storage drops to $O(N)$ traces plus the
+$O(N k)$ sparse weights, and the update costs $O(N k)$.
+
+\paragraph{The check that matters.} A reduced update is only worth having if it
+is the \emph{same} update. On the same sparsity mask, the event-driven
+implementation reproduces the dense e-prop updates for $\mathbf{w}_{\text{in}}$,
+$\mathbf{w}_{\text{rec}}$ and $\mathbf{w}_{\text{out}}$ elementwise, with
+$\text{atol} = 10^{-6}$. The equivalence is exact by construction once the mask
+is fixed; the test exists to catch drift, not to establish the rule.
+
+\paragraph{What it costs at scale.} On a single consumer GPU, a forward pass at
+$N = 10^4$, $10^5$ and $5 \times 10^5$ neurons (28 inputs, $T = 28$, batch 1,
+$k = 32$) takes 0.09 s, 0.83 s and \textbf{5.02 s}; one weight update takes
+0.10 s, 0.88 s and \textbf{5.27 s}. The $500$k network holds 16 million sparse
+weights.
+
+\paragraph{What it does not do.} The forward pass is still advanced step by step;
+this is event-driven \emph{storage and update}, not a fully event-driven
+simulator. No training run at $10^4$ or $10^5$ has been attempted, and a $500$k
+epoch at batch 1 extrapolates to roughly 90 hours. The honest reading is that the
+rule is not what makes large spiking networks unaffordable here --- the dense
+alternative is --- but nothing in this section measures an accuracy at scale.
+
 \subsection{SHD: an honest negative result}
 The e-prop configuration that works on sequential MNIST does not learn SHD:
 
@@ -783,6 +835,55 @@ did not tune for SHD --- no hyperparameter search was run for it --- so what
 this measures is that \emph{this} configuration does not transfer, not that the
 rule does not apply to the task. The distinction is the difference between a
 finding and a misattribution, and it is the reason the arm is reported at all.
+
+\subsection{A failure library: four probes that did not become results}
+\label{sec:failure-library}
+
+The project's measurement discipline treats a pre-registered failure as data.
+Four probes from the cognitive layer are reported here in that spirit; each one
+was built to be falsifiable, each one failed its own criterion, and each failure
+narrows what the architecture can claim.
+
+\paragraph{Event-priority updates.} EchoSpike's rule lets a network decide, per
+time step, whether to spend a learning update. We implemented the two halves
+separately and pre-registered the same bar for both (accuracy within 2 points of
+full updates, at a selection ratio at or below 0.35). Selecting the steps with
+the largest \emph{input} activity keeps 33.9\% of steps and costs
+\textbf{15.35} points. Selecting the steps with the largest per-step \emph{loss}
+--- the other half of the rule --- keeps 41.3\% (ties inflate the mask) and costs
+\textbf{23.58} points, worse in all ten seeds. On this task the price of skipping
+updates is set by how much of the learning signal is discarded, not by which
+statistic is used to discard it.
+
+\paragraph{Neurogenesis under sequential tasks.} Four sequential tasks with
+conflicting labels, frozen random features, and a controller that grows the
+feature layer by 16 units whenever validation accuracy falls below 0.90. Growth
+fires as designed and does not help: with a linear readout the growing arm
+reaches 0.432 on the last task against 0.526 for a fixed 64-unit control, and
+with nearest-class-mean readouts 0.766 against 0.617 while the oldest task falls
+to 0.277. A third arm that repairs old prototypes in the newly added dimensions
+by replaying 20 samples per class fixes the repair (old tasks within 2 points in
+14 of 15 task-folds) but does not lift the last task past 0.634; a competition
+guard raises it to 0.697 while costing 34 points on the old tasks. The ceiling is
+in the frozen front end, not in the capacity.
+
+\paragraph{A liquid time constant.} Replacing the fixed membrane time constant
+with a local, untrained one ($\tau^{-1} = a + b\,r_i(t)$, clamped to
+$[5, 20]$ ms, with $r_i$ the neuron's own firing rate) leaves sequential MNIST
+at \textbf{0.8754} across five seeds (95\% CI 0.8684--0.8824), below both the
+fixed-$\tau$ LIF (0.8889) and the adaptive ALIF control (0.8831), with the active
+fraction at 0.999. The prediction that this would not pay on a regular grid was
+recorded before the run; the negative result is the confirmation, and the event-
+stream round that would actually exercise a liquid constant is left unopened.
+
+\paragraph{Predictive coding as the third factor.} Replacing e-prop's
+reward-like third factor with a local predictive error works when the error
+input is present and collapses when it is scheduled away: over the last 30\% of
+training, ramping the error gain to zero takes reconstruction from
+$0.0048$--$0.0091$ to \textbf{0.089}--\textbf{0.169} and the amplitude of free
+running to 0.008--0.312, with dynamic-time-warping distances no better than an
+untrained control. The error channel is a load-bearing driver here, not a
+shortcut the network can learn to replace.
 
 \subsection{Resource measurements}
 Peak device memory and wall clock are recorded for every run. The largest peak

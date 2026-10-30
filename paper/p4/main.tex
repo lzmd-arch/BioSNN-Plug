@@ -1,5 +1,5 @@
 % ============================================================
-%  P4 paper skeleton v0.1  ·  BioSNN-Plug Arbitration Paper
+%  Paper B  ·  Emergence Without Scale  ·  BioSNN-Plug
 %  Build:  latexmk -pdf main  (needs hyperref, booktabs, graphicx, amsmath)
 %  写作纪律 (inherited from P2): 数字全部来自 research/ 复现记录;
 %  \todo{} 是任务清单; 一个数字只有一个家; 不利结果照登.
@@ -11,7 +11,7 @@
 \usepackage{booktabs, graphicx, hyperref, amsmath, amssymb, xcolor}
 \usepackage[round]{natbib}  % \citep + plainnat: natbib family
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
-\title{When Can Arbitration Be Measured?\\Mixed Local Plasticity Rules Under One Protocol}
+\title{Emergence Without Scale:\\Dynamics and Organisation Tested Against the Substrate Bet\\in a Spiking Architecture}
 \author{Jinyao Shen\thanks{Independent researcher. Correspondence: \url{https://github.com/lzmd-arch/BioSNN-Plug}.}\\ \small{github.com/lzmd-arch/BioSNN-Plug}}
 \date{November 2026}
 
@@ -20,28 +20,50 @@
 
 % ------------------------------------------------------------
 \begin{abstract}
-Multiple local learning rules acting on the same synapses propose incompatible updates; systems
-built on a single rule never face this. We ask when reconciliation between such rules can be
-\emph{measured}, and answer with a benchmark, a protocol, and one negative result. The
-Rules-Collide benchmark places a Hebbian rule and e-prop on the one weight they already share and
-scores representation separability: a fixed 50/50 mixture reaches a Fisher ratio of 0.651 against
-0.472 and 0.331 for the rules alone (five seeds; paired margin +0.179). Arbitration itself ---
-choosing that weight rather than fixing it --- comes back negative, and measurably so: no adaptive
-scheme we could build beats the fixed mixture (paired margin $+0.003$ against the pre-registered
-$\delta = 0.05$), the static optimum turns out to be the default value, and the only affordable
-objective was shown to lack discriminating power before it was used. Four triviality analyses --- degenerate measurements that could otherwise have been
-published as results --- are reported together with the guards that now catch them. The claim is
-narrow: arbitration is not a free improvement on mixing, and whether it can be measured at all is a
-question about objectives, not ideas.
+Why intelligence emerges is usually asked as a question about scale. We test the
+opposite bet: that \emph{dynamics} --- global state variables that bias learning ---
+and \emph{organisation} --- the arrangement of rules and modules --- can carry a
+system further than substrate size would suggest. The bet is a product rather than
+a sum: if any axis is zero the whole is capped, so we built an instrument whose job
+is to find which axis is zero, and report what it found.
+
+Three measurements, all pre-registered. In the first, two local rules share one
+weight: a fixed 50/50 mixture is measurable (Fisher ratio 0.651 against 0.472 and
+0.331 for the rules alone), while \emph{choosing} the mixing weight is not --- no
+adaptive scheme beats the fixed mixture, and the static optimum turns out to be the
+default value. In the second, a cognitive layer of working memory, episodic memory,
+metacognition and a world model, each with its own criterion, and a state-level
+end-to-end gate that passes 18 of 18 cells. In the third, orchestration by a
+replaceable language model: real dialogue passes every criterion, while the same
+spiking trigger that passes on a synthetic stream fails on a real one (AUC 0.732
+against 0.7475 for a plain novelty gate, one trigger per conversation).
+
+The failures are informative together. If the arbiter cannot be measured and the
+trigger does not transfer, the only defensible place for the language model is
+outside the learning path, on the reading side. We make that an architecture rather
+than a slogan: writes belong to the dynamics, the model may only \emph{propose}, and
+the bus is the only door. An implementation --- a read-only, per-call-audited MCP
+server on PyPI, and a gate-mediated write path specified against six pre-registered
+criteria --- is released alongside.
 \end{abstract}
 
 % ------------------------------------------------------------
 \section{Introduction}
 
-\subsection{The problem this paper measures}
+\subsection{The question this paper measures}
 
-Three observations motivate the question, and none of them is new; what is new is that the
-question is made measurable.
+\textbf{The bet this paper inherits.} A programme that asks why intelligence
+emerges normally treats scale as the independent variable. This paper belongs to a
+project that bet the other way: that \emph{dynamics} --- global state variables
+that bias local learning --- and \emph{organisation} --- which rules and modules
+sit where --- can carry a system further than substrate size alone, and that the
+axes multiply rather than add: if one of them is zero, so is the product. A bet of
+that shape is not tested by a larger run; it is tested by building an instrument
+that can say \emph{which} axis is zero. This paper is that instrument's first three
+readings, and the architecture the readings imply.
+
+Three observations motivate the first reading, and none of them is new; what is new
+is that the question is made measurable.
 
 \textbf{Biology.} A single neuron need not follow a single plasticity rule. In vivo imaging of
 cortical pyramidal neurons during motor learning finds distinct rules operating in different
@@ -93,6 +115,23 @@ scheme that had to earn its place against the value the sweep found.
   results --- together with the guards that now catch each of them.
   \item \textbf{Open assets}: rules, benchmark, pre-registration records with timestamps, and the
   arbitration code.
+  \item \textbf{A cognitive layer with pre-registered criteria}: working memory (0.9269/0.9276),
+  episodic memory (0.805, 0.922 at $K{=}4$), metacognitive gating against multiple OOD families, a
+  world model with a termination head (AUROC 1.0 in receding-horizon closed loop), and a
+  state-level end-to-end gate at 18/18 (Section~\ref{sec:cognitive-layer}).
+  \item \textbf{An orchestration result that does not transfer}: the same spiking trigger passes
+  its criterion on a synthetic salience stream (five seeds, four of four events, zero false
+  triggers) and fails on a stream generated by a real model (AUC 0.732 against 0.7475 for a plain
+  novelty gate; recalibration recovers hits but not the score's ceiling), with the failure located
+  in the score rather than the trigger (Section~\ref{sec:when-to-act}).
+  \item \textbf{A read/write boundary derived from those failures}: the language model may propose
+  and may never write; writes belong to the dynamics; the bus is the only door
+  (Section~\ref{sec:read-write}).
+  \item \textbf{A released implementation of that boundary}: a read-only MCP server on PyPI with
+  four read tools and five proposal tools, read-only by default and audited per call, plus a
+  gate-mediated write path specified against six criteria
+  (Section~\ref{sec:read-write}), and a host that enforces read-only at the storage engine
+  (Section~\ref{sec:host}).
 \end{itemize}
 
 % ------------------------------------------------------------
@@ -395,6 +434,173 @@ A matched comparison is left as future work, with the caveat stated above: it wo
 budget-matching the two arms and a pre-registered criterion, not a demonstration.
 
 % ------------------------------------------------------------
+% ============================================================
+\section{The cognitive layer: four components and one gate}
+\label{sec:cognitive-layer}
+
+The first reading of the instrument is the arbitration benchmark of the preceding
+sections. The second is whether a cognitive layer built from local rules can hold
+its own criteria --- and the answer depends on a distinction that the rest of this
+paper leans on: a component can be \emph{ready} while the system it belongs to is
+not emergent. Ready means a pre-registered criterion was met at a stated budget;
+emergent means the whole does something the parts do not. We report the first and
+do not claim the second.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{llll}
+\toprule
+Component & Rule & Pre-registered criterion & Result \\
+\midrule
+Working memory      & local RLS, no backprop        & three-cue reconstruction $R^2$      & 0.9269 / 0.9276 (count / low-pass) \\
+Episodic memory     & local delta readout           & delayed paired association          & 0.805 (0.922 at $K{=}4$) \\
+Metacognitive gate  & disagreement + surprise + density & OOD abstention, several families & 0.998 / 0.990 / 0.858 / 0.987 \\
+World model         & ridge dynamics + termination head & closed-loop termination AUROC   & 1.0, FP 0.0009 \\
+End-to-end          & state-level predicted-norm gate & 18 cells & 18/18 \\
+\bottomrule
+\end{tabular}
+\caption{Cognitive-layer results, each under its own pre-registered criterion. The
+numbers are per component; none of them is an end-to-end claim on its own. The
+gate row is the exception: it is the only one measured \emph{across} components.}
+\label{tab:cognitive-layer}
+\end{table}
+
+\paragraph{The end-to-end gate is state-level, and that mattered.} An earlier
+version of the gate passed the same 18 cells using an input-scale statistic; we did
+not count it, because an input gate reads the task's difficulty rather than the
+model's uncertainty. The version reported here uses a state-level statistic (the
+predicted state norm, $z$-scored), and its margins on the hardest regime are
+0.837--0.907 abstention at 0.795--0.814 coverage.
+
+\paragraph{Boundaries.} The pure-imagination closed loop --- running the world
+model forward for 500 steps without observations --- remains at 0.63--0.67, and we
+treat it as the layer's structural boundary rather than a tuning target. The
+components use frozen or synthetic front ends; the OOD families are constructed
+(shifts, reversals, dropped dimensions, correlated noise), not sampled from a
+deployed distribution.
+
+% ============================================================
+\section{When to act: orchestration that does not transfer}
+\label{sec:when-to-act}
+
+The third reading is the one the emergence bet needs most: a hybrid system in which
+the spiking side decides \emph{when} to call the language model. The pipeline is
+standard in its parts --- an episodic store, a trigger, a dialogue trace, a
+consolidation step --- and unusual only in that every part is measured against a
+criterion fixed before it ran.
+
+\paragraph{With a real model, the dialogue criteria pass.} Running against a local
+\texttt{qwen3-4b} (temperature 0, thinking disabled) over 30 scripted sessions, four
+pre-registered criteria all pass: the first trigger arrives by round 3 (criterion:
+$\leq 10$), trigger accuracy is 1.000 (criterion: $\geq 0.70$), consolidation of
+the retrieved facts is 1.000 (criterion: $\geq 0.80$), and task completion is
+0.975 against 0.350 for the same core without the model (criterion: $+50\%$). Three
+of those four are constructive --- the trigger is a rule gate and the retrieval is
+exact match --- and only the completion margin carries information. It is also the
+only one worth quoting.
+
+\paragraph{On a synthetic stream, the spiking trigger passes too.} The trigger is a
+lateral-STDP population: sixty-four LIF neurons, an impulse detected against a slow
+fire-rate mean, a window of hits required before firing. On a synthetic salience
+stream with four events it meets its criterion in all five seeds (four of four
+events, zero false triggers, bit-identical reruns).
+
+\paragraph{On a real stream, it does not.} The same parameters on a stream generated
+by the language model itself --- five conversations of twenty turns, five memorable
+turns each --- give an AUC of \textbf{0.732} against \textbf{0.7475} for a plain
+novelty-threshold gate, and one trigger per conversation rather than one per event.
+Recalibrating the operating point under leave-one-conversation-out selection
+recovers the hit rate (median 3--5 of 5) with stable parameters, but only one of
+five folds clears the held-out workpoint and the pooled AUC is 0.7472: the trigger
+becomes operable without becoming informative.
+
+\paragraph{The ceiling is the score, not the trigger.} A sequence of pre-registered
+comparisons separates the two. On one corpus, replacing the ``maximum similarity to
+recent turns'' score with a mean-similarity or centroid score lifts the pooled AUC
+to 0.8005 and 0.8325. On a fresh corpus, the original score already reaches 0.840
+and passes all five conversations --- so the advantage did not transfer, and the
+variable that changed was the corpus, not the score. On twenty conversations, the
+mean-similarity score reaches 0.809 (0.752 on the hard half) but beats the baseline
+on only 12 of 20 conversations. What the trigger can do is made of what the score
+can see; this score sees about half of it.
+
+% ============================================================
+\section{The read/write boundary}
+\label{sec:read-write}
+
+Two negative results and one positive one point at the same rule. Arbitration
+cannot be measured (Sections~\ref{sec:synergy}--\ref{sec:pending}), the trigger
+does not transfer (Section~\ref{sec:when-to-act}), and what does transfer is the
+dialogue scaffold around a model that is not asked to learn. If a hybrid system
+cannot measure how its own rules should be mixed, it certainly cannot delegate the
+question to a language model. The consequence we draw is structural, not moral:
+\textbf{openness should follow the trust boundary --- whoever is accountable for a
+write is the only one who gets to write.}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+Face & Who may write & Constraint \\
+\midrule
+Perception & any plugin   & fusion + per-call audit + plugins off by default \\
+Memory     & the dynamics core only & outside callers may only \emph{propose} \\
+Knowledge  & anyone       & mechanism core stays closed \\
+\bottomrule
+\end{tabular}
+\caption{The three faces of the boundary. The memory face is the one this paper
+argues for; the other two are what the argument does \emph{not} restrict.}
+\label{tab:faces}
+\end{table}
+
+\paragraph{Three sentences, one implementation.} Read-only is a position: the model
+never writes directly. Proposal is the valve: a two-stage queue, not a hypothetical
+API. The bus is the only door: there is no second path to the store. The released
+implementation is \texttt{biosnn-mcp} 0.2.0 --- four read tools and five proposal
+tools, read-only by default, every call appended to a JSONL audit, and arming the
+trigger requires a written reason. The naming is part of the contract: a tool that
+never really writes is not called \texttt{write}; the five are
+\texttt{propose.memory.write}, \texttt{propose.memory.consolidate},
+\texttt{propose.trigger.arm}, \texttt{propose.trigger.disarm} and
+\texttt{propose.trigger.feed}.
+
+\paragraph{What the write path would have to satisfy.} A queue alone is not the
+boundary; the boundary is that nothing commits without the dynamics deciding. The
+specified version therefore adds a consolidation gate between the queue and the
+store, with three verdicts --- accept, hold for review, reject --- and defaults
+fixed in advance: a cosine of 0.90 or more against existing entries rejects as
+duplicate, a salience score of 0.60 or more accepts, 0.30--0.60 holds for review, and
+anything below 0.30 rejects; quotas of 20 per hour and 200 per day send the overflow
+to review rather than dropping it. Six criteria are pre-registered for it, of which
+one is load-bearing: \textbf{there must be no path to the store that bypasses the
+gate} --- a unit test asserts that no internal write API is reachable from a tool.
+At the time of writing the read-only server is released and the write path is
+specified but not yet built; we report it as a design with criteria rather than as
+a result.
+
+% ============================================================
+\section{The host: making read-only a property}
+\label{sec:host}
+
+A boundary that lives in documentation is a policy; a boundary that lives in the
+storage engine is a property. The project's memory terminal (Axo) implements the
+second: its MCP adapter opens the memory store through SQLite's
+\texttt{mode=ro} URI, so a write is refused by the engine rather than by discipline.
+A missing store is an error and is never created, the read-only path does not
+create tables or migrate a schema, and the adapter refuses to be constructed around
+a writable store at all. The guards that make this checkable are behavioural rather
+than declarative: a blacklist rejects any tool whose name carries a write verb, and
+a full read-only session must leave the database file byte-identical --- the only
+new files permitted are SQLite's own \texttt{-shm} and an empty \texttt{-wal}.
+
+The host is also where the two-tier design would be felt by a user: the default
+tier is read-only, and a proposal-enabled tier --- if it ships --- would require
+explicit consent, would keep every proposal and verdict in an audit file, and would
+allow any accepted write to be reverted. We describe it here as the host-side
+consequence of Table~\ref{tab:faces}; the tier itself is not implemented.
+
 \section{Discussion}
 
 \subsection{When does arbitration pay?}
@@ -454,12 +660,28 @@ rule, not the substrate.
 % ------------------------------------------------------------
 \section{Conclusion}
 
-Rules conflict on shared synapses, and the conflict is measurable: a fixed mixture of two
-heterogeneous local rules separates representations far better than either rule alone
-(0.651 against 0.472 and 0.331), in a network with no backpropagation anywhere, under a
-protocol that pre-registers its criteria and voids runs whose weights did not move.
+The bet was that dynamics and organisation could substitute for scale. This paper
+cannot claim the bet is won --- what it can claim is that the instrument built to
+test it works, and what it read.
 
-The title asks when arbitration can be measured, and the answer has three layers.
+Rules conflict on shared synapses, and the conflict is measurable: a fixed mixture of
+two heterogeneous local rules separates representations far better than either rule
+alone (0.651 against 0.472 and 0.331), in a network with no backpropagation anywhere,
+under a protocol that pre-registers its criteria and voids runs whose weights did not
+move. Choosing the mixture, however, is not measurable on this benchmark, and the
+cognitive layer is ready component by component (working memory 0.9269, episodic
+memory 0.805, a metacognitive gate that holds across OOD families, a world model at
+AUROC 1.0 in closed loop, and an 18/18 state-level end-to-end gate) without becoming
+an end-to-end claim about emergence.
+
+The third reading is the sharpest. On a synthetic stream the spiking trigger meets
+its criterion in every seed; on a real one it loses to a threshold on the same score,
+and recalibration moves the workpoint without moving the ceiling. That is a result
+about measurement, and it has an architectural consequence: a language model that
+cannot be trusted to decide \emph{when} should not be trusted to decide \emph{what to
+remember} either.
+
+The arbitration question therefore has three layers.
 \textbf{Mixing is measurable and measured}: the mixture beats both parents by a margin the
 seed-level intervals separate. \textbf{Adaptation is measurable in principle but not at a price we
 could pay}: the only objective known to rank candidates the way the acceptance metric does requires
