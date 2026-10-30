@@ -63,7 +63,7 @@ project may enter a dependency, which may not be copied at all), are in
 | **EMBER** | ◐ STDP + eligibility traces x dopamine gating | ✗ (text only) | ◐ observational, **N=1** | ✗ | ✗ no public repo |
 | **MEMBRAIN** | ◐ Voja + PES | ✗ | ✗ | ◐ claims disagree with implementation | ✅ Nengo (MIT) |
 | **eprop-PyTorch / ESPP** | ✅ e-prop; ESPP is a separate parallel rule | ✗ | ✗ | ✗ | ◐ code fragments, not a framework |
-| **BioSNN-Plug** (this project) | ✅ all three lines accepted | ✅ four plugins (image / MNIST / text / audio) | ◐ phase 5 (M0-M3l: real LLM dialogue and spiking trigger wired; trigger ROC unmet) | ◐ phase 3 (task-aware CIL passes; 3x unmet) | ✅ both `biosnn-bus` and `biosnn-mcp` are on PyPI |
+| **BioSNN-Plug** (this project) | ✅ all three lines accepted | ✅ four plugins (image / MNIST / text / audio) | ◐ phase 5 (M0-M3p: real LLM dialogue and spiking trigger wired; trigger ROC on a real stream unmet) | ◐ phase 3 (task-aware CIL passes; 3x unmet) | ✅ both `biosnn-bus` and `biosnn-mcp` are on PyPI |
 
 Legend: **✅ implemented, with acceptance data** · **◐ partial** (mechanism or evidence incomplete) ·
 **○ roadmap only (task exists in the plan, not started)** · **✗ none**
