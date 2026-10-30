@@ -1590,7 +1590,8 @@
 
 > 181. **2026-10-30：阶段五 MCP 完成 M1 工具面（`biosnn-mcp` 0.2.0，9 个工具，默认只读 + 逐调用审计）**。
 >    ADR-0026。工具分两层：只读 4 个（`state.query`/`memory.search`/`trigger.status`/`trigger.poll`）、
->    写 5 个（`memory.write`/`memory.consolidate`/`trigger.arm`/`trigger.disarm`/`trigger.feed`）。
+>    写 5 个（`memory.write`/`memory.consolidate`/`trigger.arm`/`trigger.disarm`/`trigger.feed`；
+>    **同日按 ADR-0027 改名为 `propose.*`**）。
 >    **默认只读**：写工具照常出现在 `tools/list`，但只读模式下调用返回 `isError` 并写明需要
 >    `--allow-write`；**武装必须带 `reason`**；`--audit-log` 把每次 `tools/call` 记一行 JSONL
 >    （ts/tool/ok/error/arguments），不写路径则只在内存里供测试断言。巩固用确定性哈希嵌入，

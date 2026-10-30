@@ -473,11 +473,11 @@ jobs:
           uv pip install --python /tmp/mcp/bin/python dist-mcp/*.whl
           printf '%s\n' \
             '{"jsonrpc":"2.0","id":1,"method":"initialize"}' \
-            '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"memory.write","arguments":{"text":"ci smoke"}}}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"propose.memory.write","arguments":{"text":"ci smoke"}}}' \
             '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"memory.search","arguments":{"query":"ci"}}}' \
             | /tmp/mcp/bin/biosnn-mcp --allow-write --audit-log /tmp/mcp/audit.jsonl > /tmp/mcp/writable.jsonl
           printf '%s\n' \
-            '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"memory.write","arguments":{"text":"nope"}}}' \
+            '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"propose.memory.write","arguments":{"text":"nope"}}}' \
             | /tmp/mcp/bin/biosnn-mcp > /tmp/mcp/readonly.jsonl
           /tmp/mcp/bin/python - <<'PY'
           import json
