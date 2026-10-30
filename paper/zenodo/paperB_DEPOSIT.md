@@ -50,7 +50,7 @@ with the same care as positive ones.
 
 | 文件 | 来源 |
 | :--- | :--- |
-| `paperB_v1.0.pdf` | 从 CI 的 **`paper-pdf`** artifact 下载（P4 的 tectonic 腿） |
+| `paperB_v1.0.pdf` | **已构建**：128,531 字节、sha256 `7a144343…`；本地 tectonic 0.17.0 从 commit `bd437cc` 编译（CI 的 `paper-p4-pdf` artifact 受 egress 配额限制 503） |
 | `paperB_source_v1.0.tar.gz` | `paper/p4/main.tex` + `paper/p4/refs.bib` 快照（可选） |
 
 ## 发布后要做的

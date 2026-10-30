@@ -46,7 +46,7 @@ All numbers trace to reproduction records in the linked repository; the LaTeX so
 
 | 文件 | 来源 |
 | :--- | :--- |
-| `paperA_v1.0.pdf` | 从 CI 的 **`paper-pdf`** artifact 下载（当前 commit 的构建；PDF 不入库，因为它内嵌生成时间、每次重编哈希都变） |
+| `paperA_v1.0.pdf` | **已构建**：678,786 字节、sha256 `b67db6eb…`；本地 tectonic 0.17.0 从 commit `bd437cc` 编译（CI 的 `paper-pdf` artifact 受 GitHub egress 配额限制 503，改本地构建）。PDF 不入库——内嵌生成时间，每次重编哈希都变 |
 | `paperA_source_v1.0.tar.gz` | `paper/main.tex` + `paper/refs.bib` + `paper/figures/` 的快照（可选，但便于评审复编译） |
 
 ## 发布后要做的
