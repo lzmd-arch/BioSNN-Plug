@@ -698,24 +698,24 @@ a non-zero spread of $\Delta$ across it.
 \small
 \begin{tabular}{lll}
 \toprule
-Round & Question & Answer \
+Round & Question & Answer \\
 \midrule
-D3  & does the readout matter (count vs.\ low-pass rate)? & both stall (best 65.2, last 9.55) \
-D4  & does the greedy action depend on the angle?        & slope $=0$ in every seed \
-D5  & is the output distribution collapsed?              & yes, entropy collapses \
-D6  & does a temperature schedule repair it?             & entropy recovers, last median stays 9.5 \
-D7  & attributable to entropy, column norm or critic?    & 5/5 \emph{unattributed} \
-D8  & how much state information does the readout keep?  & 5/5 none: $\Delta$ spread 0.0--0.4 counts, SNR 11--23 \
-D9  & does removing the common-mode column component?    & spread 0.20$\to$0.60, slope still 0/10 \
-D10 & does a trained differential direction exist?       & yes in 4/5 (2.95--13.4$\times$ random), size 0.5--7.3\% \
-D11 & threshold, refractory, bias, window?               & 54 configurations, best 0.7--3.45 counts, 0/5 usable \
-D12 & larger weight budget, no sign cancellation?        & $\lambda{=}0.30$: at most 0.80 counts \
-D13 & other readouts (rate, membrane potential)?         & separability 0.58--0.65, flat in $\lambda$ \
-D14 & averaging $K$ independent windows?                 & SNR 0.57$\to$2.12 at $K{=}8$ (3/5 seeds); a noise-free front end makes $\Delta \equiv 0$ \
-D15 & first-spike latency?                               & 0.75 / 0.90 / 0.52 / 0.75 / 0.54, still short \
-D16 & orthogonalise the difference against the mean state? & its sign still never crosses zero (0/5) \
-D17 & can the encoder resolve the angle at all?          & \textbf{no}: 2.9\% relative change \
-D18 & re-run with a per-axis normalised encoder          & readout response 30$\times$ larger; policy unchanged \
+D3  & does the readout matter (count vs.\ low-pass rate)? & both stall (best 65.2, last 9.55) \\
+D4  & does the greedy action depend on the angle?        & slope $=0$ in every seed \\
+D5  & is the output distribution collapsed?              & yes, entropy collapses \\
+D6  & does a temperature schedule repair it?             & entropy recovers, last median stays 9.5 \\
+D7  & attributable to entropy, column norm or critic?    & 5/5 \emph{unattributed} \\
+D8  & how much state information does the readout keep?  & 5/5 none: $\Delta$ spread 0.0--0.4 counts, SNR 11--23 \\
+D9  & does removing the common-mode column component?    & spread 0.20$\to$0.60, slope still 0/10 \\
+D10 & does a trained differential direction exist?       & yes in 4/5 (2.95--13.4$\times$ random), size 0.5--7.3\% \\
+D11 & threshold, refractory, bias, window?               & 54 configurations, best 0.7--3.45 counts, 0/5 usable \\
+D12 & larger weight budget, no sign cancellation?        & $\lambda{=}0.30$: at most 0.80 counts \\
+D13 & other readouts (rate, membrane potential)?         & separability 0.58--0.65, flat in $\lambda$ \\
+D14 & averaging $K$ independent windows?                 & SNR 0.57$\to$2.12 at $K{=}8$ (3/5 seeds); a noise-free front end makes $\Delta \equiv 0$ \\
+D15 & first-spike latency?                               & 0.75 / 0.90 / 0.52 / 0.75 / 0.54, still short \\
+D16 & orthogonalise the difference against the mean state? & its sign still never crosses zero (0/5) \\
+D17 & can the encoder resolve the angle at all?          & \textbf{no}: 2.9\% relative change \\
+D18 & re-run with a per-axis normalised encoder          & readout response 30$\times$ larger; policy unchanged \\
 \bottomrule
 \end{tabular}
 \caption{Diagnostic rounds on the spiking execution layer. Each round is a
