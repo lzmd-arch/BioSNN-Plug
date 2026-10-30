@@ -29,7 +29,7 @@ keywords:
 # 填一个发布日期就是在声称一次并未发生的发布。
 version: "0.1.0"
 
-# 论文（Zenodo 记录 B）。与上方软件记录分开：doi 字段描述的是本仓库，
+# 论文（Paper A，取代原「记录 B」）。与上方软件记录分开：doi 字段描述的是本仓库，
 # 论文走 preferred-citation，GitHub 的 "Cite this repository" 会优先给这一条。
 preferred-citation:
   type: article
@@ -43,6 +43,6 @@ preferred-citation:
   year: 2026
   publisher:
     name: Zenodo
-  doi: "10.5281/zenodo.23429379"
-  url: "https://doi.org/10.5281/zenodo.23429379"
+  doi: "10.5281/zenodo.23819564"
+  url: "https://doi.org/10.5281/zenodo.23819564"
   license: CC-BY-4.0

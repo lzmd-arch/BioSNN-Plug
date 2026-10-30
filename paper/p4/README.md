@@ -1,6 +1,6 @@
 # P4 论文（骨架 v0.1 + 差距审计）
 
-**状态（2026-10-24 晚，成稿后回填）**：全文已成稿、编译由 CI 的 `latex-build-p4` 腿担保，并已发布——Zenodo [`10.5281/zenodo.23613539`](https://doi.org/10.5281/zenodo.23613539)。**下面这份审计是骨架阶段的快照**（骨架 `main.tex` 来自桌面 `p4_paper_skeleton.tex`，10-18 版），「待作者定 / 缺口」都是当时的记录，不再逐条回填；**当前状态以 `main.tex` 与 Zenodo 版本为准**。R1 / R2 已跑完，**两臂均为阴性**，结论见 [`sweep_results/arbiter_synergy/README.md`](../../sweep_results/arbiter_synergy/README.md)。
+**状态（2026-10-24 晚，成稿后回填）**：全文已成稿、编译由 CI 的 `latex-build-p4` 腿担保，并已发布——Zenodo 当前版本 [`10.5281/zenodo.23819567`](https://doi.org/10.5281/zenodo.23819567)（概念 DOI [`10.5281/zenodo.23817510`](https://doi.org/10.5281/zenodo.23817510)；首发是已作废的旧记录 `zenodo.23613539`）。**下面这份审计是骨架阶段的快照**（骨架 `main.tex` 来自桌面 `p4_paper_skeleton.tex`，10-18 版），「待作者定 / 缺口」都是当时的记录，不再逐条回填；**当前状态以 `main.tex` 与 Zenodo 版本为准**。R1 / R2 已跑完，**两臂均为阴性**，结论见 [`sweep_results/arbiter_synergy/README.md`](../../sweep_results/arbiter_synergy/README.md)。
 本文件是**审计**，不是改写——骨架里的结构由作者定，下面只列"哪些节已有素材、哪些还缺、哪些与
 后来的裁决冲突"。
 

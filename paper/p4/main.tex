@@ -8,8 +8,15 @@
 \usepackage[margin=1in]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage{booktabs, graphicx, hyperref, amsmath, amssymb, xcolor}
+\usepackage{booktabs, graphicx, hyperref, amsmath, amssymb, xcolor, array}
 \usepackage[round]{natbib}  % \citep + plainnat: natbib family
+
+% 表 5 的第一列是预注册记录里的**中文小节名**，必须真的渲染出来；
+% Fandol 没有「垚」（作者名已改用矢量图），其余汉字都覆盖。
+\ifdefined\XeTeXversion
+  \usepackage{xeCJK}   % 只在 XeTeX 下生效：本机 tectonic 与 CI 都是 XeTeX
+  \setCJKmainfont{FandolSong-Regular.otf}
+\fi
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 \title{Emergence Without Scale:\\Dynamics and Organisation Tested Against the Substrate Bet\\in a Spiking Architecture}
 \author{Jinyao Shen (\includegraphics[height=1.05em]{figures/cn-name.pdf})\thanks{Independent researcher. Correspondence: \url{https://github.com/lzmd-arch/BioSNN-Plug}.}\\ \small{github.com/lzmd-arch/BioSNN-Plug}}
@@ -115,7 +122,7 @@ scheme that had to earn its place against the value the sweep found.
   results --- together with the guards that now catch each of them.
   \item \textbf{Open assets}: rules, benchmark, pre-registration records with timestamps, and the
   arbitration code.
-  \item \textbf{A cognitive layer with pre-registered criteria}: working memory (0.9269/0.9276),
+  \item \textbf{A cognitive layer with pre-registered criteria}: working memory (0.9269 and 0.9276),
   episodic memory (0.805, 0.922 at $K{=}4$), metacognitive gating against multiple OOD families, a
   world model with a termination head (AUROC 1.0 in receding-horizon closed loop), and a
   state-level end-to-end gate at 18/18 (Section~\ref{sec:cognitive-layer}).
@@ -318,7 +325,7 @@ records or in any statistic.} Table~\ref{tab:synergy} reports five seeds per arm
 40 epochs, 1\% labels, five seeds. Intervals are the interquartile range.
 The paired synergy margin subtracts, per seed, the stronger of the two single-rule arms.}
 \label{tab:synergy}
-\begin{tabular}{lccc}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.30\linewidth}cp{0.16\linewidth}>{\raggedright\arraybackslash}p{0.24\linewidth}@{}}
 \toprule
 Arm & Fisher (median) & IQR & Seeds used \\
 \midrule
@@ -449,7 +456,7 @@ do not claim the second.
 \begin{table}[h]
 \centering
 \small
-\begin{tabular}{llll}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.17\linewidth}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}p{0.24\linewidth}>{\raggedright\arraybackslash}p{0.28\linewidth}@{}}
 \toprule
 Component & Rule & Pre-registered criterion & Result \\
 \midrule
@@ -737,12 +744,19 @@ make it checkable, including the record of the agent's own errors.
 % ------------------------------------------------------------
 \section*{Data and code availability}
 
-Code, configurations and every pre-registration record: \url{https://github.com/lzmd-arch/BioSNN-Plug}.
-Archived snapshots: the findings-and-protocol record (concept DOI \texttt{10.5281/zenodo.23388708}),
-the companion paper (\texttt{10.5281/zenodo.23429027}), the P4 design notes
-(\texttt{10.5281/zenodo.23603639}) and the architecture and decision record
-(\texttt{10.5281/zenodo.23603642}). The deposit of this manuscript is
-\texttt{10.5281/zenodo.23613539}.
+\begin{sloppypar}
+\raggedright
+\begin{itemize}
+  \item Code, configurations and every pre-registration record:
+  \url{https://github.com/lzmd-arch/BioSNN-Plug}.
+  \item Archived snapshots: the findings-and-protocol record (concept DOI
+  \nolinkurl{10.5281/zenodo.23388708}), the companion paper (\nolinkurl{10.5281/zenodo.23817506}),
+  the P4 design notes (\nolinkurl{10.5281/zenodo.23603639}) and the architecture and decision
+  record (\nolinkurl{10.5281/zenodo.23603642}).
+  \item The deposit of this manuscript is \nolinkurl{10.5281/zenodo.23817510}
+  (concept DOI).
+\end{itemize}
+\end{sloppypar}
 
 % ------------------------------------------------------------
 \bibliographystyle{plainnat}
@@ -786,17 +800,17 @@ record; full translation is available on request.
 \caption{Index of the pre-registration records. All four live in
 \texttt{sweep\_results/arbiter\_synergy\_task\_spec.md} unless stated otherwise.}
 \label{tab:prereg-index}
-\begin{tabular}{p{0.30\linewidth}p{0.62\linewidth}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.32\linewidth}>{\raggedright\arraybackslash}p{0.61\linewidth}}
 \toprule
 Section of the record & What it fixes \\
 \midrule
 判据改写 (criterion rewrite) & The synergy margin $\delta = 0.05$ and the separation rule,
 written before any MIX number existed \\
-预注册：目标函数（2026-10-24） & That any candidate objective must first pass a discrimination
+预注册：目标函数（\mbox{2026-10-24}） & That any candidate objective must first pass a discrimination
 check; the results of that check are recorded in the same section \\
 预注册：R1 / R2 & The static sweep and the slow-adaptive arm, including the two-arm limit and
 the conditional per-row clause \\
-设计笔记 (design notes, \texttt{research/arbiter/DESIGN.md}) & The two-sided retention constraint
+设计笔记 (design notes, \texttt{research/arbiter/\allowbreak DESIGN.md}) & The two-sided retention constraint
 and the definition of retention used in every report \\
 \bottomrule
 \end{tabular}

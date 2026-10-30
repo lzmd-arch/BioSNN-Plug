@@ -19,7 +19,7 @@
 
 ## Publications and deposits
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23429379.svg)](https://doi.org/10.5281/zenodo.23429379)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23819564.svg)](https://doi.org/10.5281/zenodo.23819564)
 
 | Output | Type / licence | Identifier | Status |
 | :--- | :--- | :--- | :--- |

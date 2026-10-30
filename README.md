@@ -15,7 +15,7 @@
 
 ## 发表与存档
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23429379.svg)](https://doi.org/10.5281/zenodo.23429379)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23819564.svg)](https://doi.org/10.5281/zenodo.23819564)
 
 | 产出 | 类型 / 许可 | 标识 | 状态 |
 | :--- | :--- | :--- | :--- |
