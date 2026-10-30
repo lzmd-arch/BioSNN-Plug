@@ -450,3 +450,57 @@ jobs:
         with:
           name: biosnn-bus-wheel-py${{ matrix.python-version }}
           path: dist/*.whl
+
+  # ── 阶段五 MCP：分发包可安装、console script 能跑一次真实 stdio 会话 ──────
+  # `package` 腿只覆盖骨架库；MCP 有自己的入口点（console script）与版本源，
+  # 分发包里少一个模块就会在"装得上但跑不起来"这一步才暴露，所以单独一条腿。
+  mcp-package:
+    name: 构建 biosnn-mcp wheel 并跑一次 stdio 会话（Python ${{ matrix.python-version }}）
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv build --package biosnn-mcp --out-dir dist-mcp
+      - name: 在全新 venv 里安装并跑一次真实 stdio 会话（可写 + 只读）
+        run: |
+          uv venv /tmp/mcp --python ${{ matrix.python-version }}
+          uv pip install --python /tmp/mcp/bin/python dist-mcp/*.whl
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"memory.write","arguments":{"text":"ci smoke"}}}' \
+            '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"memory.search","arguments":{"query":"ci"}}}' \
+            | /tmp/mcp/bin/biosnn-mcp --allow-write --audit-log /tmp/mcp/audit.jsonl > /tmp/mcp/writable.jsonl
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"memory.write","arguments":{"text":"nope"}}}' \
+            | /tmp/mcp/bin/biosnn-mcp > /tmp/mcp/readonly.jsonl
+          /tmp/mcp/bin/python - <<'PY'
+          import json
+
+          writable = [json.loads(line) for line in open("/tmp/mcp/writable.jsonl", encoding="utf-8")]
+          readonly = [json.loads(line) for line in open("/tmp/mcp/readonly.jsonl", encoding="utf-8")]
+          audit = [json.loads(line) for line in open("/tmp/mcp/audit.jsonl", encoding="utf-8")]
+
+          assert writable[0]["result"]["serverInfo"]["name"] == "biosnn-mcp"
+          assert writable[1]["result"]["isError"] is False, writable[1]
+          assert writable[2]["result"]["isError"] is False, writable[2]
+          hits = json.loads(writable[2]["result"]["content"][0]["text"])["hits"]
+          assert hits and hits[0]["text"] == "ci smoke", hits
+          assert readonly[0]["result"]["isError"] is True, readonly[0]
+          assert len(audit) == 2 and all(entry["ok"] for entry in audit), audit
+          print("biosnn-mcp wheel OK：可写/只读两条路径与审计都符合预期")
+          PY
+      - name: 在干净环境里跑 MCP 测试套件
+        run: |
+          uv pip install --python /tmp/mcp/bin/python pytest
+          PYTHONPATH="$PWD/packages/biosnn-mcp/tests" \
+            /tmp/mcp/bin/python -m pytest -q packages/biosnn-mcp/tests
+      - uses: actions/upload-artifact@v4
+        with:
+          name: biosnn-mcp-wheel-py${{ matrix.python-version }}
+          path: dist-mcp/*.whl
