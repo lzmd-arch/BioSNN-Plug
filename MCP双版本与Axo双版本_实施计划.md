@@ -284,7 +284,9 @@ MCP 客户端 ──propose.*──▶ 提议队列（SQLite，本机）
 | P1 | 完成 | `packages/biosnn-mcp/src/biosnn_mcp/{proposals,writecore}.py`、`server.py` 的写版本分支、入口 `biosnn-mcp-write`、31 条新测试（整包 150 条全绿） |
 | P2 | 完成 | `scripts/e2e_write_mcp.py` + `research/mcp_write/`（三语；2026-10-31 一次跑通 14/14，含 W1–W6） |
 | P3 | 完成 | Axo 仓 `ca57c56`：`src/axo/propose_consumer.py` + `tests/test_propose_consumer.py`（11 条，A1/A2/A4/A6 + 只读库拒绝 + 幂等）；README 与 `docs/security.md` 记清只读版未改、界面未接线 |
-| P4–P6 | 未开始 | — |
+| P4a | 完成 | Axo 仓 `ab3b009`：`MemorySettings.propose_enabled`（默认关，键 `memory/propose_enabled`），与同一组设置共命名空间，往返测试通过（Axo 套件 236 条全绿） |
+| P4b | 未开始 | 设置页勾选框 + 提议台账窗口 + 撤销（A3 要在这一步验） |
+| P5–P6 | 未开始 | — |
 
 P1 的验收按 §3.4 的 W1–W6 逐条写成测试（`packages/biosnn-mcp/tests/test_mcp_queue.py`，
 测试名带编号）：
