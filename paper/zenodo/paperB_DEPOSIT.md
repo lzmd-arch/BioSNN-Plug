@@ -1,8 +1,8 @@
 # Paper B — Zenodo deposit sheet
 
-**状态：已发布（v1.1，2026-10-31）。** **Version DOI**：10.5281/zenodo.23819567（概念 DOI `10.5281/zenodo.23817510`）。
+**状态：已发布（v1.2，2026-10-31）。** **Version DOI**：10.5281/zenodo.23820978（概念 DOI `10.5281/zenodo.23817510`）。
 
-v1.1 只把作者行的中文名（沈锦垚）改为矢量图；v1.0 为 `10.5281/zenodo.23817511`。两篇互挂指向对方的概念 DOI。
+v1.2 只改排版与指向，没有任何结果/数字变化：表 5 第一列（中文小节名）在 v1.1 里因为没载 CJK 字体整列空白，现在渲染出来；表 1、表 2 原本冲出右边距、结果列被裁，改成定宽列；可用性段里指向被取代记录的 DOI 换成概念 DOI。v1.1 为 `10.5281/zenodo.23819567`（只把作者行中文名改为矢量图）；v1.0 为 `10.5281/zenodo.23817511`。两篇互挂指向对方的概念 DOI。
 
 ## 元数据（逐字段照抄到 Zenodo）
 
@@ -12,11 +12,11 @@ v1.1 只把作者行的中文名（沈锦垚）改为矢量图；v1.0 为 `10.52
 | Creators | Shen, Jinyao (Independent researcher, <https://github.com/lzmd-arch>) |
 | Resource type | Publication → Preprint |
 | License | CC-BY-4.0 |
-| Version | v1.1 |
+| Version | v1.2 |
 | Language | en |
 | Keywords | spiking neural networks; emergence; local plasticity rules; arbitration; pre-registration; negative results; hybrid LLM architecture; MCP; read/write boundary |
 | Related: isSupplementedBy | `https://github.com/lzmd-arch/BioSNN-Plug` (software) |
-| Related: references | Paper A, DOI 待填（两篇互挂） |
+| Related: references | Paper A, concept DOI `10.5281/zenodo.23817506`（两篇互挂） |
 
 ## Description（Markdown，粘贴到 Zenodo 的 Description 框）
 

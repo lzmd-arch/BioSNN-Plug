@@ -7,6 +7,7 @@ abstract: >-
   可替换的外部 LLM 推理引擎来扩展自身能力边界。仓库同时提供独立可分发的模态插件骨架库
   biosnn-bus。
 type: software
+# 「离中梦蝶」是笔名；论文与 Zenodo 记录的署名是 Jinyao Shen（沈锦垚），见下方 preferred-citation。
 authors:
   - name: "离中梦蝶"
     alias: lzmd-arch
@@ -24,10 +25,10 @@ keywords:
   - continual learning
   - LLM orchestration
   - biologically plausible learning
-# 指骨架库 biosnn-bus 的版本；整个项目尚无版本标签。
-# 未填 date-released：截至本文件提交时没有任何 tag 或 PyPI 发布，
-# 填一个发布日期就是在声称一次并未发生的发布。
-version: "0.1.0"
+# 指骨架库 biosnn-bus 的版本；仓库的 tag 是 v0.4.0（对应 PyPI 上的 biosnn-bus 0.4.0），
+# biosnn-mcp 另有自己的 tag 与版本线（mcp-v0.2.0 / 0.2.0）。
+version: "0.4.0"
+date-released: "2026-10-25"
 
 # 论文（Paper A，取代原「记录 B」）。与上方软件记录分开：doi 字段描述的是本仓库，
 # 论文走 preferred-citation，GitHub 的 "Cite this repository" 会优先给这一条。
@@ -37,7 +38,8 @@ preferred-citation:
     Local Learning Rules Under Honest Measurement: A Reproducibility-First
     Benchmark of e-prop, Hebbian, and R-STDP on Consumer Hardware
   authors:
-    - name: "离中梦蝶"
+    # 论文上的署名（作者行：Jinyao Shen (沈锦垚)）；不要再换成笔名，否则引用出来对不上原文
+    - name: "沈锦垚"
       alias: lzmd-arch
       website: "https://github.com/lzmd-arch"
   year: 2026
