@@ -282,7 +282,7 @@ MCP 客户端 ──propose.*──▶ 提议队列（SQLite，本机）
 | :--- | :--- | :--- |
 | P0 | 完成 | 本文件 §6 的五个决策、§9.1 门控默认值、§9.2 判据冻结 |
 | P1 | 完成 | `packages/biosnn-mcp/src/biosnn_mcp/{proposals,writecore}.py`、`server.py` 的写版本分支、入口 `biosnn-mcp-write`、31 条新测试（整包 150 条全绿） |
-| P2 | 未开始 | — |
+| P2 | 完成 | `scripts/e2e_write_mcp.py` + `research/mcp_write/`（三语；2026-10-31 一次跑通 14/14，含 W1–W6） |
 | P3–P6 | 未开始 | — |
 
 P1 的验收按 §3.4 的 W1–W6 逐条写成测试（`packages/biosnn-mcp/tests/test_mcp_queue.py`，
