@@ -60,13 +60,19 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"state.quer
 | `memory.search` | 只读 | `query`、`top_k`(1–50) | 按词重叠检索内存条目 |
 | `trigger.status` | 只读 | — | 是否武装、武装理由、已喂样本数 |
 | `trigger.poll` | 只读 | — | 排空并返回待处理的触发事件 |
-| `memory.write` | 写 | `text`、`id?`、`tags?` | 存一条记忆；`id` 冲突会被拒 |
-| `memory.consolidate` | 写 | `threshold`、`rounds`、`noise_sigma`、`seed` | 跑一次睡眠巩固（确定性哈希嵌入） |
-| `trigger.arm` | 写 | `reason` | 武装脉冲触发；**必须写理由** |
-| `trigger.disarm` | 写 | — | 解除武装并清空待处理事件 |
-| `trigger.feed` | 写 | `salience`(0–1) | 推进触发群体一步；武装时命中的事件入队 |
+| `propose.memory.write` | 提议 | `text`、`id?`、`tags?` | 向替身核提议一条记忆；`id` 冲突会被拒 |
+| `propose.memory.consolidate` | 提议 | `threshold`、`rounds`、`noise_sigma`、`seed` | 提议跑一次睡眠巩固（确定性哈希嵌入） |
+| `propose.trigger.arm` | 提议 | `reason` | 提议武装替身核的脉冲触发；**必须写理由** |
+| `propose.trigger.disarm` | 提议 | — | 提议解除武装并清空待处理事件 |
+| `propose.trigger.feed` | 提议 | `salience`(0–1) | 提议推进一步；武装时命中的事件入队 |
 
-写工具在只读模式下**仍然出现在 `tools/list` 里**（客户端可发现），但调用会返回
+**为什么叫 `propose.*` 而不是 `write.*`**（[ADR-0027](../../docs/adr/ADR-0027-write-tools-are-proposals.md)）：
+这些工具**永远不会写真实记忆库**，只改服务器内存里的替身核。名字即契约——一个不真实写入的
+`write_*` 工具本身就是文档与行为不符。payload 里带 `"scope": "stand-in"`，`state.query` 报
+`"write_scope": "stand-in"`。它们**不"转正"**：将来若要让提议产生真实记忆效果，接法是新增
+**动力学独占写**的 `propose` 队列 + 巩固门控消费，而不是把这些工具接线。
+
+提议类工具在只读模式下**仍然出现在 `tools/list` 里**（客户端可发现），但调用会返回
 `isError: true`，错误文本写明需要 `--allow-write`——这是刻意的，避免"工具不存在"被误读成
 "能力不具备"。
 

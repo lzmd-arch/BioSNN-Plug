@@ -7,8 +7,14 @@
 
 * **只读**（任何模式都可用）：``state.query``、``memory.search``、``trigger.status``、
   ``trigger.poll``；
-* **写**（服务器必须以 ``--allow-write`` 启动）：``memory.write``、``memory.consolidate``、
-  ``trigger.arm``、``trigger.disarm``、``trigger.feed``。
+* **提议**（服务器必须以 ``--allow-write`` 启动）：``propose.memory.write``、
+  ``propose.memory.consolidate``、``propose.trigger.arm``、``propose.trigger.disarm``、
+  ``propose.trigger.feed``。
+
+**为什么叫 ``propose.*`` 而不是 ``write.*``**：这些工具**永远不会写真实记忆库**——它们只改
+本服务器内存里的替身核。叫 ``write`` 会让名字与行为不符；叫 ``propose`` 则把契约写在名字上：
+"这是一条提议，由替身核处置"。将来若要让提议产生真实记忆效果，接法不是把这些工具接线，
+而是新增**动力学独占写**的 ``propose`` 队列 + 巩固门控消费。
 
 默认只读是刻意的（ADR-0020 的 M0 边界）；``--audit-log`` 把每一次 ``tools/call`` 记成一行
 JSONL（时间、工具、参数、成功与否），使调用可审计、可回放。
@@ -52,8 +58,8 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
     {
-        "name": "memory.write",
-        "description": "Store one memory entry. Requires a server started with --allow-write.",
+        "name": "propose.memory.write",
+        "description": "Propose a memory entry to the server's in-memory stand-in core (never a real memory store). Requires --allow-write.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -66,8 +72,8 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
     {
-        "name": "memory.consolidate",
-        "description": "Run one sleep-consolidation pass. Requires --allow-write.",
+        "name": "propose.memory.consolidate",
+        "description": "Propose one sleep-consolidation pass over the stand-in core. Requires --allow-write.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -85,8 +91,8 @@ TOOLS: list[dict[str, Any]] = [
         "inputSchema": _EMPTY_SCHEMA,
     },
     {
-        "name": "trigger.arm",
-        "description": "Arm the spiking trigger; a reason string is required. Requires --allow-write.",
+        "name": "propose.trigger.arm",
+        "description": "Propose arming the stand-in spiking trigger; a reason string is required. Requires --allow-write.",
         "inputSchema": {
             "type": "object",
             "properties": {"reason": {"type": "string", "minLength": 1}},
@@ -95,13 +101,13 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
     {
-        "name": "trigger.disarm",
-        "description": "Disarm the trigger and drop pending events. Requires --allow-write.",
+        "name": "propose.trigger.disarm",
+        "description": "Propose disarming the stand-in trigger and dropping pending events. Requires --allow-write.",
         "inputSchema": _EMPTY_SCHEMA,
     },
     {
-        "name": "trigger.feed",
-        "description": "Advance the spiking trigger by one step with a salience in [0, 1]. Requires --allow-write.",
+        "name": "propose.trigger.feed",
+        "description": "Propose one step of the stand-in spiking trigger with a salience in [0, 1]. Requires --allow-write.",
         "inputSchema": {
             "type": "object",
             "properties": {"salience": {"type": "number", "minimum": 0, "maximum": 1}},
@@ -184,7 +190,7 @@ def _call_tool(core: CognitiveCore, name: str, arguments: dict[str, Any]) -> dic
         _reject_unknown(arguments, {"query", "top_k"})
         hits = core.search(arguments.get("query"), arguments.get("top_k", 5))
         return _text_result({"hits": hits, "count": len(hits)})
-    if name == "memory.write":
+    if name == "propose.memory.write":
         _reject_unknown(arguments, {"text", "id", "tags"})
         tags = arguments.get("tags") or []
         if not isinstance(tags, list):
@@ -195,7 +201,7 @@ def _call_tool(core: CognitiveCore, name: str, arguments: dict[str, Any]) -> dic
             tuple(tags),
         )
         return _text_result(payload)
-    if name == "memory.consolidate":
+    if name == "propose.memory.consolidate":
         _reject_unknown(arguments, {"threshold", "rounds", "noise_sigma", "seed"})
         payload = core.consolidate(
             threshold=float(arguments.get("threshold", 0.95)),
@@ -204,14 +210,14 @@ def _call_tool(core: CognitiveCore, name: str, arguments: dict[str, Any]) -> dic
             seed=int(arguments.get("seed", 0)),
         )
         return _text_result(payload)
-    if name == "trigger.arm":
+    if name == "propose.trigger.arm":
         _reject_unknown(arguments, {"reason"})
         return _text_result(core.arm(arguments.get("reason")))
-    if name == "trigger.disarm":
+    if name == "propose.trigger.disarm":
         if arguments:
             raise ToolError("trigger.disarm 不接受参数。")
         return _text_result(core.disarm())
-    if name == "trigger.feed":
+    if name == "propose.trigger.feed":
         _reject_unknown(arguments, {"salience"})
         if "salience" not in arguments:
             raise ToolError("trigger.feed 需要 salience。")

@@ -32,6 +32,28 @@ class TestHandshake:
         assert reply["result"]["capabilities"] == {"tools": {}}
         assert reply["result"]["serverInfo"]["name"] == "biosnn-mcp"
 
+    def test_write_tools_are_named_as_proposals(self):
+        """名字即契约：改动替身核的工具必须以 `propose.` 开头，描述里写明 stand-in。"""
+        read_only = {"state.query", "memory.search", "trigger.status", "trigger.poll"}
+        for tool in TOOLS:
+            if tool["name"] in read_only:
+                continue
+            assert tool["name"].startswith("propose."), tool["name"]
+            assert "stand-in" in tool["description"], tool["name"]
+
+    def test_state_reports_the_stand_in_write_scope(self):
+        reply = handle_message(
+            _core(),
+            {
+                "jsonrpc": "2.0",
+                "id": 12,
+                "method": "tools/call",
+                "params": {"name": "state.query", "arguments": {}},
+            },
+        )
+        payload = json.loads(reply["result"]["content"][0]["text"])
+        assert payload["write_scope"] == "stand-in"
+
     def test_server_info_version_matches_the_package(self):
         """版本号只有一个来源：`serverInfo.version` 与 `__version__` 必须一致。"""
         import biosnn_mcp
@@ -52,12 +74,12 @@ class TestHandshake:
         assert names == [
             "state.query",
             "memory.search",
-            "memory.write",
-            "memory.consolidate",
+            "propose.memory.write",
+            "propose.memory.consolidate",
             "trigger.status",
-            "trigger.arm",
-            "trigger.disarm",
-            "trigger.feed",
+            "propose.trigger.arm",
+            "propose.trigger.disarm",
+            "propose.trigger.feed",
             "trigger.poll",
         ]
         assert len(TOOLS) == 9

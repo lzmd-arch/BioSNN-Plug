@@ -154,6 +154,22 @@ which is hard to remedy after the fact, does not arise.
 Until PyPI is configured, you can trigger the pipeline manually with
 `gh workflow run release.yml`: it only runs validation and the build, it does not publish.
 
+`biosnn-mcp` has its **own** pipeline, [`release-mcp.yml`](.github/workflows/release-mcp.yml): its tag
+prefix is `mcp-v<version>` (separate from the skeleton library's `v<version>` - the two packages
+version independently, and one tag cannot express two versions).
+
+```bash
+# 1. Change the version in packages/biosnn-mcp/pyproject.toml (match src/biosnn_mcp/_version.py)
+# 2. Write .github/releases/mcp-v<version>.md (release notes are hand-written)
+# 3. After committing and pushing, tag it
+git tag mcp-v0.2.0 && git push origin mcp-v0.2.0
+```
+
+Before the first release, register a pending publisher for `biosnn-mcp` on PyPI (fields are in the
+header of that file); the **environment name is `pypi-mcp`**, not the `pypi` used by the skeleton
+library. Before registering you can run `gh workflow run release-mcp.yml` to validate and build only;
+afterwards `-f publish=true` publishes without re-tagging.
+
 ## Documentation translations
 
 The documentation exists in Chinese, English and Japanese. When you change any managed

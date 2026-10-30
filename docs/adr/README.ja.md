@@ -58,3 +58,4 @@ Michael Nygard の古典的な 4 段構成を採用します：
 | [ADR-0024](ADR-0024-stub-llm-probe.ja.md) | まず stub-LLM で自律トリガを探針する | 採用済み |
 | [ADR-0025](ADR-0025-p3-flagship-observation-vs-intervention.ja.md) | 「観察学習 vs 介入学習」を第 4 フェーズの旗艦とする | 採用済み |
 | [ADR-0026](ADR-0026-mcp-write-tools-and-explicit-arming.ja.md) | MCP の書き込みツールと明示的武装（M0 → M1）：既定は読み取り専用、`--allow-write`、呼び出しごとに監査 | 採用済み |
+| [ADR-0027](ADR-0027-write-tools-are-proposals.ja.md) | 書き込みツールは提案：`propose.*` に改名、恒久的に代替コアのみ | 採用済み |

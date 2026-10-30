@@ -55,3 +55,4 @@
 | [ADR-0024](ADR-0024-stub-llm-probe.md) | 先用 stub-LLM 做自主触发探针 | 已采纳 |
 | [ADR-0025](ADR-0025-p3-flagship-observation-vs-intervention.md) | 「观察学习 vs 干预学习」设为阶段四旗舰 | 已采纳 |
 | [ADR-0026](ADR-0026-mcp-write-tools-and-explicit-arming.md) | MCP 写工具与显式武装（M0 → M1）：默认只读、`--allow-write`、每次调用留审计 | 已采纳 |
+| [ADR-0027](ADR-0027-write-tools-are-proposals.md) | 写工具是提案，不是写：改名 `propose.*`，永远只碰替身核 | 已采纳 |

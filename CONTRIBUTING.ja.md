@@ -135,6 +135,22 @@ git tag v0.1.0 && git push origin v0.1.0
 `verify` job が先に tag 名とパッケージのバージョンの一致を確認します——tag を書き間違えればこの段階で止められ、
 「v0.2.0 を出したのにパッケージの中身はまだ 0.1.0」といった後から直しにくい事態は起きません。
 
+`biosnn-mcp` は**独立した**パイプライン [`.github/workflows/release-mcp.yml`](.github/workflows/release-mcp.yml)
+を使います：tag の接頭辞は `mcp-v<version>` です（骨格ライブラリの `v<version>` とは別——2 つの
+パッケージのバージョンは独立に進むので、1 つの tag では両方を表せません）。
+
+```bash
+# 1. packages/biosnn-mcp/pyproject.toml の version を変更（src/biosnn_mcp/_version.py と一致させる）
+# 2. .github/releases/mcp-v<version>.md を書く（release notes は手書き）
+# 3. コミットして push した後にタグを打つ
+git tag mcp-v0.2.0 && git push origin mcp-v0.2.0
+```
+
+初回リリースの前に PyPI で `biosnn-mcp` の pending publisher を登録します（項目はそのファイル先頭の
+コメント）。**Environment 名は `pypi-mcp`** で、骨格ライブラリの `pypi` とは別です。登録前は
+`gh workflow run release-mcp.yml` で検証とビルドのみ実行できます。登録後は `-f publish=true` で
+タグを打ち直さずに公開できます。
+
 PyPI 側は **trusted publishing**（OIDC）で設定済みで、初回リリース（`v0.1.0`）は完了しています。
 `gh workflow run release.yml` の手動起動も依然として有用です——検証とビルドのみを実行し、
 **公開はしません**（タグを打つ前のパイプライン確認に使います）：

@@ -1,0 +1,162 @@
+# 发布流水线：打 `mcp-v<版本>` tag 即发布 `biosnn-mcp`。
+#
+# 与 `release.yml`（`biosnn-bus`）分开，是因为两者版本各自演进：同一个 `v*` tag 无法同时
+# 表达两个包的版本。这里用 `mcp-v*` 前缀，互不干扰。
+#
+# ## 首次发布前必须做的一件事
+#
+# 本工作流用 **PyPI trusted publishing**（OIDC）发布，不存任何 API token。必须先在 PyPI 侧
+# 登记发布者，否则 `publish-pypi` 会失败——**那是预期行为，不是 bug**。
+#
+# 在 <https://pypi.org/manage/account/publishing/> 添加一个 pending publisher：
+#
+#   PyPI Project Name : biosnn-mcp
+#   Owner             : lzmd-arch
+#   Repository name   : BioSNN-Plug
+#   Workflow name     : release-mcp.yml
+#   Environment name  : pypi-mcp        ← 必须与下面 job 里的 environment 一致
+#
+# 登记之前可以 `gh workflow run release-mcp.yml` 手动触发：默认只跑校验与构建，不发布；
+# 带 `-f publish=true` 才发布（用于登记后不再重打 tag 的情形）。
+#
+# ## 发布步骤
+#
+#   1. 改 `packages/biosnn-mcp/pyproject.toml` 的 version（与 `_version.py` 一致）；
+#   2. 写 `.github/releases/mcp-v<版本>.md`（release notes 手写，不靠 --generate-notes）；
+#   3. 提交、推送；
+#   4. `git tag mcp-v0.2.0 && git push origin mcp-v0.2.0`。
+
+name: Release biosnn-mcp
+
+on:
+  push:
+    tags: ["mcp-v*"]
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "手动触发时是否真的发布到 PyPI（默认只校验与构建）"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  # ── 校验：tag 与包版本一致、release notes 就绪、装得上跑得起来 ──────────────
+  verify:
+    name: 校验版本与包
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: tag 与 packages/biosnn-mcp 的版本一致
+        env:
+          TAG: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          python - <<'PY'
+          import os, pathlib, sys, tomllib
+
+          version = tomllib.loads(
+              pathlib.Path("packages/biosnn-mcp/pyproject.toml").read_text(encoding="utf-8")
+          )["project"]["version"]
+          if os.environ["EVENT"] != "push":
+              print(f"手动触发，跳过 tag 校验（当前包版本 {version}）")
+              sys.exit(0)
+          tag = os.environ["TAG"]
+          expected = f"mcp-v{version}"
+          if tag != expected:
+              sys.exit(f"tag {tag!r} 与包版本 {version!r} 不符，应为 {expected!r}。")
+          print(f"tag {tag} 与包版本一致")
+          PY
+
+      - name: 版本号只写一处（pyproject ↔ _version.py）
+        run: |
+          python - <<'PY'
+          import pathlib, sys, tomllib
+          version = tomllib.loads(
+              pathlib.Path("packages/biosnn-mcp/pyproject.toml").read_text(encoding="utf-8")
+          )["project"]["version"]
+          source = pathlib.Path("packages/biosnn-mcp/src/biosnn_mcp/_version.py").read_text(
+              encoding="utf-8"
+          )
+          if f'__version__ = "{version}"' not in source:
+              sys.exit(f"_version.py 与 pyproject 的版本 {version} 不一致。")
+          print("版本号一致：", version)
+          PY
+
+      - name: tag 对应的 release notes 文件必须存在
+        if: github.event_name == 'push'
+        run: |
+          notes=".github/releases/${GITHUB_REF_NAME}.md"
+          if [ ! -f "$notes" ]; then
+            echo "::error::缺少 $notes。先写好 release notes 再打 tag。"
+            exit 1
+          fi
+          echo "release notes 就绪：$notes"
+
+      - name: 冒烟：装源码包、跑一次 stdio 往返
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ./packages/biosnn-mcp
+          printf '%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize"}' \
+            '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"propose.memory.write","arguments":{"text":"release smoke"}}}' \
+            | biosnn-mcp --allow-write > /tmp/out.jsonl
+          python - <<'PY'
+          import json
+          lines = [json.loads(line) for line in open("/tmp/out.jsonl", encoding="utf-8")]
+          assert lines[0]["result"]["serverInfo"]["name"] == "biosnn-mcp"
+          assert lines[1]["result"]["isError"] is False, lines[1]
+          print("stdio 往返 OK")
+          PY
+
+  # ── 构建：sdist + wheel ───────────────────────────────────────────────────
+  build:
+    name: 构建发行包
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv build --package biosnn-mcp --out-dir dist-mcp
+      - name: 零依赖与 console script 自检
+        run: |
+          uv venv /tmp/clean --python 3.12
+          uv pip install --python /tmp/clean/bin/python dist-mcp/*.whl
+          /tmp/clean/bin/python -c "
+          import importlib.metadata as md
+          requires = md.requires('biosnn-mcp') or []
+          assert not any('torch' in item for item in requires), requires
+          import biosnn_mcp; print('OK', biosnn_mcp.__version__)
+          "
+          test -x /tmp/clean/bin/biosnn-mcp
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-mcp
+          path: dist-mcp/
+
+  # ── 发布到 PyPI ───────────────────────────────────────────────────────────
+  publish-pypi:
+    name: 发布到 PyPI
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/mcp-v') || inputs.publish
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi-mcp
+      url: https://pypi.org/p/biosnn-mcp
+    permissions:
+      id-token: write # trusted publishing 必需
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist-mcp
+          path: dist-mcp/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist-mcp/

@@ -135,6 +135,20 @@ git tag v0.1.0 && git push origin v0.1.0
 PyPI 侧已用 **trusted publishing**（OIDC）配好，首次发布（`v0.1.0`）已完成。手动触发
 `gh workflow run release.yml` 仍然有用——它只跑校验与构建、**不发布**，用来在没打 tag 时验证流水线。
 
+`biosnn-mcp` 走**独立的**流水线 [`release-mcp.yml`](.github/workflows/release-mcp.yml)：tag 前缀是
+`mcp-v<version>`（与骨架库的 `v<version>` 分开——两个包的版本各自演进，同一个 tag 表达不了两个版本）。
+
+```bash
+# 1. 改 packages/biosnn-mcp/pyproject.toml 的 version（与 src/biosnn_mcp/_version.py 一致）
+# 2. 写 .github/releases/mcp-v<version>.md（release notes 手写）
+# 3. 提交推送后打 tag
+git tag mcp-v0.2.0 && git push origin mcp-v0.2.0
+```
+
+首次发布前要在 PyPI 登记 `biosnn-mcp` 的 pending publisher（字段见该文件头部注释）：
+**Environment 名是 `pypi-mcp`**，不是骨架库用的 `pypi`。登记前可以用
+`gh workflow run release-mcp.yml` 只跑校验与构建；登记后用 `-f publish=true` 发布，不必重打 tag。
+
 ## 文档翻译
 
 文档有中文 / English / 日本語 三版。改动任何一份受管文档时，**三份要一起改**——

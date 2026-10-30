@@ -59,3 +59,4 @@ and link the two to each other.
 | [ADR-0024](ADR-0024-stub-llm-probe.en.md) | Probe autonomous triggering with a stub LLM first | Accepted |
 | [ADR-0025](ADR-0025-p3-flagship-observation-vs-intervention.en.md) | "Observation vs intervention learning" as the phase-4 flagship | Accepted |
 | [ADR-0026](ADR-0026-mcp-write-tools-and-explicit-arming.en.md) | MCP write tools and explicit arming (M0 -> M1): read-only by default, `--allow-write`, every call audited | Accepted |
+| [ADR-0027](ADR-0027-write-tools-are-proposals.en.md) | Write tools are proposals, not writes: renamed `propose.*`, permanently scoped to the stand-in core | Accepted |

@@ -34,7 +34,7 @@ def _writable(entries=None):
 class TestReadOnlyGate:
     def test_write_is_refused_by_default(self):
         core = InMemoryCore()
-        reply = _call(core, "memory.write", {"text": "spike"})
+        reply = _call(core, "propose.memory.write", {"text": "spike"})
         assert reply["result"]["isError"] is True
         assert "只读模式" in _payload(reply)["error"]
         assert len(core.search("spike", 5)) == 0
@@ -46,7 +46,7 @@ class TestReadOnlyGate:
         assert writable["milestone"] == "M1" and writable["read_only"] is False
 
     def test_arm_is_refused_without_allow_write(self):
-        reply = _call(InMemoryCore(), "trigger.arm", {"reason": "test"})
+        reply = _call(InMemoryCore(), "propose.trigger.arm", {"reason": "test"})
         assert reply["result"]["isError"] is True
 
     def test_poll_is_read_only_and_empty_when_nothing_fed(self):
@@ -58,21 +58,21 @@ class TestWrites:
     def test_write_then_search_round_trip(self):
         core = _writable()
         payload = _payload(
-            _call(core, "memory.write", {"text": "liquid time constant", "tags": ["x"]})
+            _call(core, "propose.memory.write", {"text": "liquid time constant", "tags": ["x"]})
         )
-        assert payload["stored"] is True and payload["id"] == "m0001"
+        assert payload["accepted"] is True and payload["id"] == "m0001"
         hits = _payload(_call(core, "memory.search", {"query": "liquid"}))["hits"]
         assert hits[0]["id"] == "m0001"
         assert hits[0]["tags"] == ["x"]
 
     def test_explicit_id_conflict_is_a_tool_error(self):
         core = _writable([MemoryEntry("m1", "first")])
-        reply = _call(core, "memory.write", {"text": "second", "id": "m1"})
+        reply = _call(core, "propose.memory.write", {"text": "second", "id": "m1"})
         assert reply["result"]["isError"] is True
         assert "已存在" in _payload(reply)["error"]
 
     def test_write_rejects_unknown_arguments(self):
-        reply = _call(_writable(), "memory.write", {"text": "a", "colour": "red"})
+        reply = _call(_writable(), "propose.memory.write", {"text": "a", "colour": "red"})
         assert reply["result"]["isError"] is True
         assert "未知参数" in _payload(reply)["error"]
 
@@ -84,7 +84,7 @@ class TestWrites:
                 MemoryEntry("c", "liquid time constant"),
             ]
         )
-        payload = _payload(_call(core, "memory.consolidate", {"threshold": 0.99}))
+        payload = _payload(_call(core, "propose.memory.consolidate", {"threshold": 0.99}))
         assert payload["original_count"] == 3
         assert payload["final_count"] < payload["original_count"]
         assert payload["merged_pairs"]
@@ -93,36 +93,36 @@ class TestWrites:
 class TestTriggerLifecycle:
     def test_arm_requires_a_reason(self):
         core = _writable()
-        reply = _call(core, "trigger.arm", {})
+        reply = _call(core, "propose.trigger.arm", {})
         assert reply["result"]["isError"] is True
 
     def test_arm_feed_poll_disarm(self):
         core = _writable()
-        armed = _payload(_call(core, "trigger.arm", {"reason": "manual test"}))
+        armed = _payload(_call(core, "propose.trigger.arm", {"reason": "manual test"}))
         assert armed["armed"] is True and armed["reason"] == "manual test"
 
         fired = 0
         for _ in range(200):
-            payload = _payload(_call(core, "trigger.feed", {"salience": 1.0}))
+            payload = _payload(_call(core, "propose.trigger.feed", {"salience": 1.0}))
             fired += int(payload["fired"])
         assert fired > 0, "满显著性喂 200 步应当至少触发一次"
         events = _payload(_call(core, "trigger.poll"))
         assert events["count"] == fired
         assert _payload(_call(core, "trigger.poll"))["count"] == 0
 
-        disarmed = _payload(_call(core, "trigger.disarm"))
+        disarmed = _payload(_call(core, "propose.trigger.disarm"))
         assert disarmed["armed"] is False
 
     def test_feed_without_arming_queues_nothing(self):
         core = _writable()
         fired = 0
         for _ in range(200):
-            fired += int(_payload(_call(core, "trigger.feed", {"salience": 1.0}))["fired"])
+            fired += int(_payload(_call(core, "propose.trigger.feed", {"salience": 1.0}))["fired"])
         assert fired > 0
         assert _payload(_call(core, "trigger.poll"))["count"] == 0
 
     def test_feed_rejects_out_of_range_salience(self):
-        reply = _call(_writable(), "trigger.feed", {"salience": 1.5})
+        reply = _call(_writable(), "propose.trigger.feed", {"salience": 1.5})
         assert reply["result"]["isError"] is True
 
 
@@ -130,9 +130,12 @@ class TestAudit:
     def test_every_call_is_recorded_ok_or_error(self):
         core = _writable()
         audit = AuditLog()
-        _call(core, "memory.write", {"text": "alpha"}, audit=audit)
+        _call(core, "propose.memory.write", {"text": "alpha"}, audit=audit)
         _call(core, "memory.search", {"query": ""}, audit=audit)
-        assert [entry["tool"] for entry in audit.entries] == ["memory.write", "memory.search"]
+        assert [entry["tool"] for entry in audit.entries] == [
+            "propose.memory.write",
+            "memory.search",
+        ]
         assert audit.entries[0]["ok"] is True
         assert audit.entries[1]["ok"] is False
         assert "query" in (audit.entries[1]["error"] or "")
@@ -141,7 +144,7 @@ class TestAudit:
         path = tmp_path / "audit.jsonl"
         audit = AuditLog(path=path)
         _call(_writable(), "state.query", audit=audit)
-        _call(_writable(), "memory.write", {}, audit=audit)
+        _call(_writable(), "propose.memory.write", {}, audit=audit)
         lines = path.read_text(encoding="utf-8").splitlines()
         assert len(lines) == 2
         decoded = [json.loads(line) for line in lines]
@@ -156,7 +159,7 @@ class TestStdio:
                 "jsonrpc": "2.0",
                 "id": 9,
                 "method": "tools/call",
-                "params": {"name": "memory.write", "arguments": {"text": "x"}},
+                "params": {"name": "propose.memory.write", "arguments": {"text": "x"}},
             }
         )
         sink = io.StringIO()
@@ -166,15 +169,22 @@ class TestStdio:
 
 
 @pytest.mark.parametrize(
-    "name", ["memory.write", "memory.consolidate", "trigger.arm", "trigger.disarm", "trigger.feed"]
+    "name",
+    [
+        "propose.memory.write",
+        "propose.memory.consolidate",
+        "propose.trigger.arm",
+        "propose.trigger.disarm",
+        "propose.trigger.feed",
+    ],
 )
 def test_all_write_tools_are_refused_in_read_only_mode(name):
     arguments = {
-        "memory.write": {"text": "x"},
-        "memory.consolidate": {},
-        "trigger.arm": {"reason": "r"},
-        "trigger.disarm": {},
-        "trigger.feed": {"salience": 0.5},
+        "propose.memory.write": {"text": "x"},
+        "propose.memory.consolidate": {},
+        "propose.trigger.arm": {"reason": "r"},
+        "propose.trigger.disarm": {},
+        "propose.trigger.feed": {"salience": 0.5},
     }[name]
     reply = _call(InMemoryCore(), name, arguments)
     assert reply["result"]["isError"] is True

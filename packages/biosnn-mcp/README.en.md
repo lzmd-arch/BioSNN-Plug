@@ -62,13 +62,20 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"state.quer
 | `memory.search` | read | `query`, `top_k` (1-50) | token-overlap search over memory entries |
 | `trigger.status` | read | - | armed flag, arming reason, fed samples |
 | `trigger.poll` | read | - | drain and return queued trigger events |
-| `memory.write` | write | `text`, `id?`, `tags?` | store one entry; id conflicts are rejected |
-| `memory.consolidate` | write | `threshold`, `rounds`, `noise_sigma`, `seed` | one sleep-consolidation pass (deterministic hash embeddings) |
-| `trigger.arm` | write | `reason` | arm the spiking trigger; **a reason is mandatory** |
-| `trigger.disarm` | write | - | disarm and drop pending events |
-| `trigger.feed` | write | `salience` (0-1) | advance the trigger population by one step; hits are queued while armed |
+| `propose.memory.write` | propose | `text`, `id?`, `tags?` | propose an entry to the stand-in core; id conflicts are rejected |
+| `propose.memory.consolidate` | propose | `threshold`, `rounds`, `noise_sigma`, `seed` | propose one sleep-consolidation pass (deterministic hash embeddings) |
+| `propose.trigger.arm` | propose | `reason` | propose arming the stand-in trigger; **a reason is mandatory** |
+| `propose.trigger.disarm` | propose | - | propose disarming and dropping pending events |
+| `propose.trigger.feed` | propose | `salience` (0-1) | propose one step of the stand-in trigger; hits are queued while armed |
 
-In read-only mode the write tools **still appear in `tools/list`** (clients can discover them) but
+**Why `propose.*` and not `write.*`** ([ADR-0027](../../docs/adr/ADR-0027-write-tools-are-proposals.en.md)):
+these tools **never write a real memory store** - they only mutate the server's in-memory stand-in.
+The name is the contract: a `write_*` tool that never really writes is itself a doc/behaviour
+mismatch. Payloads carry `"scope": "stand-in"` and `state.query` reports `"write_scope": "stand-in"`.
+They are **never promoted**: if proposals must one day produce real memory effects, the answer is a
+**dynamics-owned** `propose` queue with consolidation-gated consumption, not wiring these tools up.
+
+In read-only mode the propose tools **still appear in `tools/list`** (clients can discover them) but
 calling one returns `isError: true` with a message saying `--allow-write` is required - deliberately,
 so that "the tool does not exist" cannot be misread as "the capability is missing".
 

@@ -88,6 +88,8 @@ class InMemoryCore:
             "phase": 5,
             "milestone": "M1" if self.writes_enabled else "M0",
             "read_only": not self.writes_enabled,
+            # 写工具的作用域：永远是内存替身核，不是真实记忆库（见 ADR-0027）。
+            "write_scope": "stand-in",
             "memory_entries": len(self._entries),
             "llm": "not_connected",
             "autonomy": "armed" if self._armed else "disabled",
@@ -128,6 +130,7 @@ class InMemoryCore:
             ),
             "fed_samples": self._fed,
             "pending": len(self._pending),
+            "scope": "stand-in",
         }
 
     def poll(self) -> dict[str, Any]:
@@ -156,7 +159,13 @@ class InMemoryCore:
         entry = MemoryEntry(identifier, body, tuple(tag.strip() for tag in tags))
         self._entries = (*self._entries, entry)
         self._by_id[identifier] = entry
-        return {"id": identifier, "entries": len(self._entries), "stored": True}
+        # 措辞刻意用 accepted 而不是 stored：写的是替身核，不是真实库。
+        return {
+            "id": identifier,
+            "entries": len(self._entries),
+            "accepted": True,
+            "scope": "stand-in",
+        }
 
     def consolidate(
         self,
@@ -180,6 +189,7 @@ class InMemoryCore:
                 "original_count": 0,
                 "final_count": 0,
                 "mean_cosine_drift": 0.0,
+                "scope": "stand-in",
             }
         embeddings = self._embedder.embed([entry.text for entry in self._entries])
         items = [
@@ -202,6 +212,7 @@ class InMemoryCore:
             "original_count": report.original_count,
             "final_count": report.final_count,
             "mean_cosine_drift": report.mean_cosine_drift,
+            "scope": "stand-in",
         }
 
     def arm(self, reason: str) -> dict[str, Any]:

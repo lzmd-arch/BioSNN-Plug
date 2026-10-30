@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "biosnn-mcp"
 version = "0.2.0"
-description = "BioSNN-Plug 阶段五 MCP：只读骨架 + 显式可写工具（记忆/巩固/触发武装），逐调用审计，不依赖 LLM"
+description = "BioSNN-Plug 阶段五 MCP 服务器：4 个只读工具 + 5 个提议工具（propose.*，只改内存替身核），默认只读、逐调用 JSONL 审计，不依赖 LLM"
 requires-python = ">=3.10"
 license = "Apache-2.0"
 authors = [{ name = "离中梦蝶", email = "269058959+lzmd-arch@users.noreply.github.com" }]

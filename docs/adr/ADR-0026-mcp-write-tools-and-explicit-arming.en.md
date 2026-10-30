@@ -44,6 +44,10 @@ Extending the tool surface has to satisfy both.
 
 ## Consequences
 
+> **Later revision**: the five write tools were renamed into the `propose.*` namespace the same
+> day - they only ever mutate the in-memory stand-in, so calling them `write` was a name/behaviour
+> mismatch. See [ADR-0027](ADR-0027-write-tools-are-proposals.en.md).
+
 - External clients can now **write, arm and consolidate**, and by default nothing mutates silently:
   writing needs the switch, arming needs a reason, every call leaves a trace;
 - `state.query` reports `milestone` `M1` (was `M0`) and `read_only` follows the switch; the old
