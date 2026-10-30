@@ -200,6 +200,15 @@ class TestW4Revert:
         assert (tmp_path / "store.json").read_bytes() == before
         assert len(core.search("rolled back", 5)) == 0
 
+    def test_revert_of_the_first_write_leaves_no_store_file(self, tmp_path):
+        """写之前没有库文件 → 撤销之后也不该有（S4：哈希回到写前）。"""
+        core = _core(tmp_path)
+        added = _propose(core, "the very first entry, later rolled back", pid="only")
+        path = tmp_path / "store.json"
+        assert path.exists()
+        _call(core, "memory.revert", {"seq": added["seq"], "reason": "S4"})
+        assert not path.exists()
+
     def test_revert_twice_is_refused(self, tmp_path):
         core = _core(tmp_path)
         added = _propose(core, "an entry to be reverted exactly once", pid="once")

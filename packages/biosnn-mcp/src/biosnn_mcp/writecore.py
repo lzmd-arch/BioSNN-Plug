@@ -88,7 +88,13 @@ class WriteCore:
             MemoryEntry(item["id"], item["text"], tuple(item.get("tags", ()))) for item in image
         ]
         self._store = InMemoryCore(entries, writes_enabled=True)
-        self._persist()
+        if image:
+            self._persist()
+            return
+        # 写之前库是空的，而空库在磁盘上本来就该是"没有文件"（``_load_store`` 对
+        # 两种状态一视同仁）。撤销要约的是**库文件的哈希回到写前**，所以这里删文件，
+        # 而不是留一个空 JSON——后者内容一样，哈希不一样。
+        self._store_path.unlink(missing_ok=True)
 
     # ------------------------------------------------------------ 只读面（转发）
     def state(self) -> dict[str, Any]:
