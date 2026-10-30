@@ -1,4 +1,21 @@
-# paper/ — P2 benchmark paper (LaTeX)
+# paper/ — two papers (LaTeX)
+
+**As of 2026-10-31 this directory holds two papers**, not three. The split and its reasons are
+in [`PLAN_two_papers.md`](PLAN_two_papers.md); in short, the W2 material was already a section of
+the benchmark paper, so it does not get a paper of its own.
+
+| Paper | Source | Subject |
+| :--- | :--- | :--- |
+| **A** — *Local Learning Rules Under Honest Measurement* | [`main.tex`](main.tex) | The benchmark, extended with the spiking-execution diagnostics (D3–D18), the event-driven e-prop result, and a failure library |
+| **B** — *Emergence Without Scale* | [`p4/main.tex`](p4/main.tex) | Arbitration, the cognitive layer, orchestration by a replaceable language model, and the read/write boundary the failures imply |
+
+Zenodo deposit sheets for both: [`zenodo/paperA_DEPOSIT.md`](zenodo/paperA_DEPOSIT.md),
+[`zenodo/paperB_DEPOSIT.md`](zenodo/paperB_DEPOSIT.md). Both papers compile in CI
+(`paper 编译验证（tectonic）` and `paper P4 编译验证（tectonic）`).
+
+---
+
+## Paper A: P2 benchmark paper (LaTeX)
 
 Source for the **P2 paper**: an honest-measurement benchmark of local learning rules
 (e-prop / Hebbian / R-STDP) on consumer hardware. Every number in it must trace back to a
