@@ -1,5 +1,7 @@
 # MCP write mode: system-level acceptance (P2)
 
+[中文](README.md) · [日本語](README.ja.md)
+
 **2026-10-31 -- 14 of 14 checks passed, in one run.** The script is
 [`scripts/e2e_write_mcp.py`](../../scripts/e2e_write_mcp.py); the criteria are W1-W6 as
 pre-registered in the plan (S3.4, frozen 2026-10-31 per S9.2).

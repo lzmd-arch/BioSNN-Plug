@@ -1,5 +1,7 @@
 # MCP 写版本：系统级验收（P2）
 
+[English](README.en.md) · [日本語](README.ja.md)
+
 **2026-10-31，一次跑通 14/14。** 脚本 [`scripts/e2e_write_mcp.py`](../../scripts/e2e_write_mcp.py)，
 判据是计划书 §3.4 预注册的 W1–W6（冻结于 2026-10-31，§9.2）。
 

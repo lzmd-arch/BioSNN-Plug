@@ -1,5 +1,7 @@
 # MCP 書き込み版：システムレベル受け入れ（P2）
 
+[中文](README.md) · [English](README.en.md)
+
 **2026-10-31、1 回の実行で 14/14 通過。** スクリプトは
 [`scripts/e2e_write_mcp.py`](../../scripts/e2e_write_mcp.py)、判定基準は計画書 §3.4 で
 事前登録した W1–W6（§9.2 により 2026-10-31 に凍結）。

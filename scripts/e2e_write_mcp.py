@@ -86,7 +86,9 @@ def main(argv: list[str]) -> int:
     try:
         session.request("initialize")
         tools = [tool["name"] for tool in session.request("tools/list")["result"]["tools"]]
-        check("W6 工具表 13 个且只读 9 个在前", len(tools) == 13 and "queue.list" in tools, str(tools))
+        check(
+            "W6 工具表 13 个且只读 9 个在前", len(tools) == 13 and "queue.list" in tools, str(tools)
+        )
 
         # --- W1：提议 → 接受 → 可检索 → 三条审计
         accepted, _ = session.call(
@@ -97,9 +99,15 @@ def main(argv: list[str]) -> int:
                 "source": "user",
             },
         )
-        check("W1 提议被判 accepted", accepted.get("status") == "accepted", json.dumps(accepted, ensure_ascii=False))
+        check(
+            "W1 提议被判 accepted",
+            accepted.get("status") == "accepted",
+            json.dumps(accepted, ensure_ascii=False),
+        )
         hits, _ = session.call("memory.search", {"query": "trigger"})
-        check("W1 落库后可检索", hits.get("count", 0) >= 1, json.dumps(hits, ensure_ascii=False)[:200])
+        check(
+            "W1 落库后可检索", hits.get("count", 0) >= 1, json.dumps(hits, ensure_ascii=False)[:200]
+        )
 
         events = [json.loads(line)["tool"] for line in audit.read_text("utf-8").splitlines()]
         needed = {"proposal.received", "gate.accepted", "memory.applied"}
@@ -125,7 +133,10 @@ def main(argv: list[str]) -> int:
         # --- W3：同一 proposal_id 只落一条
         replay, _ = session.call(
             "propose.memory.write",
-            {"text": "the trigger fired 3 times across 20 turns on the real stream", "proposal_id": "e2e-1"},
+            {
+                "text": "the trigger fired 3 times across 20 turns on the real stream",
+                "proposal_id": "e2e-1",
+            },
         )
         check(
             "W3 重放同一 proposal_id 不产生新条目",
@@ -137,11 +148,25 @@ def main(argv: list[str]) -> int:
         before_second = sha256(store)
         second, _ = session.call(
             "propose.memory.write",
-            {"text": "a second entry written only to be rolled back in this run", "proposal_id": "e2e-2", "source": "user"},
+            {
+                "text": "a second entry written only to be rolled back in this run",
+                "proposal_id": "e2e-2",
+                "source": "user",
+            },
         )
-        check("W4 第二条 accepted", second.get("status") == "accepted", json.dumps(second, ensure_ascii=False))
-        reverted, error = session.call("memory.revert", {"seq": second["seq"], "reason": "e2e rollback"})
-        check("W4 撤销成功", not error and reverted.get("reverted") is True, json.dumps(reverted, ensure_ascii=False))
+        check(
+            "W4 第二条 accepted",
+            second.get("status") == "accepted",
+            json.dumps(second, ensure_ascii=False),
+        )
+        reverted, error = session.call(
+            "memory.revert", {"seq": second["seq"], "reason": "e2e rollback"}
+        )
+        check(
+            "W4 撤销成功",
+            not error and reverted.get("reverted") is True,
+            json.dumps(reverted, ensure_ascii=False),
+        )
         check("W4 库逐字节回到写前", sha256(store) == before_second, "")
 
         # --- W5：无旁路（对 MCP 客户端而言，写工具的输入里没有"直接落库"这条路）
@@ -163,7 +188,11 @@ def main(argv: list[str]) -> int:
         )
         held, _ = session.call(
             "propose.memory.write",
-            {"text": "this one should be held because the hourly quota is zero", "proposal_id": "e2e-3", "source": "user"},
+            {
+                "text": "this one should be held because the hourly quota is zero",
+                "proposal_id": "e2e-3",
+                "source": "user",
+            },
         )
         check(
             "超配额的提议转待审（不丢弃）",
@@ -174,7 +203,8 @@ def main(argv: list[str]) -> int:
         status, _ = session.call("queue.status")
         check(
             "队列统计自洽",
-            status.get("counts", {}).get("accepted") == 1 and status.get("counts", {}).get("reverted") == 1,
+            status.get("counts", {}).get("accepted") == 1
+            and status.get("counts", {}).get("reverted") == 1,
             json.dumps(status, ensure_ascii=False)[:300],
         )
     finally:
