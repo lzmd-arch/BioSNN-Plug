@@ -11,10 +11,14 @@ JSON-RPC 2.0 over stdio，零第三方依赖，把认知状态、情景记忆、
 
 ## 安装
 
-尚未发布到 PyPI，从仓库装：
+```bash
+pip install biosnn-mcp
+```
+
+要从 `main` 装**尚未发布**的改动时走 Git：
 
 ```bash
-pip install "biosnn-mcp @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-mcp"
+pip install "biosnn-mcp @ git+https://github.com/lzmd-arch/BioSNN-Plug.git@main#subdirectory=packages/biosnn-mcp"
 ```
 
 或在本仓库里直接跑（未安装时把源码目录放进 `PYTHONPATH`）：

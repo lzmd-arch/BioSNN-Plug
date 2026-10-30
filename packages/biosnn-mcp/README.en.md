@@ -13,10 +13,14 @@ memory, sleep consolidation and the spiking trigger as MCP tools.
 
 ## Install
 
-Not on PyPI yet; install from the repository:
+```bash
+pip install biosnn-mcp
+```
+
+To install unreleased changes straight from `main`, use Git:
 
 ```bash
-pip install "biosnn-mcp @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-mcp"
+pip install "biosnn-mcp @ git+https://github.com/lzmd-arch/BioSNN-Plug.git@main#subdirectory=packages/biosnn-mcp"
 ```
 
 Or run it in place (point `PYTHONPATH` at the sources when it is not installed):

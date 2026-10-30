@@ -1604,6 +1604,14 @@
 >    守卫测试钉住「非只读工具必须以 propose. 开头且描述含 stand-in」。**提议不转正**：将来要产生
 >    真实记忆效果走动力学独占写的 propose 队列 + 巩固门控消费。
 
+> 182. **2026-10-31：`biosnn-mcp` 0.2.0 已发布 PyPI（trusted publishing，零依赖）**。
+>    tag `mcp-v0.2.0` + GitHub Release；`release-mcp.yml`（validate → build → publish）全绿。
+>    PyPI 上核对：`requires_dist` 为空（零依赖）、`requires_python >=3.10`、wheel 33,501 字节 /
+>    sdist 35,010 字节；并在干净 venv 里从 **PyPI 索引**装 0.2.0 跑通
+>    `initialize` → `propose.memory.write` → `memory.search`，审计 JSONL 两行正确。
+>    首次发布前按用户判定把五个写工具改名为 `propose.*`（ADR-0027），所以 0.2.0 就是新契约的第一版。
+>    发布流程写进 CONTRIBUTING 三语（tag 前缀 `mcp-v*`、Environment `pypi-mcp`）。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

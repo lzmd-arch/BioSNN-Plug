@@ -13,10 +13,14 @@ stdio 上の JSON-RPC 2.0、サードパーティ依存ゼロで、認知状態�
 
 ## インストール
 
-PyPI 未公開のためリポジトリから：
+```bash
+pip install biosnn-mcp
+```
+
+`main` の未公開の変更を入れたい場合は Git から：
 
 ```bash
-pip install "biosnn-mcp @ git+https://github.com/lzmd-arch/BioSNN-Plug.git#subdirectory=packages/biosnn-mcp"
+pip install "biosnn-mcp @ git+https://github.com/lzmd-arch/BioSNN-Plug.git@main#subdirectory=packages/biosnn-mcp"
 ```
 
 このリポジトリ内で動かす場合（未インストールなら `PYTHONPATH` を通す）：
