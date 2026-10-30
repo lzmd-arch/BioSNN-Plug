@@ -38,11 +38,22 @@ class TestHandshake:
             is None
         )
 
-    def test_tools_list_has_three_read_only_tools(self):
+    def test_tools_list_exposes_read_only_and_write_tools(self):
+        """M1 表面：四个只读 + 五个写（写工具在只读模式下会被拒，但必须可被发现）。"""
         reply = handle_message(_core(), {"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         names = [tool["name"] for tool in reply["result"]["tools"]]
-        assert names == ["state.query", "memory.search", "trigger.status"]
-        assert len(TOOLS) == 3
+        assert names == [
+            "state.query",
+            "memory.search",
+            "memory.write",
+            "memory.consolidate",
+            "trigger.status",
+            "trigger.arm",
+            "trigger.disarm",
+            "trigger.feed",
+            "trigger.poll",
+        ]
+        assert len(TOOLS) == 9
 
 
 class TestTools:
@@ -92,7 +103,7 @@ class TestTools:
         )
         payload = json.loads(reply["result"]["content"][0]["text"])
         assert payload["armed"] is False
-        assert "not implemented" in payload["reason"]
+        assert "read-only" in payload["reason"]
 
     def test_bad_tool_argument_is_tool_error_not_crash(self):
         reply = handle_message(
@@ -113,7 +124,7 @@ class TestTools:
                 "jsonrpc": "2.0",
                 "id": 7,
                 "method": "tools/call",
-                "params": {"name": "memory.write", "arguments": {}},
+                "params": {"name": "memory.delete", "arguments": {}},
             },
         )
         assert reply["error"]["code"] == -32602

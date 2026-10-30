@@ -1588,6 +1588,18 @@
 >    `cartpole` 的 `scale`/`half_widths` 默认关闭，用冒烟参考值做逐位守卫。
 >    见 [`sweep_results/rstdp_spiking_normalised/README.md`](sweep_results/rstdp_spiking_normalised/README.md)。
 
+> 181. **2026-10-30：阶段五 MCP 完成 M1 工具面（`biosnn-mcp` 0.2.0，9 个工具，默认只读 + 逐调用审计）**。
+>    ADR-0026。工具分两层：只读 4 个（`state.query`/`memory.search`/`trigger.status`/`trigger.poll`）、
+>    写 5 个（`memory.write`/`memory.consolidate`/`trigger.arm`/`trigger.disarm`/`trigger.feed`）。
+>    **默认只读**：写工具照常出现在 `tools/list`，但只读模式下调用返回 `isError` 并写明需要
+>    `--allow-write`；**武装必须带 `reason`**；`--audit-log` 把每次 `tools/call` 记一行 JSONL
+>    （ts/tool/ok/error/arguments），不写路径则只在内存里供测试断言。巩固用确定性哈希嵌入，
+>    无 Ollama 也能跑。新增 20 条守卫（默认拒绝、写/检索往返、巩固合并、武装-喂-排空-解除、
+>    审计内容与 JSONL、stdio 路径），`packages/biosnn-mcp` 116 条测试全过。
+>    **仍未接 LLM**（`llm=not_connected`）；写工具改的是内存替身核，接真实库要复用同一协议与
+>    审计约定；`armed=true` 不等于「自主触发成立」——那仍由 M3k–M3p 的证据决定。
+>    文档：包内三语 README（工具表、客户端配置、审计格式）+ ADR-0026 三语。
+
 ## 一、项目定位
 
 ### 1.1 项目名称

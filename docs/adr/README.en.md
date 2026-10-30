@@ -58,3 +58,4 @@ and link the two to each other.
 | [ADR-0023](ADR-0023-llm-ablation-arm.en.md) | LLM collaboration claims need three arms | Accepted |
 | [ADR-0024](ADR-0024-stub-llm-probe.en.md) | Probe autonomous triggering with a stub LLM first | Accepted |
 | [ADR-0025](ADR-0025-p3-flagship-observation-vs-intervention.en.md) | "Observation vs intervention learning" as the phase-4 flagship | Accepted |
+| [ADR-0026](ADR-0026-mcp-write-tools-and-explicit-arming.en.md) | MCP write tools and explicit arming (M0 -> M1): read-only by default, `--allow-write`, every call audited | Accepted |
