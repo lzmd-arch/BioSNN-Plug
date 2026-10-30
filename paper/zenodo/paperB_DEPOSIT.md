@@ -1,6 +1,6 @@
 # Paper B — Zenodo deposit sheet
 
-**状态：草稿，未发布。** 发布是人工动作；发布后把 DOI 填回本表并与 Paper A 互挂。
+**状态：已发布（v1.0，2026-10-31）。** 发布是人工动作；发布后把 DOI 填回本表并与 Paper A 互挂。
 
 ## 元数据（逐字段照抄到 Zenodo）
 

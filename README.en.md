@@ -23,8 +23,8 @@
 
 | Output | Type / licence | Identifier | Status |
 | :--- | :--- | :--- | :--- |
-| **P2 paper**: W2 e-prop against a matched-budget BPTT control | Preprint / CC-BY-4.0 | [10.5281/zenodo.23429379](https://doi.org/10.5281/zenodo.23429379) | Published (v1.1, 2026-10-17) |
-| **P4 paper**: when arbitration can be measured (synergy benchmark + protocol) | Preprint / CC-BY-4.0 | [10.5281/zenodo.23613539](https://doi.org/10.5281/zenodo.23613539) | Published (v1.0, 2026-10-24) |
+| **Paper A**: local learning rules under honest measurement (with the sixteen spiking-execution diagnostics, event-driven e-prop, and a failure library) | Preprint / CC-BY-4.0 | [10.5281/zenodo.23817507](https://doi.org/10.5281/zenodo.23817507) | Published (v1.0, 2026-10-31; supersedes the former P2 v1.1 `zenodo.23429379`) |
+| **Paper B**: emergence without scale - dynamics and organisation tested against the substrate bet (arbitration, cognitive layer, orchestration, read/write boundary) | Preprint / CC-BY-4.0 | [10.5281/zenodo.23817511](https://doi.org/10.5281/zenodo.23817511) | Published (v1.0, 2026-10-31; supersedes the former P4 v1.0 `zenodo.23613539`) |
 | **Record A**: W2 findings and protocol snapshot | Report / Apache-2.0 | [10.5281/zenodo.23428426](https://doi.org/10.5281/zenodo.23428426) | Published (v0.2, 2026-10-17) |
 | **Record C**: P4 design notes (arbiter formalisation, synergy criteria, three rulings) | Report / Apache-2.0 | [10.5281/zenodo.23603639](https://doi.org/10.5281/zenodo.23603639) | Published (v0.1, 2026-10-24) |
 | **Record D**: architecture and design-decision record (plan v6.3, ADR index, four-axis frame) | Other | [10.5281/zenodo.23603642](https://doi.org/10.5281/zenodo.23603642) | Published (v0.1, 2026-10-24) |

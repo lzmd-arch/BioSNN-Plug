@@ -1,7 +1,8 @@
 # Paper A — Zenodo deposit sheet
 
-**状态：草稿，未发布。** 发布是人工动作（本仓先例：记录 C/D 也是先建私有草稿、由用户点发布）。
-发布后把 DOI 填回本表，并把 `paper/README.md` 与引用清单同步。
+**状态：已发布（v1.0，2026-10-31）。** **Version DOI**：10.5281/zenodo.23817507（概念 DOI `10.5281/zenodo.23817506`）。
+
+发布经用户明确要求、通过 Zenodo API 完成；发布后已从**公开 API** 核对：DOI、类型 Preprint、许可 CC-BY-4.0、版本 v1.0、附件 md5 与本地逐字节一致、两篇互挂生效。
 
 ## 元数据（逐字段照抄到 Zenodo）
 

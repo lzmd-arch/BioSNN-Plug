@@ -6,8 +6,8 @@ the benchmark paper, so it does not get a paper of its own.
 
 | Paper | Source | Subject |
 | :--- | :--- | :--- |
-| **A** — *Local Learning Rules Under Honest Measurement* | [`main.tex`](main.tex) | The benchmark, extended with the spiking-execution diagnostics (D3–D18), the event-driven e-prop result, and a failure library |
-| **B** — *Emergence Without Scale* | [`p4/main.tex`](p4/main.tex) | Arbitration, the cognitive layer, orchestration by a replaceable language model, and the read/write boundary the failures imply |
+| **A** — *Local Learning Rules Under Honest Measurement* | [`main.tex`](main.tex) | The benchmark, extended with the spiking-execution diagnostics (D3–D18), the event-driven e-prop result, and a failure library. **DOI [10.5281/zenodo.23817507](https://doi.org/10.5281/zenodo.23817507)** (v1.0, 2026-10-31) |
+| **B** — *Emergence Without Scale* | [`p4/main.tex`](p4/main.tex) | Arbitration, the cognitive layer, orchestration by a replaceable language model, and the read/write boundary the failures imply. **DOI [10.5281/zenodo.23817511](https://doi.org/10.5281/zenodo.23817511)** (v1.0, 2026-10-31) |
 
 Zenodo deposit sheets for both: [`zenodo/paperA_DEPOSIT.md`](zenodo/paperA_DEPOSIT.md),
 [`zenodo/paperB_DEPOSIT.md`](zenodo/paperB_DEPOSIT.md). Both papers compile in CI
