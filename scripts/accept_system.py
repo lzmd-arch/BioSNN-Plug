@@ -76,7 +76,9 @@ class Session:
 
     def call(self, name: str, arguments: dict | None = None) -> tuple[dict, bool]:
         reply = self._send("tools/call", {"name": name, "arguments": arguments or {}})
-        return json.loads(reply["result"]["content"][0]["text"]), bool(reply["result"].get("isError"))
+        return json.loads(reply["result"]["content"][0]["text"]), bool(
+            reply["result"].get("isError")
+        )
 
     def tools(self) -> list[str]:
         return [tool["name"] for tool in self._send("tools/list")["result"]["tools"]]
@@ -117,7 +119,11 @@ def main(argv: list[str]) -> int:
         check("S3 显著度上升后触发", fired_at is not None, f"第 {fired_at} 步")
 
         events, _ = session.call("trigger.poll")
-        check("S3 触发事件可取出", events.get("count", 0) >= 1, json.dumps(events, ensure_ascii=False)[:160])
+        check(
+            "S3 触发事件可取出",
+            events.get("count", 0) >= 1,
+            json.dumps(events, ensure_ascii=False)[:160],
+        )
 
         before = sha256(store) if store.exists() else ""
         written, _ = session.call(
@@ -128,15 +134,26 @@ def main(argv: list[str]) -> int:
                 "source": "user",
             },
         )
-        check("S3 提议被判 accepted", written.get("status") == "accepted", json.dumps(written, ensure_ascii=False)[:200])
+        check(
+            "S3 提议被判 accepted",
+            written.get("status") == "accepted",
+            json.dumps(written, ensure_ascii=False)[:200],
+        )
 
         hit, _ = session.call("memory.search", {"query": "trigger"})
-        check("S3 落库后可查回", hit.get("count", 0) >= 1, json.dumps(hit, ensure_ascii=False)[:160])
+        check(
+            "S3 落库后可查回", hit.get("count", 0) >= 1, json.dumps(hit, ensure_ascii=False)[:160]
+        )
 
         merged, _ = session.call(
-            "propose.memory.consolidate", {"proposal_id": "accept-cons", "threshold": 0.0, "rounds": 1}
+            "propose.memory.consolidate",
+            {"proposal_id": "accept-cons", "threshold": 0.0, "rounds": 1},
         )
-        check("S3 巩固轮到 maintenance accept", merged.get("status") == "accepted", json.dumps(merged, ensure_ascii=False)[:160])
+        check(
+            "S3 巩固轮到 maintenance accept",
+            merged.get("status") == "accepted",
+            json.dumps(merged, ensure_ascii=False)[:160],
+        )
 
         events = [json.loads(line)["tool"] for line in audit.read_text("utf-8").splitlines()]
         needed = {"proposal.received", "gate.accepted", "memory.applied"}
@@ -146,7 +163,11 @@ def main(argv: list[str]) -> int:
         reverted, error = session.call(
             "memory.revert", {"seq": written["seq"], "reason": "acceptance rollback"}
         )
-        check("S4 撤销成功", not error and reverted.get("reverted") is True, json.dumps(reverted, ensure_ascii=False)[:160])
+        check(
+            "S4 撤销成功",
+            not error and reverted.get("reverted") is True,
+            json.dumps(reverted, ensure_ascii=False)[:160],
+        )
         after = sha256(store) if store.exists() else ""
         check("S4 撤销后库文件哈希回到写前", after == before, f"{before[:12]}… → {after[:12]}…")
         events = [json.loads(line)["tool"] for line in audit.read_text("utf-8").splitlines()]
@@ -157,7 +178,11 @@ def main(argv: list[str]) -> int:
     # ── 回归：只读版仍然拒绝写，工具表不变
     readonly = Session(state, write_mode=False)
     try:
-        check("回归 只读版工具表与 0.2.0 相同", readonly.tools() == READ_ONLY_TOOLS, str(readonly.tools()))
+        check(
+            "回归 只读版工具表与 0.2.0 相同",
+            readonly.tools() == READ_ONLY_TOOLS,
+            str(readonly.tools()),
+        )
         refused, is_error = readonly.call("propose.memory.write", {"text": "nope"})
         check(
             "回归 只读版拒绝写",
