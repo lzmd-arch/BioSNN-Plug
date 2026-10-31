@@ -66,3 +66,33 @@ Not a release -- the point is that **one wheel carries both entry points and bot
 A CI leg was added ("write entry smoke"): build the wheel, install into a clean venv, run
 propose -> accept -> revert through `biosnn-mcp-write`, asserting 13 tools and both verdicts.
 **Nothing was published** -- the version number and the tag are the user's call.
+## Isolated end-to-end on the Axo side (2026-10-31, closes gap B2)
+
+Until now this directory only recorded the biosnn-side acceptance; the Axo write tier had unit
+tests but nobody had driven the installed program end to end. That is now covered, and **everything
+runs in a temporary directory**: store, queue and audit all live under `mkdtemp()` and are removed
+afterwards. The write tier is switched on through `AXO_PROPOSE_SETTING`, which is only honoured when
+`--data-dir` is given as well -- so the user's real settings and real library were never touched.
+
+Script: `tools/_smoke_mcp_write.py` in the Axo repository, driving the installed
+`dist/_mcp/axo-mcp-write.exe`.
+
+| Check | Result |
+| :--- | :--- |
+| Tool table has 7 entries | PASS |
+| Proposal is judged accepted | PASS |
+| Searchable afterwards (multi-word query) | PASS |
+| Duplicate proposal is rejected | PASS |
+| Same `proposal_id` is idempotent | PASS |
+| Revert takes the store back to zero | PASS |
+| Audit events complete (received / accepted / applied / revert) | PASS |
+
+**This run found two real problems**
+
+1. **The read-only connection could not see the entry it had just written**: the proposal was
+   accepted and `state.query` showed one entry, but `memory.search` returned nothing. Search used a
+   read-only connection opened at start-up while writes went through another connection. Fixed by
+   reopening the reader after every accept.
+2. **Single-word queries do not hit**: `"gate"` returns 0 while `"accepted this line"` returns 1 for
+   the same memory. That is a property of the lexical encoder in the recall layer, not a defect of
+   the write tier -- but users will run into it, so it is recorded here.

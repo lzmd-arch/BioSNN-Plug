@@ -63,3 +63,29 @@ python scripts/e2e_write_mcp.py --keep     # 保留目录，用来翻 store.json
 CI 里另加了一条腿「写版本入口的 smoke」：构建 wheel、装进干净 venv、用
 `biosnn-mcp-write` 走一遍 propose → accept → revert，断言 13 个工具与两条判定。
 **发布本身没有做**——版本号与 tag 由用户决定。
+## Axo 侧的隔离端到端（2026-10-31，补 B2 缺口）
+
+之前这里只记了 biosnn 侧的验收；Axo 的写档位只有单元测试，没人用装好的程序走一遍。
+这次补上，且**全程临时目录**：库、队列、审计都在 `mkdtemp()` 里，跑完即删；
+写档位开关靠 `AXO_PROPOSE_SETTING` 覆盖，而这个覆盖只在同时给了 `--data-dir` 时被采信，
+所以用户的真实设置与真实库一次都没被碰。
+
+脚本：Axo 仓 `tools/_smoke_mcp_write.py`，打的是装好的 `dist/_mcp/axo-mcp-write.exe`。
+
+| 判据 | 结果 |
+| :--- | :--- |
+| 工具表 7 个 | PASS |
+| 提议被判 accepted | PASS |
+| 落库后可检索（多词查询） | PASS |
+| 重复提议判 rejected | PASS |
+| 同一 `proposal_id` 幂等 | PASS |
+| 撤销后库回到 0 条 | PASS |
+| 审计事件齐全（received / accepted / applied / revert） | PASS |
+
+**这一轮抓到两个真问题**
+
+1. **只读连接看不见刚落库的条目**：提议被接受、`state.query` 也显示 1 条，但
+   `memory.search` 返回空。原因是检索用启动时打开的只读连接，写走另一个连接。
+   修法：每次 accepted 之后重开只读连接。
+2. **单字查询命中不了**：`"gate"` 0 条、`"accepted this line"` 1 条（同一条记忆）。
+   这是召回层词法编码的性质，不是写档位的缺陷——但用户会撞上，记录在案。
