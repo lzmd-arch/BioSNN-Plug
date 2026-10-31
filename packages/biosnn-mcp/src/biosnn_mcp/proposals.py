@@ -35,6 +35,10 @@ ENTITY_WEIGHT = 0.10
 #: 合适的长度带：太短记不住，太长像粘贴。
 LENGTH_MIN, LENGTH_MAX = 20, 400
 
+#: 实测的"无关文本"相似度基线（真实库 193 条、随包 BGE、抽样 80，2026-10-31）。
+#: 新颖度按它归一，否则假设相似度≈0 会把这一项压掉一半（见 amend 2）。
+NOVELTY_BASELINE = 0.51
+
 STATUSES = ("pending", "accepted", "rejected", "reverted")
 
 _NUMBER = re.compile(r"\d")
@@ -101,7 +105,8 @@ def salience_score(
         length_part = LENGTH_WEIGHT / 2
     else:
         length_part = 0.0
-    novelty = NOVELTY_WEIGHT * max(0.0, 1.0 - max_cosine)
+    span = 1.0 - NOVELTY_BASELINE
+    novelty = NOVELTY_WEIGHT * min(1.0, max(0.0, (1.0 - max_cosine) / span))
     entity = ENTITY_WEIGHT if has_entity_or_number(text) else 0.0
     return round(min(1.0, weight + length_part + novelty + entity), 4)
 

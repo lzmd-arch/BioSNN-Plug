@@ -83,6 +83,16 @@ class TestGateArithmetic:
         body = "the scheduler fired once per conversation in 20 trials"
         assert salience_score(body, source="user") > salience_score(body, source="llm")
 
+    def test_novelty_is_normalised_against_the_measured_baseline(self):
+        """回归：真实库上无关文本的相似度是 ~0.51，不是 0（2026-10-31 标定）。"""
+        body = "the trigger fired 3 times across 20 turns on the real stream"
+        assert salience_score(body, source="llm", max_cosine=0.5115) >= GateConfig().accept_salience
+        assert salience_score(body, source="llm", max_cosine=0.8072) < GateConfig().accept_salience
+        assert (
+            salience_score(body, source="client", max_cosine=0.8072)
+            >= GateConfig().accept_salience
+        )
+
     def test_duplicate_rejects_before_salience_is_considered(self):
         decision = Gate().evaluate(
             "anything at all, long enough to be salient",
