@@ -89,8 +89,7 @@ class TestGateArithmetic:
         assert salience_score(body, source="llm", max_cosine=0.5115) >= GateConfig().accept_salience
         assert salience_score(body, source="llm", max_cosine=0.8072) < GateConfig().accept_salience
         assert (
-            salience_score(body, source="client", max_cosine=0.8072)
-            >= GateConfig().accept_salience
+            salience_score(body, source="client", max_cosine=0.8072) >= GateConfig().accept_salience
         )
 
     def test_duplicate_rejects_before_salience_is_considered(self):
