@@ -74,7 +74,7 @@ CI 里另加了一条腿「写版本入口的 smoke」：构建 wheel、装进�
 
 | 判据 | 结果 |
 | :--- | :--- |
-| 工具表 7 个 | PASS |
+| 工具表 8 个（含 `queue.approve`） | PASS |
 | 提议被判 accepted | PASS |
 | 落库后可检索（多词查询） | PASS |
 | 重复提议判 rejected | PASS |

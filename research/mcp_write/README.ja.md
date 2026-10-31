@@ -78,7 +78,7 @@ CI に「書き込み入口の smoke」を一條追加しました：wheel を�
 
 | 基準 | 結果 |
 | :--- | :--- |
-| ツール表 7 個 | PASS |
+| ツール表 8 個（`queue.approve` を含む） | PASS |
 | 提案が accepted と判定される | PASS |
 | 反映後に検索できる（複数語のクエリ） | PASS |
 | 重複提案が rejected | PASS |

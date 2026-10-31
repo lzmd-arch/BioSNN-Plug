@@ -79,7 +79,7 @@ Script: `tools/_smoke_mcp_write.py` in the Axo repository, driving the installed
 
 | Check | Result |
 | :--- | :--- |
-| Tool table has 7 entries | PASS |
+| Tool table has 8 entries (including `queue.approve`) | PASS |
 | Proposal is judged accepted | PASS |
 | Searchable afterwards (multi-word query) | PASS |
 | Duplicate proposal is rejected | PASS |
