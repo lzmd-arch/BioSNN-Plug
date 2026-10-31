@@ -127,7 +127,7 @@
 ```mermaid
 flowchart TB
     subgraph L5["LLM 调度与协同层"]
-        MCP["MCP 服务器 biosnn-mcp 0.2.0（PyPI）<br/>4 只读 + 5 提议（propose.*，只碰内存替身核）<br/>默认只读 · --allow-write · 逐调用审计<br/>✅ 真 LLM 对话（M3b 四判据全过）<br/>◐ 真实对话流上的触发 ROC 未过；Axo 侧只读"]
+        MCP["MCP 服务器 biosnn-mcp 0.3.0（PyPI）<br/>只读版 9 工具；写版本 13 工具（队列 + 门控 + 撤销）<br/>默认只读 · 提议进队列 · 全程 JSONL 审计<br/>✅ 真 LLM 对话（M3b 四判据全过）<br/>◐ 真实对话流上的触发 ROC 未过；Axo 侧只读"]
     end
 
     subgraph L4["执行层"]

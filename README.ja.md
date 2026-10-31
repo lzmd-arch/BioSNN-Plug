@@ -135,7 +135,7 @@
 ```mermaid
 flowchart TB
     subgraph L5["LLM 連携層"]
-        MCP["MCP サーバ biosnn-mcp 0.2.0（PyPI）<br/>読み取り 4 + 提案 5（propose.*、代替コアのみ）<br/>既定は読み取り専用 · --allow-write · 呼び出しごとに監査<br/>✅ 実 LLM 対話（M3b、四基準すべて通過）<br/>◐ 実ストリームの発火 ROC 未達；Axo 側は読み取り専用"]
+        MCP["MCP サーバ biosnn-mcp 0.3.0（PyPI）<br/>読み取り版 9 ツール；書き込み版 13（キュー + ゲート + 取り消し）<br/>既定は読み取り専用 · 提案はキューへ · 全体を JSONL で監査<br/>✅ 実 LLM 対話（M3b、四基準すべて通過）<br/>◐ 実ストリームの発火 ROC 未達；Axo 側は読み取り専用"]
     end
 
     subgraph L4["実行層"]

@@ -151,7 +151,7 @@ Data flows bottom-up. ✅ marks what already runs and is ready/passing under its
 ```mermaid
 flowchart TB
     subgraph L5["LLM orchestration layer"]
-        MCP["MCP server biosnn-mcp 0.2.0 (PyPI)<br/>4 read-only + 5 proposals (propose.*, stand-in core only)<br/>read-only by default · --allow-write · per-call audit<br/>✅ real LLM dialogue (M3b, all four criteria pass)<br/>◐ trigger ROC on a real stream unmet; Axo side read-only"]
+        MCP["MCP server biosnn-mcp 0.3.0 (PyPI)<br/>read-only build, 9 tools; write build, 13 (queue + gate + revert)<br/>read-only by default · proposals queue up · JSONL audit throughout<br/>✅ real LLM dialogue (M3b, all four criteria pass)<br/>◐ trigger ROC on a real stream unmet; Axo side read-only"]
     end
 
     subgraph L4["Execution layer"]
