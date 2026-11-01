@@ -9,20 +9,18 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import statistics
 import zlib
 from pathlib import Path
 
 import numpy as np
-
 from biosnn_bus import AdaptiveMembrane
 
 WIDTH, K, N_NEURONS, T_STEPS = 4096, 64, 512, 20
 
 
 def assoc_code(text: str) -> np.ndarray:
-    """k-of-n 稀疏码：**字符二元组**取位再合并。
+    r"""k-of-n 稀疏码：**字符二元组**取位再合并。
 
     两次修正都记在这里，因为它们改变了结论：
     ① 整句哈希 → 共享词不重叠（基线 hit@1 1/85）；
@@ -110,8 +108,8 @@ def run(seed: int, memories: dict[str, str], queries: list[dict], prefilter: int
 
 
 def auroc(scores: list[float], labels: list[int]) -> float:
-    pos = [s for s, y in zip(scores, labels) if y]
-    neg = [s for s, y in zip(scores, labels) if not y]
+    pos = [s for s, y in zip(scores, labels, strict=True) if y]
+    neg = [s for s, y in zip(scores, labels, strict=True) if not y]
     if not pos or not neg:
         return float("nan")
     wins = sum((p > n) + 0.5 * (p == n) for p in pos for n in neg)
@@ -120,7 +118,9 @@ def auroc(scores: list[float], labels: list[int]) -> float:
 
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--gold", type=Path, default=Path("D:/Projects/BioSNN-MemoryTerminal/benchmarks/gold"))
+    parser.add_argument(
+        "--gold", type=Path, default=Path("D:/Projects/BioSNN-MemoryTerminal/benchmarks/gold")
+    )
     parser.add_argument("--seeds", type=int, default=3)
     parser.add_argument("--prefilter", type=int, default=50)
     args = parser.parse_args(argv)
@@ -134,9 +134,13 @@ def main(argv: list[str]) -> int:
 
     s1, b1 = stat("spiking_hit1"), stat("baseline_hit1")
     s5, b5 = stat("spiking_hit5"), stat("baseline_hit5")
-    print(f"gold：{len(memories)} 条记忆 / {len(queries)} 条查询；种子 {len(rows)}；预筛前 {args.prefilter} 条")
-    print(f"A1 hit@1  群体 {s1[0]:.3f} [{s1[1]:.3f}, {s1[2]:.3f}]   基线 {b1[0]:.3f} [{b1[1]:.3f}, {b1[2]:.3f}]   差 {s1[0]-b1[0]:+.3f}")
-    print(f"A2 hit@5  群体 {s5[0]:.3f}   基线 {b5[0]:.3f}   差 {s5[0]-b5[0]:+.3f}")
+    print(
+        f"gold：{len(memories)} 条记忆 / {len(queries)} 条查询；种子 {len(rows)}；预筛前 {args.prefilter} 条"
+    )
+    print(
+        f"A1 hit@1  群体 {s1[0]:.3f} [{s1[1]:.3f}, {s1[2]:.3f}]   基线 {b1[0]:.3f} [{b1[1]:.3f}, {b1[2]:.3f}]   差 {s1[0] - b1[0]:+.3f}"
+    )
+    print(f"A2 hit@5  群体 {s5[0]:.3f}   基线 {b5[0]:.3f}   差 {s5[0] - b5[0]:+.3f}")
     aucs = [auroc(row["feature"], row["label"]) for row in rows]
     print(f"B  AUROC  群体 {statistics.median(aucs):.3f} [{min(aucs):.3f}, {max(aucs):.3f}]")
     print(f"A1 判据（≥ +0.05）：{'过' if s1[0] - b1[0] >= 0.05 else '不过'}")
