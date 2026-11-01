@@ -32,7 +32,7 @@ class RidgeReadout:
         self.weight: torch.Tensor | None = None
         self.bias: torch.Tensor | None = None
 
-    def fit(self, counts: torch.Tensor, targets: torch.Tensor) -> "RidgeReadout":
+    def fit(self, counts: torch.Tensor, targets: torch.Tensor) -> RidgeReadout:
         """最小二乘一次解出。
 
         Args:
