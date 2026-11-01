@@ -80,6 +80,30 @@ print(out)
 | `register_plugin` | 进程内注册装饰器 |
 | `discover_plugins` | 扫描第三方分发包声明的 entry points |
 
+## 神经元：恒等膜与 ALIF
+
+`get_membrane()` 返回的东西只需满足一个结构化协议（存在 `forward(x)`）。库里有两个实现：
+
+| 实现 | 有没有状态 | 用途 |
+| :--- | :--- | :--- |
+| `PassThroughMembrane` | 无 | 恒等。示例插件的最小模板，`forward` 原样返回输入 |
+| `AdaptiveMembrane` | **有** | 纯 numpy 的 ALIF（自适应阈值 + 适应变量）；`beta=0` 退化为 LIF |
+
+```python
+from biosnn_bus import AdaptiveMembrane
+
+membrane = AdaptiveMembrane(128, tau=20.0, tau_adaptation=500.0, threshold=0.62, beta=0.07)
+spikes = membrane.forward(current)      # current: (128,) 输入电流 → 本步脉冲 (128,) bool
+membrane.reset()                        # 状态清零
+```
+
+**边界**：它只实现神经元动力学——输入是**电流**，不是突触前脉冲。权重属于网络层，
+所以这里没有 `w_in` / `w_rec`。研究层的 `research/eprop/neurons.py` 里的 `ALIFCell`
+把两者合在一起，更新式与本类逐项对应，测试用同一组输入逐时间步对齐（`tests/test_membrane.py`）。
+
+进程内的 `SpikeBus.step()` **不跑**这个膜：它输出的仍是输入电流。要不要跑动力学、怎么接线，
+由宿主（认知核心）决定。
+
 ## 内置插件
 
 | 插件 | 模态 | 编码 | 融合通道 |

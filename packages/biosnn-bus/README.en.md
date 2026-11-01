@@ -87,6 +87,32 @@ paper figure F1.
 | `register_plugin` | In-process registration decorator |
 | `discover_plugins` | Scans the entry points declared by third-party distribution packages |
 
+## Neurons: the identity membrane and ALIF
+
+Whatever `get_membrane()` returns only has to satisfy one structural protocol (a `forward(x)`
+method). The library ships two implementations:
+
+| Implementation | Stateful | Purpose |
+| :--- | :--- | :--- |
+| `PassThroughMembrane` | no | Identity. The minimal template for example plugins |
+| `AdaptiveMembrane` | **yes** | A numpy ALIF (adaptive threshold + adaptation variable); `beta=0` degenerates to LIF |
+
+```python
+from biosnn_bus import AdaptiveMembrane
+
+membrane = AdaptiveMembrane(128, tau=20.0, tau_adaptation=500.0, threshold=0.62, beta=0.07)
+spikes = membrane.forward(current)      # current: (128,) input current -> spikes (128,) bool
+membrane.reset()                        # clear the state
+```
+
+**Boundary**: it implements neuron dynamics only -- the input is a **current**, not presynaptic
+spikes. Weights belong to the network layer, so there is no `w_in` / `w_rec` here. The research
+`ALIFCell` in `research/eprop/neurons.py` combines both; the update rule matches this class term by
+term, and the tests align the two step by step on the same input (`tests/test_membrane.py`).
+
+`SpikeBus.step()` does **not** run this membrane: it still emits input currents. Whether to run
+dynamics, and how to wire it, is the host's (cognitive core's) decision.
+
 ## Built-in plugins
 
 | Plugin | Modality | Encoding | Fusion channel |

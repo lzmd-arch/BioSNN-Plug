@@ -62,7 +62,7 @@ from .errors import (
     UnknownModalityError,
 )
 from .host import BioSNNHost, TriggerEvent
-from .membrane import PassThroughMembrane
+from .membrane import AdaptiveMembrane, PassThroughMembrane
 from .plugin import ModalityPlugin
 from .providers import GeminiProvider, LLMProvider, OpenAIProvider, ProviderError, VLLMProvider
 from .registry import (
@@ -76,10 +76,11 @@ from .registry import (
 from .taaf import TemporalAttentionFusion
 from .types import FusionChannel, Membrane, SpikeTrain
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 __all__ = [
     "ENTRY_POINT_GROUP",
+    "AdaptiveMembrane",
     "BioSNNBusError",
     "BioSNNHost",
     "ConcatenateFusion",

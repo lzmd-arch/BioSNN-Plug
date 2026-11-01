@@ -84,6 +84,32 @@ print(out)
 | `register_plugin` | プロセス内登録デコレータです |
 | `discover_plugins` | サードパーティの配布パッケージが宣言したエントリポイントをスキャンします |
 
+## ニューロン：恒等膜と ALIF
+
+`get_membrane()` が返すものは、構造的プロトコル（`forward(x)` があること）を満たせば十分です。
+ライブラリには二つの実装があります：
+
+| 実装 | 状態 | 用途 |
+| :--- | :--- | :--- |
+| `PassThroughMembrane` | なし | 恒等。サンプルプラグインの最小テンプレート |
+| `AdaptiveMembrane` | **あり** | numpy だけの ALIF（適応しきい値＋適応変数）。`beta=0` で LIF に退化 |
+
+```python
+from biosnn_bus import AdaptiveMembrane
+
+membrane = AdaptiveMembrane(128, tau=20.0, tau_adaptation=500.0, threshold=0.62, beta=0.07)
+spikes = membrane.forward(current)      # current: (128,) 入力電流 -> その歩のスパイク (128,) bool
+membrane.reset()                        # 状態をクリア
+```
+
+**境界**：実装するのはニューロンの力学だけです——入力は**電流**で、前シナプスのスパイクでは
+ありません。重みはネットワーク層のものなので、ここに `w_in` / `w_rec` はありません。研究層の
+`research/eprop/neurons.py` の `ALIFCell` は両方をまとめて持っており、更新式はこのクラスと
+項目ごとに対応しています（`tests/test_membrane.py` が同じ入力で 1 ステップずつ突き合わせます）。
+
+`SpikeBus.step()` はこの膜を**実行しません**：出力は従来どおり入力電流です。力学を回すか
+どうか、どう配線するかはホスト（認知コア）の判断です。
+
 ## 内蔵プラグイン
 
 | プラグイン | モダリティ | 符号化 | 融合チャネル |
