@@ -98,10 +98,13 @@ method). The library ships two implementations:
 | `AdaptiveMembrane` | **yes** | A numpy ALIF (adaptive threshold + adaptation variable); `beta=0` degenerates to LIF |
 
 ```python
+import numpy as np
+
 from biosnn_bus import AdaptiveMembrane
 
 membrane = AdaptiveMembrane(128, tau=20.0, tau_adaptation=500.0, threshold=0.62, beta=0.07)
-spikes = membrane.forward(current)      # current: (128,) input current -> spikes (128,) bool
+current = np.zeros(128)                 # input current, shape (128,)
+spikes = membrane.forward(current)      # -> spikes, shape (128,) bool
 membrane.reset()                        # clear the state
 ```
 

@@ -90,10 +90,13 @@ print(out)
 | `AdaptiveMembrane` | **有** | 纯 numpy 的 ALIF（自适应阈值 + 适应变量）；`beta=0` 退化为 LIF |
 
 ```python
+import numpy as np
+
 from biosnn_bus import AdaptiveMembrane
 
 membrane = AdaptiveMembrane(128, tau=20.0, tau_adaptation=500.0, threshold=0.62, beta=0.07)
-spikes = membrane.forward(current)      # current: (128,) 输入电流 → 本步脉冲 (128,) bool
+current = np.zeros(128)                 # 输入电流，形状 (128,)
+spikes = membrane.forward(current)      # → 本步脉冲，形状 (128,) 的 bool
 membrane.reset()                        # 状态清零
 ```
 

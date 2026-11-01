@@ -95,10 +95,13 @@ print(out)
 | `AdaptiveMembrane` | **あり** | numpy だけの ALIF（適応しきい値＋適応変数）。`beta=0` で LIF に退化 |
 
 ```python
+import numpy as np
+
 from biosnn_bus import AdaptiveMembrane
 
 membrane = AdaptiveMembrane(128, tau=20.0, tau_adaptation=500.0, threshold=0.62, beta=0.07)
-spikes = membrane.forward(current)      # current: (128,) 入力電流 -> その歩のスパイク (128,) bool
+current = np.zeros(128)                 # 入力電流、形状 (128,)
+spikes = membrane.forward(current)      # -> その歩のスパイク、形状 (128,) bool
 membrane.reset()                        # 状態をクリア
 ```
 
