@@ -1,5 +1,10 @@
 # 规模实验 S1：资源与可行性——**稀疏 8192 只吃 767 MiB、约 12 分钟/epoch**（2026-11-03）
 
+> ⚠️ **2026-11-03 更正（见 [S4](../scale_s4/README.md)）**：本页的显存数字**是评测批次造成的**。
+> 8192 那 767 MiB 几乎全部来自 `predict(200 个测试样本)`；**训练一次 update 只要 81 MiB**。
+> 因此「0.48 MiB/神经元」「8 GB 上限」这类推论**作废**——8 GB 限制的是一次评测多少样本，不是模型大小。
+> 本页的**时间**数字不受影响（update 的墙钟是实测的）。
+
 **预注册：** [`research/scale/prereg-s1.md`](../../research/scale/prereg-s1.md) +
 [`amend1`](../../research/scale/prereg-s1-amend1.md)（精度对比移到 S2）
 
