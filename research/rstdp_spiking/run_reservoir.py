@@ -49,6 +49,8 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--episodes", type=int, default=300)
     parser.add_argument("--eval-episodes", type=int, default=5)
     parser.add_argument("--hidden", type=int, default=128)
+    parser.add_argument("--h2", action="store_true", help="岭回归读出（越红线，仅作上界参照）")
+    parser.add_argument("--collect-episodes", type=int, default=60)
     args = parser.parse_args(argv)
 
     import gymnasium
@@ -61,6 +63,23 @@ def main(argv: list[str]) -> int:
         )
         env = gymnasium.make("CartPole-v1")
         actor = ReservoirActor(N_FEATURES, args.hidden, 2, steps=STEPS, seed=seed)
+
+        if args.h2:
+            counts_rows, actions_rows = [], []
+            for _ in range(args.collect_episodes):
+                raw, _ = env.reset(seed=int(torch.randint(0, 2**31 - 1, (1,), generator=generator)))
+                feats = _encode(raw, centers, SIGMA, None)
+                for _ in range(500):
+                    c = actor.counts(actor.hidden_spikes(feats, generator=generator))
+                    a = int(torch.randint(0, 2, (1,), generator=generator))
+                    counts_rows.append(c)
+                    actions_rows.append(a)
+                    raw, _, term, trunc, _ = env.step(a)
+                    feats = _encode(raw, centers, SIGMA, None)
+                    if term or trunc:
+                        break
+            actor.fit_decoder(torch.stack(counts_rows), torch.tensor(actions_rows), alpha=1e-2)
+            print(f"  seed {seed}: H2 拟合了 {len(actions_rows)} 个样本", flush=True)
 
         for episode in range(args.episodes):
             run_episode(env, actor, centers, generator=generator, learn=True)
