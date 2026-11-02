@@ -1,0 +1,21 @@
+{
+  "kind": "10k event-driven training smoke; no acceptance criterion",
+  "config": {
+    "n_rec": 4096,
+    "fan_in": 32,
+    "batch_size": 8,
+    "samples": 60000,
+    "epochs": 2,
+    "test_samples": 1000,
+    "data_dir": "data",
+    "seed": 0,
+    "device": "cuda",
+    "out": "D:\\Projects\\_trigger_v2_tmp\\s2_sparse_4096.json"
+  },
+  "accuracy": 0.7350000143051147,
+  "updates": 15000,
+  "elapsed_s": 1114.0391849000007,
+  "seconds_per_update": 0.07426927899333338,
+  "sparse_weights": 131072,
+  "peak_mb": 2057.45654296875
+}
