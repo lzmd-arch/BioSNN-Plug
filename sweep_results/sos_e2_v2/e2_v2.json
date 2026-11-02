@@ -1,0 +1,217 @@
+{
+ "kind": "spiking sos e2 v2 (three arms)",
+ "epochs": 20,
+ "learning_rate": 0.05,
+ "train_mazes": 100,
+ "confirm_mazes": 100,
+ "arms": {
+  "A": {
+   "train": {
+    "success": 0.0,
+    "entropy": 0.6488803991878377
+   },
+   "confirm": {
+    "success": 0.0,
+    "steps": 0.0,
+    "entropy": 0.6413085826506226
+   },
+   "rows": {
+    "train": [
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 1.2446729584866987
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 0.20753373587244744
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 0.6488803991878377
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 0.4800792265975476
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 1.039621618285617
+     }
+    ],
+    "confirm": [
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 1.1852471777401512
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 0.31319748759965044
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 0.6413085826506226
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 0.5776804044817865
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 1.2674438496524016
+     }
+    ]
+   }
+  },
+  "B": {
+   "train": {
+    "success": 0.03,
+    "entropy": 2.900142355512261
+   },
+   "confirm": {
+    "success": 0.02,
+    "steps": 39.5,
+    "entropy": 2.862711654723645
+   },
+   "rows": {
+    "train": [
+     {
+      "success": 0.03,
+      "steps": 47.666666666666664,
+      "entropy": 3.18263160890227
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 2.94037081713294
+     },
+     {
+      "success": 0.03,
+      "steps": 33.666666666666664,
+      "entropy": 2.8121698743273735
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 2.5996327163559902
+     },
+     {
+      "success": 0.03,
+      "steps": 41.0,
+      "entropy": 2.900142355512261
+     }
+    ],
+    "confirm": [
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 3.2407344450630102
+     },
+     {
+      "success": 0.03,
+      "steps": 43.333333333333336,
+      "entropy": 2.7977842639676282
+     },
+     {
+      "success": 0.04,
+      "steps": 31.25,
+      "entropy": 2.862711654723645
+     },
+     {
+      "success": 0.02,
+      "steps": 39.5,
+      "entropy": 2.579572991946231
+     },
+     {
+      "success": 0.02,
+      "steps": 44.5,
+      "entropy": 2.9555783595942806
+     }
+    ]
+   }
+  },
+  "C": {
+   "train": {
+    "success": 0.0,
+    "entropy": 2.5128652951663852
+   },
+   "confirm": {
+    "success": 0.0,
+    "steps": 0.0,
+    "entropy": 2.5122097252365667
+   },
+   "rows": {
+    "train": [
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 2.5128652951663852
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 2.3746861194773716
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 2.610314222201692
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 2.452264136937347
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 2.7331895299889313
+     }
+    ],
+    "confirm": [
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 2.531529901072007
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 2.1887211422261346
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 2.5122097252365667
+     },
+     {
+      "success": 0.01,
+      "steps": 51.0,
+      "entropy": 2.5060834985783496
+     },
+     {
+      "success": 0.0,
+      "steps": 0.0,
+      "entropy": 2.8656972799728155
+     }
+    ]
+   }
+  }
+ },
+ "criteria": {
+  "e2_0_not_degenerate": false,
+  "e2_1_dense_learns": false,
+  "e2_2_process_beats_outcome": true,
+  "train_gap": 0.0
+ },
+ "h1_supported": false
+}
