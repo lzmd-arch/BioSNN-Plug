@@ -128,3 +128,37 @@ def step(
     dx, dy = ACTIONS[action]
     candidate = (cell[0] + dx, cell[1] + dy)
     return cell if grid.blocked(candidate) else candidate
+
+
+def make_maze(seed: int, *, size: int = 11, loop: float = 0.05) -> Grid:
+    """DFS 迷宫（走廊在奇数坐标，偶数坐标是墙），再打通 ``loop`` 比例的剩余内墙。
+
+    由构造保证连通：DFS 生成的是生成树，任何两个走廊格之间都有路。
+    ``size`` 必须是奇数。
+    """
+    if size % 2 == 0:
+        raise ValueError(f"迷宫边长必须是奇数，收到 {size}。")
+    rng = random.Random(seed)
+    walls = {(x, y) for x in range(size) for y in range(size)}
+    start = (1, 1)
+    stack = [start]
+    walls.discard(start)
+    while stack:
+        x, y = stack[-1]
+        candidates = []
+        for dx, dy in ((0, 2), (2, 0), (0, -2), (-2, 0)):
+            nx, ny = x + dx, y + dy
+            if 1 <= nx < size - 1 and 1 <= ny < size - 1 and (nx, ny) in walls:
+                candidates.append((nx, ny, dx // 2, dy // 2))
+        if not candidates:
+            stack.pop()
+            continue
+        nx, ny, hx, hy = rng.choice(candidates)
+        walls.discard((nx, ny))
+        walls.discard((x + hx, y + hy))
+        stack.append((nx, ny))
+    interior = [(x, y) for x in range(1, size - 1) for y in range(1, size - 1) if (x, y) in walls]
+    for cell in interior:
+        if rng.random() < loop:
+            walls.discard(cell)
+    return Grid(size=size, walls=frozenset(walls), start=start, goal=(size - 2, size - 2))
