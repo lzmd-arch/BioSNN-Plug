@@ -65,6 +65,7 @@ def main(argv: list[str]) -> int:
         actor = ReservoirActor(N_FEATURES, args.hidden, 2, steps=STEPS, seed=seed)
 
         if args.h2:
+            args.episodes = 0  # H2 拟合后读出冻结，不再跑 H1 的训练循环
             counts_rows, actions_rows = [], []
             for _ in range(args.collect_episodes):
                 raw, _ = env.reset(seed=int(torch.randint(0, 2**31 - 1, (1,), generator=generator)))
