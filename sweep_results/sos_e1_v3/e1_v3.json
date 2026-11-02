@@ -1,0 +1,69 @@
+{
+ "kind": "spiking sos e1 v3 (per-maze online)",
+ "size": 11,
+ "grids": 200,
+ "learn_fraction": 0.6,
+ "alpha": 1.0,
+ "rows": [
+  {
+   "seed": 0,
+   "n": 6982,
+   "hit_model": 0.715697507877399,
+   "hit_marginal": 0.5574334001718705,
+   "gap": 0.1582641077055285,
+   "spearman": 0.8195049077123274,
+   "coverage_ok": true,
+   "coverage_grids": "136/175",
+   "variance_cv": 0.09729751490872665
+  },
+  {
+   "seed": 1,
+   "n": 6982,
+   "hit_model": 0.7141220280721856,
+   "hit_marginal": 0.600830707533658,
+   "gap": 0.11329132053852764,
+   "spearman": 0.8283252600853558,
+   "coverage_ok": true,
+   "coverage_grids": "131/170",
+   "variance_cv": 0.09355273642941071
+  },
+  {
+   "seed": 2,
+   "n": 6982,
+   "hit_model": 0.7300200515611572,
+   "hit_marginal": 0.5975365224863936,
+   "gap": 0.13248352907476368,
+   "spearman": 0.8395635058902082,
+   "coverage_ok": true,
+   "coverage_grids": "133/176",
+   "variance_cv": 0.0952305353503461
+  },
+  {
+   "seed": 3,
+   "n": 6982,
+   "hit_model": 0.7169865368089373,
+   "hit_marginal": 0.560011458034947,
+   "gap": 0.15697507877399025,
+   "spearman": 0.8441366865477518,
+   "coverage_ok": true,
+   "coverage_grids": "142/174",
+   "variance_cv": 0.10100969575075551
+  },
+  {
+   "seed": 4,
+   "n": 6982,
+   "hit_model": 0.7165568604984245,
+   "hit_marginal": 0.5779146376396448,
+   "gap": 0.13864222285877972,
+   "spearman": 0.832324723061941,
+   "coverage_ok": true,
+   "coverage_grids": "139/180",
+   "variance_cv": 0.10084126776954887
+  }
+ ],
+ "gap_median": 0.13864222285877972,
+ "spearman_median": 0.832324723061941,
+ "variance_cv_median": 0.09729751490872665,
+ "coverage_seeds": 5,
+ "p1_ready": false
+}
