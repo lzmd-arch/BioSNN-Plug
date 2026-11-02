@@ -230,7 +230,7 @@ flowchart TB
     EM -.-> E2E
     MG -.-> E2E
 
-    subgraph SOS["Spiking SoS main line (ADR-0030)"]
+    subgraph SOS["Spiking SoS (research item; no longer the main line since ADR-0031)"]
         SOSN["Make the search process explicit instead of showing only optimal trajectories<br/>✅ E0 maze env: 23 distinct shortest-path lengths [12, 62]<br/>✅ E1 world-model uncertainty: p1_ready (rho 0.842, coverage 5/5)<br/>✗ E2 three RL rewards all failed<br/>◐ E3-E7 state/scale ladder (training pool): 0.14 -> 0.39 -> 0.74 -> **0.93** (GRU + 2000 mazes)<br/>✗ H1' (process beats outcome) unsupported in two independent settings: E6 tabular [−0.045, +0.015], E7 GRU [−0.050, +0.050]"]
     end
     WMODEL -.->|one-step prediction| SOSN
