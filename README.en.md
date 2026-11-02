@@ -231,7 +231,7 @@ flowchart TB
     MG -.-> E2E
 
     subgraph SOS["Spiking SoS main line (ADR-0030)"]
-        SOSN["Make the search process explicit instead of showing only optimal trajectories<br/>✅ E0 maze env: 23 distinct shortest-path lengths [12, 62]<br/>✅ E1 world-model uncertainty: p1_ready (rho 0.842, coverage 5/5)<br/>✗ E2 three RL rewards all failed<br/>◐ E3-E5 state ladder: displacement 0.14 -> +wall bits 0.39 -> +heading 0.74<br/>✗ H1' (process beats outcome) twice unsupported (+0.03, short of 0.05)"]
+        SOSN["Make the search process explicit instead of showing only optimal trajectories<br/>✅ E0 maze env: 23 distinct shortest-path lengths [12, 62]<br/>✅ E1 world-model uncertainty: p1_ready (rho 0.842, coverage 5/5)<br/>✗ E2 three RL rewards all failed<br/>◐ E3-E5 state ladder: displacement 0.14 -> +wall bits 0.39 -> +heading 0.74<br/>✗ H1' (process beats outcome) unsupported three times: E6 over 20 seeds gives [−0.045, +0.015], undetectable"]
     end
     WMODEL -.->|one-step prediction| SOSN
     WM -.->|holds the search state| SOSN
