@@ -57,3 +57,4 @@
 | [ADR-0026](ADR-0026-mcp-write-tools-and-explicit-arming.md) | MCP 写工具与显式武装（M0 → M1）：默认只读、`--allow-write`、每次调用留审计 | 已采纳 |
 | [ADR-0027](ADR-0027-write-tools-are-proposals.md) | 写工具是提案，不是写：改名 `propose.*`，永远只碰替身核 | 已采纳 |
 | [ADR-0028](ADR-0028-metacog-gate-threshold-first.md) | 元认知门控：机制照实落地，产品先量阈值（三特征门与单阈值等价；脉冲版只排期） | 已采纳 |
+| [ADR-0029](ADR-0029-research-line-archival.md) | 研究线归档：纯 CIL 与 W3 脉冲 actor 归档，阶段五触发器标「暂缓」并写明重开条件 | 已采纳 |

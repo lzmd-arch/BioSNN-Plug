@@ -61,3 +61,4 @@ and link the two to each other.
 | [ADR-0026](ADR-0026-mcp-write-tools-and-explicit-arming.en.md) | MCP write tools and explicit arming (M0 -> M1): read-only by default, `--allow-write`, every call audited | Accepted |
 | [ADR-0027](ADR-0027-write-tools-are-proposals.en.md) | Write tools are proposals, not writes: renamed `propose.*`, permanently scoped to the stand-in core | Accepted |
 | [ADR-0028](ADR-0028-metacog-gate-threshold-first.en.md) | Metacognitive gate: real mechanism, product starts with a measured threshold (three-feature gate equals a single threshold; spiking version scheduled only) | Accepted |
+| [ADR-0029](ADR-0029-research-line-archival.en.md) | Research-line archival: pure CIL and the W3 spiking actor are archived; the phase-five trigger is paused, with re-opening conditions | Accepted |

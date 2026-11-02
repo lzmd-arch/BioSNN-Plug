@@ -60,3 +60,4 @@ Michael Nygard の古典的な 4 段構成を採用します：
 | [ADR-0026](ADR-0026-mcp-write-tools-and-explicit-arming.ja.md) | MCP の書き込みツールと明示的武装（M0 → M1）：既定は読み取り専用、`--allow-write`、呼び出しごとに監査 | 採用済み |
 | [ADR-0027](ADR-0027-write-tools-are-proposals.ja.md) | 書き込みツールは提案：`propose.*` に改名、恒久的に代替コアのみ | 採用済み |
 | [ADR-0028](ADR-0028-metacog-gate-threshold-first.ja.md) | メタ認知ゲート：仕組みは実物どおり、製品はまず閾値を測定（三次元ゲートは単一閾値と同等；スパイク版は予定のみ） | 採用済み |
+| [ADR-0029](ADR-0029-research-line-archival.ja.md) | 研究ラインのアーカイブ：純 CIL と W3 スパイク actor をアーカイブ、第 5 フェーズのトリガは「保留」とし再開条件を明記 | 採用済み |
