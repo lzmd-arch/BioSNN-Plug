@@ -58,3 +58,4 @@
 | [ADR-0027](ADR-0027-write-tools-are-proposals.md) | 写工具是提案，不是写：改名 `propose.*`，永远只碰替身核 | 已采纳 |
 | [ADR-0028](ADR-0028-metacog-gate-threshold-first.md) | 元认知门控：机制照实落地，产品先量阈值（三特征门与单阈值等价；脉冲版只排期） | 已采纳 |
 | [ADR-0029](ADR-0029-research-line-archival.md) | 研究线归档：纯 CIL 与 W3 脉冲 actor 归档，阶段五触发器标「暂缓」并写明重开条件 | 已采纳 |
+| [ADR-0030](ADR-0030-mainline-shift-to-spiking-sos.md) | 主线切换到脉冲 SoS：三条前提先落地，未落地不跑训练，并写下回退条件 | 已采纳 |

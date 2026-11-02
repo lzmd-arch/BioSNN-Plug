@@ -61,3 +61,4 @@ Michael Nygard の古典的な 4 段構成を採用します：
 | [ADR-0027](ADR-0027-write-tools-are-proposals.ja.md) | 書き込みツールは提案：`propose.*` に改名、恒久的に代替コアのみ | 採用済み |
 | [ADR-0028](ADR-0028-metacog-gate-threshold-first.ja.md) | メタ認知ゲート：仕組みは実物どおり、製品はまず閾値を測定（三次元ゲートは単一閾値と同等；スパイク版は予定のみ） | 採用済み |
 | [ADR-0029](ADR-0029-research-line-archival.ja.md) | 研究ラインのアーカイブ：純 CIL と W3 スパイク actor をアーカイブ、第 5 フェーズのトリガは「保留」とし再開条件を明記 | 採用済み |
+| [ADR-0030](ADR-0030-mainline-shift-to-spiking-sos.ja.md) | メインラインをスパイク SoS へ：三つの前提を先に整え、整うまで訓練しない。撤回条件も明記 | 採用済み |
