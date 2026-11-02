@@ -94,7 +94,7 @@
 | 跨模态检索 | **十轮检索实验**：原标准（绝对 R@1 50%）在两种数据上都无法区分「局部学习成立」，已重述为**恢复率**（合成集 75.2%、Flickr8k **78.7%**，完整网格）；Flickr8k 的**前端**另有验收口径——caption 内容词线性探针 AUC 中位数 **0.790**（文本侧自查 1.000） | 2026-10-17 |
 | 第五阶段：LLM 协同 | **MCP 0.3（只读版 9 工具：4 只读 + 5 提议 `propose.*`；写版本 13 工具：提议进队列、门控落库、可撤销——两版默认都是只读档位，写版本要显式启动，全程 JSONL 审计）→ M1 mock LLM/trace → M2 规则触发（30 场景 0.733）→ M3b 真 qwen3-4b 四判据全过（完成率 0.975 vs 基线 0.350）→ M3e/M3f 真实嵌入闭环（6/8 合并、6 对误合并，间隔规则无效）→ M3h ES 调度 10/10 严格优于规则门 → M3i–M3k 脉冲触发（合成流 5/5 种子 4/4、误触发 0）**；**M3l 真实对话流 ROC：AUC 0.732 vs 规则门 0.7475、工作点 0/5；M3m 留一重标定把命中救到 3–5/5 但留出判据只过 1/5 折、池化 AUC 0.7472；M3n 换分数（`Rmean` 0.80 / `Rcentroid` 0.83）同批过线，M3o 换一批语料后判据复现、「换分数更好」却没复现（`R5` 自己就有 0.84），M3p 扩到 20 段：`Rmean` 均值 0.809、难批 0.752，但逐段只 12/20 比 `R5` 好 → 符号判据不过 → 仍不 ready；M3p 之后把判据换成 conformal（α=0.10 预先写死、只测判据不换分数）：T-1 误触发 0.153、T-2 命中 0.420、T-3 逐段 11/20，三条都不过，但 500 次随机划分的误触发率均值 0.100 = α → 失败点是打分函数太弱，不是分布漂移；单个 10/10 划分认证不了 0.10 量级（sd 0.040，需约 140 段）；判据 v3 换成零参数表面线索分数（数字串 / 中文数字+单位 / 星期 / 引号）：T-1 0.067、T-2 0.760、T-3 20/20 三条全过——但四格分解显示 75/100 的目标轮带具体信息、285/300 的背景轮不带，说明这 20 段测的是「这轮有没有具体事实」而不是「该不该搜索」；事后探针更进一步——20 段的目标轮下标完全相同（按下标猜 100% 准确）、`len(text)` 单独 AUC 0.877，这份语料结构上就不能检验内容信号。触发器仍 not ready**。见 [ADR-0020](docs/adr/ADR-0020-phase-five-m0-readonly-mcp.md)、[M3l 结果](sweep_results/phase5_m3l/README.md)、[M3m 结果](sweep_results/phase5_m3m/README.md)、[M3n](sweep_results/phase5_m3n/README.md)、[M3o](sweep_results/phase5_m3o/README.md)、[M3p](sweep_results/phase5_m3p/README.md)、[v2](sweep_results/phase5_trigger_v2/README.md)、[v3](sweep_results/phase5_trigger_v3/README.md) | 2026-11-02 |
 | **研究项：脉冲 SoS**（[ADR-0030](docs/adr/ADR-0030-mainline-shift-to-spiking-sos.md) → [ADR-0031](docs/adr/ADR-0031-mainline-to-scale.md) 降级） | **E0 全过 → E1 过 → E2/E3 停线 → E3→E7 状态三连**——E0 迷宫难度跨度 **23 档 [12, 62]**；E1 世界模型不确定度 **p1_ready**（ρ 0.842、覆盖 5/5）；状态 0.140 → 0.390 → 0.740 → **0.930**（训练池，GRU confirm **0.90**）；**H1' 两次独立设置都不成立**（E6 −0.015、E7 −0.005，区间都跨 0）。见 [research/sos](research/sos/DESIGN.md)、[E1](sweep_results/sos_e1_v4/README.md)、[E7](sweep_results/sos_e7/README.md) | 2026-11-03 |
-| **主线：规模实验**（[ADR-0031](docs/adr/ADR-0031-mainline-to-scale.md)） | **两条臂一起做**——稠密路径 8 GB 上限约 **1.35k** 循环神经元（log-log 斜率 0.863）；事件驱动稀疏已跑到 **10k**（稀疏权重 320k、一次 update 0.10 s、1 epoch 60k 样本 **40 min / acc 0.697**，单 epoch 不作精度结论）。目标 **5k–8k**：报固定预算下的**精度-规模曲线**与**资源曲线**。回退条件：提升 ≤2pp / epoch >4h / 稀疏明显低于稠密 | 2026-11-03 |
+| **主线：规模实验**（[ADR-0031](docs/adr/ADR-0031-mainline-to-scale.md)） | **S2 三条全过，规模是真实有效的轴**——稀疏臂 1024→8192：准确率 **0.628 → 0.774（+14.6pp）**，显存 676 → 3,899.5 MiB（**0.48 MiB/神经元**），耗时恒定 ~1,110 s；稠密臂 256/512/1024：0.4713 / 0.5270 / 0.5872，显存 1,104 → 3,700 MiB、耗时 86 → 734 s（超线性），**2048 放不下**。ADR-0031 的「≤2pp 停止加宽」未触发。下一问：16k 是否贴上限（预注册 S3）。见 [S1](sweep_results/scale_s1/README.md)、[S2](sweep_results/scale_s2/README.md) | 2026-11-03 |
 
 **第二阶段的四条成功标准，实况**：
 
@@ -211,7 +211,7 @@ flowchart TB
     SOSN -.->|策略候选| ACT
 
     subgraph SCALE["规模实验主线（ADR-0031）"]
-        SCALEN["稠密 vs 事件驱动稀疏，1k → 8k<br/>◐ 稠密：8 GB 上限约 1.35k（已量）<br/>◐ 稀疏：10k 已跑通单 epoch（40 min / acc 0.697）<br/>⬜ 5k–8k 的精度-规模与资源曲线"]
+        SCALEN["稠密 vs 事件驱动稀疏，1k → 8k<br/>◐ 稠密：8 GB 上限约 1.35k（已量）<br/>◐ 稀疏：10k 已跑通单 epoch（40 min / acc 0.697）<br/>✅ S2：稀疏 1024→8192 是 0.628→0.774（+14.6pp），3,900 MiB、耗时恒定<br/>⏳ S3：12k/16k 是否贴 8 GB 上限"]
     end
     SCALEN -.->|规模轴| ACT
 ```
