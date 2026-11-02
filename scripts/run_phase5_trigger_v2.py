@@ -87,11 +87,11 @@ def best_threshold(scores: list[float], labels: list[bool]) -> float:
     return best_at
 
 
-def evaluate_stream(stream: dict, vectors: list[list[float]]) -> dict:
+def evaluate_scores(stream: dict, scores: list[list[float]]) -> dict:
+    """判据与口径全在这里；分数由调用方给，所以 v3 能复用同一套判决。"""
     target_turns = set(stream["target_turns"])
     turns_per = stream["turns_per_conversation"]
     labels = [turn in target_turns for turn in range(turns_per)]
-    scores = [novelty_scores(conversation) for conversation in vectors]
 
     indices = list(range(len(scores)))
     even = [index for index in indices if index % 2 == CALIBRATION_PARITY]
@@ -185,6 +185,11 @@ def evaluate_stream(stream: dict, vectors: list[list[float]]) -> dict:
         "t3_total": len(indices),
         "t3_pass": signs >= SIGNS_MIN,
     }
+
+
+def evaluate_stream(stream: dict, vectors: list[list[float]]) -> dict:
+    """v2 的口径：分数 = 每段的 `R5`。"""
+    return evaluate_scores(stream, [novelty_scores(conversation) for conversation in vectors])
 
 
 def main(argv: list[str] | None = None) -> int:
