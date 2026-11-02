@@ -30,6 +30,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--data-dir", default="data")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--device", default=None, choices=[None, "cpu", "cuda"])
+    parser.add_argument(
+        "--predict-chunk",
+        type=int,
+        default=0,
+        help="分块预测的块大小；0 = 一次全喂（默认，行为不变）",
+    )
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
     device = args.device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -62,9 +68,21 @@ def main(argv: list[str] | None = None) -> int:
             f"elapsed {time.perf_counter() - started:.1f}s",
             flush=True,
         )
-    test_inputs, test_labels = test.batch(torch.arange(args.test_samples))
-    test_inputs, test_labels = test_inputs.to(device), test_labels.to(device)
-    accuracy = float((model.predict(test_inputs) == test_labels).float().mean())
+    index = torch.arange(args.test_samples)
+    test_inputs, test_labels = test.batch(index)
+    test_labels = test_labels.to(device)
+    chunk = args.predict_chunk
+    if chunk and chunk < args.test_samples:
+        # 分块预测：测试集不变，峰值随块大小走而不是随样本数走（S4 / S5）。
+        predictions = []
+        for start in range(0, args.test_samples, chunk):
+            part = torch.arange(start, min(start + chunk, args.test_samples))
+            part_inputs, _ = test.batch(part)
+            predictions.append(model.predict(part_inputs.to(device)))
+        predicted = torch.cat(predictions)
+    else:
+        predicted = model.predict(test_inputs.to(device))
+    accuracy = float((predicted == test_labels).float().mean())
     elapsed = time.perf_counter() - started
     summary = {
         "kind": "10k event-driven training smoke; no acceptance criterion",
