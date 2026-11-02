@@ -1,0 +1,127 @@
+{
+ "kind": "spiking sos e3 (trace supervision)",
+ "epochs": 20,
+ "learning_rate": 0.05,
+ "train_mazes": 100,
+ "confirm_mazes": 100,
+ "arms": {
+  "opt": {
+   "train": {
+    "success": 0.14
+   },
+   "confirm": {
+    "success": 0.1,
+    "steps": 25.555555555555557
+   },
+   "rows": {
+    "train": [
+     {
+      "success": 0.13,
+      "steps": 40.15384615384615
+     },
+     {
+      "success": 0.14,
+      "steps": 38.714285714285715
+     },
+     {
+      "success": 0.14,
+      "steps": 42.785714285714285
+     },
+     {
+      "success": 0.15,
+      "steps": 37.0
+     },
+     {
+      "success": 0.15,
+      "steps": 32.666666666666664
+     }
+    ],
+    "confirm": [
+     {
+      "success": 0.1,
+      "steps": 24.6
+     },
+     {
+      "success": 0.08,
+      "steps": 25.25
+     },
+     {
+      "success": 0.09,
+      "steps": 25.555555555555557
+     },
+     {
+      "success": 0.1,
+      "steps": 36.5
+     },
+     {
+      "success": 0.1,
+      "steps": 28.5
+     }
+    ]
+   }
+  },
+  "search": {
+   "train": {
+    "success": 0.12
+   },
+   "confirm": {
+    "success": 0.09,
+    "steps": 31.555555555555557
+   },
+   "rows": {
+    "train": [
+     {
+      "success": 0.12,
+      "steps": 37.833333333333336
+     },
+     {
+      "success": 0.12,
+      "steps": 35.0
+     },
+     {
+      "success": 0.11,
+      "steps": 41.27272727272727
+     },
+     {
+      "success": 0.18,
+      "steps": 34.111111111111114
+     },
+     {
+      "success": 0.14,
+      "steps": 34.07142857142857
+     }
+    ],
+    "confirm": [
+     {
+      "success": 0.09,
+      "steps": 35.0
+     },
+     {
+      "success": 0.1,
+      "steps": 32.9
+     },
+     {
+      "success": 0.07,
+      "steps": 23.714285714285715
+     },
+     {
+      "success": 0.09,
+      "steps": 27.77777777777778
+     },
+     {
+      "success": 0.09,
+      "steps": 31.555555555555557
+     }
+    ]
+   }
+  }
+ },
+ "criteria": {
+  "e3_0_both_learn": false,
+  "e3_1_search_usable": true,
+  "e3_2_process_beats_result": true,
+  "e3_3_not_step_inflation": true,
+  "pilot_gap": -0.020000000000000018
+ },
+ "h1_prime_supported": false
+}
