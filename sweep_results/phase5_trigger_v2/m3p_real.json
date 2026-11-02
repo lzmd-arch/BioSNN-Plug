@@ -1,0 +1,294 @@
+{
+ "kind": "phase5 trigger v2: conformal gate",
+ "tag": "m3p_real",
+ "stream_sha256": "ad1d278bacb3887e91190740353ce40ce6e0617419464f93811d64dea804bcce",
+ "model": "nomic-embed-text",
+ "stream_kind": "phase5-m3l dialogue stream fixture",
+ "conversations": 20,
+ "turns_per_conversation": 20,
+ "target_turns": [
+  4,
+  8,
+  12,
+  16,
+  19
+ ],
+ "alpha": 0.1,
+ "directions": {
+  "A": {
+   "calibration_indices": [
+    0,
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18
+   ],
+   "test_indices": [
+    1,
+    3,
+    5,
+    7,
+    9,
+    11,
+    13,
+    15,
+    17,
+    19
+   ],
+   "q": 0.2181890051546148,
+   "baseline_threshold": 0.1728183753620901,
+   "calibration_negatives": 150,
+   "in_sample_fpr": 0.09333333333333334,
+   "test_negatives": 150,
+   "test_positives": 50,
+   "false": 23,
+   "fpr": 0.15333333333333332,
+   "hits": 21,
+   "hit_rate": 0.42,
+   "misses": 29,
+   "test_auc": 0.7187333333333333,
+   "baseline_test_f1": 0.4297520661157025,
+   "conformal_test_f1": 0.44680851063829785,
+   "per_conversation_fpr_median": 0.16666666666666669,
+   "per_conversation_fpr_max": 0.26666666666666666,
+   "test_conversations_above_alpha": 6
+  },
+  "B": {
+   "calibration_indices": [
+    1,
+    3,
+    5,
+    7,
+    9,
+    11,
+    13,
+    15,
+    17,
+    19
+   ],
+   "test_indices": [
+    0,
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18
+   ],
+   "q": 0.23553489740985945,
+   "baseline_threshold": 0.028762165628449243,
+   "calibration_negatives": 150,
+   "in_sample_fpr": 0.09333333333333334,
+   "test_negatives": 150,
+   "test_positives": 50,
+   "false": 10,
+   "fpr": 0.06666666666666667,
+   "hits": 19,
+   "hit_rate": 0.38,
+   "misses": 31,
+   "test_auc": 0.7969333333333334,
+   "baseline_test_f1": 0.5108695652173914,
+   "conformal_test_f1": 0.4810126582278481,
+   "per_conversation_fpr_median": 0.03333333333333333,
+   "per_conversation_fpr_max": 0.2,
+   "test_conversations_above_alpha": 4
+  }
+ },
+ "per_conversation": [
+  {
+   "conversation": 0,
+   "direction": "B",
+   "f1_conformal": 0.25,
+   "f1_baseline": 0.43478260869565216,
+   "tp": 1,
+   "fp": 2,
+   "fn": 4
+  },
+  {
+   "conversation": 1,
+   "direction": "A",
+   "f1_conformal": 0.5,
+   "f1_baseline": 0.42857142857142855,
+   "tp": 2,
+   "fp": 1,
+   "fn": 3
+  },
+  {
+   "conversation": 2,
+   "direction": "B",
+   "f1_conformal": 0.6,
+   "f1_baseline": 0.5555555555555556,
+   "tp": 3,
+   "fp": 2,
+   "fn": 2
+  },
+  {
+   "conversation": 3,
+   "direction": "A",
+   "f1_conformal": 0.3333333333333333,
+   "f1_baseline": 0.5714285714285714,
+   "tp": 1,
+   "fp": 0,
+   "fn": 4
+  },
+  {
+   "conversation": 4,
+   "direction": "B",
+   "f1_conformal": 0.0,
+   "f1_baseline": 0.625,
+   "tp": 0,
+   "fp": 0,
+   "fn": 5
+  },
+  {
+   "conversation": 5,
+   "direction": "A",
+   "f1_conformal": 0.5,
+   "f1_baseline": 0.5,
+   "tp": 3,
+   "fp": 4,
+   "fn": 2
+  },
+  {
+   "conversation": 6,
+   "direction": "B",
+   "f1_conformal": 0.8333333333333334,
+   "f1_baseline": 0.5555555555555556,
+   "tp": 5,
+   "fp": 2,
+   "fn": 0
+  },
+  {
+   "conversation": 7,
+   "direction": "A",
+   "f1_conformal": 0.6666666666666666,
+   "f1_baseline": 0.5454545454545454,
+   "tp": 3,
+   "fp": 1,
+   "fn": 2
+  },
+  {
+   "conversation": 8,
+   "direction": "B",
+   "f1_conformal": 0.4,
+   "f1_baseline": 0.5555555555555556,
+   "tp": 2,
+   "fp": 3,
+   "fn": 3
+  },
+  {
+   "conversation": 9,
+   "direction": "A",
+   "f1_conformal": 0.2857142857142857,
+   "f1_baseline": 0.5,
+   "tp": 1,
+   "fp": 1,
+   "fn": 4
+  },
+  {
+   "conversation": 10,
+   "direction": "B",
+   "f1_conformal": 0.3333333333333333,
+   "f1_baseline": 0.34782608695652173,
+   "tp": 1,
+   "fp": 0,
+   "fn": 4
+  },
+  {
+   "conversation": 11,
+   "direction": "A",
+   "f1_conformal": 0.36363636363636365,
+   "f1_baseline": 0.2857142857142857,
+   "tp": 2,
+   "fp": 4,
+   "fn": 3
+  },
+  {
+   "conversation": 12,
+   "direction": "B",
+   "f1_conformal": 0.0,
+   "f1_baseline": 0.35294117647058826,
+   "tp": 0,
+   "fp": 1,
+   "fn": 5
+  },
+  {
+   "conversation": 13,
+   "direction": "A",
+   "f1_conformal": 0.4,
+   "f1_baseline": 0.36363636363636365,
+   "tp": 2,
+   "fp": 3,
+   "fn": 3
+  },
+  {
+   "conversation": 14,
+   "direction": "B",
+   "f1_conformal": 0.5714285714285714,
+   "f1_baseline": 0.5555555555555556,
+   "tp": 2,
+   "fp": 0,
+   "fn": 3
+  },
+  {
+   "conversation": 15,
+   "direction": "A",
+   "f1_conformal": 0.5,
+   "f1_baseline": 0.4,
+   "tp": 3,
+   "fp": 4,
+   "fn": 2
+  },
+  {
+   "conversation": 16,
+   "direction": "B",
+   "f1_conformal": 0.3333333333333333,
+   "f1_baseline": 0.5555555555555556,
+   "tp": 1,
+   "fp": 0,
+   "fn": 4
+  },
+  {
+   "conversation": 17,
+   "direction": "A",
+   "f1_conformal": 0.6,
+   "f1_baseline": 0.46153846153846156,
+   "tp": 3,
+   "fp": 2,
+   "fn": 2
+  },
+  {
+   "conversation": 18,
+   "direction": "B",
+   "f1_conformal": 0.8888888888888888,
+   "f1_baseline": 0.6666666666666666,
+   "tp": 4,
+   "fp": 0,
+   "fn": 1
+  },
+  {
+   "conversation": 19,
+   "direction": "A",
+   "f1_conformal": 0.2222222222222222,
+   "f1_baseline": 0.3333333333333333,
+   "tp": 1,
+   "fp": 3,
+   "fn": 4
+  }
+ ],
+ "t1_fpr": 0.15333333333333332,
+ "t1_pass": false,
+ "t2_hit_rate": 0.42,
+ "t2_pass": false,
+ "t3_signs": 11,
+ "t3_total": 20,
+ "t3_pass": false
+}

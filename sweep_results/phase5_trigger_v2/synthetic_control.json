@@ -1,0 +1,294 @@
+{
+ "kind": "phase5 trigger v2: conformal gate",
+ "tag": "synthetic_control",
+ "stream_sha256": "31b0f7962cf5bdcf5894bf5209c19f817db9c177c91bcc42ca30c46795f10866",
+ "model": "nomic-embed-text",
+ "stream_kind": "phase5 trigger v2 synthetic control fixture",
+ "conversations": 20,
+ "turns_per_conversation": 20,
+ "target_turns": [
+  4,
+  8,
+  12,
+  16,
+  19
+ ],
+ "alpha": 0.1,
+ "directions": {
+  "A": {
+   "calibration_indices": [
+    0,
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18
+   ],
+   "test_indices": [
+    1,
+    3,
+    5,
+    7,
+    9,
+    11,
+    13,
+    15,
+    17,
+    19
+   ],
+   "q": 0.22417575533697565,
+   "baseline_threshold": 0.048571034561689874,
+   "calibration_negatives": 150,
+   "in_sample_fpr": 0.09333333333333334,
+   "test_negatives": 150,
+   "test_positives": 50,
+   "false": 18,
+   "fpr": 0.12,
+   "hits": 11,
+   "hit_rate": 0.22,
+   "misses": 39,
+   "test_auc": 0.6541333333333333,
+   "baseline_test_f1": 0.4418604651162791,
+   "conformal_test_f1": 0.27848101265822783,
+   "per_conversation_fpr_median": 0.1,
+   "per_conversation_fpr_max": 0.3333333333333333,
+   "test_conversations_above_alpha": 5
+  },
+  "B": {
+   "calibration_indices": [
+    1,
+    3,
+    5,
+    7,
+    9,
+    11,
+    13,
+    15,
+    17,
+    19
+   ],
+   "test_indices": [
+    0,
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18
+   ],
+   "q": 0.2346991945619078,
+   "baseline_threshold": 0.012908936650897429,
+   "calibration_negatives": 150,
+   "in_sample_fpr": 0.08666666666666667,
+   "test_negatives": 150,
+   "test_positives": 50,
+   "false": 13,
+   "fpr": 0.08666666666666667,
+   "hits": 7,
+   "hit_rate": 0.14,
+   "misses": 43,
+   "test_auc": 0.6521333333333333,
+   "baseline_test_f1": 0.4536082474226804,
+   "conformal_test_f1": 0.2,
+   "per_conversation_fpr_median": 0.0,
+   "per_conversation_fpr_max": 0.3333333333333333,
+   "test_conversations_above_alpha": 3
+  }
+ },
+ "per_conversation": [
+  {
+   "conversation": 0,
+   "direction": "B",
+   "f1_conformal": 0.2222222222222222,
+   "f1_baseline": 0.5882352941176471,
+   "tp": 1,
+   "fp": 3,
+   "fn": 4
+  },
+  {
+   "conversation": 1,
+   "direction": "A",
+   "f1_conformal": 0.5714285714285714,
+   "f1_baseline": 0.47619047619047616,
+   "tp": 2,
+   "fp": 0,
+   "fn": 3
+  },
+  {
+   "conversation": 2,
+   "direction": "B",
+   "f1_conformal": 0.3333333333333333,
+   "f1_baseline": 0.45454545454545453,
+   "tp": 1,
+   "fp": 0,
+   "fn": 4
+  },
+  {
+   "conversation": 3,
+   "direction": "A",
+   "f1_conformal": 0.25,
+   "f1_baseline": 0.1111111111111111,
+   "tp": 1,
+   "fp": 2,
+   "fn": 4
+  },
+  {
+   "conversation": 4,
+   "direction": "B",
+   "f1_conformal": 0.3333333333333333,
+   "f1_baseline": 0.6666666666666666,
+   "tp": 1,
+   "fp": 0,
+   "fn": 4
+  },
+  {
+   "conversation": 5,
+   "direction": "A",
+   "f1_conformal": 0.3333333333333333,
+   "f1_baseline": 0.5714285714285714,
+   "tp": 1,
+   "fp": 0,
+   "fn": 4
+  },
+  {
+   "conversation": 6,
+   "direction": "B",
+   "f1_conformal": 0.0,
+   "f1_baseline": 0.5263157894736842,
+   "tp": 0,
+   "fp": 1,
+   "fn": 5
+  },
+  {
+   "conversation": 7,
+   "direction": "A",
+   "f1_conformal": 0.0,
+   "f1_baseline": 0.5263157894736842,
+   "tp": 0,
+   "fp": 5,
+   "fn": 5
+  },
+  {
+   "conversation": 8,
+   "direction": "B",
+   "f1_conformal": 0.0,
+   "f1_baseline": 0.42105263157894735,
+   "tp": 0,
+   "fp": 0,
+   "fn": 5
+  },
+  {
+   "conversation": 9,
+   "direction": "A",
+   "f1_conformal": 0.0,
+   "f1_baseline": 0.5882352941176471,
+   "tp": 0,
+   "fp": 3,
+   "fn": 5
+  },
+  {
+   "conversation": 10,
+   "direction": "B",
+   "f1_conformal": 0.18181818181818182,
+   "f1_baseline": 0.2222222222222222,
+   "tp": 1,
+   "fp": 5,
+   "fn": 4
+  },
+  {
+   "conversation": 11,
+   "direction": "A",
+   "f1_conformal": 0.2857142857142857,
+   "f1_baseline": 0.5882352941176471,
+   "tp": 1,
+   "fp": 1,
+   "fn": 4
+  },
+  {
+   "conversation": 12,
+   "direction": "B",
+   "f1_conformal": 0.3333333333333333,
+   "f1_baseline": 0.34782608695652173,
+   "tp": 1,
+   "fp": 0,
+   "fn": 4
+  },
+  {
+   "conversation": 13,
+   "direction": "A",
+   "f1_conformal": 0.0,
+   "f1_baseline": 0.375,
+   "tp": 0,
+   "fp": 4,
+   "fn": 5
+  },
+  {
+   "conversation": 14,
+   "direction": "B",
+   "f1_conformal": 0.3333333333333333,
+   "f1_baseline": 0.47619047619047616,
+   "tp": 1,
+   "fp": 0,
+   "fn": 4
+  },
+  {
+   "conversation": 15,
+   "direction": "A",
+   "f1_conformal": 0.0,
+   "f1_baseline": 0.2857142857142857,
+   "tp": 0,
+   "fp": 3,
+   "fn": 5
+  },
+  {
+   "conversation": 16,
+   "direction": "B",
+   "f1_conformal": 0.3333333333333333,
+   "f1_baseline": 0.5555555555555556,
+   "tp": 1,
+   "fp": 0,
+   "fn": 4
+  },
+  {
+   "conversation": 17,
+   "direction": "A",
+   "f1_conformal": 0.5714285714285714,
+   "f1_baseline": 0.4,
+   "tp": 2,
+   "fp": 0,
+   "fn": 3
+  },
+  {
+   "conversation": 18,
+   "direction": "B",
+   "f1_conformal": 0.0,
+   "f1_baseline": 0.36363636363636365,
+   "tp": 0,
+   "fp": 4,
+   "fn": 5
+  },
+  {
+   "conversation": 19,
+   "direction": "A",
+   "f1_conformal": 0.8888888888888888,
+   "f1_baseline": 0.5,
+   "tp": 4,
+   "fp": 0,
+   "fn": 1
+  }
+ ],
+ "t1_fpr": 0.12,
+ "t1_pass": false,
+ "t2_hit_rate": 0.22,
+ "t2_pass": false,
+ "t3_signs": 4,
+ "t3_total": 20,
+ "t3_pass": false
+}

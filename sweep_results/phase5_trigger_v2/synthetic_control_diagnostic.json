@@ -1,0 +1,34 @@
+{
+ "kind": "phase5 trigger v2: post-hoc diagnostic (not a criterion)",
+ "tag": "synthetic_control",
+ "stream_sha256": "31b0f7962cf5bdcf5894bf5209c19f817db9c177c91bcc42ca30c46795f10866",
+ "alpha": 0.1,
+ "splits": 500,
+ "split_seed": 20261102,
+ "separation": {
+  "target_mean": 0.14424112419253288,
+  "target_median": 0.13715981179368658,
+  "background_mean": 0.09707787085614439,
+  "background_median": 0.09762374991010275
+ },
+ "fpr": {
+  "mean": 0.10442666666666667,
+  "sd": 0.05488519789226531,
+  "median": 0.1,
+  "p05": 0.02666666666666667,
+  "p95": 0.20666666666666667,
+  "min": 0.006666666666666667,
+  "max": 0.34,
+  "share_at_or_below_alpha": 0.546
+ },
+ "hit_rate": {
+  "mean": 0.18768,
+  "sd": 0.0491390567042915,
+  "median": 0.18,
+  "p05": 0.12,
+  "p95": 0.28,
+  "min": 0.1,
+  "max": 0.38,
+  "share_at_or_above_half": 0.0
+ }
+}
