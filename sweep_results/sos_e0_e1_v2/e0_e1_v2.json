@@ -1,0 +1,85 @@
+{
+ "kind": "spiking sos e0-e1 v2 (maze)",
+ "e0": {
+  "e0_1_deterministic": true,
+  "e0_2_bfs_checked": 40,
+  "e0_2_bfs_mismatches": 0,
+  "e0_3_solvable_all": true,
+  "e0_4_distinct": 23,
+  "e0_4_min": 12,
+  "e0_4_max": 62,
+  "e0_4_per_size": {
+   "9": {
+    "min": 12,
+    "max": 28,
+    "distinct": 8
+   },
+   "11": {
+    "min": 16,
+    "max": 40,
+    "distinct": 13
+   },
+   "13": {
+    "min": 20,
+    "max": 62,
+    "distinct": 19
+   }
+  },
+  "e0_5_rates": {
+   "random": 0.005666666666666667,
+   "greedy": 0.25,
+   "follow": 0.975
+  },
+  "pass": true
+ },
+ "e1": {
+  "rows": [
+   {
+    "seed": 0,
+    "holdout": 3362,
+    "hit": 0.5642474717430102,
+    "spearman": 0.7679079972593882,
+    "coverage_ok": true,
+    "variance_cv": 1.7859503254671918
+   },
+   {
+    "seed": 1,
+    "holdout": 3362,
+    "hit": 0.5722784057108864,
+    "spearman": 0.7867809380819952,
+    "coverage_ok": true,
+    "variance_cv": 1.944776391913613
+   },
+   {
+    "seed": 2,
+    "holdout": 3362,
+    "hit": 0.6267102914931588,
+    "spearman": 0.7836439299172128,
+    "coverage_ok": true,
+    "variance_cv": 1.9643674707556398
+   },
+   {
+    "seed": 3,
+    "holdout": 3362,
+    "hit": 0.6829268292682927,
+    "spearman": 0.7321345023096447,
+    "coverage_ok": true,
+    "variance_cv": 2.2393223378528058
+   },
+   {
+    "seed": 4,
+    "holdout": 3362,
+    "hit": 0.661511005353956,
+    "spearman": 0.7683555670742548,
+    "coverage_ok": true,
+    "variance_cv": 2.1714082859210584
+   }
+  ],
+  "hit_median": 0.6267102914931588,
+  "spearman_median": 0.7683555670742548,
+  "variance_cv_median": 1.9643674707556398,
+  "coverage_seeds": 5,
+  "pass": false
+ },
+ "p1_ready": false
+}
