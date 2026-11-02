@@ -1,0 +1,138 @@
+{
+ "kind": "spiking sos e7 (sequence model, large corpus)",
+ "device": "cuda",
+ "epochs": 100,
+ "hidden": 128,
+ "train_mazes": 2000,
+ "confirm_mazes": 200,
+ "arms": {
+  "opt": {
+   "train": {
+    "success": 0.93
+   },
+   "confirm": {
+    "success": 0.9,
+    "steps": 31.08839779005525
+   },
+   "rows": {
+    "train": [
+     {
+      "success": 0.935,
+      "steps": 31.764705882352942
+     },
+     {
+      "success": 0.895,
+      "steps": 31.067039106145252
+     },
+     {
+      "success": 0.94,
+      "steps": 30.97340425531915
+     },
+     {
+      "success": 0.93,
+      "steps": 30.478494623655912
+     },
+     {
+      "success": 0.885,
+      "steps": 30.451977401129945
+     }
+    ],
+    "confirm": [
+     {
+      "success": 0.905,
+      "steps": 31.08839779005525
+     },
+     {
+      "success": 0.92,
+      "steps": 29.945652173913043
+     },
+     {
+      "success": 0.88,
+      "steps": 31.414772727272727
+     },
+     {
+      "success": 0.89,
+      "steps": 32.04494382022472
+     },
+     {
+      "success": 0.9,
+      "steps": 30.85
+     }
+    ]
+   }
+  },
+  "search": {
+   "train": {
+    "success": 0.905
+   },
+   "confirm": {
+    "success": 0.91,
+    "steps": 34.55357142857143
+   },
+   "rows": {
+    "train": [
+     {
+      "success": 0.905,
+      "steps": 38.30386740331492
+     },
+     {
+      "success": 0.9,
+      "steps": 34.644444444444446
+     },
+     {
+      "success": 0.93,
+      "steps": 34.54838709677419
+     },
+     {
+      "success": 0.9,
+      "steps": 37.516666666666666
+     },
+     {
+      "success": 0.93,
+      "steps": 35.25268817204301
+     }
+    ],
+    "confirm": [
+     {
+      "success": 0.9,
+      "steps": 35.51111111111111
+     },
+     {
+      "success": 0.91,
+      "steps": 33.84615384615385
+     },
+     {
+      "success": 0.93,
+      "steps": 31.370967741935484
+     },
+     {
+      "success": 0.84,
+      "steps": 34.55357142857143
+     },
+     {
+      "success": 0.91,
+      "steps": 36.40659340659341
+     }
+    ]
+   }
+  }
+ },
+ "paired_deltas": [
+  -0.0050000000000000044,
+  -0.010000000000000009,
+  0.050000000000000044,
+  -0.050000000000000044,
+  0.010000000000000009
+ ],
+ "delta_median": -0.0050000000000000044,
+ "delta_ci95": [
+  -0.050000000000000044,
+  0.050000000000000044
+ ],
+ "criteria": {
+  "e7_0_both_learn": true,
+  "e7_1_process_beats_result": false,
+  "e7_2_not_step_inflation": true
+ },
+ "h1_prime_supported": false
+}
