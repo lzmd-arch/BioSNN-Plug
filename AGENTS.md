@@ -268,6 +268,7 @@ W3 脉冲 actor 的失败在于"policy 不形成"——给的是状态→最优�
 | 语料混杂探针 | `scripts/check_corpus_confound.py` | 零参数基线（位置/长度/表面线索/重复） |
 | Paper C 设计 | `paper/c/DESIGN.md` | 草案 |
 | **脉冲 SoS 设计** | `research/sos/DESIGN.md` | 零件盘点 + 最小任务 + 实验序列（草案，非预注册） |
+| **滑移迷宫基准** | `benchmarks/maze/README.md` | 任务、难度分布、四个基线（随机 0.006 / 贪心 0.250 / 沿最短路 0.975 / GRU 0.900） |
 | LoCoMo 基线 | `D:\Projects\BioSNN-MemoryTerminal\benchmarks\locomo\` | 三臂结果 |
 
 ---
