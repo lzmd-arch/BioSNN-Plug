@@ -267,6 +267,7 @@ W3 脉冲 actor 的失败在于"policy 不形成"——给的是状态→最优�
 | 触发判据 v2 / v3 | `sweep_results/phase5_trigger_v2/`、`sweep_results/phase5_trigger_v3/` | 诊断结果与预注册 |
 | 语料混杂探针 | `scripts/check_corpus_confound.py` | 零参数基线（位置/长度/表面线索/重复） |
 | Paper C 设计 | `paper/c/DESIGN.md` | 草案 |
+| **脉冲 SoS 设计** | `research/sos/DESIGN.md` | 零件盘点 + 最小任务 + 实验序列（草案，非预注册） |
 | LoCoMo 基线 | `D:\Projects\BioSNN-MemoryTerminal\benchmarks\locomo\` | 三臂结果 |
 
 ---
