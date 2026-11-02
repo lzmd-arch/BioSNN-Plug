@@ -1,0 +1,20 @@
+{
+ "kind": "spiking sos e0-e1",
+ "e0": {
+  "e0_1_deterministic": true,
+  "e0_2_bfs_checked": 40,
+  "e0_2_bfs_mismatches": 0,
+  "e0_3_solvable_rate": 0.835,
+  "e0_4_distinct_lengths": 2,
+  "e0_4_min_length": 14,
+  "e0_4_max_length": 16,
+  "e0_5_rates": {
+   "random": 0.022754491017964073,
+   "greedy": 0.4275449101796407,
+   "follow": 0.932934131736527
+  },
+  "pass": false
+ },
+ "e1": null,
+ "p1_ready": false
+}
