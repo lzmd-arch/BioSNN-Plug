@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 from .eprop import EPropLearner
+from .event_driven import EventDrivenEProp
 from .neurons import ALIFCell, ALIFState
 from .predictive import PredictiveEProp, PredictiveRollout
 from .tasks import load_shd, load_smnist
@@ -27,6 +28,7 @@ __all__ = [
     "ALIFCell",
     "ALIFState",
     "EPropLearner",
+    "EventDrivenEProp",
     "PredictiveEProp",
     "PredictiveRollout",
     "load_shd",

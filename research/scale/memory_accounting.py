@@ -11,8 +11,7 @@ from pathlib import Path
 
 import torch
 
-from research.eprop.event_driven import EventDrivenEProp
-from research.eprop.tasks import load_smnist
+from research.eprop import EventDrivenEProp, load_smnist
 
 REPO = Path(__file__).resolve().parents[2]
 OUT = REPO / "sweep_results" / "scale_s4"
