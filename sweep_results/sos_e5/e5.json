@@ -1,0 +1,126 @@
+{
+ "kind": "spiking sos e5 (trace supervision + wall bits + heading)",
+ "epochs": 20,
+ "learning_rate": 0.05,
+ "train_mazes": 100,
+ "confirm_mazes": 100,
+ "arms": {
+  "opt": {
+   "train": {
+    "success": 0.74
+   },
+   "confirm": {
+    "success": 0.42,
+    "steps": 27.26829268292683
+   },
+   "rows": {
+    "train": [
+     {
+      "success": 0.74,
+      "steps": 31.35135135135135
+     },
+     {
+      "success": 0.83,
+      "steps": 31.53012048192771
+     },
+     {
+      "success": 0.76,
+      "steps": 30.38157894736842
+     },
+     {
+      "success": 0.73,
+      "steps": 30.17808219178082
+     },
+     {
+      "success": 0.74,
+      "steps": 29.81081081081081
+     }
+    ],
+    "confirm": [
+     {
+      "success": 0.42,
+      "steps": 26.261904761904763
+     },
+     {
+      "success": 0.46,
+      "steps": 27.58695652173913
+     },
+     {
+      "success": 0.41,
+      "steps": 29.048780487804876
+     },
+     {
+      "success": 0.41,
+      "steps": 27.26829268292683
+     },
+     {
+      "success": 0.44,
+      "steps": 26.136363636363637
+     }
+    ]
+   }
+  },
+  "search": {
+   "train": {
+    "success": 0.6
+   },
+   "confirm": {
+    "success": 0.45,
+    "steps": 30.441860465116278
+   },
+   "rows": {
+    "train": [
+     {
+      "success": 0.6,
+      "steps": 34.63333333333333
+     },
+     {
+      "success": 0.54,
+      "steps": 34.111111111111114
+     },
+     {
+      "success": 0.67,
+      "steps": 30.73134328358209
+     },
+     {
+      "success": 0.54,
+      "steps": 31.38888888888889
+     },
+     {
+      "success": 0.62,
+      "steps": 34.46774193548387
+     }
+    ],
+    "confirm": [
+     {
+      "success": 0.46,
+      "steps": 34.02173913043478
+     },
+     {
+      "success": 0.43,
+      "steps": 30.441860465116278
+     },
+     {
+      "success": 0.51,
+      "steps": 28.54901960784314
+     },
+     {
+      "success": 0.45,
+      "steps": 26.644444444444446
+     },
+     {
+      "success": 0.3,
+      "steps": 30.466666666666665
+     }
+    ]
+   }
+  }
+ },
+ "criteria": {
+  "e5_0_both_learn": true,
+  "e5_1_process_beats_result": false,
+  "e5_2_not_step_inflation": true,
+  "pilot_gap": -0.14
+ },
+ "h1_prime_supported": false
+}
