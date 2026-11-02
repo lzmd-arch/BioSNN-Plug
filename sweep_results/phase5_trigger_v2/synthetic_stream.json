@@ -1,0 +1,2163 @@
+{
+ "schema_version": 1,
+ "kind": "phase5 trigger v2 synthetic control fixture",
+ "model": "synthetic-template-v1",
+ "options": {
+  "seed": 20261102,
+  "templates": 8
+ },
+ "target_turns": [
+  4,
+  8,
+  12,
+  16,
+  19
+ ],
+ "topics": [
+  "医疗预约",
+  "地铁通勤",
+  "城市天气",
+  "超市采购",
+  "小区物业",
+  "银行开户",
+  "手机套餐",
+  "图书馆借书",
+  "公园晨跑",
+  "快递取件",
+  "电影院排片",
+  "搬家打包",
+  "学校家长会",
+  "装修报价",
+  "汽车保养",
+  "餐厅订位",
+  "健身房课程",
+  "旅行社行程",
+  "医院挂号",
+  "电子发票"
+ ],
+ "seed_offset": 0,
+ "turns_per_conversation": 20,
+ "background_turns": 15,
+ "conversations": [
+  {
+   "id": "synthetic-00",
+   "topic": "医疗预约",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "挂号还是老样子，医疗预约这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "最近在处理医疗预约的事，检查报告这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "医疗预约上面，挂号那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "检查报告还是老样子，医疗预约这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "爆米花还是老样子，电影院排片这边也没进展。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "关于医疗预约，我昨天又想起检查报告还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "关于医疗预约，我昨天又想起挂号还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "医疗预约上面，复诊那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "最近在处理电影院排片的事，imax这块比想象中麻烦。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "检查报告还是老样子，医疗预约这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "挂号这件事拖了好几天了，医疗预约真不省心。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "医疗预约上面，挂号那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "今天跟人聊到电影院排片，顺带提了imax。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "复诊还是老样子，医疗预约这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "医疗预约上面，检查报告那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "挂号这件事拖了好几天了，医疗预约真不省心。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "imax还是老样子，电影院排片这边也没进展。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "关于医疗预约，我昨天又想起检查报告还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "早上出门前又看了一眼医疗预约的清单，复诊排在最后。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "今天跟人聊到电影院排片，顺带提了爆米花。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-01",
+   "topic": "地铁通勤",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "地铁通勤上面，换乘那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "早高峰还是老样子，地铁通勤这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "地铁通勤上面，月票那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "早高峰还是老样子，地铁通勤这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "打算这周末把搬家打包的事办完，尤其是易碎品。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "早高峰这件事拖了好几天了，地铁通勤真不省心。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "今天跟人聊到地铁通勤，顺带提了月票。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "早上出门前又看了一眼地铁通勤的清单，早高峰排在最后。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "今天跟人聊到搬家打包，顺带提了易碎品。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "最近在处理地铁通勤的事，换乘这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "月票还是老样子，地铁通勤这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "最近在处理地铁通勤的事，月票这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "关于搬家打包，我昨天又想起纸箱还没弄完。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "月票还是老样子，地铁通勤这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "最近在处理地铁通勤的事，月票这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "今天跟人聊到地铁通勤，顺带提了换乘。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "早上出门前又看了一眼搬家打包的清单，纸箱排在最后。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "今天跟人聊到地铁通勤，顺带提了月票。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "最近在处理地铁通勤的事，早高峰这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "最近在处理搬家打包的事，纸箱这块比想象中麻烦。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-02",
+   "topic": "城市天气",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "城市天气上面，空气质量那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "打算这周末把城市天气的事办完，尤其是空气质量。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "降温还是老样子，城市天气这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "今天跟人聊到城市天气，顺带提了空气质量。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "最近在处理学校家长会的事，期末成绩这块比想象中麻烦。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "城市天气上面，降雨那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "空气质量还是老样子，城市天气这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "早上出门前又看了一眼城市天气的清单，空气质量排在最后。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "班主任还是老样子，学校家长会这边也没进展。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "关于城市天气，我昨天又想起降温还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "早上出门前又看了一眼城市天气的清单，降温排在最后。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "降雨这件事拖了好几天了，城市天气真不省心。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "早上出门前又看了一眼学校家长会的清单，座位表排在最后。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "今天跟人聊到城市天气，顺带提了降雨。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "降雨还是老样子，城市天气这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "关于城市天气，我昨天又想起降温还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "打算这周末把学校家长会的事办完，尤其是座位表。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "降温还是老样子，城市天气这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "今天跟人聊到城市天气，顺带提了降雨。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "今天跟人聊到学校家长会，顺带提了期末成绩。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-03",
+   "topic": "超市采购",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "超市采购上面，折扣那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "关于超市采购，我昨天又想起生鲜还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "打算这周末把超市采购的事办完，尤其是生鲜。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "购物车还是老样子，超市采购这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "施工队还是老样子，装修报价这边也没进展。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "生鲜还是老样子，超市采购这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "关于超市采购，我昨天又想起购物车还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "早上出门前又看了一眼超市采购的清单，购物车排在最后。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "施工队这件事拖了好几天了，装修报价真不省心。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "打算这周末把超市采购的事办完，尤其是折扣。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "关于超市采购，我昨天又想起生鲜还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "今天跟人聊到超市采购，顺带提了生鲜。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "早上出门前又看了一眼装修报价的清单，瓷砖排在最后。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "最近在处理超市采购的事，生鲜这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "今天跟人聊到超市采购，顺带提了生鲜。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "关于超市采购，我昨天又想起购物车还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "早上出门前又看了一眼装修报价的清单，水电改造排在最后。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "早上出门前又看了一眼超市采购的清单，折扣排在最后。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "打算这周末把超市采购的事办完，尤其是购物车。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "打算这周末把装修报价的事办完，尤其是瓷砖。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-04",
+   "topic": "小区物业",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "今天跟人聊到小区物业，顺带提了维修。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "小区物业上面，维修那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "关于小区物业，我昨天又想起维修还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "小区物业上面，停车位那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "最近在处理汽车保养的事，年检这块比想象中麻烦。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "维修这件事拖了好几天了，小区物业真不省心。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "小区物业上面，物业费那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "小区物业上面，维修那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "年检这件事拖了好几天了，汽车保养真不省心。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "物业费这件事拖了好几天了，小区物业真不省心。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "最近在处理小区物业的事，停车位这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "物业费这件事拖了好几天了，小区物业真不省心。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "打算这周末把汽车保养的事办完，尤其是机油。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "最近在处理小区物业的事，物业费这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "关于小区物业，我昨天又想起物业费还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "物业费这件事拖了好几天了，小区物业真不省心。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "早上出门前又看了一眼汽车保养的清单，轮胎排在最后。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "关于小区物业，我昨天又想起维修还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "物业费这件事拖了好几天了，小区物业真不省心。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "汽车保养上面，年检那边说要再等等。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-05",
+   "topic": "银行开户",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "今天跟人聊到银行开户，顺带提了储蓄卡。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "今天跟人聊到银行开户，顺带提了网银。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "今天跟人聊到银行开户，顺带提了储蓄卡。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "最近在处理银行开户的事，排队这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "最近在处理餐厅订位的事，等位这块比想象中麻烦。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "关于银行开户，我昨天又想起储蓄卡还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "网银还是老样子，银行开户这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "关于银行开户，我昨天又想起网银还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "招牌菜这件事拖了好几天了，餐厅订位真不省心。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "关于银行开户，我昨天又想起排队还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "关于银行开户，我昨天又想起排队还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "打算这周末把银行开户的事办完，尤其是网银。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "早上出门前又看了一眼餐厅订位的清单，招牌菜排在最后。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "关于银行开户，我昨天又想起排队还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "关于银行开户，我昨天又想起排队还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "早上出门前又看了一眼银行开户的清单，排队排在最后。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "餐厅订位上面，等位那边说要再等等。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "银行开户上面，储蓄卡那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "最近在处理银行开户的事，网银这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "打算这周末把餐厅订位的事办完，尤其是等位。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-06",
+   "topic": "手机套餐",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "打算这周末把手机套餐的事办完，尤其是漫游。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "早上出门前又看了一眼手机套餐的清单，流量包排在最后。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "关于手机套餐，我昨天又想起漫游还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "打算这周末把手机套餐的事办完，尤其是流量包。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "今天跟人聊到健身房课程，顺带提了体测。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "早上出门前又看了一眼手机套餐的清单，携号转网排在最后。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "手机套餐上面，漫游那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "今天跟人聊到手机套餐，顺带提了漫游。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "打算这周末把健身房课程的事办完，尤其是私教课。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "今天跟人聊到手机套餐，顺带提了流量包。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "漫游还是老样子，手机套餐这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "早上出门前又看了一眼手机套餐的清单，流量包排在最后。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "健身房课程上面，团操那边说要再等等。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "打算这周末把手机套餐的事办完，尤其是携号转网。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "早上出门前又看了一眼手机套餐的清单，漫游排在最后。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "手机套餐上面，漫游那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "今天跟人聊到健身房课程，顺带提了体测。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "今天跟人聊到手机套餐，顺带提了流量包。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "手机套餐上面，携号转网那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "健身房课程上面，体测那边说要再等等。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-07",
+   "topic": "图书馆借书",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "最近在处理图书馆借书的事，续借这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "早上出门前又看了一眼图书馆借书的清单，还书排在最后。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "今天跟人聊到图书馆借书，顺带提了续借。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "最近在处理图书馆借书的事，续借这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "酒店这件事拖了好几天了，旅行社行程真不省心。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "图书馆借书上面，借阅证那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "最近在处理图书馆借书的事，还书这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "最近在处理图书馆借书的事，还书这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "护照还是老样子，旅行社行程这边也没进展。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "最近在处理图书馆借书的事，借阅证这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "今天跟人聊到图书馆借书，顺带提了借阅证。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "早上出门前又看了一眼图书馆借书的清单，还书排在最后。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "护照这件事拖了好几天了，旅行社行程真不省心。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "打算这周末把图书馆借书的事办完，尤其是借阅证。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "打算这周末把图书馆借书的事办完，尤其是续借。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "借阅证还是老样子，图书馆借书这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "早上出门前又看了一眼旅行社行程的清单，护照排在最后。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "图书馆借书上面，借阅证那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "关于图书馆借书，我昨天又想起借阅证还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "旅行社行程上面，护照那边说要再等等。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-08",
+   "topic": "公园晨跑",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "跑鞋还是老样子，公园晨跑这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "公园晨跑上面，配速那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "早上出门前又看了一眼公园晨跑的清单，拉伸排在最后。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "拉伸这件事拖了好几天了，公园晨跑真不省心。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "最近在处理医院挂号的事，专家号这块比想象中麻烦。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "最近在处理公园晨跑的事，跑鞋这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "关于公园晨跑，我昨天又想起跑鞋还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "早上出门前又看了一眼公园晨跑的清单，拉伸排在最后。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "最近在处理医院挂号的事，专家号这块比想象中麻烦。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "配速还是老样子，公园晨跑这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "打算这周末把公园晨跑的事办完，尤其是拉伸。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "拉伸还是老样子，公园晨跑这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "打算这周末把医院挂号的事办完，尤其是医保卡。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "配速还是老样子，公园晨跑这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "早上出门前又看了一眼公园晨跑的清单，拉伸排在最后。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "跑鞋还是老样子，公园晨跑这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "医院挂号上面，医保卡那边说要再等等。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "打算这周末把公园晨跑的事办完，尤其是跑鞋。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "跑鞋这件事拖了好几天了，公园晨跑真不省心。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "医院挂号上面，专家号那边说要再等等。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-09",
+   "topic": "快递取件",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "今天跟人聊到快递取件，顺带提了取件码。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "驿站这件事拖了好几天了，快递取件真不省心。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "早上出门前又看了一眼快递取件的清单，取件码排在最后。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "签收还是老样子，快递取件这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "打算这周末把电子发票的事办完，尤其是报销。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "今天跟人聊到快递取件，顺带提了驿站。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "关于快递取件，我昨天又想起驿站还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "早上出门前又看了一眼快递取件的清单，驿站排在最后。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "电子发票上面，报销那边说要再等等。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "今天跟人聊到快递取件，顺带提了取件码。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "打算这周末把快递取件的事办完，尤其是驿站。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "早上出门前又看了一眼快递取件的清单，取件码排在最后。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "抬头这件事拖了好几天了，电子发票真不省心。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "驿站这件事拖了好几天了，快递取件真不省心。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "驿站还是老样子，快递取件这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "早上出门前又看了一眼快递取件的清单，取件码排在最后。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "电子发票上面，抬头那边说要再等等。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "今天跟人聊到快递取件，顺带提了取件码。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "签收这件事拖了好几天了，快递取件真不省心。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "打算这周末把电子发票的事办完，尤其是票据。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-10",
+   "topic": "电影院排片",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "早上出门前又看了一眼电影院排片的清单，imax排在最后。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "爆米花还是老样子，电影院排片这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "打算这周末把电影院排片的事办完，尤其是午夜场。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "打算这周末把电影院排片的事办完，尤其是午夜场。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "关于医疗预约，我昨天又想起挂号还没弄完。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "打算这周末把电影院排片的事办完，尤其是午夜场。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "关于电影院排片，我昨天又想起imax还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "爆米花还是老样子，电影院排片这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "打算这周末把医疗预约的事办完，尤其是复诊。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "imax这件事拖了好几天了，电影院排片真不省心。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "早上出门前又看了一眼电影院排片的清单，爆米花排在最后。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "早上出门前又看了一眼电影院排片的清单，午夜场排在最后。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "早上出门前又看了一眼医疗预约的清单，挂号排在最后。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "午夜场这件事拖了好几天了，电影院排片真不省心。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "关于电影院排片，我昨天又想起午夜场还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "电影院排片上面，爆米花那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "关于医疗预约，我昨天又想起检查报告还没弄完。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "最近在处理电影院排片的事，imax这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "电影院排片上面，爆米花那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "早上出门前又看了一眼医疗预约的清单，检查报告排在最后。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-11",
+   "topic": "搬家打包",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "搬家车还是老样子，搬家打包这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "打算这周末把搬家打包的事办完，尤其是搬家车。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "最近在处理搬家打包的事，易碎品这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "打算这周末把搬家打包的事办完，尤其是搬家车。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "地铁通勤上面，月票那边说要再等等。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "打算这周末把搬家打包的事办完，尤其是易碎品。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "早上出门前又看了一眼搬家打包的清单，搬家车排在最后。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "早上出门前又看了一眼搬家打包的清单，易碎品排在最后。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "换乘还是老样子，地铁通勤这边也没进展。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "打算这周末把搬家打包的事办完，尤其是易碎品。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "今天跟人聊到搬家打包，顺带提了纸箱。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "搬家打包上面，易碎品那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "最近在处理地铁通勤的事，换乘这块比想象中麻烦。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "最近在处理搬家打包的事，搬家车这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "最近在处理搬家打包的事，纸箱这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "今天跟人聊到搬家打包，顺带提了搬家车。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "打算这周末把地铁通勤的事办完，尤其是早高峰。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "关于搬家打包，我昨天又想起搬家车还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "今天跟人聊到搬家打包，顺带提了易碎品。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "关于地铁通勤，我昨天又想起月票还没弄完。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-12",
+   "topic": "学校家长会",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "关于学校家长会，我昨天又想起班主任还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "今天跟人聊到学校家长会，顺带提了期末成绩。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "班主任还是老样子，学校家长会这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "打算这周末把学校家长会的事办完，尤其是班主任。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "打算这周末把城市天气的事办完，尤其是空气质量。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "早上出门前又看了一眼学校家长会的清单，班主任排在最后。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "学校家长会上面，期末成绩那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "关于学校家长会，我昨天又想起班主任还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "打算这周末把城市天气的事办完，尤其是空气质量。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "打算这周末把学校家长会的事办完，尤其是座位表。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "今天跟人聊到学校家长会，顺带提了座位表。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "早上出门前又看了一眼学校家长会的清单，班主任排在最后。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "城市天气上面，空气质量那边说要再等等。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "座位表还是老样子，学校家长会这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "座位表这件事拖了好几天了，学校家长会真不省心。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "学校家长会上面，座位表那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "城市天气上面，降温那边说要再等等。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "早上出门前又看了一眼学校家长会的清单，期末成绩排在最后。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "早上出门前又看了一眼学校家长会的清单，班主任排在最后。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "早上出门前又看了一眼城市天气的清单，降温排在最后。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-13",
+   "topic": "装修报价",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "早上出门前又看了一眼装修报价的清单，瓷砖排在最后。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "装修报价上面，瓷砖那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "装修报价上面，瓷砖那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "关于装修报价，我昨天又想起水电改造还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "早上出门前又看了一眼超市采购的清单，折扣排在最后。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "装修报价上面，瓷砖那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "最近在处理装修报价的事，施工队这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "打算这周末把装修报价的事办完，尤其是水电改造。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "生鲜这件事拖了好几天了，超市采购真不省心。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "装修报价上面，瓷砖那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "今天跟人聊到装修报价，顺带提了施工队。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "今天跟人聊到装修报价，顺带提了施工队。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "早上出门前又看了一眼超市采购的清单，购物车排在最后。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "关于装修报价，我昨天又想起水电改造还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "早上出门前又看了一眼装修报价的清单，施工队排在最后。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "今天跟人聊到装修报价，顺带提了瓷砖。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "购物车还是老样子，超市采购这边也没进展。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "装修报价上面，瓷砖那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "关于装修报价，我昨天又想起瓷砖还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "关于超市采购，我昨天又想起购物车还没弄完。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-14",
+   "topic": "汽车保养",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "最近在处理汽车保养的事，轮胎这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "汽车保养上面，轮胎那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "轮胎还是老样子，汽车保养这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "打算这周末把汽车保养的事办完，尤其是轮胎。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "关于小区物业，我昨天又想起维修还没弄完。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "最近在处理汽车保养的事，机油这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "早上出门前又看了一眼汽车保养的清单，轮胎排在最后。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "打算这周末把汽车保养的事办完，尤其是年检。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "早上出门前又看了一眼小区物业的清单，停车位排在最后。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "年检还是老样子，汽车保养这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "年检这件事拖了好几天了，汽车保养真不省心。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "年检这件事拖了好几天了，汽车保养真不省心。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "停车位还是老样子，小区物业这边也没进展。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "汽车保养上面，机油那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "汽车保养上面，轮胎那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "早上出门前又看了一眼汽车保养的清单，轮胎排在最后。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "早上出门前又看了一眼小区物业的清单，维修排在最后。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "机油这件事拖了好几天了，汽车保养真不省心。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "打算这周末把汽车保养的事办完，尤其是轮胎。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "打算这周末把小区物业的事办完，尤其是停车位。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-15",
+   "topic": "餐厅订位",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "早上出门前又看了一眼餐厅订位的清单，招牌菜排在最后。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "今天跟人聊到餐厅订位，顺带提了招牌菜。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "包间这件事拖了好几天了，餐厅订位真不省心。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "等位还是老样子，餐厅订位这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "网银这件事拖了好几天了，银行开户真不省心。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "等位还是老样子，餐厅订位这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "今天跟人聊到餐厅订位，顺带提了招牌菜。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "早上出门前又看了一眼餐厅订位的清单，招牌菜排在最后。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "早上出门前又看了一眼银行开户的清单，排队排在最后。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "打算这周末把餐厅订位的事办完，尤其是招牌菜。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "包间还是老样子，餐厅订位这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "早上出门前又看了一眼餐厅订位的清单，包间排在最后。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "早上出门前又看了一眼银行开户的清单，网银排在最后。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "打算这周末把餐厅订位的事办完，尤其是招牌菜。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "早上出门前又看了一眼餐厅订位的清单，包间排在最后。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "招牌菜这件事拖了好几天了，餐厅订位真不省心。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "最近在处理银行开户的事，网银这块比想象中麻烦。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "包间这件事拖了好几天了，餐厅订位真不省心。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "招牌菜还是老样子，餐厅订位这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "打算这周末把银行开户的事办完，尤其是排队。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-16",
+   "topic": "健身房课程",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "最近在处理健身房课程的事，体测这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "团操这件事拖了好几天了，健身房课程真不省心。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "最近在处理健身房课程的事，私教课这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "健身房课程上面，体测那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "早上出门前又看了一眼手机套餐的清单，流量包排在最后。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "早上出门前又看了一眼健身房课程的清单，私教课排在最后。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "团操这件事拖了好几天了，健身房课程真不省心。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "健身房课程上面，体测那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "流量包还是老样子，手机套餐这边也没进展。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "早上出门前又看了一眼健身房课程的清单，私教课排在最后。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "早上出门前又看了一眼健身房课程的清单，团操排在最后。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "打算这周末把健身房课程的事办完，尤其是体测。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "早上出门前又看了一眼手机套餐的清单，漫游排在最后。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "早上出门前又看了一眼健身房课程的清单，团操排在最后。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "关于健身房课程，我昨天又想起私教课还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "私教课还是老样子，健身房课程这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "关于手机套餐，我昨天又想起漫游还没弄完。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "最近在处理健身房课程的事，团操这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "健身房课程上面，体测那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "早上出门前又看了一眼手机套餐的清单，漫游排在最后。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-17",
+   "topic": "旅行社行程",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "酒店还是老样子，旅行社行程这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "旅行社行程上面，护照那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "旅行社行程上面，航班那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "最近在处理旅行社行程的事，护照这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "关于图书馆借书，我昨天又想起续借还没弄完。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "今天跟人聊到旅行社行程，顺带提了航班。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "关于旅行社行程，我昨天又想起航班还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "护照这件事拖了好几天了，旅行社行程真不省心。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "关于图书馆借书，我昨天又想起借阅证还没弄完。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "最近在处理旅行社行程的事，航班这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "旅行社行程上面，护照那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "酒店还是老样子，旅行社行程这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "最近在处理图书馆借书的事，还书这块比想象中麻烦。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "旅行社行程上面，护照那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "最近在处理旅行社行程的事，酒店这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "早上出门前又看了一眼旅行社行程的清单，航班排在最后。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "早上出门前又看了一眼图书馆借书的清单，还书排在最后。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "航班这件事拖了好几天了，旅行社行程真不省心。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "今天跟人聊到旅行社行程，顺带提了护照。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "续借还是老样子，图书馆借书这边也没进展。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-18",
+   "topic": "医院挂号",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "医院挂号上面，医保卡那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "最近在处理医院挂号的事，专家号这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "专家号还是老样子，医院挂号这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "关于医院挂号，我昨天又想起急诊还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "最近在处理公园晨跑的事，拉伸这块比想象中麻烦。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "打算这周末把医院挂号的事办完，尤其是专家号。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "打算这周末把医院挂号的事办完，尤其是专家号。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "专家号这件事拖了好几天了，医院挂号真不省心。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "配速这件事拖了好几天了，公园晨跑真不省心。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "打算这周末把医院挂号的事办完，尤其是医保卡。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "医院挂号上面，急诊那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "关于医院挂号，我昨天又想起医保卡还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "配速这件事拖了好几天了，公园晨跑真不省心。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "早上出门前又看了一眼医院挂号的清单，急诊排在最后。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "今天跟人聊到医院挂号，顺带提了专家号。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "医保卡还是老样子，医院挂号这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "最近在处理公园晨跑的事，拉伸这块比想象中麻烦。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "最近在处理医院挂号的事，医保卡这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "急诊这件事拖了好几天了，医院挂号真不省心。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "今天跟人聊到公园晨跑，顺带提了配速。",
+     "target": true
+    }
+   ]
+  },
+  {
+   "id": "synthetic-19",
+   "topic": "电子发票",
+   "turns": [
+    {
+     "turn": 0,
+     "text": "报销还是老样子，电子发票这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 1,
+     "text": "关于电子发票，我昨天又想起报销还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 2,
+     "text": "电子发票上面，票据那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 3,
+     "text": "关于电子发票，我昨天又想起票据还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 4,
+     "text": "早上出门前又看了一眼快递取件的清单，驿站排在最后。",
+     "target": true
+    },
+    {
+     "turn": 5,
+     "text": "报销还是老样子，电子发票这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 6,
+     "text": "抬头这件事拖了好几天了，电子发票真不省心。",
+     "target": false
+    },
+    {
+     "turn": 7,
+     "text": "最近在处理电子发票的事，票据这块比想象中麻烦。",
+     "target": false
+    },
+    {
+     "turn": 8,
+     "text": "签收这件事拖了好几天了，快递取件真不省心。",
+     "target": true
+    },
+    {
+     "turn": 9,
+     "text": "抬头这件事拖了好几天了，电子发票真不省心。",
+     "target": false
+    },
+    {
+     "turn": 10,
+     "text": "抬头还是老样子，电子发票这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 11,
+     "text": "抬头还是老样子，电子发票这边也没进展。",
+     "target": false
+    },
+    {
+     "turn": 12,
+     "text": "快递取件上面，取件码那边说要再等等。",
+     "target": true
+    },
+    {
+     "turn": 13,
+     "text": "今天跟人聊到电子发票，顺带提了票据。",
+     "target": false
+    },
+    {
+     "turn": 14,
+     "text": "电子发票上面，报销那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 15,
+     "text": "关于电子发票，我昨天又想起票据还没弄完。",
+     "target": false
+    },
+    {
+     "turn": 16,
+     "text": "取件码这件事拖了好几天了，快递取件真不省心。",
+     "target": true
+    },
+    {
+     "turn": 17,
+     "text": "抬头这件事拖了好几天了，电子发票真不省心。",
+     "target": false
+    },
+    {
+     "turn": 18,
+     "text": "电子发票上面，抬头那边说要再等等。",
+     "target": false
+    },
+    {
+     "turn": 19,
+     "text": "早上出门前又看了一眼快递取件的清单，签收排在最后。",
+     "target": true
+    }
+   ]
+  }
+ ]
+}
