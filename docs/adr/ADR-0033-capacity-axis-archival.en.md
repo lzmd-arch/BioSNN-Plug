@@ -23,6 +23,13 @@ S4 also corrected the earlier memory claim: **the 8 GB "ceiling" came from the e
 one training update at 64k neurons costs a few hundred MB. So the saturation is **not a resource
 limit** -- the pipeline's capacity itself is used up.
 
+**Addendum (2026-11-04, A3)**: everything above was measured **through the last-step readout**.
+On the **same 8,192 neurons**, line A's A3 changed only the readout -- one time point to 28, with the
+same local rule -- and moved sMNIST from **0.759 to 0.917**. So "capacity is used up" must be read as
+"used up **under the last-step readout**". The decision below is **unchanged** -- more neurons and more
+connections still buy nothing, and no scale run needs repeating; but **0.83 must not be quoted as this
+pipeline's capability ceiling**. Source: `sweep_results/brainregions_a3/README.md`.
+
 S6 adds the mechanism: **more training lets the small network catch up** -- at 2 epochs 32k leads 8k
 by 3.1pp, at 5 epochs by 0.5pp. Part of "scale helps" was "bigger learns faster", not "bigger learns
 better".
