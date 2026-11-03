@@ -1,0 +1,48 @@
+{
+ "kind": "line A v1: brain-region specialization vs uniform",
+ "n_rec": 8192,
+ "fan_in": 32,
+ "epochs": 2,
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "arms": {
+  "uniform": {
+   "seed_accuracy": [
+    0.759,
+    0.762,
+    0.763
+   ],
+   "seed_firing_rate": [
+    0.1233,
+    0.1232,
+    0.125
+   ],
+   "accuracy": 0.762,
+   "sparsity": 0.8766733921595982
+  },
+  "specialized": {
+   "seed_accuracy": [
+    0.767,
+    0.759,
+    0.765
+   ],
+   "seed_firing_rate": [
+    0.1221,
+    0.1224,
+    0.1249
+   ],
+   "accuracy": 0.765,
+   "sparsity": 0.8775947701590402
+  }
+ },
+ "criteria": {
+  "h_a0_both_learn": true,
+  "h_a1_organization_pays": false,
+  "h_a2_not_denser": true,
+  "accuracy_gap": 0.003
+ },
+ "line_a_ready": false
+}
