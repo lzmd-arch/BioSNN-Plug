@@ -1,0 +1,17 @@
+{
+ "kind": "line A v3 post-hoc probe (NOT preregistered)",
+ "taps": 28,
+ "seed": 0,
+ "n_fit": 1000,
+ "n_fit_big": 4000,
+ "lambda": 0.001,
+ "q1_online": 0.917,
+ "q2_ridge_last_step": 0.774,
+ "q3_ridge_all_steps": 0.866,
+ "q3_ridge_all_steps_big_fit": 0.914,
+ "reference_a2_on_taps1_net": {
+  "p1": 0.759,
+  "p2": 0.772,
+  "p3": 0.869
+ }
+}
