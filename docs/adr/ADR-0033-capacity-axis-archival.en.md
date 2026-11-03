@@ -28,7 +28,8 @@ On the **same 8,192 neurons**, line A's A3 changed only the readout -- one time 
 same local rule -- and moved sMNIST from **0.759 to 0.917**. So "capacity is used up" must be read as
 "used up **under the last-step readout**". The decision below is **unchanged** -- more neurons and more
 connections still buy nothing, and no scale run needs repeating; but **0.83 must not be quoted as this
-pipeline's capability ceiling**. Source: `sweep_results/brainregions_a3/README.md`.
+pipeline's capability ceiling**. **Re-checked the same day (A4)**: 32k with 28 taps = **0.914**, 8k with 28 taps = **0.917** (-0.3pp) -- with the readout fixed, scale still buys nothing, so this ADR's conclusion holds under both readouts.
+Source: `sweep_results/brainregions_a3/README.md`, `sweep_results/brainregions_a4/README.md`.
 
 S6 adds the mechanism: **more training lets the small network catch up** -- at 2 epochs 32k leads 8k
 by 3.1pp, at 5 epochs by 0.5pp. Part of "scale helps" was "bigger learns faster", not "bigger learns

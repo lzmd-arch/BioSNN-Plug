@@ -1,0 +1,19 @@
+{
+ "kind": "line A v4: 32k neurons with a 28-tap readout",
+ "n_rec": 32768,
+ "taps": 28,
+ "seed": 0,
+ "epochs": 2,
+ "reference_8k": 0.917,
+ "accuracy": 0.914,
+ "firing_rate": 0.1167,
+ "peak_mb": 2418.1,
+ "elapsed_s": 1825.3,
+ "criteria": {
+  "c0_firing_rate_in_band": true,
+  "c1_scale_pays": false,
+  "c2_fits_memory": true,
+  "c3_not_broken": true,
+  "gain": -0.003
+ }
+}
