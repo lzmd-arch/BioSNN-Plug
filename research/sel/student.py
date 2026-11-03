@@ -228,7 +228,7 @@ def main() -> int:
             optimizer.step()
             step += 1
             if step % args.eval_every == 0 or step >= args.steps:
-                valid_top1, valid_ce = evaluate(
+                valid_top1, _valid_ce = evaluate(
                     model, valid, max_len=args.max_len, pad_id=vocab[EOS]
                 )
                 if valid_top1 > best_valid:

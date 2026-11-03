@@ -48,9 +48,7 @@ def top1_accuracy(counts: list[list[float]], sequences: list[list[int]], k: floa
     hits = total = 0
     for seq in sequences:
         for left, right in pairwise(seq):
-            row = [
-                (counts[left][j] + k) if j != left else (counts[left][j] + k) for j in range(size)
-            ]
+            row = [(counts[left][j] + k) if j != left else k for j in range(size)]
             best = max(range(size), key=row.__getitem__)
             hits += int(best == right)
             total += 1
