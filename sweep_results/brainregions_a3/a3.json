@@ -1,0 +1,40 @@
+{
+ "kind": "line A v3: multi-tap readout",
+ "seed": 0,
+ "n_rec": 8192,
+ "fan_in": 32,
+ "epochs": 2,
+ "taps": [
+  1,
+  7,
+  28
+ ],
+ "arms": {
+  "taps_1": {
+   "elapsed_s": 1696.8,
+   "accuracy": 0.759,
+   "firing_rate": 0.12332660784040178,
+   "peak_mb": 757.7
+  },
+  "taps_7": {
+   "elapsed_s": 1630.9,
+   "accuracy": 0.895,
+   "firing_rate": 0.12239728655133929,
+   "peak_mb": 759.8
+  },
+  "taps_28": {
+   "elapsed_s": 1467.6,
+   "accuracy": 0.917,
+   "firing_rate": 0.11871194022042411,
+   "peak_mb": 766.2
+  }
+ },
+ "criteria": {
+  "a3_0_baseline_reproduces": true,
+  "a3_1_taps_pay": true,
+  "a3_2_cost_acceptable": true,
+  "gain": 0.158,
+  "time_ratio": 0.865
+ },
+ "a3_ready": true
+}
