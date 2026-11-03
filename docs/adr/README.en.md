@@ -64,5 +64,6 @@ and link the two to each other.
 | [ADR-0029](ADR-0029-research-line-archival.en.md) | Research-line archival: pure CIL and the W3 spiking actor are archived; the phase-five trigger is paused, with re-opening conditions | Accepted |
 | [ADR-0030](ADR-0030-mainline-shift-to-spiking-sos.en.md) | Main line shifts to spiking SoS: three prerequisites first, no training before they land, with fallback conditions written down | Accepted |
 | [ADR-0031](ADR-0031-mainline-to-scale.en.md) | Main line moves from spiking SoS to the scale experiment: H1' unsupported twice; accuracy-versus-size and resource curves for 5k-8k, criteria first | Accepted |
-| [ADR-0032](ADR-0032-sel-research-track.en.md) | SEL spiking expression layer as a research track: staged, off the main line, not wired into recall/gating, weights not distributed | Accepted |
+| [ADR-0032](ADR-0032-sel-research-track.en.md) | SEL spiking expression layer as a research track: staged, off the main line, not wired into recall/gating, weights not distributed (P2–P5 closed by ADR-0034) | Accepted |
 | [ADR-0033](ADR-0033-capacity-axis-archival.en.md) | Capacity-axis archival: neither more neurons nor more connections buys accuracy (knee near 8k); default 8k + fan-in 32 | Accepted |
+| [ADR-0034](ADR-0034-sel-distillation-archival.en.md) | SEL spiking-distillation path archived: concept kept, TI-LIF + CWSSA + SSM + KD stopped; product falls back to Phase 2; Line A is the only active research line | Accepted |

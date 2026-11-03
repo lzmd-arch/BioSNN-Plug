@@ -2,6 +2,13 @@
 
 [中文](README.md) · [日本語](README.ja.md)
 
+> **2026-11-04 closure ([ADR-0034](../../docs/adr/ADR-0034-sel-distillation-archival.en.md))**:
+> SEL **is not a failure**; what stopped is the efficiency of the TI-LIF + CWSSA + SSM +
+> KD path. The concept (same tone across backend models) still holds; the product falls
+> back to Phase 2 (template + model mixed rendering, default off); P3's 391 pairs may be
+> reused for SFT, not distillation; ALIF-only SEL is a long-term backup with no
+> preregistration now; the only active research line is Line A (brain-region specialization).
+
 **Teacher data (P3)**: passed (fourth round). The data lives in `D:\AxoData\sel\pairs\v1_amend3\`
 (not in the repository); `manifest.json` records sha256 `fedfa34a…`.
 

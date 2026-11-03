@@ -1,5 +1,11 @@
 # SEL-001 研究线：当前状态
 
+> **2026-11-04 收口（[ADR-0034](../../docs/adr/ADR-0034-sel-distillation-archival.md)）**：
+> SEL **不是失败**；停止的是 TI-LIF + CWSSA + SSM + KD 这条路径的效率。概念（换模型
+> 语气不变）仍成立；产品回退 Phase 2（模板 + 模型混合渲染，默认关）；P3 的 391 对
+> 可转 SFT，不做蒸馏；ALIF-only SEL 是远期备选，现在不写预注册；唯一活跃研究线是
+> 线 A（脑区特化）。
+
 **教师数据（P3）**：通过（第四轮）。数据在 `D:\AxoData\sel\pairs\v1_amend3\`
 （不入库），`manifest.json` 记了 sha256 `fedfa34a…`。
 

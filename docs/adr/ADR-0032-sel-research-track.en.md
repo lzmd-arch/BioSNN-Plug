@@ -2,7 +2,7 @@
 
 [中文](ADR-0032-sel-research-track.md) · [日本語](ADR-0032-sel-research-track.ja.md)
 
-- **Status**: Accepted
+- **Status**: Accepted (P2–P5 are closed by [ADR-0034](ADR-0034-sel-distillation-archival.en.md))
 - **Date**: 2026-11-03
 - **Related**: [ADR-0028](ADR-0028-metacog-gate-threshold-first.en.md), [ADR-0029](ADR-0029-research-line-archival.en.md), [ADR-0030](ADR-0030-mainline-shift-to-spiking-sos.en.md), [ADR-0031](ADR-0031-mainline-to-scale.en.md), `docs/sel-applicability.md`, `BioSNN-Plug_项目计划书_v6.3_amend2.md` / `amend3.md`
 

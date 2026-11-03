@@ -2,6 +2,13 @@
 
 [中文](README.md) · [English](README.en.md)
 
+> **2026-11-04 終了（[ADR-0034](../../docs/adr/ADR-0034-sel-distillation-archival.ja.md)）**：
+> SEL は**失敗ではない**。停止したのは TI-LIF + CWSSA + SSM + KD という経路の効率である。
+> 概念（バックエンドを変えても口調を保つ）は今も成立する。製品は Phase 2（テンプレート +
+> モデル混合レンダリング、デフォルト無効）に戻す。P3 の 391 対は SFT に再利用でき、
+> 蒸留には使わない。ALIF-only SEL は遠期の代替案で、今は事前登録を書かない。唯一の
+> 活動研究線は線 A（脳領域特化）。
+
 **教師データ（P3）**：通過（第四ラウンド）。データは `D:\AxoData\sel\pairs\v1_amend3\`
 （リポジトリ外）。`manifest.json` に sha256 `fedfa34a…` を記録。
 

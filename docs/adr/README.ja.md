@@ -63,5 +63,6 @@ Michael Nygard の古典的な 4 段構成を採用します：
 | [ADR-0029](ADR-0029-research-line-archival.ja.md) | 研究ラインのアーカイブ：純 CIL と W3 スパイク actor をアーカイブ、第 5 フェーズのトリガは「保留」とし再開条件を明記 | 採用済み |
 | [ADR-0030](ADR-0030-mainline-shift-to-spiking-sos.ja.md) | メインラインをスパイク SoS へ：三つの前提を先に整え、整うまで訓練しない。撤回条件も明記 | 採用済み |
 | [ADR-0031](ADR-0031-mainline-to-scale.ja.md) | メインラインをスパイク SoS から規模実験へ：H1' は二度不成立。5k–8k の精度-規模曲線と資源曲線、判据を先に落とす | 採用済み |
-| [ADR-0032](ADR-0032-sel-research-track.ja.md) | SEL スパイク表現層を研究項目として：段階的、メインライン外、召回・ゲートに接続しない、重みは配布しない | 採用済み |
+| [ADR-0032](ADR-0032-sel-research-track.ja.md) | SEL スパイク表現層を研究項目として：段階的、メインライン外、召回・ゲートに接続しない、重みは配布しない（P2–P5 は ADR-0034 で終了） | 採用済み |
 | [ADR-0033](ADR-0033-capacity-axis-archival.ja.md) | 容量の軸をアーカイブ：ニューロンも接続も精度を買えない（膝は 8k 付近）。既定は 8k + fan-in 32 | 採用済み |
+| [ADR-0034](ADR-0034-sel-distillation-archival.ja.md) | SEL パルス蒸留経路をアーカイブ：概念は保持、TI-LIF + CWSSA + SSM + KD は停止；製品は Phase 2 に戻し、線 A が唯一の活動研究線 | 採用済み |
