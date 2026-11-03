@@ -1,0 +1,23 @@
+{
+  "kind": "10k event-driven training smoke; no acceptance criterion",
+  "config": {
+    "n_rec": 8192,
+    "fan_in": 32,
+    "batch_size": 8,
+    "samples": 100000,
+    "epochs": 10,
+    "test_samples": 1000,
+    "data_dir": "data",
+    "seed": 0,
+    "device": "cuda",
+    "dataset": "shd",
+    "predict_chunk": 100,
+    "out": "D:\\Projects\\_trigger_v2_tmp\\s8_shd_8192.json"
+  },
+  "accuracy": 0.33800002932548523,
+  "updates": 10200,
+  "elapsed_s": 2717.8534169999766,
+  "seconds_per_update": 0.2664562173529389,
+  "sparse_weights": 262144,
+  "peak_mb": 3530.8046875
+}
