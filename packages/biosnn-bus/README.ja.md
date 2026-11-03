@@ -93,6 +93,7 @@ print(out)
 | :--- | :--- | :--- |
 | `PassThroughMembrane` | なし | 恒等。サンプルプラグインの最小テンプレート |
 | `AdaptiveMembrane` | **あり** | numpy だけの ALIF（適応しきい値＋適応変数）。`beta=0` で LIF に退化 |
+| `TernaryMembrane` | **あり** | 符号付き多値スパイク（TI-LIF）。1 ステップで `-D..+D` を出せる。`depth=1, signed=False` なら `AdaptiveMembrane` と 1 ステップずつ一致 |
 
 ```python
 import numpy as np

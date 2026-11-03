@@ -96,6 +96,7 @@ method). The library ships two implementations:
 | :--- | :--- | :--- |
 | `PassThroughMembrane` | no | Identity. The minimal template for example plugins |
 | `AdaptiveMembrane` | **yes** | A numpy ALIF (adaptive threshold + adaptation variable); `beta=0` degenerates to LIF |
+| `TernaryMembrane` | **yes** | Signed multi-level spikes (TI-LIF): one step may emit `-D..+D`; with `depth=1, signed=False` it matches `AdaptiveMembrane` step for step |
 
 ```python
 import numpy as np

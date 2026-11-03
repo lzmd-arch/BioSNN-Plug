@@ -74,9 +74,10 @@ from .registry import (
     unregister_plugin,
 )
 from .taaf import TemporalAttentionFusion
+from .ternary import TernaryMembrane
 from .types import FusionChannel, Membrane, SpikeTrain
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 __all__ = [
     "ENTRY_POINT_GROUP",
@@ -101,6 +102,7 @@ __all__ = [
     "SpikeBus",
     "SpikeTrain",
     "TemporalAttentionFusion",
+    "TernaryMembrane",
     "TriggerEvent",
     "UnknownModalityError",
     "VLLMProvider",

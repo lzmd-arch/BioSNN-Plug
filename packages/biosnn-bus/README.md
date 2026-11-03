@@ -88,6 +88,7 @@ print(out)
 | :--- | :--- | :--- |
 | `PassThroughMembrane` | 无 | 恒等。示例插件的最小模板，`forward` 原样返回输入 |
 | `AdaptiveMembrane` | **有** | 纯 numpy 的 ALIF（自适应阈值 + 适应变量）；`beta=0` 退化为 LIF |
+| `TernaryMembrane` | **有** | 有符号多值脉冲（TI-LIF）：一步可发 `-D..+D`；`depth=1, signed=False` 时与 `AdaptiveMembrane` 逐位一致 |
 
 ```python
 import numpy as np

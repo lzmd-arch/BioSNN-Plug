@@ -14,7 +14,7 @@ import zlib
 from pathlib import Path
 
 import numpy as np
-from biosnn_bus import AdaptiveMembrane
+from biosnn_bus import AdaptiveMembrane, TernaryMembrane
 
 WIDTH, K, N_NEURONS, T_STEPS = 4096, 64, 512, 20
 
@@ -41,22 +41,60 @@ def cosine(a: np.ndarray, b: np.ndarray) -> float:
 
 
 class Population:
-    """512 个 ALIF 神经元 + 固定的 4096→512 投影。"""
+    """512 个脉冲神经元 + **K 套**固定的 4096→512 投影。
 
-    def __init__(self, seed: int, gain: float = 1.0) -> None:
-        rng = np.random.default_rng(seed)
-        self.proj = rng.normal(0.0, 1.0 / np.sqrt(K), size=(WIDTH, N_NEURONS))
-        self.membrane = AdaptiveMembrane(N_NEURONS)
+    ``membrane`` 取 ``"alif"``（二值）或 ``"tilif"``（有符号多值，``depth`` 档）。
+    ``window=K`` 是 K 窗平均：同一段输入用 K 套独立投影各跑一遍、把分数取平均。
+    **K 套投影必须不同**——同一套投影重复跑是确定性的，平均等于没平均（这一点在
+    第一版实现里写错过，见 prereg 的 R0b 阳性对照）。
+    """
+
+    def __init__(
+        self,
+        seed: int,
+        gain: float = 1.0,
+        *,
+        membrane: str = "alif",
+        depth: int = 1,
+        window: int = 1,
+    ) -> None:
+        self.window = max(1, int(window))
+        self.projs = []
+        for k in range(self.window):
+            rng = np.random.default_rng(seed * 1000 + k)
+            self.projs.append(rng.normal(0.0, 1.0 / np.sqrt(K), size=(WIDTH, N_NEURONS)))
+        if membrane == "alif":
+            self.membrane = AdaptiveMembrane(N_NEURONS)
+        elif membrane == "tilif":
+            self.membrane = TernaryMembrane(N_NEURONS, depth=depth, signed=True)
+        else:
+            raise ValueError(f"未知膜类型：{membrane!r}（只认 alif / tilif）")
         self.gain = gain
 
-    def current(self, *codes: np.ndarray) -> np.ndarray:
+    def current(self, proj: np.ndarray, *codes: np.ndarray) -> np.ndarray:
         idx = np.concatenate(codes)
-        return self.proj[idx].sum(axis=0) * self.gain
+        return proj[idx].sum(axis=0) * self.gain
 
-    def spikes(self, *codes: np.ndarray) -> int:
+    def _window_sum(self, proj: np.ndarray, *codes: np.ndarray, absolute: bool) -> float:
+        current = self.current(proj, *codes)
         self.membrane.reset()
-        current = self.current(*codes)
-        return int(sum(int(self.membrane.forward(current).sum()) for _ in range(T_STEPS)))
+        total = 0.0
+        for _ in range(T_STEPS):
+            spikes = self.membrane.forward(current)
+            total += float(np.abs(spikes).sum() if absolute else spikes.sum())
+        return total
+
+    def spikes(self, *codes: np.ndarray) -> float:
+        """K 窗平均后的净脉冲数（TI-LIF 有符号；ALIF 恒非负）。"""
+        return statistics.fmean(
+            self._window_sum(proj, *codes, absolute=False) for proj in self.projs
+        )
+
+    def rate(self, *codes: np.ndarray) -> float:
+        """门控特征：**幅值**的发放率，归一化到 [0, 1]（负脉冲不抵消支撑度）。"""
+        return statistics.fmean(
+            self._window_sum(proj, *codes, absolute=True) for proj in self.projs
+        ) / (N_NEURONS * T_STEPS)
 
 
 def load_gold(root: Path) -> tuple[dict[str, str], list[dict]]:
@@ -68,8 +106,17 @@ def load_gold(root: Path) -> tuple[dict[str, str], list[dict]]:
     return memories, queries
 
 
-def run(seed: int, memories: dict[str, str], queries: list[dict], prefilter: int) -> dict:
-    pop = Population(seed)
+def run(
+    seed: int,
+    memories: dict[str, str],
+    queries: list[dict],
+    prefilter: int,
+    *,
+    membrane: str = "alif",
+    depth: int = 1,
+    window: int = 1,
+) -> dict:
+    pop = Population(seed, membrane=membrane, depth=depth, window=window)
     codes = {mid: assoc_code(text) for mid, text in memories.items()}
 
     hit1 = hit5 = base1 = base5 = 0
@@ -93,7 +140,7 @@ def run(seed: int, memories: dict[str, str], queries: list[dict], prefilter: int
         hit1 += bool(expect and top[0] in expect)
         hit5 += bool(expect and any(mid in expect for mid in top[:5]))
 
-        feats.append(pop.spikes(q_code) / (N_NEURONS * T_STEPS))
+        feats.append(pop.rate(q_code))
         labels.append(1 if expect else 0)
 
     return {
@@ -123,10 +170,25 @@ def main(argv: list[str]) -> int:
     )
     parser.add_argument("--seeds", type=int, default=3)
     parser.add_argument("--prefilter", type=int, default=50)
+    parser.add_argument("--membrane", choices=("alif", "tilif"), default="alif")
+    parser.add_argument("--depth", type=int, default=1, help="TI-LIF 的最大幅值 D")
+    parser.add_argument("--window", type=int, default=1, help="K 窗平均的重复次数")
+    parser.add_argument("--out", type=Path, default=None, help="把逐种子结果写成 json")
     args = parser.parse_args(argv)
 
     memories, queries = load_gold(args.gold)
-    rows = [run(seed, memories, queries, args.prefilter) for seed in range(1, args.seeds + 1)]
+    rows = [
+        run(
+            seed,
+            memories,
+            queries,
+            args.prefilter,
+            membrane=args.membrane,
+            depth=args.depth,
+            window=args.window,
+        )
+        for seed in range(1, args.seeds + 1)
+    ]
 
     def stat(key: str) -> tuple[float, float, float]:
         values = sorted(row[key] for row in rows)
@@ -135,7 +197,8 @@ def main(argv: list[str]) -> int:
     s1, b1 = stat("spiking_hit1"), stat("baseline_hit1")
     s5, b5 = stat("spiking_hit5"), stat("baseline_hit5")
     print(
-        f"gold：{len(memories)} 条记忆 / {len(queries)} 条查询；种子 {len(rows)}；预筛前 {args.prefilter} 条"
+        f"gold：{len(memories)} 条记忆 / {len(queries)} 条查询；种子 {len(rows)}；"
+        f"预筛前 {args.prefilter} 条；膜 {args.membrane} D={args.depth} K={args.window}"
     )
     print(
         f"A1 hit@1  群体 {s1[0]:.3f} [{s1[1]:.3f}, {s1[2]:.3f}]   基线 {b1[0]:.3f} [{b1[1]:.3f}, {b1[2]:.3f}]   差 {s1[0] - b1[0]:+.3f}"
@@ -144,6 +207,25 @@ def main(argv: list[str]) -> int:
     aucs = [auroc(row["feature"], row["label"]) for row in rows]
     print(f"B  AUROC  群体 {statistics.median(aucs):.3f} [{min(aucs):.3f}, {max(aucs):.3f}]")
     print(f"A1 判据（≥ +0.05）：{'过' if s1[0] - b1[0] >= 0.05 else '不过'}")
+    if args.out is not None:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(
+            json.dumps(
+                {
+                    "membrane": args.membrane,
+                    "depth": args.depth,
+                    "window": args.window,
+                    "seeds": args.seeds,
+                    "rows": rows,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        print(f"原始结果已写入 {args.out}")
     return 0
 
 

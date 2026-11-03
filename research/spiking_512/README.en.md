@@ -42,3 +42,25 @@ uv run python research/spiking_512/run_512.py --seeds 3
 (2) `re.split(r"\W+")` does not work for Chinese (the whole sentence became one token) ->
 character bigrams. Both changes touched the **encoder**, never the criteria; only then did the
 baseline return to a credible 0.259.
+
+## TI-LIF revision (2026-11-03, 10 projection seeds; prereg in [prereg_tilif.md](prereg_tilif.md))
+
+Signed multi-level spikes (TI-LIF, D=1/2) and K-window averaging (K=5, **five independent
+projections**) each get one arm:
+
+| Arm | hit@1 | hit@5 | gating AUROC |
+| :--- | ---: | ---: | ---: |
+| ALIF K=1 | 0.012 | 0.082 | 0.410 |
+| TI-LIF D=1 K=1 | 0.012 | 0.047 | 0.406 |
+| TI-LIF D=2 K=1 | 0.012 | 0.047 | 0.410 |
+| ALIF K=5 | **0.035** | **0.100** | 0.412 |
+| TI-LIF D=2 K=5 | 0.012 | 0.059 | 0.369 |
+| Lexical baseline (assoc-code cosine) | **0.259** | **0.424** | **0.825** |
+
+Criteria A1', A1'', A2', B1 and B1' **all fail**. The K-window positive control (R0b)
+passes: ALIF goes from 0.012 to 0.035 hit@1 (+2.3pp), so the K-window really introduces
+variance; TI-LIF does not benefit from it. The gating baseline here is the lexical top-1
+cosine (AUROC 0.825), not 1.000 -- the spiking arms are still 0.41 behind.
+
+**Conclusion unchanged**: TI-LIF does not rescue recall or gating; neither is wired.
+Raw JSON under `sweep_results/spiking_512_tilif/`.
