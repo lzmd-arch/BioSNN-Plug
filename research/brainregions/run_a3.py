@@ -30,7 +30,7 @@ A3_GAIN = 0.05
 A3_TIME_RATIO = 1.5
 
 
-def build(n_in: int, n_out: int, taps: int, n_rec: int = N_REC) -> MultiTapEProp:
+def build(n_in: int, n_out: int, taps: int, n_rec: int = N_REC, seed: int = SEED) -> MultiTapEProp:
     return MultiTapEProp(
         n_in,
         n_rec,
@@ -39,7 +39,7 @@ def build(n_in: int, n_out: int, taps: int, n_rec: int = N_REC) -> MultiTapEProp
         fan_in=FAN_IN,
         regions=[RegionSpec("uniform", n_rec, tau=20.0, threshold=0.62)],
         intra_fraction=0.0,
-        generator=torch.Generator().manual_seed(SEED),
+        generator=torch.Generator().manual_seed(seed),
     )
 
 
@@ -58,15 +58,15 @@ def evaluate(model: MultiTapEProp, test, device: str) -> dict:
     return {"accuracy": correct / total, "firing_rate": fired / seen}
 
 
-def run_once(taps: int, device: str) -> dict:
-    torch.manual_seed(SEED)
-    train = load_smnist("data", split="train", seed=SEED)
-    test = load_smnist("data", split="test", seed=SEED)
+def run_once(taps: int, device: str, seed: int = SEED) -> dict:
+    torch.manual_seed(seed)
+    train = load_smnist("data", split="train", seed=seed)
+    test = load_smnist("data", split="test", seed=seed)
     inputs, targets = train.batch(torch.arange(len(train)))
     inputs, targets = inputs.to(device), targets.to(device)
     n_out = int(max(int(train.labels.max()), int(test.labels.max()))) + 1
-    model = build(int(inputs.shape[2]), n_out, taps).to(device)
-    generator = torch.Generator().manual_seed(SEED + 991)
+    model = build(int(inputs.shape[2]), n_out, taps, seed=seed).to(device)
+    generator = torch.Generator().manual_seed(seed + 991)
     started = time.perf_counter()
     for _ in range(EPOCHS):
         permutation = torch.randperm(inputs.shape[1], generator=generator).to(device)
