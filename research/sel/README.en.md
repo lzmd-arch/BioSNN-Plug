@@ -25,3 +25,19 @@ repository root).
 Before P4, run the **logits probe** (`probe_logprobs.py`): how much of the teacher's
 `top_logprobs` is reachable and what the coverage looks like. If it is unavailable, fall back to
 sequence-level CE and state plainly that this is "supervised fine-tuning".
+
+## P4 student (pilot, 1 seed x 1500 steps; not the final verdict)
+
+| Arm | test top-1 | test CE | seconds |
+| :--- | ---: | ---: | ---: |
+| bigram (denominator) | 0.6457 | -- | -- |
+| GRU(256) | **0.8787** | 0.5019 | 14.4 |
+| ALIF(512) | 0.8641 | **0.4227** | 105.5 |
+| TI-LIF(512, D=3) | 0.8663 | 0.5003 | 115.1 |
+
+- P4-1 (>= 0.7457): both spiking arms pass; P4-2 (>= GRU - 5pp = 0.8287): both pass;
+- **P4-3 fails**: TI-LIF CE is **1.18x** ALIF (the criterion asks <= 0.90x) -- ternary spikes
+  do not lower cross-entropy on this character task;
+- P4-4 is N/A (see `prereg_p4_amend1.md`); P4-5 not done yet;
+- This is a **pilot**: the preregistration asks for 5 seeds x 10k steps; the verdict waits
+  for the full run.
