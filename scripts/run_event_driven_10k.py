@@ -14,7 +14,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
 from research.eprop.event_driven import EventDrivenEProp  # noqa: E402
-from research.eprop.tasks import load_smnist  # noqa: E402
+from research.eprop.tasks import load_shd, load_smnist  # noqa: E402
 
 OUT = REPO / "sweep_results" / "event_driven_10k" / "summary.json"
 
@@ -30,6 +30,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--data-dir", default="data")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--device", default=None, choices=[None, "cpu", "cuda"])
+    parser.add_argument("--dataset", default="smnist", choices=["smnist", "shd"])
     parser.add_argument(
         "--predict-chunk",
         type=int,
@@ -42,15 +43,17 @@ def main(argv: list[str] | None = None) -> int:
     torch.manual_seed(args.seed)
     if torch.cuda.is_available():
         torch.cuda.reset_peak_memory_stats()
-    train = load_smnist(args.data_dir, split="train", seed=args.seed)
-    test = load_smnist(args.data_dir, split="test", seed=args.seed)
+    loader = load_shd if args.dataset == "shd" else load_smnist
+    train = loader(args.data_dir, split="train", seed=args.seed)
+    test = loader(args.data_dir, split="test", seed=args.seed)
     inputs, targets = train.batch(torch.arange(min(args.samples, len(train))))
     inputs, targets = inputs.to(device), targets.to(device)
     n_in = int(inputs.shape[2])
+    n_classes = int(max(int(train.labels.max()), int(test.labels.max()))) + 1
     model = EventDrivenEProp(
         n_in,
         args.n_rec,
-        10,
+        n_classes,
         fan_in=args.fan_in,
         n_refractory=2,
         generator=torch.Generator().manual_seed(args.seed),
