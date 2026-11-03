@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 from collections import defaultdict
+from itertools import pairwise
 from pathlib import Path
 
 BOS = "<bos>"
@@ -37,7 +38,7 @@ def encode(text: str, index: dict[str, int]) -> list[int]:
 def train_counts(sequences: list[list[int]], size: int) -> list[list[float]]:
     counts = [[0.0] * size for _ in range(size)]
     for seq in sequences:
-        for left, right in zip(seq, seq[1:]):
+        for left, right in pairwise(seq):
             counts[left][right] += 1.0
     return counts
 
@@ -46,8 +47,10 @@ def top1_accuracy(counts: list[list[float]], sequences: list[list[int]], k: floa
     size = len(counts)
     hits = total = 0
     for seq in sequences:
-        for left, right in zip(seq, seq[1:]):
-            row = [(counts[left][j] + k) if j != left else (counts[left][j] + k) for j in range(size)]
+        for left, right in pairwise(seq):
+            row = [
+                (counts[left][j] + k) if j != left else (counts[left][j] + k) for j in range(size)
+            ]
             best = max(range(size), key=row.__getitem__)
             hits += int(best == right)
             total += 1

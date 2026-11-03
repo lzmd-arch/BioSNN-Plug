@@ -52,7 +52,9 @@ def _probe_openai(base_url: str, model: str, *, api_key: str = "local") -> dict:
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     with httpx.Client(timeout=60.0) as client:
-        response = client.post(f"{base_url.rstrip('/')}/chat/completions", json=body, headers=headers)
+        response = client.post(
+            f"{base_url.rstrip('/')}/chat/completions", json=body, headers=headers
+        )
     report: dict = {"url": base_url, "status": response.status_code}
     try:
         data = response.json()
@@ -80,7 +82,13 @@ def _probe_openai(base_url: str, model: str, *, api_key: str = "local") -> dict:
 
 
 def _probe_ollama(base_url: str, model: str) -> dict:
-    body = {"model": model, "messages": PROMPT, "stream": False, "logprobs": True, "top_logprobs": 5}
+    body = {
+        "model": model,
+        "messages": PROMPT,
+        "stream": False,
+        "logprobs": True,
+        "top_logprobs": 5,
+    }
     with httpx.Client(timeout=120.0) as client:
         response = client.post(f"{base_url.rstrip('/')}/api/chat", json=body)
     report: dict = {"url": base_url + "/api/chat", "status": response.status_code}
@@ -120,7 +128,9 @@ def main(argv: list[str]) -> int:
         reports.append({"teacher": "llama.cpp", **_probe_openai(base_url, args.llama_model)})
         runtime.stop()
     if args.ollama_model:
-        reports.append({"teacher": "ollama/native", **_probe_ollama(args.ollama_url, args.ollama_model)})
+        reports.append(
+            {"teacher": "ollama/native", **_probe_ollama(args.ollama_url, args.ollama_model)}
+        )
         reports.append(
             {
                 "teacher": "ollama/openai",
