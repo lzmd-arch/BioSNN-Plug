@@ -61,3 +61,4 @@
 | [ADR-0030](ADR-0030-mainline-shift-to-spiking-sos.md) | 主线切换到脉冲 SoS：三条前提先落地，未落地不跑训练，并写下回退条件 | 已采纳 |
 | [ADR-0031](ADR-0031-mainline-to-scale.md) | 主线从脉冲 SoS 切到规模实验：H1' 两次不支持；5k–8k 的精度-规模曲线与资源曲线，判据先落盘 | 已采纳 |
 | [ADR-0032](ADR-0032-sel-research-track.md) | SEL 脉冲表达层作为研究项：分阶段、不占主线、不接召回/门控、不发布权重 | 已采纳 |
+| [ADR-0033](ADR-0033-capacity-axis-archival.md) | 容量轴归档：加神经元与加连接都买不到精度（8k 附近是膝点），默认 8k + fan_in 32 | 已采纳 |
