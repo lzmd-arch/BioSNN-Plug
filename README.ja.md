@@ -93,7 +93,7 @@
 
 | 部分 | 状態 | 最終更新 |
 | :--- | :--- | :--- |
-| `biosnn-bus` スケルトンライブラリ | **0.4.0（音声プラグインは 0.3.0 から。PyPI 公開済み）。リポジトリには 0.5.0（`AdaptiveMembrane`、numpy の ALIF）があるが未公開**——プラグインインターフェース、登録と検出、スパイクバス、**TAAF 時間注意融合**（rate-based gating：重みは各系統の発火率から計算、**逆伝播なし**）；`Used in:` [Axo](https://github.com/lzmd-arch/Axo)（出荷中のターミナル）：常駐プロセス `axo.busd` が `SpikeBus` を生成して継続的に `step()` を呼び（融合＋疎ランダム射影）、新しい記憶は独自の `ModalityPlugin` で符号化してバスへ入る。UI は stdlib が書く JSONL イベントのみを読み、本ライブラリを import しない | 2026-11-02 |
+| `biosnn-bus` スケルトンライブラリ | **0.6.0（音声プラグインは 0.3.0 から。PyPI 公開済み）**——0.5.0 で `AdaptiveMembrane`（numpy の ALIF）、0.6.0 で `TernaryMembrane`（符号付き多値膜、ALIF の上位集合）を追加——プラグインインターフェース、登録と検出、スパイクバス、**TAAF 時間注意融合**（rate-based gating：重みは各系統の発火率から計算、**逆伝播なし**）；`Used in:` [Axo](https://github.com/lzmd-arch/Axo)（出荷中のターミナル）：常駐プロセス `axo.busd` が `SpikeBus` を生成して継続的に `step()` を呼び（融合＋疎ランダム射影）、新しい記憶は独自の `ModalityPlugin` で符号化してバスへ入る。UI は stdlib が書く JSONL イベントのみを読み、本ライブラリを import しない | 2026-11-03 |
 | モダリティプラグイン | **4 本**：`image_diff`（DVS イベント符号化）、`mnist_pulse`（発火率）、**`text_zscore`**（凍結ローカル embedding ＋ z-score top-k 集団符号化）、**`audio_cochlea`**（対数帯域分解＋発火率；0.3.0 で PyPI 公開済み） | 2026-10-18 |
 | 研究コード：三つの検証ライン | **第 1 フェーズの実装完了**——W1 Hebbian 知覚 MNIST **97.79%**（既定の閉形式読み出し；SGD 読み出し 98.01%）✓；W2 e-prop 系列 sMNIST **0.7764**（30 エポック × 5 シード）→ **0.8889**（**公式收官**：**LIF** @ lr=1e-2 @ 250 エポック、収束；同条件の ALIF 0.8831 は対照；**同予算の BPTT 対照 0.9630、7.41 ポイント先行**——この差はそのまま書く：局所規則は依然として誤差逆伝播に劣る；**レシピ待遇の定量**：BPTT の最適化器の形式は小さい学習率で **+8.53 pp**、最終的に選んだ学習率では **+0.88 pp**（タイ帯の内側）——動作点では両腕のレシピは比較可能）；lr 交互扫描完了、**LIF は四つの lr 全域で先行** ✓；W3 R-STDP CartPole 中央値 **237.8 歩**（基準 ≥ 200）✓。数値と再現記録は[再現記録](docs/reproducibility.ja.md) 参照 | 2026-10-18 |
 | **ネットワーク規模** | **スパイキングニューロン 256 個**（W2）。W1 には**レート型**ユニット 3,072 個が別にある（スパイキングニューロンには数えない）。計画書 §2.2 の認知コアは約 5 万を目標——**約 195 倍の隔たり**。詳細は [research/README](research/README.ja.md) | 2026-10-18 |
@@ -121,7 +121,7 @@
 - **知覚層は凍結した事前学習済みフロントエンドを使ってよい**（境界宣言、[計画書 §2.3](BioSNN-Plug_项目计划书_v6.3.md) 参照）：「純粋な局所学習」という主張の範囲は**シナプス学習規則**であって、**入力エンコーダではありません**。判定は「パラメータが勾配に入るか」であって「モデルが大きいか」ではない——凍結した 2GB の事前学習済み embedding は、固定ランダム射影とこの点で等価です。逆に、100 行のローカルエンコーダが逆伝播で自身のパラメータを学習するなら、この境界に**違反**します。テキストプラグインの `nomic-embed-text`（Ollama、768 次元）は凍結です。
 - （スケルトンライブラリがなぜ独立したパッケージなのか、なぜこれらを意図的に含めないのかは [ADR-0001](docs/adr/ADR-0001-skeleton-as-separate-library.ja.md) 参照。）
 - **2 つのパッケージが PyPI に公開済み**です：骨格ライブラリ `pip install biosnn-bus`（**0.4.0**：`ProjectedFusionStrategy` 能力プロトコル、`EmbeddingBackend` 注入点の公開、`SpikeBus.step()` の dtype 契約統一）；第 5 フェーズの MCP サーバ `pip install biosnn-mcp`（**0.3.0**：読み取り版 9 ツール、書き込み版 13 ツール、既定は読み取り専用、呼び出しごとに監査）。どちらも PyPI の trusted publishing（OIDC、トークンを保存しません）で、[release.yml](.github/workflows/release.yml)・[release-mcp.yml](.github/workflows/release-mcp.yml) に手順があります。
-- **骨格ライブラリはリポジトリ内で 0.5.0（未公開）**：`AdaptiveMembrane` を追加しました。numpy だけで書いた適応しきい値 LIF（ALIF）で、研究層の torch 版 `ALIFCell` と項目ごとに対応（同じ入力に対する期待スパイク列をテストに固定）。`beta=0` で LIF に退化します。プラグイン作者向けの**参照実装**であり、Axo の本線には**接続していません**。使い方は[パッケージ README](packages/biosnn-bus/README.ja.md) を参照。
+- **骨格ライブラリは 0.6.0 として公開済み**：0.5.0 の `AdaptiveMembrane` は numpy だけの適応しきい値 LIF（ALIF）で、研究層の torch 版 `ALIFCell` と項目ごとに対応します。0.6.0 の `TernaryMembrane` はスパイクを 0/1 から `-D…+D` に広げ、`depth=1, signed=False` では `AdaptiveMembrane` と**ビット一致**します。どちらもプラグイン作者向けの**参照実装**で、Axo の本線には**接続していません**。使い方は[パッケージ README](packages/biosnn-bus/README.ja.md) を参照。
 
 ## 探索項目（現行スケジュール外）
 
