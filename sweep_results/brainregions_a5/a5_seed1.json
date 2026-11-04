@@ -1,0 +1,21 @@
+{
+ "kind": "line A v5: multi-tap readout on SHD",
+ "n_rec": 8192,
+ "fan_in": 32,
+ "taps": 28,
+ "epochs": 10,
+ "seed": 1,
+ "test_samples": 1000,
+ "reference_last_step": 0.338,
+ "accuracy": 0.745,
+ "firing_rate": 0.0572,
+ "peak_mb": 4171.1,
+ "elapsed_s": 3442.8,
+ "criteria": {
+  "f0_not_broken": true,
+  "f1_reproduces": true,
+  "f2_not_worse": true,
+  "f3_fits_memory": true,
+  "gain": 0.407
+ }
+}
