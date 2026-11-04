@@ -66,6 +66,7 @@
 | 任务感知 CIL | ACC **0.8195** / AF **0.0** | 需要 oracle 给任务 ID，**构造性通过**（[ADR-0018](adr/ADR-0018-task-aware-cl-gate.md)） |
 | 纯 CIL | ACC **0.0876** / AF **0.290** | 不可达 |
 | 任务推断 | **0.5855 / 0.1285** | 最好的一档，仍远不够喂给 CIL |
+| 任务信息天花板（2026-11-04 诊断） | 线性 **0.5363** / 非局部最好 **0.6512** | 联合训练、非 CIL 可用的标尺；线性上限与局部路由器几乎相等，非线性只多给 12pp。见 [`continual_v3_task_information`](../sweep_results/continual_v3_task_information/README.md) |
 | 重学快 3× | 配对中位 **0.957**、校准约 **1.06** | v1–v3 均未达（[ADR-0019](adr/ADR-0019-stage-four-entry-decoupled-from-relearn.md)） |
 
 ## 4. 边界（读上面的数字时要知道的）
