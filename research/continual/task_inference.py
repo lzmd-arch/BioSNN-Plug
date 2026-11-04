@@ -85,6 +85,26 @@ def _task_stats_full(
     return np.mean(means, axis=0), np.linalg.inv(covariance)
 
 
+def _scatter(features: np.ndarray, labels: np.ndarray, classes: np.ndarray):
+    """本任务的类内散布（未除以自由度）与自由度。"""
+    means = [features[labels == label].mean(axis=0) for label in classes]
+    centered = [features[labels == label] - means[index] for index, label in enumerate(classes)]
+    count = sum(row.shape[0] for row in centered)
+    scatter = sum(row.T @ row for row in centered)
+    return scatter, count - len(classes)
+
+
+def _inverse_covariance(
+    scatter: np.ndarray, freedom: int, shrinkage: float = 0.1, eps: float = 1e-6
+):
+    """散布 → 收缩后的逆协方差（与 `_task_stats_full` 同一口径）。"""
+    covariance = scatter / max(freedom, 1)
+    diagonal = np.diag(np.diag(covariance))
+    covariance = (1.0 - shrinkage) * covariance + shrinkage * diagonal
+    covariance = covariance + eps * np.eye(covariance.shape[0])
+    return np.linalg.inv(covariance)
+
+
 def _route_full(
     features: np.ndarray,
     means: list[np.ndarray],
@@ -143,10 +163,17 @@ def run_with_task_inference(
     routing: str = "routed",
 ) -> dict:
     """跑一个种子的 task-inference 臂；``routing`` 见函数内的白名单。"""
-    if routing not in ("routed", "mahalanobis", "mahalanobis-full", "classifier", "oracle"):
+    if routing not in (
+        "routed",
+        "mahalanobis",
+        "mahalanobis-full",
+        "mahalanobis-shared",
+        "classifier",
+        "oracle",
+    ):
         raise ValueError(
-            "routing 只能是 routed / mahalanobis / mahalanobis-full / classifier / oracle，"
-            f"收到 {routing!r}。"
+            "routing 只能是 routed / mahalanobis / mahalanobis-full / mahalanobis-shared / "
+            f"classifier / oracle，收到 {routing!r}。"
         )
     np.random.seed(seed)
     train, test = load_cifar100(data_root)
@@ -165,6 +192,9 @@ def run_with_task_inference(
     prototypes: list[np.ndarray] = []
     variances: list[np.ndarray] = []
     inverse_covariances: list[np.ndarray] = []
+    shared_scatter = np.zeros((train_features.shape[1], train_features.shape[1]))
+    shared_freedom = 0
+    shared_inverse: np.ndarray | None = None
     head_train_accuracy: list[float] = []
     head_weight_norm: list[float] = []
     classifier = None
@@ -214,6 +244,11 @@ def run_with_task_inference(
         if routing == "mahalanobis-full":
             _, inverse = _task_stats_full(features, labels, classes)
             inverse_covariances.append(inverse)
+        if routing == "mahalanobis-shared":
+            scatter, freedom = _scatter(features, labels, classes)
+            shared_scatter += scatter
+            shared_freedom += freedom
+            shared_inverse = _inverse_covariance(shared_scatter, shared_freedom)
         if classifier is not None:
             task_labels = np.full(features.shape[0], t, dtype=int)
             _train_head(
@@ -237,6 +272,8 @@ def run_with_task_inference(
                 inferred = _route(x, prototypes[: t + 1], variances[: t + 1])
             elif routing == "mahalanobis-full":
                 inferred = _route_full(x, prototypes[: t + 1], inverse_covariances[: t + 1])
+            elif routing == "mahalanobis-shared":
+                inferred = _route_full(x, prototypes[: t + 1], [shared_inverse] * (t + 1))
             elif routing == "classifier":
                 seen_logits = classifier.predict(x)[:, : t + 1]
                 inferred = np.argmax(seen_logits, axis=1)
@@ -262,6 +299,8 @@ def run_with_task_inference(
             inferred = _route(x, prototypes, variances)
         elif routing == "mahalanobis-full":
             inferred = _route_full(x, prototypes, inverse_covariances)
+        elif routing == "mahalanobis-shared":
+            inferred = _route_full(x, prototypes, [shared_inverse] * len(prototypes))
         elif routing == "classifier":
             inferred = np.argmax(classifier.predict(x), axis=1)
         else:
