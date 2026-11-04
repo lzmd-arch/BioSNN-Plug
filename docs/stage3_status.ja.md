@@ -69,7 +69,8 @@
 | :--- | :--- | :--- |
 | タスク認識 CIL | ACC **0.8195** / AF **0.0** | タスク ID の oracle が必要、**構成的通過**（[ADR-0018](adr/ADR-0018-task-aware-cl-gate.ja.md)） |
 | 純 CIL | ACC **0.0876** / AF **0.290** | 到達不能 |
-| タスク推論 | **0.5855 / 0.1285** | 最良の設定でも CIL に渡すには遠い |
+| タスク推論 | **0.5855 / 0.1285** | ResNet18 特徴での最良設定で、CIL に渡すにはまだ遠い |
+| **ViT-B/16 特徴（2026-11-04）** | 上限 **0.9192 / 0.0**、実運用 **0.7504 / 0.0916** | +16.5pp だが 0.80 には届かず；内挿ではルーティング約 0.773 が必要で、同時訓練の上限は 0.7912（余裕 1.8pp）。参照：[`continual_v3_cil_vit`](../sweep_results/continual_v3_cil_vit/README.md) |
 | タスク情報の上限（2026-11-04 の診断） | ResNet18 **0.6512** / ResNet50 **0.7166** / ViT-B/16 **0.7912** | 全タスク同時訓練による物差しで CIL では使えない；**上限はバックボーンの分類力に追随する**（H-4 は三つとも成立）、ViT は 0.80 に 0.9pp 届かず。参照：[`continual_v3_task_information`](../sweep_results/continual_v3_task_information/README.md)、[`continual_v3_backbone_ceiling`](../sweep_results/continual_v3_backbone_ceiling/README.md) |
 | ストリーム上のタスク境界検出（2026-11-04、v1→v2） | v1 F1 **0.7826**（14 検出／真 9）→ v2 F1 **0.8750**（7 検出／真 9） | 評価ストリームのブロック構造を利用、**逐次サンプルの推論ではない**；v2（白色化＋ストリーム単位の閾値）で誤検出を 1 ストリームあたり 0.04 回まで落としたが、ノイズ帯に入る 2 境界を取りこぼし（7 セグメント）。参照：[`v1`](../sweep_results/continual_v3_boundary_detection/README.md)、[`v2`](../sweep_results/continual_v3_boundary_detection_v2/README.md) |
 | 再学習 3× 高速化 | ペア中央値 **0.957**、校正は約 **1.06** | v1–v3 いずれも未達（[ADR-0019](adr/ADR-0019-stage-four-entry-decoupled-from-relearn.ja.md)） |

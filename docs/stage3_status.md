@@ -65,7 +65,8 @@
 | :--- | :--- | :--- |
 | 任务感知 CIL | ACC **0.8195** / AF **0.0** | 需要 oracle 给任务 ID，**构造性通过**（[ADR-0018](adr/ADR-0018-task-aware-cl-gate.md)） |
 | 纯 CIL | ACC **0.0876** / AF **0.290** | 不可达 |
-| 任务推断 | **0.5855 / 0.1285** | 最好的一档，仍远不够喂给 CIL |
+| 任务推断 | **0.5855 / 0.1285** | ResNet18 特征下最好的一档，仍远不够喂给 CIL |
+| **换 ViT-B/16 特征（2026-11-04）** | 上界 **0.9192 / 0.0**；可部署 **0.7504 / 0.0916** | +16.5pp，但仍未过 0.80；内插显示需路由 ≈0.773，而联合上限是 0.7912（余量 1.8pp）。见 [`continual_v3_cil_vit`](../sweep_results/continual_v3_cil_vit/README.md) |
 | 任务信息天花板（2026-11-04 诊断） | ResNet18 **0.6512** / ResNet50 **0.7166** / ViT-B/16 **0.7912** | 联合训练、非 CIL 可用的标尺；**天花板跟着骨干的分类力走**（H-4 三个骨干全过），ViT 差 0.9pp 未过 0.8。见 [`continual_v3_task_information`](../sweep_results/continual_v3_task_information/README.md)、[`continual_v3_backbone_ceiling`](../sweep_results/continual_v3_backbone_ceiling/README.md) |
 | 流上任务边界检测（2026-11-04 诊断，v1→v2） | v1 F1 **0.7826**（14 报/9 真）→ v2 F1 **0.8750**（7 报/9 真） | 利用评测流的分块结构，**不是逐样本推断**；v2 白化+流级标定把误报清到 0.04 次/流，但漏掉 2 个落在噪声里的边界（段数 7≠9）。见 [`v1`](../sweep_results/continual_v3_boundary_detection/README.md)、[`v2`](../sweep_results/continual_v3_boundary_detection_v2/README.md) |
 | 重学快 3× | 配对中位 **0.957**、校准约 **1.06** | v1–v3 均未达（[ADR-0019](adr/ADR-0019-stage-four-entry-decoupled-from-relearn.md)） |
