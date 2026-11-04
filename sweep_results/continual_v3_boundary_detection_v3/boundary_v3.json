@@ -1,0 +1,149 @@
+{
+ "kind": "CL evaluation-stream task-boundary detection v3 (two statistics, stream-level thresholds)",
+ "seed": 0,
+ "extra_seeds": [
+  1,
+  2,
+  3
+ ],
+ "window": 64,
+ "step": 10,
+ "tolerance": 100,
+ "tau_raw": 0.1802,
+ "tau_whitened": 4.155,
+ "null_alarms": [
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  1,
+  0,
+  0,
+  1,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+ ],
+ "main": {
+  "seed": 0,
+  "peaks": [
+   1994,
+   3004,
+   5004,
+   5994,
+   7004,
+   8004,
+   9004
+  ],
+  "detected": 7,
+  "f1": 0.875,
+  "routing": 0.1006
+ },
+ "extras": [
+  {
+   "seed": 1,
+   "peaks": [
+    1004,
+    2004,
+    3004,
+    4004,
+    5004,
+    8004,
+    9004
+   ],
+   "detected": 7,
+   "f1": 0.875,
+   "routing": 0.598
+  },
+  {
+   "seed": 2,
+   "peaks": [
+    2004,
+    2994,
+    4004,
+    5004,
+    6004,
+    6994,
+    8004,
+    9004
+   ],
+   "detected": 8,
+   "f1": 0.9412,
+   "routing": 0.1012
+  },
+  {
+   "seed": 3,
+   "peaks": [
+    2004,
+    2994,
+    5004,
+    5994,
+    7994,
+    9004
+   ],
+   "detected": 6,
+   "f1": 0.8,
+   "routing": 0.1006
+  }
+ ],
+ "truth": [
+  1000,
+  2000,
+  3000,
+  4000,
+  5000,
+  6000,
+  7000,
+  8000,
+  9000
+ ],
+ "criteria": {
+  "e0_stream_fp_controlled": true,
+  "e1_segment_count": false,
+  "e2_boundary_f1": true,
+  "e3_routing": false,
+  "e4_control_quiet": true,
+  "e5_holds_across_seeds": false,
+  "null_alarms_mean": 0.06,
+  "control_f1": 0.0
+ }
+}
