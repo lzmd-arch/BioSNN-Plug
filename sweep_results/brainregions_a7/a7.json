@@ -1,0 +1,40 @@
+{
+ "kind": "line A v7: k ladder at two readout decays (SHD)",
+ "n_rec": 8192,
+ "taps": 7,
+ "epochs": 10,
+ "seed": 0,
+ "arms": {
+  "0.99": {
+   "taps": 7,
+   "accuracy": 0.657,
+   "firing_rate": 0.122,
+   "elapsed_s": 2539.7,
+   "peak_mb": 4159.5
+  },
+  "0.95": {
+   "taps": 7,
+   "accuracy": 0.726,
+   "firing_rate": 0.1041,
+   "elapsed_s": 2611.6,
+   "peak_mb": 4159.5
+  }
+ },
+ "known": {
+  "0.95": {
+   "1": 0.338,
+   "28": 0.759
+  },
+  "0.99": {
+   "1": 0.425,
+   "28": 0.71
+  }
+ },
+ "criteria": {
+  "l0_both_learn": true,
+  "l1_main_share": true,
+  "l2_saturated": false,
+  "l3_other_decay": true,
+  "share_1_to_7": 0.814
+ }
+}
