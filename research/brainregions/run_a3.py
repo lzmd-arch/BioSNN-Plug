@@ -30,7 +30,14 @@ A3_GAIN = 0.05
 A3_TIME_RATIO = 1.5
 
 
-def build(n_in: int, n_out: int, taps: int, n_rec: int = N_REC, seed: int = SEED) -> MultiTapEProp:
+def build(
+    n_in: int,
+    n_out: int,
+    taps: int,
+    n_rec: int = N_REC,
+    seed: int = SEED,
+    decay_out: float = 0.95,
+) -> MultiTapEProp:
     return MultiTapEProp(
         n_in,
         n_rec,
@@ -40,6 +47,7 @@ def build(n_in: int, n_out: int, taps: int, n_rec: int = N_REC, seed: int = SEED
         regions=[RegionSpec("uniform", n_rec, tau=20.0, threshold=0.62)],
         intra_fraction=0.0,
         generator=torch.Generator().manual_seed(seed),
+        decay_out=decay_out,
     )
 
 
