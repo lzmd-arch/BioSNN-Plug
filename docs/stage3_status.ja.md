@@ -71,7 +71,7 @@
 | 純 CIL | ACC **0.0876** / AF **0.290** | 到達不能 |
 | タスク推論 | **0.5855 / 0.1285** | 最良の設定でも CIL に渡すには遠い |
 | タスク情報の上限（2026-11-04 の診断） | ResNet18 **0.6512** / ResNet50 **0.7166** / ViT-B/16 **0.7912** | 全タスク同時訓練による物差しで CIL では使えない；**上限はバックボーンの分類力に追随する**（H-4 は三つとも成立）、ViT は 0.80 に 0.9pp 届かず。参照：[`continual_v3_task_information`](../sweep_results/continual_v3_task_information/README.md)、[`continual_v3_backbone_ceiling`](../sweep_results/continual_v3_backbone_ceiling/README.md) |
-| ストリーム上のタスク境界検出（2026-11-04 の診断） | 9/9 命中・誤差 6 サンプル以内、F1 **0.7826** | 評価ストリームのブロック構造を利用、**逐次サンプルの推論ではない**；5 回の誤検出で 0.80 に届かず。参照：[`continual_v3_boundary_detection`](../sweep_results/continual_v3_boundary_detection/README.md) |
+| ストリーム上のタスク境界検出（2026-11-04、v1→v2） | v1 F1 **0.7826**（14 検出／真 9）→ v2 F1 **0.8750**（7 検出／真 9） | 評価ストリームのブロック構造を利用、**逐次サンプルの推論ではない**；v2（白色化＋ストリーム単位の閾値）で誤検出を 1 ストリームあたり 0.04 回まで落としたが、ノイズ帯に入る 2 境界を取りこぼし（7 セグメント）。参照：[`v1`](../sweep_results/continual_v3_boundary_detection/README.md)、[`v2`](../sweep_results/continual_v3_boundary_detection_v2/README.md) |
 | 再学習 3× 高速化 | ペア中央値 **0.957**、校正は約 **1.06** | v1–v3 いずれも未達（[ADR-0019](adr/ADR-0019-stage-four-entry-decoupled-from-relearn.ja.md)） |
 
 ## 4. 境界（上の数字を読むときに知っておくこと）

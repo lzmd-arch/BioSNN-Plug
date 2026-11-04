@@ -72,7 +72,7 @@ The full chain is in [`sweep_results/stage3_readout_audit.md`](../sweep_results/
 | Pure CIL | ACC **0.0876** / AF **0.290** | unreachable |
 | Task inference | **0.5855 / 0.1285** | the best setting, still far from feeding CIL |
 | Task-information ceiling (2026-11-04 diagnostic) | ResNet18 **0.6512** / ResNet50 **0.7166** / ViT-B/16 **0.7912** | a joint-training ruler, not usable in CIL; **the ceiling tracks the backbone's classification strength** (H-4 holds on all three), ViT falls 0.9pp short of 0.80. See [`continual_v3_task_information`](../sweep_results/continual_v3_task_information/README.md), [`continual_v3_backbone_ceiling`](../sweep_results/continual_v3_backbone_ceiling/README.md) |
-| Stream task-boundary detection (2026-11-04 diagnostic) | 9/9 hit within 6 samples; F1 **0.7826** | exploits the evaluation stream's block structure, **not per-sample inference**; 5 false positives, misses the 0.80 bar. See [`continual_v3_boundary_detection`](../sweep_results/continual_v3_boundary_detection/README.md) |
+| Stream task-boundary detection (2026-11-04, v1->v2) | v1 F1 **0.7826** (14 fired / 9 true) -> v2 F1 **0.8750** (7 fired / 9 true) | exploits the evaluation stream's block structure, **not per-sample inference**; v2 (whitening + stream-level threshold) cuts false alarms to 0.04 per stream but misses two boundaries that sit inside the noise band (7 segments, not 9). See [`v1`](../sweep_results/continual_v3_boundary_detection/README.md), [`v2`](../sweep_results/continual_v3_boundary_detection_v2/README.md) |
 | Relearn 3x faster | paired median **0.957**, calibration about **1.06** | v1-v3 all unmet ([ADR-0019](adr/ADR-0019-stage-four-entry-decoupled-from-relearn.en.md)) |
 
 ## 4. Boundaries (what to know when reading the numbers above)
