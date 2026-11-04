@@ -33,21 +33,23 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="A5：SHD + 28 抽头")
     parser.add_argument("--out", type=Path, default=OUT)
     parser.add_argument("--tag", default="a5")
+    parser.add_argument("--seed", type=int, default=SEED)
     args = parser.parse_args(argv)
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    torch.manual_seed(SEED)
+    seed = args.seed
+    torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.reset_peak_memory_stats()
-    train = load_shd("data", split="train", seed=SEED)
-    test = load_shd("data", split="test", seed=SEED)
+    train = load_shd("data", split="train", seed=seed)
+    test = load_shd("data", split="test", seed=seed)
     inputs, targets = train.batch(torch.arange(len(train)))
     inputs, targets = inputs.to(device), targets.to(device)
     n_out = int(max(int(train.labels.max()), int(test.labels.max()))) + 1
-    model = build(int(inputs.shape[2]), n_out, TAPS).to(device)
+    model = build(int(inputs.shape[2]), n_out, TAPS, seed=seed).to(device)
     start = time.perf_counter()
     # 与 A3 同一口径：生成器只在循环外建一次，每个 epoch 抽不同的排列。
-    generator = torch.Generator().manual_seed(SEED + 991)
+    generator = torch.Generator().manual_seed(seed + 991)
     for _ in range(EPOCHS):
         permutation = torch.randperm(inputs.shape[1], generator=generator)
         for offset in range(0, inputs.shape[1], BATCH):
@@ -72,7 +74,7 @@ def main(argv: list[str] | None = None) -> int:
         "fan_in": FAN_IN,
         "taps": TAPS,
         "epochs": EPOCHS,
-        "seed": SEED,
+        "seed": seed,
         "test_samples": TEST_SAMPLES,
         "reference_last_step": REFERENCE_LAST_STEP,
         "accuracy": round(result["accuracy"], 4),
