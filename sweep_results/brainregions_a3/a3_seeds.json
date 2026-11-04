@@ -1,0 +1,36 @@
+{
+ "kind": "line A v3 amendment 1: extra seeds for taps=28",
+ "taps": 28,
+ "seeds": [
+  1,
+  2
+ ],
+ "taps1_by_seed": {
+  "0": 0.759,
+  "1": 0.762,
+  "2": 0.763
+ },
+ "rows": {
+  "1": {
+   "elapsed_s": 1159.8,
+   "accuracy": 0.873,
+   "firing_rate": 0.1188
+  },
+  "2": {
+   "elapsed_s": 1157.8,
+   "accuracy": 0.906,
+   "firing_rate": 0.1202
+  }
+ },
+ "criteria": {
+  "s0_both_learned": false,
+  "s1_every_seed_wins": true,
+  "s2_median_gain": true,
+  "gains": {
+   "0": 0.158,
+   "1": 0.111,
+   "2": 0.143
+  },
+  "median_gain": 0.143
+ }
+}
