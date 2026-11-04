@@ -28,7 +28,7 @@ FLOOR = 0.20
 HALF_GAIN = 0.421 / 2
 
 
-def run_arm(taps: int, device: str) -> dict:
+def run_arm(taps: int, device: str, decay: float = DECAY) -> dict:
     torch.manual_seed(SEED)
     if torch.cuda.is_available():
         torch.cuda.reset_peak_memory_stats()
@@ -37,7 +37,7 @@ def run_arm(taps: int, device: str) -> dict:
     inputs, targets = train.batch(torch.arange(len(train)))
     inputs, targets = inputs.to(device), targets.to(device)
     n_out = int(max(int(train.labels.max()), int(test.labels.max()))) + 1
-    model = build(int(inputs.shape[2]), n_out, taps, decay_out=DECAY).to(device)
+    model = build(int(inputs.shape[2]), n_out, taps, decay_out=decay).to(device)
     generator = torch.Generator().manual_seed(SEED + 991)
     start = time.perf_counter()
     for _ in range(EPOCHS):
@@ -45,7 +45,7 @@ def run_arm(taps: int, device: str) -> dict:
         for offset in range(0, inputs.shape[1], BATCH):
             index = permutation[offset : offset + BATCH].to(device)
             model.update(inputs[:, index], targets[index])
-        print(f"  taps={taps} epoch {time.perf_counter() - start:.0f}s", flush=True)
+        print(f"  decay={decay} taps={taps} epoch {time.perf_counter() - start:.0f}s", flush=True)
     result = evaluate(model, test, device)
     return {
         "taps": taps,
