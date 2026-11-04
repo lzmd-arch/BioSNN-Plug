@@ -1,0 +1,32 @@
+{
+ "kind": "line A v6: readout decay control on SHD",
+ "n_rec": 8192,
+ "fan_in": 32,
+ "epochs": 10,
+ "seed": 0,
+ "decay_out": 0.99,
+ "test_samples": 1000,
+ "arms": {
+  "taps_1": {
+   "taps": 1,
+   "accuracy": 0.425,
+   "firing_rate": 0.12,
+   "elapsed_s": 3854.9,
+   "peak_mb": 4153.7
+  },
+  "taps_28": {
+   "taps": 28,
+   "accuracy": 0.71,
+   "firing_rate": 0.0966,
+   "elapsed_s": 3069.3,
+   "peak_mb": 4173.1
+  }
+ },
+ "criteria": {
+  "k0_both_learn": true,
+  "k1_gain_shrinks": false,
+  "k2_still_positive": true,
+  "gain": 0.285,
+  "reference_gain_at_decay_095": 0.421
+ }
+}
