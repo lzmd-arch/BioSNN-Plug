@@ -15,7 +15,7 @@ import torch
 from torch import nn
 
 from research.continual.data import load_cifar100
-from research.continual.frontends import image_features
+from research.continual.frontends import BACKBONES, image_features
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT = REPO_ROOT / "sweep_results" / "continual_v3_task_information"
@@ -115,6 +115,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="任务信息天花板诊断")
     parser.add_argument("--out", type=Path, default=OUT)
     parser.add_argument("--tag", default="task_information")
+    parser.add_argument("--backbone", default=BACKBONE, choices=sorted(BACKBONES))
     args = parser.parse_args(argv)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.manual_seed(SEED)
@@ -123,10 +124,10 @@ def main(argv: list[str] | None = None) -> int:
     train, test = load_cifar100(DATA_ROOT)
     CACHE.mkdir(parents=True, exist_ok=True)
     train_x = image_features(
-        train.x, backbone=BACKBONE, cache=CACHE / f"{BACKBONE}_train.npz", device=device
+        train.x, backbone=args.backbone, cache=CACHE / f"{args.backbone}_train.npz", device=device
     ).astype(np.float64)
     test_x = image_features(
-        test.x, backbone=BACKBONE, cache=CACHE / f"{BACKBONE}_test.npz", device=device
+        test.x, backbone=args.backbone, cache=CACHE / f"{args.backbone}_test.npz", device=device
     ).astype(np.float64)
     train_y = np.asarray(train.y, dtype=np.int64)
     test_y = np.asarray(test.y, dtype=np.int64)
@@ -148,6 +149,18 @@ def main(argv: list[str] | None = None) -> int:
             device=device,
         ),
         "d_knn": probe_knn(train_x, train_task, test_x, test_task),
+        "f_fine_class": _train_head(
+            nn.Sequential(
+                nn.Linear(train_std.shape[1], MLP_HIDDEN), nn.ReLU(), nn.Linear(MLP_HIDDEN, 100)
+            ),
+            train_std,
+            train_y,
+            test_std,
+            test_y,
+            epochs=MLP_EPOCHS,
+            lr=1e-3,
+            device=device,
+        ),
         "e_mlp": _train_head(
             nn.Sequential(
                 nn.Linear(train_std.shape[1], MLP_HIDDEN), nn.ReLU(), nn.Linear(MLP_HIDDEN, TASKS)
@@ -163,7 +176,10 @@ def main(argv: list[str] | None = None) -> int:
     }
     best = max(results["c_logistic"], results["d_knn"], results["e_mlp"])
     criteria = {
-        "g0_reproduces": abs(results["b_full_covariance"] - B_REPRODUCE[0]) <= B_REPRODUCE[1],
+        "g0_reproduces": (
+            args.backbone != "resnet18"
+            or abs(results["b_full_covariance"] - B_REPRODUCE[0]) <= B_REPRODUCE[1]
+        ),
         "g1_information_present": best >= CEILING_PASS,
         "g2_information_absent": best < CEILING_FLOOR,
         "g3_middle": CEILING_FLOOR <= best < CEILING_PASS,
@@ -172,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
     out = {
         "kind": "CL task-information ceiling diagnosis",
         "seed": SEED,
-        "backbone": BACKBONE,
+        "backbone": args.backbone,
         "n_train": int(train_x.shape[0]),
         "n_test": int(test_x.shape[0]),
         "probes": {key: round(value, 4) for key, value in results.items()},

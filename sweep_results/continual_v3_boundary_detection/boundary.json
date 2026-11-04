@@ -1,0 +1,52 @@
+{
+ "kind": "CL evaluation-stream task-boundary detection",
+ "seed": 0,
+ "window": 64,
+ "step": 10,
+ "tolerance": 100,
+ "quantile": 99.5,
+ "threshold": 0.1373,
+ "null_median": 0.1025,
+ "peaks": [
+  834,
+  994,
+  1594,
+  1994,
+  2844,
+  3004,
+  3134,
+  3194,
+  3994,
+  5004,
+  5994,
+  7004,
+  8004,
+  9014
+ ],
+ "truth": [
+  1000,
+  2000,
+  3000,
+  4000,
+  5000,
+  6000,
+  7000,
+  8000,
+  9000
+ ],
+ "matched": 9,
+ "detected": 14,
+ "control_peaks": [
+  8944
+ ],
+ "criteria": {
+  "d0_segment_count": false,
+  "d1_boundary_f1": false,
+  "d2_routing": false,
+  "d3_control_quiet": true,
+  "f1": 0.7826,
+  "routing": 0.0834,
+  "control_f1": 0.2,
+  "detected": 14
+ }
+}

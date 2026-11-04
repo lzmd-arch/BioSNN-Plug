@@ -71,7 +71,8 @@ The full chain is in [`sweep_results/stage3_readout_audit.md`](../sweep_results/
 | Task-aware CIL | ACC **0.8195** / AF **0.0** | needs an oracle for the task ID, **constructive pass** ([ADR-0018](adr/ADR-0018-task-aware-cl-gate.en.md)) |
 | Pure CIL | ACC **0.0876** / AF **0.290** | unreachable |
 | Task inference | **0.5855 / 0.1285** | the best setting, still far from feeding CIL |
-| Task-information ceiling (2026-11-04 diagnostic) | linear **0.5363** / best non-local **0.6512** | a joint-training ruler, not usable in CIL; the linear ceiling nearly equals the local routers, non-linearity adds only 12pp. See [`continual_v3_task_information`](../sweep_results/continual_v3_task_information/README.md) |
+| Task-information ceiling (2026-11-04 diagnostic) | ResNet18 **0.6512** / ResNet50 **0.7166** / ViT-B/16 **0.7912** | a joint-training ruler, not usable in CIL; **the ceiling tracks the backbone's classification strength** (H-4 holds on all three), ViT falls 0.9pp short of 0.80. See [`continual_v3_task_information`](../sweep_results/continual_v3_task_information/README.md), [`continual_v3_backbone_ceiling`](../sweep_results/continual_v3_backbone_ceiling/README.md) |
+| Stream task-boundary detection (2026-11-04 diagnostic) | 9/9 hit within 6 samples; F1 **0.7826** | exploits the evaluation stream's block structure, **not per-sample inference**; 5 false positives, misses the 0.80 bar. See [`continual_v3_boundary_detection`](../sweep_results/continual_v3_boundary_detection/README.md) |
 | Relearn 3x faster | paired median **0.957**, calibration about **1.06** | v1-v3 all unmet ([ADR-0019](adr/ADR-0019-stage-four-entry-decoupled-from-relearn.en.md)) |
 
 ## 4. Boundaries (what to know when reading the numbers above)

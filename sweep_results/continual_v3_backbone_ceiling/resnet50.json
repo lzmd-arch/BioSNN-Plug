@@ -1,0 +1,22 @@
+{
+ "kind": "CL task-information ceiling diagnosis",
+ "seed": 0,
+ "backbone": "resnet50",
+ "n_train": 50000,
+ "n_test": 10000,
+ "probes": {
+  "a_prototype": 0.3304,
+  "b_full_covariance": 0.5779,
+  "c_logistic": 0.6522,
+  "d_knn": 0.675,
+  "f_fine_class": 0.686,
+  "e_mlp": 0.7166
+ },
+ "criteria": {
+  "g0_reproduces": true,
+  "g1_information_present": false,
+  "g2_information_absent": false,
+  "g3_middle": true,
+  "best_nonlocal": 0.7166
+ }
+}
