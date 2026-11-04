@@ -69,5 +69,5 @@ v3 的立项理由是"原始统计量能看见 1000 与 4000，白化看不见"�
 v1（误报多）→ v2（误报清零、漏 2 个）→ v3（两种并用、仍然漏同样的 2 个，且换种子不稳）。
 三轮下来答案一致：**这两个边界在这套特征里就是不可分的**，继续换统计量是在跟噪声较劲。
 
-要继续，得换的是**特征**（骨架更强，见 [`../continual_v3_backbone_ceiling/README.md`](../sweep_results/continual_v3_backbone_ceiling/README.md)
+要继续，得换的是**特征**（骨架更强，见 [`../continual_v3_backbone_ceiling/README.md`](../continual_v3_backbone_ceiling/README.md)
 里 ViT-B/16 的细类准确率 0.809 远高于 ResNet18 的 0.663），而不是检测器。
