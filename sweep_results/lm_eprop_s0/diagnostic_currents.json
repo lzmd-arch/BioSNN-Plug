@@ -1,0 +1,23 @@
+{
+ "steps": 120,
+ "seed": 0,
+ "arms": {
+  "none": {
+   "direct_current_mean_abs": 0.0966,
+   "recurrent_current_mean_abs": null,
+   "ssm_current_mean_abs": null
+  },
+  "random": {
+   "direct_current_mean_abs": 0.0966,
+   "recurrent_current_mean_abs": 0.2082,
+   "ssm_current_mean_abs": null,
+   "recurrent_over_direct": 2.155
+  },
+  "ssm": {
+   "direct_current_mean_abs": 0.0945,
+   "recurrent_current_mean_abs": null,
+   "ssm_current_mean_abs": 0.6958,
+   "ssm_over_direct": 7.363
+  }
+ }
+}

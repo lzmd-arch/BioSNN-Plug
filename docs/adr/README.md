@@ -63,4 +63,4 @@
 | [ADR-0032](ADR-0032-sel-research-track.md) | SEL 脉冲表达层作为研究项：分阶段、不占主线、不接召回/门控、不发布权重（P2–P5 已由 ADR-0034 收口） | 已采纳 |
 | [ADR-0033](ADR-0033-capacity-axis-archival.md) | 容量轴归档：加神经元与加连接都买不到精度（8k 附近是膝点），默认 8k + fan_in 32 | 已采纳 |
 | [ADR-0034](ADR-0034-sel-distillation-archival.md) | SEL 脉冲蒸馏路径归档：概念保留，TI-LIF + CWSSA + SSM + KD 停止；产品回退 Phase 2，线 A 是唯一活跃研究线 | 已采纳 |
-| [ADR-0035](ADR-0035-local-learning-lm.md) | 局部学习规则的语言模型预训练：作为新支线重开，M0 先行、判据先落盘。**M0/M0b 两轮均未通过，支线已停**（局部学习输给字符 bigram） | 已采纳（支线已停） |
+| [ADR-0035](ADR-0035-local-learning-lm.md) | 局部学习规则的语言模型预训练：作为新支线重开，M0 先行、判据先落盘。M0/M0b 两轮未通过；**S0 发现那是递推电流尺度缺陷，kill 结论已撤回**；无递推时局部学习已赢过 bigram | 已采纳（结论部分撤回） |

@@ -103,3 +103,24 @@ stronger than M0's: M0's "no difference" could be read as "not measured", M0b's 
 
 **The branch stops**; both pre-registered kill criteria have been executed. Reopening needs **new data and a
 new scale** (the M3 rung), not more tuning of this working point.
+
+
+**2026-11-06, further correction: the M0/M0b kill is not supported; the branch should be reassessed.**
+
+S0 (`sweep_results/lm_eprop_s0/README.md`) measured three arms, changing only where the recurrence comes from:
+
+| Arm | CE | top-1 | recurrent / input current |
+| :--- | ---: | ---: | ---: |
+| no recurrence | **1.139** | **0.717** | 0× |
+| frozen random recurrence | 1.861 | 0.516 | 2.16× |
+| frozen diagonal SSM | 2.639 | 0.352 | 7.36× |
+
+**The ordering is perfectly monotone in "recurrent current / input current".** The recurrent arms of the first
+two rounds carried 2.16× the input current from initialisation, i.e. they were handicapped before the test
+began — so **"local learning loses to bigram" does not hold**. Without recurrence, **a feedforward LIF with a
+locally-trained readout beats bigram for the first time (1.139 / 0.717 vs 1.423 / 0.646)**.
+
+**Disposition**: the "stop" conclusion of this ADR is **withdrawn** (the numbers stand, the inference does
+not). Reopening does not need new data — it needs a **new pre-registration** that writes "recurrent current /
+input current ∈ [0.8, 1.3]" as a precondition and asks again, fairly, whether recurrence or SSM helps.
+That corrects an implementation defect; it is not tuning a result green.

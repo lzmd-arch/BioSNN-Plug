@@ -1,0 +1,85 @@
+{
+ "kind": "S0: structured recurrence (diagonal SSM) vs frozen random recurrence",
+ "seed": 0,
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "n_state": 32,
+  "max_len": 64,
+  "batch": 16,
+  "updates": 2000,
+  "lr_in": 0.001,
+  "lr_rec": 0.001,
+  "lr_out": 0.5
+ },
+ "baselines": {
+  "bigram_ce": 1.4234,
+  "bigram_top1": 0.6457,
+  "m0b_random_ce": 1.741,
+  "m0b_random_top1": 0.566
+ },
+ "bigram_top1_recomputed": 0.6457,
+ "arms": {
+  "none": {
+   "ce": 1.1392,
+   "top1": 0.7166,
+   "tokens": 1369,
+   "firing_rate": 0.0107,
+   "ce_head": 3.2299,
+   "ce_tail": 0.9382,
+   "ce_ratio": 0.2905,
+   "train_firing_rate": 0.0097,
+   "relative_change": {
+    "w_in": 0.032197,
+    "w_rec": 0.0,
+    "w_out": 4.075437
+   },
+   "seconds": 286.7,
+   "state_norm": null
+  },
+  "random": {
+   "ce": 1.8612,
+   "top1": 0.5164,
+   "tokens": 1369,
+   "firing_rate": 0.0877,
+   "ce_head": 3.755,
+   "ce_tail": 1.7814,
+   "ce_ratio": 0.4744,
+   "train_firing_rate": 0.0659,
+   "relative_change": {
+    "w_in": 0.022822,
+    "w_rec": 0.049762,
+    "w_out": 3.526832
+   },
+   "seconds": 558.8,
+   "state_norm": null
+  },
+  "ssm": {
+   "ce": 2.6387,
+   "top1": 0.3521,
+   "tokens": 1369,
+   "firing_rate": 0.1653,
+   "ce_head": 4.4072,
+   "ce_tail": 2.4186,
+   "ce_ratio": 0.5488,
+   "train_firing_rate": 0.1652,
+   "relative_change": {
+    "E": 0.039445,
+    "C": 0.015424,
+    "D": 0.00563,
+    "w_out": 1.165694
+   },
+   "seconds": 264.9,
+   "state_norm": 5.1311
+  }
+ },
+ "criteria": {
+  "s0_0_preconditions": true,
+  "s0_1_ssm_beats_random": false,
+  "s0_2_beats_bigram": false,
+  "s0_3_diagnostics": true,
+  "delta_top1_vs_random": -0.1643,
+  "delta_ce_vs_random": 0.7775,
+  "none_firing_low": false
+ }
+}

@@ -66,4 +66,4 @@ Michael Nygard の古典的な 4 段構成を採用します：
 | [ADR-0032](ADR-0032-sel-research-track.ja.md) | SEL スパイク表現層を研究項目として：段階的、メインライン外、召回・ゲートに接続しない、重みは配布しない（P2–P5 は ADR-0034 で終了） | 採用済み |
 | [ADR-0033](ADR-0033-capacity-axis-archival.ja.md) | 容量の軸をアーカイブ：ニューロンも接続も精度を買えない（膝は 8k 付近）。既定は 8k + fan-in 32 | 採用済み |
 | [ADR-0034](ADR-0034-sel-distillation-archival.ja.md) | SEL パルス蒸留経路をアーカイブ：概念は保持、TI-LIF + CWSSA + SSM + KD は停止；製品は Phase 2 に戻し、線 A が唯一の活動研究線 | 採用済み |
-| [ADR-0035](ADR-0035-local-learning-lm.ja.md) | 局所学習規則による言語モデルの事前学習を新しい支線として再開、M0 を先行。**M0/M0b の二回とも不合格で支線は停止**（文字 bigram に負ける） | 採用済み（支線停止） |
+| [ADR-0035](ADR-0035-local-learning-lm.ja.md) | 局所学習規則による言語モデルの事前学習を新しい支線として再開、M0 を先行。M0/M0b は不合格；**S0 でそれは再帰電流のスケール欠陥と判明し kill を撤回**；再帰なしなら局所学習は bigram を上回る | 採用済み（一部撤回） |
