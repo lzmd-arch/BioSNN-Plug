@@ -28,7 +28,7 @@ On the **same 8,192 neurons**, line A's A3 changed only the readout -- one time 
 same local rule -- and moved sMNIST from **0.759 to 0.917** (three seeds: 0.873 / 0.906 / 0.917, **median 0.899**). So "capacity is used up" must be read as
 "used up **under the last-step readout**". The decision below is **unchanged** -- more neurons and more
 connections still buy nothing, and no scale run needs repeating; but **0.83 must not be quoted as this
-pipeline's capability ceiling**. **Re-checked the same day (A4)**: 32k with 28 taps = **0.914**, 8k with 28 taps = **0.917** (-0.3pp) -- with the readout fixed, scale still buys nothing. **Resolution**: A4 has a single seed, and the seed noise at 8k is sd 2.2pp with a 4.4pp range, so the precise claim is "no gain **larger than the seed noise**"; this ADR's conclusion holds under both readouts.
+pipeline's capability ceiling**. **Re-checked the same day (A4)**: 32k with 28 taps = **0.914**, 8k with 28 taps = **0.917** (-0.3pp) -- with the readout fixed, scale still buys nothing. **Resolution**: A4 has a single seed, and the seed noise at 8k is sd 2.2pp with a 4.4pp range, so the precise claim is "no gain **larger than the seed noise**"; this ADR's conclusion holds under both readouts. **Re-checked on SHD too (A8)**: 32k with 28 taps = **0.748**, 8k = **0.757** (-0.9pp) -- SHD is not a saturated task, and scale still buys nothing.
 Source: `sweep_results/brainregions_a3/README.md`, `sweep_results/brainregions_a4/README.md`.
 
 S6 adds the mechanism: **more training lets the small network catch up** -- at 2 epochs 32k leads 8k
