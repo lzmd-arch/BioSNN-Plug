@@ -183,7 +183,7 @@ cat 1–4 池化 hit@5 为 **0.540**（headline 0.495 含对抗性类别）。
 
 | 阻塞项 | 缺什么 | 负责人 |
 |---|---|---|
-| 召回门槛判据 | 40 条人工标注（`~/axo-annotation/questions.jsonl`，**已标 0 条**） | 用户 |
+| 召回门槛判据 | 40 条人工标注（`~/axo-annotation/questions.jsonl`）**已标完**：support 28 / none 12 / partial 0；复评见 Axo 仓 `docs/prereg-recall-threshold-v1.md` §6.1 | 用户 |
 | arXiv endorsement | 对方回信 | 外部 |
 
 **对 Agent 的意义**：Paper C 只能在基线 + 标注都齐了之后谈写作。基线已齐，标注没动。
@@ -271,7 +271,7 @@ W3 脉冲 actor 的失败在于"policy 不形成"——给的是状态→最优�
 
 ### 6.2 需要确认后才能做的事
 
-1. **开始写 Paper C** — 需要确认：40 条标注已完成（LoCoMo 基线**已跑完**，不再是阻塞项）。
+1. **开始写 Paper C** — 40 条标注已完成、LoCoMo 基线已跑完；需要确认写作范围（§5 与 §1–§3 未写）。
 2. **启动脉冲 SoS 训练** — 需要确认：预注册已写、世界模型不确定性估计已就绪、R-STDP reward 已定义。
 3. **修改 Axo 召回层** — **门槛 0.20 已实现**（Axo 仓 `src/axo/ui/settings_store.py:454` 的
    `DEFAULT_RECALL_MIN_SCORE`）；还缺的是带 `hebbian_spread` 的融合项，那需要新预注册。
@@ -285,10 +285,10 @@ W3 脉冲 actor 的失败在于"policy 不形成"——给的是状态→最优�
 | "纯 CIL 还有希望吗？" | ADR-0029 已归档，8.76% 不可达。任务感知 CIL 已通过。 |
 | "脉冲 actor 能不能救？" | ADR-0029 已归档。**脉冲 SoS 是新主线，不是直接 actor 训练**。 |
 | "MG v11 还能用吗？" | v11 是 kNN 密度门（离线指标），不是 SNN。Axo 版三特征门 ≡ 单阈值，不接线。 |
-| "Paper C 什么时候写？" | 结构已落盘（`paper/c/OUTLINE.md`）；要写先补 40 条标注；基线已齐（nomic hit@5 0.495）。 |
+| "Paper C 什么时候写？" | 结构已落盘（`paper/c/OUTLINE.md`）；40 条标注已完成，基线已齐（nomic hit@5 0.495）；复评见 Axo 仓 `docs/prereg-recall-threshold-v1.md` §6.1。 |
 | "SEL 还做吗？" | 概念保留、路径停止（ADR-0034）：TI-LIF + CWSSA + SSM + KD 不再跑；产品回退 Phase 2；P3 数据可转 SFT；ALIF-only 是远期备选，不写预注册。 |
 | "biosnn-bus 发不发？" | 0.5.0 已就绪，等您确认。10 条测试全过，与研究层逐项对齐。 |
-| "接下来做什么？" | **线 A 已收口**（A1–A7，见 §2.6；正文草稿 `paper/c/sec4-3-readout-bottleneck.md`）。可做的是 Paper C 收口：§5（SEL）未写、§1–§3 未开。CL 线的两条路由假设已否（共享协方差无改善、ViT 下 CIL 0.7504 未过 0.8）。**只卡用户侧**：40 条标注、arXiv endorsement。 |
+| "接下来做什么？" | **线 A 已收口**（A1–A7，见 §2.6；正文草稿 `paper/c/sec4-3-readout-bottleneck.md`）。可做的是 Paper C 收口：§5（SEL）未写、§1–§3 未开。CL 线的两条路由假设已否（共享协方差无改善、ViT 下 CIL 0.7504 未过 0.8）。**只卡用户侧**：arXiv endorsement；40 条标注已完成。 |
 
 ### 6.4 文件位置速查（**v1.1 已改：原表指向 `/mnt/agents/output/`，本机不存在**）
 
@@ -328,7 +328,7 @@ W3 脉冲 actor 的失败在于"policy 不形成"——给的是状态→最优�
 
 用户要求"写代码/跑实验"
     ├── 涉及触发器？→ 先确认语料是否诚实
-    ├── 涉及 Paper C？→ 先确认 40 条标注
+    ├── 涉及 Paper C？→ 40 条标注已完成；先确认写作范围
     ├── 涉及脉冲 SoS？→ 已归档，不跑
     ├── 涉及 SEL 蒸馏？→ 已收口，不跑；SFT 另写预注册
     ├── 涉及线 A？→ A1–A7 已收口；再跑要新预注册（见 §2.6）
@@ -360,7 +360,7 @@ W3 脉冲 actor 的失败在于"policy 不形成"——给的是状态→最优�
 2. 它利用了阶段四已验证的**世界模型**与**工作记忆**；
 3. 它提供了一个 Transformer（SoS / Coconut）做不到的故事：**毫秒级实时内部搜索**。
 
-**Agent 的第一优先级：先把 SoS 的预注册写出来，同时把能收口的收口（发 0.5.0、等 40 条标注）。**
+**Agent 的第一优先级：先把 SoS 的预注册写出来，同时把能收口的收口（发 0.5.0）。**
 前提没落地之前，不要去跑训练——那会把"没设计好"变成"又一条负结果"。
 
 ---
