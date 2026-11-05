@@ -43,6 +43,7 @@ RATE_LOW, RATE_HIGH = 0.01, 0.30
 TOP1_MIN = 0.70
 REC_GAIN = 0.95
 TRAIN_CE_DROP = 0.5
+HIDDEN_MOVE_MIN = 0.05
 
 
 def encode_split(texts: list[str], vocab: dict[str, int]) -> list[list[int]]:
@@ -69,6 +70,8 @@ def run_arm(
     learn_recurrent: bool,
     device: torch.device,
     updates: int = UPDATES,
+    lr_in: float = LR_IN,
+    lr_rec: float = LR_REC,
 ) -> TokenEProp:
     torch.manual_seed(SEED)
     model = TokenEProp(
@@ -78,12 +81,13 @@ def run_arm(
         tau=TAU,
         tau_read=TAU_READ,
         input_std=INPUT_STD,
-        lr_in=LR_IN,
-        lr_rec=LR_REC,
+        lr_in=lr_in,
+        lr_rec=lr_rec,
         lr_out=LR_OUT,
         generator=torch.Generator().manual_seed(SEED),
         device=device,
     )
+    snapshot = {name: getattr(model, name).clone() for name in ("w_in", "w_rec", "w_out")}
     pad = vocab_size - 1
     generator = torch.Generator().manual_seed(SEED + 17)
     losses: list[float] = []
@@ -110,7 +114,12 @@ def run_arm(
             )
     head = statistics.median(losses[:200])
     tail = statistics.median(losses[-200:])
+    moved = {
+        name: round(float((getattr(model, name) - base).norm() / base.norm()), 6)
+        for name, base in snapshot.items()
+    }
     model.training_summary = {  # type: ignore[attr-defined]
+        "relative_change": moved,
         "ce_head": round(head, 4),
         "ce_tail": round(tail, 4),
         "ce_ratio": round(tail / head, 4) if head else None,
@@ -137,6 +146,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=OUT)
     parser.add_argument("--updates", type=int, default=UPDATES)
     parser.add_argument("--tag", default="m0")
+    parser.add_argument("--lr-in", type=float, default=LR_IN)
+    parser.add_argument("--lr-rec", type=float, default=LR_REC)
     args = parser.parse_args(argv)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -153,7 +164,13 @@ def main(argv: list[str] | None = None) -> int:
     for name, learn_recurrent in (("learned", True), ("frozen", False)):
         print(f"[{name}] 训练中…", flush=True)
         model = run_arm(
-            train, len(vocab), learn_recurrent=learn_recurrent, device=device, updates=args.updates
+            train,
+            len(vocab),
+            learn_recurrent=learn_recurrent,
+            device=device,
+            updates=args.updates,
+            lr_in=args.lr_in,
+            lr_rec=args.lr_rec,
         )
         metrics = evaluate_model(model, test, len(vocab), device)
         arms[name] = {**metrics, **model.training_summary}  # type: ignore[attr-defined]
@@ -176,6 +193,7 @@ def main(argv: list[str] | None = None) -> int:
         "m0_1_local_rule_learns": learned["top1"] >= TOP1_MIN,
         "m0_2_recurrent_learns": learned["ce"] <= REC_GAIN * frozen["ce"],
         "m0_3_loss_falls": learned["ce_ratio"] is not None and learned["ce_ratio"] < TRAIN_CE_DROP,
+        "m0b_0_hidden_moved": learned["relative_change"]["w_rec"] >= HIDDEN_MOVE_MIN,
     }
     out = {
         "kind": "local-rule next-token M0 (TokenEProp)",
@@ -189,8 +207,8 @@ def main(argv: list[str] | None = None) -> int:
             "tau": TAU,
             "tau_read": TAU_READ,
             "input_std": INPUT_STD,
-            "lr_in": LR_IN,
-            "lr_rec": LR_REC,
+            "lr_in": args.lr_in,
+            "lr_rec": args.lr_rec,
             "lr_out": LR_OUT,
             "device": str(device),
         },

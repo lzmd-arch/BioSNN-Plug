@@ -1,0 +1,71 @@
+{
+ "kind": "local-rule next-token M0 (TokenEProp)",
+ "seed": 0,
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "max_len": 64,
+  "batch": 16,
+  "updates": 2000,
+  "tau": 20.0,
+  "tau_read": 8.0,
+  "input_std": 0.12,
+  "lr_in": 0.001,
+  "lr_rec": 0.001,
+  "lr_out": 0.5,
+  "device": "cuda"
+ },
+ "vocab": 274,
+ "bigram_top1": 0.6457,
+ "bigram_k": 0.1,
+ "initial": {
+  "ce": 5.7924,
+  "top1": 0.0007,
+  "tokens": 1369,
+  "firing_rate": 0.0427
+ },
+ "arms": {
+  "learned": {
+   "ce": 1.8612135808950274,
+   "top1": 0.5164353542731921,
+   "tokens": 1369,
+   "firing_rate": 0.08772655679327977,
+   "relative_change": {
+    "w_in": 0.022822,
+    "w_rec": 0.049762,
+    "w_out": 3.526832
+   },
+   "ce_head": 3.755,
+   "ce_tail": 1.7814,
+   "ce_ratio": 0.4744,
+   "train_firing_rate": 0.0659,
+   "seconds": 443.9
+  },
+  "frozen": {
+   "ce": 1.7412509733608292,
+   "top1": 0.5661066471877283,
+   "tokens": 1369,
+   "firing_rate": 0.0593456103907962,
+   "relative_change": {
+    "w_in": 0.02783,
+    "w_rec": 0.0,
+    "w_out": 3.517922
+   },
+   "ce_head": 3.7619,
+   "ce_tail": 1.6637,
+   "ce_ratio": 0.4422,
+   "train_firing_rate": 0.0524,
+   "seconds": 408.1
+  }
+ },
+ "criteria": {
+  "m0_0_data_matches": true,
+  "m0_0b_init_ce_in_band": true,
+  "m0_0c_firing_in_band": true,
+  "m0_1_local_rule_learns": false,
+  "m0_2_recurrent_learns": false,
+  "m0_3_loss_falls": true,
+  "m0b_0_hidden_moved": false
+ },
+ "m0_pass": false
+}

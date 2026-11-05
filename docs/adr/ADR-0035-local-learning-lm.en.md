@@ -83,3 +83,23 @@ the kill criterion took effect. Do not retune and rerun, and do not retry with a
 ## Addendum
 
 (To be appended once M0 reports.)
+
+
+**2026-11-06, update: M0b also fails; the branch is confirmed stopped.**
+
+M0b only raised the hidden learning rates (`lr_in` 1e-3, `lr_rec` 1e-3), everything else unchanged.
+Results in `sweep_results/lm_eprop_m0b/README.md`:
+
+- the hidden layer did move: `w_rec` relative change **4.976%** (M0: 0.070%, a 70× difference); but against
+  the pre-registered 5% bar **M0b-0 formally fails by 0.024pp** — under the rule that means "the experiment
+  is invalid", no conclusion is drawn from it, and the learning rate is not raised again to rerun;
+- with that caveat, **learning the recurrent weights made things worse**: CE 1.861 vs 1.741 frozen (**+6.9%**),
+  top-1 0.516 vs 0.566;
+- both variants **lose to a character bigram** (CE 1.423 / top-1 0.646).
+
+**Conclusion**: at 1,024 neurons, 2,000 updates and 301 templated samples, per-step local learning does not
+beat a second-order character bigram, and **training the recurrent weights is harmful**. This negative is
+stronger than M0's: M0's "no difference" could be read as "not measured", M0b's cannot.
+
+**The branch stops**; both pre-registered kill criteria have been executed. Reopening needs **new data and a
+new scale** (the M3 rung), not more tuning of this working point.
