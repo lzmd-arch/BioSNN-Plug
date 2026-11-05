@@ -4,7 +4,7 @@
 
 ## 背景
 
-S0（[`../sweep_results/lm_eprop_s0/README.md`](../sweep_results/lm_eprop_s0/README.md)）发现：
+S0（[`../sweep_results/lm_eprop_s0/README.md`](../../sweep_results/lm_eprop_s0/README.md)）发现：
 三臂的 top-1 与「递推电流 / 输入电流」**完全单调**（0× → 0.717、2.16× → 0.516、7.36× → 0.352）。
 M0/M0b/S0 的递推臂从初始化起就在淹没 token 信号，所以它们关于"递推"的负结果**不能引用**
 （已在 ADR-0035-c 标记为"证据受污染"）。

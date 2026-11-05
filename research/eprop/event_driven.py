@@ -10,6 +10,14 @@
   **O(N²) 的资格痕迹**，权重也只存固定 fan-in。它的用途是先把 10k–100k 的规模
   可行性做出来，再谈 500k。
 * 稀疏 mask 固定；不做学习型连接；不做 BPTT。
+
+## ⚠️ 带递推的实验，跑之前先看 `current_ratio()`
+
+递推电流与输入电流的比值决定了"token/刺激信号有没有被自激活动淹没"。
+2026-11-06 在**未训练**的默认初始化下实测（sMNIST、N=8192、fan-in 32）：
+直接电流 0.269、递推电流 0.298、**比值 1.106**。
+在同族的一个语言模型实验里，把同一比值从 0 抬到 0.56 / 1.02，top-1 从 0.717 掉到
+0.698 / 0.668（单调）。**这个比值大于 1 时，任何"模型学不动"的结论都要先排除它。**
 """
 
 from __future__ import annotations
@@ -133,6 +141,21 @@ class EventDrivenEProp(nn.Module):
         return torch.stack(spikes), torch.stack(scaled)
 
     @torch.no_grad()
+    @torch.no_grad()
+    def current_ratio(self, inputs: torch.Tensor) -> float:
+        """``median|递推电流| / median|输入电流|``——判断信号有没有被自激活动淹没。
+
+        见模块文档：这个比值大于 1 时，先怀疑初始化尺度，再怀疑学习规则。
+        """
+        spikes, _ = self.simulate(inputs)
+        z_previous = torch.cat([torch.zeros_like(spikes[:1]), spikes[:-1]])
+        direct, recurrent = [], []
+        for t in range(inputs.shape[0]):
+            direct.append(float((inputs[t] @ self.w_in).abs().mean()))
+            recurrent.append(float(self._recurrent_current(z_previous[t]).abs().mean()))
+        median = sorted(direct)[len(direct) // 2]
+        return sorted(recurrent)[len(recurrent) // 2] / median if median > 0 else 0.0
+
     def predict(self, inputs: torch.Tensor) -> torch.Tensor:
         spikes, _ = self.simulate(inputs)
         filtered = exp_convolve(spikes, self.decay_out)
