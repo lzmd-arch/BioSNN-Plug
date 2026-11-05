@@ -33,7 +33,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="A5：SHD + 28 抽头")
     parser.add_argument("--out", type=Path, default=OUT)
     parser.add_argument("--tag", default="a5")
+    parser.add_argument("--reference", type=float, default=REFERENCE_LAST_STEP)
     parser.add_argument("--seed", type=int, default=SEED)
+    parser.add_argument("--n-rec", type=int, default=N_REC)
     args = parser.parse_args(argv)
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -46,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
     inputs, targets = train.batch(torch.arange(len(train)))
     inputs, targets = inputs.to(device), targets.to(device)
     n_out = int(max(int(train.labels.max()), int(test.labels.max()))) + 1
-    model = build(int(inputs.shape[2]), n_out, TAPS, seed=seed).to(device)
+    model = build(int(inputs.shape[2]), n_out, TAPS, n_rec=args.n_rec, seed=seed).to(device)
     start = time.perf_counter()
     # 与 A3 同一口径：生成器只在循环外建一次，每个 epoch 抽不同的排列。
     generator = torch.Generator().manual_seed(seed + 991)
@@ -60,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
     result = evaluate(model, test, device)
     peak = round(torch.cuda.max_memory_allocated() / 2**20, 1) if torch.cuda.is_available() else 0.0
 
-    gain = result["accuracy"] - REFERENCE_LAST_STEP
+    gain = result["accuracy"] - args.reference
     criteria = {
         "f0_not_broken": result["accuracy"] > FLOOR,
         "f1_reproduces": gain >= GAIN,
@@ -70,13 +72,13 @@ def main(argv: list[str] | None = None) -> int:
     }
     out = {
         "kind": "line A v5: multi-tap readout on SHD",
-        "n_rec": N_REC,
+        "n_rec": args.n_rec,
         "fan_in": FAN_IN,
         "taps": TAPS,
         "epochs": EPOCHS,
         "seed": seed,
         "test_samples": TEST_SAMPLES,
-        "reference_last_step": REFERENCE_LAST_STEP,
+        "reference_last_step": args.reference,
         "accuracy": round(result["accuracy"], 4),
         "firing_rate": round(result["firing_rate"], 4),
         "peak_mb": peak,
