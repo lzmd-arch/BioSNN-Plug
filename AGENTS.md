@@ -273,8 +273,9 @@ W3 脉冲 actor 的失败在于"policy 不形成"——给的是状态→最优�
 
 1. **开始写 Paper C** — 40 条标注已完成、LoCoMo 基线已跑完；需要确认写作范围（§5 与 §1–§3 未写）。
 2. **启动脉冲 SoS 训练** — 需要确认：预注册已写、世界模型不确定性估计已就绪、R-STDP reward 已定义。
-3. **修改 Axo 召回层** — **门槛 0.20 已实现**（Axo 仓 `src/axo/ui/settings_store.py:454` 的
-   `DEFAULT_RECALL_MIN_SCORE`）；还缺的是带 `hebbian_spread` 的融合项，那需要新预注册。
+3. **修改 Axo 召回层** — **门槛 0.25 已实现**（Axo 仓 `src/axo/ui/settings_store.py` 的
+   `DEFAULT_RECALL_MIN_SCORE`；2026-11-05 在 40 条真实提问上从 0.20 重标）；还缺的是带
+   `hebbian_spread` 的融合项，那需要新预注册。
 4. **在线 Hebbian 关联更新** — 需要确认：有真实使用数据（249 条记忆不够，而且没有共检索日志）。
 
 ### 6.3 用户问以下问题时的标准回答
