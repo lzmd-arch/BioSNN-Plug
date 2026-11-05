@@ -162,3 +162,24 @@ helped while drowned nor needs a fair re-test, because **even the simplest recur
 **1.106**, the same regime that cost 4.9pp here. The A-line's **relative** conclusions are unaffected (both
 arms share the recurrence), but its **absolute** numbers may be conservative: "no recurrence vs recurrence"
 has never been measured there.
+
+
+**2026-11-06, fourth round: S2 confirms across five seeds — 0.717 was not luck.**
+
+Feedforward LIF + local readout, five seeds (everything else identical to S1's `none` arm):
+
+| Seed | 0 | 1 | 2 | 3 | 4 | Mean | std |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| top-1 | 0.7166 | 0.7137 | 0.7115 | 0.7312 | 0.7400 | **0.7226** | **0.0124** |
+| CE | 1.139 | 1.195 | 1.222 | 1.152 | 1.156 | **1.173** | — |
+
+- **all five criteria pass**: mean 0.7226 ≥ 0.70, std 0.0124 ≤ 0.02, **every seed beats bigram by
+  6.6–9.4pp**, mean CE 1.173 < 1.423;
+- the spread is only **2.85pp**, much tighter than A3's three seeds (4.4pp).
+
+**This is the branch's first seed-robust positive result**: a purely local learning rule (per-step e-prop +
+NLMS readout, no autograd anywhere) reliably beats a second-order character bigram on this corpus, and it
+**needs no recurrence at all** (S1 showed adding one only hurts).
+
+**Boundaries**: character level, templated corpus, one layer, N=1,024, 2,000 updates, 46 test items; this does
+not extrapolate to "can hold a conversation".

@@ -1,0 +1,68 @@
+{
+ "kind": "S2: five seeds for the feedforward local-rule LM",
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4
+ ],
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "max_len": 64,
+  "batch": 16,
+  "updates": 2000,
+  "lr_in": 0.001,
+  "lr_out": 0.5,
+  "recurrence": "none"
+ },
+ "bigram": {
+  "top1": 0.646,
+  "ce": 1.423,
+  "recomputed_top1": 0.6457
+ },
+ "rows": {
+  "0": {
+   "ce": 1.1392,
+   "top1": 0.7166,
+   "tokens": 1369,
+   "firing_rate": 0.0107
+  },
+  "1": {
+   "ce": 1.1953,
+   "top1": 0.7137,
+   "tokens": 1369,
+   "firing_rate": 0.0105
+  },
+  "2": {
+   "ce": 1.2222,
+   "top1": 0.7115,
+   "tokens": 1369,
+   "firing_rate": 0.0112
+  },
+  "3": {
+   "ce": 1.1517,
+   "top1": 0.7312,
+   "tokens": 1369,
+   "firing_rate": 0.0109
+  },
+  "4": {
+   "ce": 1.1562,
+   "top1": 0.74,
+   "tokens": 1369,
+   "firing_rate": 0.0114
+  }
+ },
+ "criteria": {
+  "s2_0_seed0_reproduces": true,
+  "s2_1_mean_holds": true,
+  "s2_2_stable": true,
+  "s2_3_every_seed_beats_bigram": true,
+  "s2_4_ce_beats_bigram": true,
+  "mean_top1": 0.7226,
+  "std_top1": 0.0124,
+  "min_top1": 0.7115,
+  "max_top1": 0.74
+ }
+}
