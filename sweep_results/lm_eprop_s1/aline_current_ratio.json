@@ -1,0 +1,12 @@
+{
+ "what": "A 线 EventDrivenEProp 的递推/输入电流比（同一类初始化缺陷的排查）",
+ "model": "research/eprop/EventDrivenEProp",
+ "task": "sMNIST test, batch 8",
+ "n_rec": 8192,
+ "fan_in": 32,
+ "direct_current_mean_abs": 0.269,
+ "recurrent_current_mean_abs_real_z": 0.2976,
+ "recurrent_over_direct": 1.106,
+ "firing_rate": 0.1173,
+ "note": "用未训练的模型测（初始化尺度决定这个比值）。A 线两臂用同一个递推，相对比较不受影响；但绝对数字可能偏保守。"
+}

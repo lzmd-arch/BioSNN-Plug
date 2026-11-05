@@ -1,0 +1,128 @@
+{
+ "kind": "S1: controlled recurrent current ratio",
+ "seed": 0,
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "max_len": 64,
+  "batch": 16,
+  "updates": 2000,
+  "lr_in": 0.001,
+  "lr_rec": 0.001,
+  "lr_out": 0.5
+ },
+ "bigram_top1": 0.6457,
+ "baseline_s0_none": {
+  "ce": 1.139,
+  "top1": 0.717
+ },
+ "arms": {
+  "none": {
+   "ce": 1.1392,
+   "top1": 0.7166,
+   "tokens": 1369,
+   "firing_rate": 0.0107,
+   "ce_head": 3.2299,
+   "ce_tail": 0.9382,
+   "ce_ratio": 0.2905,
+   "train_firing_rate": 0.0097,
+   "relative_change": {
+    "w_in": 0.032197,
+    "w_out": 4.075437
+   },
+   "seconds": 267.5,
+   "calibration": {
+    "target": null,
+    "achieved": 0.0,
+    "total_scale": 1.0,
+    "rounds": 0
+   },
+   "silent_rate": 0.0,
+   "ratio_after_training": 0.0
+  },
+  "rec@0.5": {
+   "ce": 1.2305,
+   "top1": 0.6983,
+   "tokens": 1369,
+   "firing_rate": 0.0146,
+   "ce_head": 3.3091,
+   "ce_tail": 1.0599,
+   "ce_ratio": 0.3203,
+   "train_firing_rate": 0.0125,
+   "relative_change": {
+    "w_in": 0.033225,
+    "w_out": 3.925118
+   },
+   "seconds": 439.4,
+   "calibration": {
+    "target": 0.5,
+    "initial": 2.1554,
+    "exponent": 2.967,
+    "total_scale": 0.4944,
+    "achieved": 0.5557,
+    "rounds": 4
+   },
+   "silent_rate": 0.0,
+   "ratio_after_training": 0.5716
+  },
+  "rec@1.0": {
+   "ce": 1.3303,
+   "top1": 0.6676,
+   "tokens": 1369,
+   "firing_rate": 0.0241,
+   "ce_head": 3.4563,
+   "ce_tail": 1.221,
+   "ce_ratio": 0.3533,
+   "train_firing_rate": 0.0197,
+   "relative_change": {
+    "w_in": 0.031709,
+    "w_out": 3.728017
+   },
+   "seconds": 414.0,
+   "calibration": {
+    "target": 1.0,
+    "initial": 2.1554,
+    "exponent": 2.967,
+    "total_scale": 0.7554,
+    "achieved": 1.0209,
+    "rounds": 2
+   },
+   "silent_rate": 0.0,
+   "ratio_after_training": 1.155
+  },
+  "rec@0.5-learned": {
+   "ce": 1.2133,
+   "top1": 0.6874,
+   "tokens": 1369,
+   "firing_rate": 0.0178,
+   "ce_head": 3.3073,
+   "ce_tail": 1.0755,
+   "ce_ratio": 0.3252,
+   "train_firing_rate": 0.0135,
+   "relative_change": {
+    "w_in": 0.0321,
+    "w_out": 3.885214,
+    "w_rec": 0.072474
+   },
+   "seconds": 414.5,
+   "calibration": {
+    "target": 0.5,
+    "initial": 2.1554,
+    "exponent": 2.967,
+    "total_scale": 0.4944,
+    "achieved": 0.5557,
+    "rounds": 4
+   },
+   "silent_rate": 0.0,
+   "ratio_after_training": 0.6732
+  }
+ },
+ "criteria": {
+  "s1_0_calibrated": true,
+  "s1_1_rec05_wins": false,
+  "s1_2_rec10_wins": false,
+  "s1_3_learned_wins_over_frozen": false,
+  "s1_4_no_arm_regresses": false,
+  "none_reproduces": true
+ }
+}

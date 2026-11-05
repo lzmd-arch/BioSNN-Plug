@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from statistics import median as statistics_median
 
 import torch
 
@@ -238,6 +239,88 @@ class TokenEProp:
             norm = float(trace.readout.pow(2).sum(dim=1).mean().clamp(min=1e-3))
             self.w_out.add_(trace.readout.T @ gradient / norm, alpha=-self.lr_out)
         return loss, fired
+
+    # -- 标定与诊断 ------------------------------------------------------------
+
+    @torch.no_grad()
+    def measure_current_ratio(self, tokens: torch.Tensor, *, steps: int = 120) -> float:
+        """初始化后前 ``steps`` 步的 ``median(|I_rec|) / median(|I_in|)``。"""
+        if self.recurrence != "random":
+            return 0.0
+        trace = self.new_trace(tokens.shape[0])
+        direct: list[float] = []
+        recurrent: list[float] = []
+        for t in range(min(steps, tokens.shape[1] - 1)):
+            direct.append(float(self.w_in[tokens[:, t]].abs().mean()))
+            recurrent.append(float(self._recurrent_current(trace.z).abs().mean()))
+            self.step(tokens[:, t], tokens[:, t + 1], trace, update=False)
+        if not direct or statistics_median(direct) == 0:
+            return 0.0
+        return statistics_median(recurrent) / statistics_median(direct)
+
+    @torch.no_grad()
+    def calibrate_recurrent(
+        self, tokens: torch.Tensor, *, target: float, steps: int = 120, tolerance: float = 0.05
+    ) -> dict:
+        """把 ``w_rec`` 整体缩放，使递推/输入电流比达到 ``target``。
+
+        **不是一次乘到位**：递推电流是 ``w_rec·z`` 的乘积，而 ``z`` 本身随递推电流变，
+        实测是**超线性**的（缩放 0.5 倍，电流比掉 6.6 倍）。固定步长会来回震荡，
+        所以先用两点估出幂指数 ``k``（``r ∝ s^k``），再解出所需缩放，最后用局部指数精修一次。
+        """
+        if self.recurrence != "random":
+            return {"target": target, "achieved": 0.0, "total_scale": 1.0, "rounds": 0}
+        probe = 0.8
+        base = self.measure_current_ratio(tokens, steps=steps)
+        self.w_rec.mul_(probe)
+        probed = self.measure_current_ratio(tokens, steps=steps)
+        total_scale = probe
+        exponent = 1.0
+        if base > 0 and probed > 0 and abs(probed - base) > 1e-9:
+            exponent = math.log(probed / base) / math.log(probe)
+            exponent = min(max(exponent, 1.0), 6.0)
+        achieved = probed
+        rounds = 0
+        for _ in range(4):
+            if abs(achieved - target) <= tolerance:
+                break
+            if achieved <= 1e-6:
+                factor = 1.2
+            else:
+                factor = (target / achieved) ** (1.0 / exponent)
+            factor = min(max(factor, 0.7), 1.4)
+            self.w_rec.mul_(factor)
+            total_scale *= factor
+            achieved = self.measure_current_ratio(tokens, steps=steps)
+            rounds += 1
+        return {
+            "target": target,
+            "initial": round(base, 4),
+            "exponent": round(exponent, 3),
+            "total_scale": round(total_scale, 4),
+            "achieved": round(achieved, 4),
+            "rounds": rounds,
+        }
+
+    @torch.no_grad()
+    def silent_rate(self, batch: int, *, steps: int = 50) -> float:
+        """**零输入**下跑若干步的发放率——测网络会不会自持振荡。"""
+        trace = self.new_trace(batch)
+        fired = 0
+        for _ in range(steps):
+            current = self._recurrent_current(trace.z)
+            new_v = self.alpha * trace.v + current - trace.z * self.threshold
+            scaled = (new_v - self.threshold) / self.threshold
+            fresh = (scaled > 0).to(trace.v.dtype)
+            new_z = torch.where(trace.refractory > 0, torch.zeros_like(fresh), fresh)
+            trace.refractory = torch.clamp(
+                trace.refractory + self.n_refractory * new_z - 1.0,
+                min=0.0,
+                max=float(self.n_refractory),
+            )
+            trace.v, trace.z = new_v, new_z
+            fired += int(new_z.sum())
+        return fired / (steps * batch * self.n_rec)
 
     # -- 整块 -----------------------------------------------------------------
 

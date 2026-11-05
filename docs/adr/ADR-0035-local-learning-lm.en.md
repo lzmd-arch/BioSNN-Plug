@@ -124,3 +124,41 @@ locally-trained readout beats bigram for the first time (1.139 / 0.717 vs 1.423 
 not). Reopening does not need new data — it needs a **new pre-registration** that writes "recurrent current /
 input current ∈ [0.8, 1.3]" as a precondition and asks again, fairly, whether recurrence or SSM helps.
 That corrects an implementation defect; it is not tuning a result green.
+
+## ADR-0035-c: the M0/M0b conclusions are marked "evidence contaminated"
+
+**The M0/M0b stop decision rests on incomplete evidence.** Their recurrent arms carried 2.16× the input
+current at initialisation, letting internal dynamics dominate the e-prop learning signal. Therefore:
+
+- the M0/M0b **numbers** stand and remain valid (reproducible);
+- the M0/M0b **inferences** ("local learning loses to a character bigram", "training the recurrent weights
+  is harmful") are marked **"evidence contaminated"** and must not be cited;
+- whether to reopen the branch is decided by S1's pre-registration, not by this ADR.
+
+
+**2026-11-06, third round: S1 answers "does controlled recurrence help?" — no.**
+
+Recurrent current calibrated to 0.5× and 1.0× of the input (power-law calibration, achieved 0.556 / 1.021),
+everything else as in S0:
+
+| Arm | CE | top-1 |
+| :--- | ---: | ---: |
+| no recurrence | **1.139** | **0.717** |
+| rec@0.5 (frozen) | 1.231 | 0.698 |
+| rec@1.0 (frozen) | 1.330 | 0.668 |
+| rec@0.5 (learned, `w_rec` moved 7.2%) | 1.213 | 0.687 |
+
+- **the monotonic trend persists in the controlled range** (0× → 0.717, 0.56× → 0.698, 1.02× → 0.668);
+- **learning the recurrent weights still does not help** — and this round rules out "drowning" as the
+  explanation, since the current was calibrated;
+- **zero-input firing is 0 in all four arms**, so this is not self-sustained oscillation: it is a large but
+  uninformative current diluting the token signal.
+
+**Conclusion**: at this working point **a feedforward LIF with a locally-trained readout is the best
+configuration**; any recurrent current is a drag. The SSM branch closes with it: the structural prior neither
+helped while drowned nor needs a fair re-test, because **even the simplest recurrence is not worth keeping**.
+
+**Aside**: the A-line `EventDrivenEProp` (sMNIST, N=8192, fan-in 32) has a recurrent/input current ratio of
+**1.106**, the same regime that cost 4.9pp here. The A-line's **relative** conclusions are unaffected (both
+arms share the recurrence), but its **absolute** numbers may be conservative: "no recurrence vs recurrence"
+has never been measured there.
