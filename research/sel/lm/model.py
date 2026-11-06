@@ -284,10 +284,7 @@ class TokenEProp:
         for _ in range(4):
             if abs(achieved - target) <= tolerance:
                 break
-            if achieved <= 1e-6:
-                factor = 1.2
-            else:
-                factor = (target / achieved) ** (1.0 / exponent)
+            factor = 1.2 if achieved <= 1e-6 else (target / achieved) ** (1.0 / exponent)
             factor = min(max(factor, 0.7), 1.4)
             self.w_rec.mul_(factor)
             total_scale *= factor
