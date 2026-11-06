@@ -252,3 +252,33 @@ not judgeable (R1b-0 fails).
 **One open item**: R0 (real corpus) also ran at the 2,000-update level. There is no direct evidence of underfitting
 (CE ratio 0.57-0.63, 128-271 epochs), but it was **never re-run epoch-aligned** -- so whether its -10.4pp is a
 real loss or underfitting is unresolved. This is the only loose end.
+
+
+**2026-11-07, eighth round: R0b is RED — real text is a hard boundary, not underfitting.**
+
+The real corpus was also given an epoch-aligned budget (16,000 updates), two folds (the first, plus the fold with
+the largest training set):
+
+| Fold | train pairs | top-1 after 16k | bigram | delta | CE tail/head |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| fold 1 | **118** | 0.0604 | 0.1754 | **-11.49pp** | 0.13 (converged) |
+| largest | **252** | 0.0652 | 0.1669 | **-10.17pp** | 0.39 (converged) |
+
+The largest fold's full curve (every 2,000 steps): test CE **rises monotonically 6.35 -> 7.93**, while top-1 peaks at
+**0.0691 at 4,000 steps** and then declines.
+
+**Both statements hold at once**: (1) **it is not underfitting** (CE ratios 0.13 / 0.39, fully trained); (2) **nor is
+it "train longer and catch up"** -- even at the curve's best point it is still **9.8pp** behind bigram.
+
+**This is the branch's RED boundary**: on 34k characters of real conversation with a 1,246-character vocabulary, a
+feedforward LIF with a locally-trained readout **cannot match a character bigram**, and the gap does not shrink with
+more training. The dose response is real (118 -> 252 pairs drops CE at 16k from 11.26 to 7.93), but **top-1 stays
+between 0.060 and 0.069** regardless of data size.
+
+**Deviation**: the pre-registration said six folds, two were run; the stopping rule is recorded in the results file
+(fold 1 showed decisive overfitting, and one fold takes 1.75 h in practice, so six would take 8-10 hours). This does
+not affect the directional conclusion.
+
+**Only three fixes remain**: more data (synthetic expansion into the hundreds of thousands of pairs, to bring the
+parameter/data ratio down), a smaller readout (or stronger regularisation), and early stopping (which limits damage
+but cannot lift top-1). **More training is not among them.**

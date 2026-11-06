@@ -80,7 +80,9 @@ def bigram_accuracy(
     return hits / max(total, 1), ce / max(total, 1)
 
 
-def run_fold(train_texts: list[str], test_texts: list[str], device, updates: int) -> dict:
+def run_fold(
+    train_texts: list[str], test_texts: list[str], device, updates: int, eval_every: int = 0
+) -> dict:
     torch.manual_seed(SEED)
     vocab = build_vocab(train_texts)
     train = [encode(text, vocab, cap=MAX_LEN) for text in train_texts]
@@ -101,14 +103,30 @@ def run_fold(train_texts: list[str], test_texts: list[str], device, updates: int
     )
     generator = torch.Generator().manual_seed(SEED + 17)
     losses: list[float] = []
-    for _ in range(updates):
+    curve: list[dict] = []
+    test_tokens, test_valid = make_batches(test, order=list(range(len(test))), pad=pad)
+    for step in range(updates):
         order = torch.randperm(len(train), generator=generator)[:BATCH].tolist()
         tokens, valid = make_batches(train, order=order, pad=pad)
         result = model.run(
             tokens.to(device), model.new_trace(tokens.shape[0]), valid=valid.to(device)
         )
         losses.append(result["ce"])
-    tokens, valid = make_batches(test, order=list(range(len(test))), pad=pad)
+        if eval_every and (step + 1) % eval_every == 0:
+            # 周期评测必须用**全新状态**，否则会把训练状态带进测试
+            probe = model.evaluate(
+                test_tokens.to(device),
+                model.new_trace(test_tokens.shape[0]),
+                valid=test_valid.to(device),
+            )
+            curve.append(
+                {"updates": step + 1, "top1": round(probe["top1"], 4), "ce": round(probe["ce"], 4)}
+            )
+            print(
+                f"    step {step + 1}: test top1 {probe['top1']:.4f} ce {probe['ce']:.3f}",
+                flush=True,
+            )
+    tokens, valid = test_tokens, test_valid
     metrics = model.evaluate(
         tokens.to(device), model.new_trace(tokens.shape[0]), valid=valid.to(device)
     )
@@ -126,6 +144,7 @@ def run_fold(train_texts: list[str], test_texts: list[str], device, updates: int
         "delta_top1": round(metrics["top1"] - base_top1, 4),
         "ce_ratio": round(tail / head, 4) if head else None,
         "tokens": metrics["tokens"],
+        "curve": curve,
     }
 
 
@@ -135,17 +154,26 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=OUT)
     parser.add_argument("--updates", type=int, default=UPDATES)
     parser.add_argument("--tag", default="r0")
+    parser.add_argument("--sessions", default="", help="逗号分隔的留出会话；空=全部")
+    parser.add_argument("--eval-every", type=int, default=0)
     args = parser.parse_args(argv)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     by_session = load_sequences(args.data)
     sessions = sorted(by_session)
+    held_sessions = sessions
+    if args.sessions:
+        wanted = [item.strip() for item in args.sessions.split(",") if item.strip()]
+        missing = [w for w in wanted if w not in sessions]
+        if missing:
+            raise SystemExit(f"未知会话：{missing}")
+        held_sessions = wanted  # 只限制跑哪几折；训练仍用全部会话
     print(f"会话 {len(sessions)} 个，各折对数 {[len(by_session[s]) for s in sessions]}", flush=True)
 
     folds: dict[str, dict] = {}
-    for held in sessions:
+    for held in held_sessions:
         train_texts = [text for s in sessions if s != held for text in by_session[s]]
-        folds[held] = run_fold(train_texts, by_session[held], device, args.updates)
+        folds[held] = run_fold(train_texts, by_session[held], device, args.updates, args.eval_every)
         print(f"[hold-out {held}] {folds[held]}", flush=True)
 
     deltas = [fold["delta_top1"] for fold in folds.values()]

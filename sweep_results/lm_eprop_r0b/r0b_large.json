@@ -1,0 +1,79 @@
+{
+ "kind": "R0: feedforward local-rule LM on a real conversation corpus",
+ "seed": 0,
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "max_len": 192,
+  "batch": 16,
+  "updates": 16000,
+  "lr_in": 0.001,
+  "lr_out": 0.5
+ },
+ "folds": {
+  "20261018-154235-861faf": {
+   "vocab": 1216,
+   "train_pairs": 252,
+   "test_pairs": 13,
+   "top1": 0.0652,
+   "ce": 7.9279,
+   "bigram_top1": 0.1669,
+   "bigram_ce": 5.6564,
+   "delta_top1": -0.1017,
+   "ce_ratio": 0.386,
+   "tokens": 1810,
+   "curve": [
+    {
+     "updates": 2000,
+     "top1": 0.0641,
+     "ce": 6.3527
+    },
+    {
+     "updates": 4000,
+     "top1": 0.0691,
+     "ce": 6.6219
+    },
+    {
+     "updates": 6000,
+     "top1": 0.068,
+     "ce": 6.9625
+    },
+    {
+     "updates": 8000,
+     "top1": 0.0657,
+     "ce": 7.2396
+    },
+    {
+     "updates": 10000,
+     "top1": 0.0657,
+     "ce": 7.3286
+    },
+    {
+     "updates": 12000,
+     "top1": 0.0685,
+     "ce": 7.6319
+    },
+    {
+     "updates": 14000,
+     "top1": 0.0663,
+     "ce": 7.7387
+    },
+    {
+     "updates": 16000,
+     "top1": 0.0652,
+     "ce": 7.9279
+    }
+   ]
+  }
+ },
+ "criteria": {
+  "r0_0_loss_falls": true,
+  "r0_1_beats_bigram": false,
+  "r0_2_most_folds_win": false,
+  "r0_3_ce_better": false,
+  "mean_delta_top1": -0.1017,
+  "folds_winning": 0,
+  "mean_top1": 0.0652,
+  "mean_bigram_top1": 0.1669
+ }
+}
