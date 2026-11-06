@@ -40,9 +40,9 @@ LOSS_DROP = 0.6
 WIN_DELTA = 0.0
 
 
-def load_groups(level: str) -> dict[int, list[str]]:
+def load_groups(level: str, name: str = "") -> dict[int, list[str]]:
     groups: dict[int, list[str]] = defaultdict(list)
-    path = DATA / f"{level}.jsonl"
+    path = DATA / f"{name or level}.jsonl"
     for line in path.read_text(encoding="utf-8").splitlines():
         row = json.loads(line)
         groups[int(row["group"])].append(f"\x01{row['user']}\x02{row['assistant']}\x03")
@@ -136,6 +136,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--updates", type=int, default=UPDATES)
     parser.add_argument("--levels", default=",".join(LEVELS))
     parser.add_argument("--folds", default="", help="逗号分隔的留出 group；空=全部")
+    parser.add_argument("--name", default="", help="语料文件名（不含 .jsonl）；空=用 level")
     parser.add_argument("--tag", default="r1")
     args = parser.parse_args(argv)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -144,7 +145,7 @@ def main(argv: list[str] | None = None) -> int:
     report: dict[str, dict] = {}
     fold_ids = [int(item) for item in args.folds.split(",") if item.strip()] if args.folds else None
     for level in levels:
-        groups = load_groups(level)
+        groups = load_groups(level, args.name)
         held_ids = fold_ids if fold_ids is not None else sorted(groups)
         folds: dict[str, dict] = {}
         for held in held_ids:
