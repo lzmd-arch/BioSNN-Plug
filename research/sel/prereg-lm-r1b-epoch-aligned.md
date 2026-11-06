@@ -4,7 +4,7 @@
 
 ## 为什么要这一轮
 
-R1（[`../sweep_results/lm_eprop_r1/README.md`](../sweep_results/lm_eprop_r1/README.md)）里，
+R1（[`../sweep_results/lm_eprop_r1/README.md`](../../sweep_results/lm_eprop_r1/README.md)）里，
 M/H 两档的损失只降到初值的 **0.71 / 0.80**，按预注册的前置判据 R1-2 不过，
 所以它们的 −10.7 / −11.7pp **判为不可判，不判为输**。
 

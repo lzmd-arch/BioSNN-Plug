@@ -230,3 +230,25 @@ A suspicion was also ruled out: the M/H collapse is **not** vocabulary truncatio
 
 **Next is R1b: align the update count to epochs** (~20,000 updates; three folds brings it to 1.5-2 hours).
 **No changes to N or tau before that** -- that would mistake "not trained enough" for "architecture too small".
+
+
+**2026-11-06, seventh round: R1b — train long enough and R1's "M/H lose" disappears.**
+
+Only the update count changed, from 2,000 to **16,000** (about 103 epochs, matching S2's 106), three rungs x
+three folds:
+
+| Rung | bigram | model | **delta** | R1 (2k) | CE tail/head |
+| :--- | ---: | ---: | ---: | ---: | :--- |
+| **E** | 0.4766 | 0.6123 | **+13.58pp** | +2.1pp | 0.32 (converged) |
+| **M** | 0.3505 | 0.3397 | **-1.08pp** | -10.7pp | 0.51 (converged) |
+| H | 0.2933 | 0.2542 | -3.92pp | -11.7pp | 0.62 (still slightly underfit) |
+
+**Same corpus, same architecture, same hyperparameters -- only the training budget changed, and the three deltas
+rose by 11.5 / 9.6 / 7.8pp.** So **R1's "M/H lose by 10-12pp" is void**; it was a 12.8-epoch result.
+
+**The crossover sits between bigram 0.35 and 0.48**: a 13.6pp win at 0.48, a tie (-1.1pp) at 0.35. H remains
+not judgeable (R1b-0 fails).
+
+**One open item**: R0 (real corpus) also ran at the 2,000-update level. There is no direct evidence of underfitting
+(CE ratio 0.57-0.63, 128-271 epochs), but it was **never re-run epoch-aligned** -- so whether its -10.4pp is a
+real loss or underfitting is unresolved. This is the only loose end.

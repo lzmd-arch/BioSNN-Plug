@@ -3,6 +3,12 @@
 **预注册**：[`research/sel/prereg-lm-r1-synthetic-ladder.md`](../../research/sel/prereg-lm-r1-synthetic-ladder.md)
 **原始数据**：[`r1.json`](r1.json)、[`ladder.json`](ladder.json)（三档 bigram 基线）
 
+## ⚠️ 2026-11-06 更正：M/H 的"输"是欠拟合假象
+
+R1b（[`../lm_eprop_r1b/README.md`](../lm_eprop_r1b/README.md)）把 updates 从 2,000 提到 16,000：
+**E 从 +2.1pp 涨到 +13.6pp、M 从 −10.7pp 收窄到 −1.1pp**。
+本文件里"M/H 输 10–12pp"的读数**作废**——那是 12.8 epoch 的结果，不是语料难度。
+
 ## 一句话
 
 **E 档（bigram 0.4765）赢 bigram +2.1pp、六折全胜、且已收敛；M/H 两档输 10–12pp，
