@@ -1,0 +1,97 @@
+{
+ "kind": "R0: feedforward local-rule LM on a real conversation corpus",
+ "seed": 0,
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "max_len": 192,
+  "batch": 16,
+  "updates": 2000,
+  "lr_in": 0.001,
+  "lr_out": 0.5
+ },
+ "folds": {
+  "20261012-131301-144740": {
+   "vocab": 986,
+   "train_pairs": 118,
+   "test_pairs": 147,
+   "top1": 0.0633,
+   "ce": 7.2848,
+   "bigram_top1": 0.1754,
+   "bigram_ce": 5.7824,
+   "delta_top1": -0.112,
+   "ce_ratio": 0.333,
+   "tokens": 14825
+  },
+  "20261018-154235-861faf": {
+   "vocab": 1216,
+   "train_pairs": 252,
+   "test_pairs": 13,
+   "top1": 0.0641,
+   "ce": 6.3527,
+   "bigram_top1": 0.1669,
+   "bigram_ce": 5.6564,
+   "delta_top1": -0.1028,
+   "ce_ratio": 0.6272,
+   "tokens": 1810
+  },
+  "20261019-115739-2a8af0": {
+   "vocab": 1215,
+   "train_pairs": 251,
+   "test_pairs": 14,
+   "top1": 0.0762,
+   "ce": 6.2825,
+   "bigram_top1": 0.1799,
+   "bigram_ce": 5.6507,
+   "delta_top1": -0.1037,
+   "ce_ratio": 0.6147,
+   "tokens": 945
+  },
+  "20261031-192313-9d8d81": {
+   "vocab": 1244,
+   "train_pairs": 249,
+   "test_pairs": 16,
+   "top1": 0.0965,
+   "ce": 5.6668,
+   "bigram_top1": 0.2028,
+   "bigram_ce": 5.4026,
+   "delta_top1": -0.1063,
+   "ce_ratio": 0.6156,
+   "tokens": 715
+  },
+  "20261031-200943-523b29": {
+   "vocab": 1159,
+   "train_pairs": 206,
+   "test_pairs": 59,
+   "top1": 0.0772,
+   "ce": 6.343,
+   "bigram_top1": 0.1873,
+   "bigram_ce": 5.6753,
+   "delta_top1": -0.1101,
+   "ce_ratio": 0.5705,
+   "tokens": 4468
+  },
+  "20261105-225220-dc8ee9": {
+   "vocab": 1240,
+   "train_pairs": 249,
+   "test_pairs": 16,
+   "top1": 0.1034,
+   "ce": 6.3274,
+   "bigram_top1": 0.1905,
+   "bigram_ce": 5.6922,
+   "delta_top1": -0.0871,
+   "ce_ratio": 0.6134,
+   "tokens": 861
+  }
+ },
+ "criteria": {
+  "r0_0_loss_falls": false,
+  "r0_1_beats_bigram": false,
+  "r0_2_most_folds_win": false,
+  "r0_3_ce_better": false,
+  "mean_delta_top1": -0.1037,
+  "folds_winning": 0,
+  "mean_top1": 0.0801,
+  "mean_bigram_top1": 0.1838
+ }
+}

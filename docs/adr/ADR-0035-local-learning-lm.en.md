@@ -184,3 +184,25 @@ NLMS readout, no autograd anywhere) reliably beats a second-order character bigr
 
 **Boundaries**: character level, templated corpus, one layer, N=1,024, 2,000 updates, 46 test items; this does
 not extrapolate to "can hold a conversation".
+
+
+**2026-11-06, fifth round: R0 — switching to a real corpus, all six folds lose.**
+
+The corpus goes from SEL's templated pairs to **real conversations** (265 pairs / 34,183 chars / 1,246 unique
+characters, outside the repo, not committed), leave-one-session-out over six folds, everything else as in S2:
+
+| Corpus | unique chars | bigram top-1 | model top-1 | delta |
+| :--- | ---: | ---: | ---: | ---: |
+| SEL templated (S2) | 274 | 0.646 | **0.7226** | **+7.7pp** |
+| **real conversations (R0)** | **986-1,244** | **0.184** | **0.080** | **-10.4pp** |
+
+**All four criteria fail**: 0/6 folds win, mean delta -10.37pp, and training loss only falls to 0.57-0.63 of its
+initial value.
+
+**Conclusion**: S2's 0.7226 **does not transfer to real text** — that was a low-entropy templated corpus. At this
+budget (118-252 training pairs per fold, 2,000 updates, N=1,024) the feedforward local-rule model **cannot even
+match a character bigram**. It does learn (0.080 is far above the 1/1,200 chance line), just far too little.
+
+**One thing this cannot separate**: "too little data" from "too shallow an architecture". The planned next step
+is **synthetic expansion** (thousands to tens of thousands of pairs) under the same criteria; **no tuning of N or
+tau** before that — that would be moving the goalposts.
