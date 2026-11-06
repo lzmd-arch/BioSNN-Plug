@@ -135,16 +135,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=OUT)
     parser.add_argument("--updates", type=int, default=UPDATES)
     parser.add_argument("--levels", default=",".join(LEVELS))
+    parser.add_argument("--folds", default="", help="逗号分隔的留出 group；空=全部")
     parser.add_argument("--tag", default="r1")
     args = parser.parse_args(argv)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     levels = [item.strip() for item in args.levels.split(",") if item.strip()]
 
     report: dict[str, dict] = {}
+    fold_ids = [int(item) for item in args.folds.split(",") if item.strip()] if args.folds else None
     for level in levels:
         groups = load_groups(level)
+        held_ids = fold_ids if fold_ids is not None else sorted(groups)
         folds: dict[str, dict] = {}
-        for held in sorted(groups):
+        for held in held_ids:
             train_texts = [text for g in groups if g != held for text in groups[g]]
             folds[str(held)] = run_fold(train_texts, groups[held], device, args.updates)
         deltas = [fold["delta_top1"] for fold in folds.values()]
@@ -161,7 +164,7 @@ def main(argv: list[str] | None = None) -> int:
         print(
             f"[{level}] {report[level]['mean_top1']} vs bigram "
             f"{report[level]['mean_bigram_top1']} → Δ {report[level]['mean_delta']:+.4f}，"
-            f"赢 {report[level]['folds_winning']}/6",
+            f"赢 {report[level]['folds_winning']}/{len(held_ids)}",
             flush=True,
         )
 
