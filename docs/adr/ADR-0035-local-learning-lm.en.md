@@ -206,3 +206,27 @@ match a character bigram**. It does learn (0.080 is far above the 1/1,200 chance
 **One thing this cannot separate**: "too little data" from "too shallow an architecture". The planned next step
 is **synthetic expansion** (thousands to tens of thousands of pairs) under the same criteria; **no tuning of N or
 tau** before that — that would be moving the goalposts.
+
+
+**2026-11-06, sixth round: R1 difficulty ladder — only the easiest rung is valid.**
+
+Three synthetic corpora from the local `qwen3-4b` (3,000 pairs each; only four knobs vary: topics, personas,
+temperature, turns):
+
+| Rung | bigram | model | delta | folds won | CE tail/head |
+| :--- | ---: | ---: | ---: | ---: | :--- |
+| **E** | 0.4765 | **0.4973** | **+2.08pp** | **6/6** | 0.50-0.54 (converged) |
+| M | 0.3463 | 0.2390 | -10.72pp | 0/6 | **0.71-0.73 (underfit)** |
+| H | 0.2919 | 0.1752 | -11.67pp | 0/6 | **0.79-0.82 (underfit)** |
+
+**R1-2 (every rung converges) fails, so M/H are "not judgeable", not "losing".** The root cause is **my design
+error**: S2 trained 301 samples for 2,000 updates (106 epochs); R1 trained 2,500 per fold for the same 2,000
+updates (**12.8 epochs**) -- the corpus grew 8x but the update count did not.
+
+A suspicion was also ruled out: the M/H collapse is **not** vocabulary truncation (top-800 covers 97%+ of characters).
+
+**Three valid points now exist**: bigram 0.646 -> **+7.7pp** (S2), 0.4765 -> **+2.1pp** (R1-E), 0.184 -> **-10.4pp**
+(R0). **Monotone across three points**, but the 0.35-0.30 stretch is still empty.
+
+**Next is R1b: align the update count to epochs** (~20,000 updates; three folds brings it to 1.5-2 hours).
+**No changes to N or tau before that** -- that would mistake "not trained enough" for "architecture too small".

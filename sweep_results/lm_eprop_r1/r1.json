@@ -1,0 +1,228 @@
+{
+ "kind": "R1: difficulty ladder for the feedforward local-rule LM",
+ "seed": 0,
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "max_len": 192,
+  "max_vocab": 800,
+  "batch": 16,
+  "updates": 2000,
+  "lr_in": 0.001,
+  "lr_out": 0.5
+ },
+ "levels": {
+  "E": {
+   "folds": {
+    "0": {
+     "vocab": 772,
+     "top1": 0.4902,
+     "ce": 2.589,
+     "bigram_top1": 0.4824,
+     "bigram_ce": 2.6349,
+     "delta_top1": 0.0078,
+     "ce_ratio": 0.5399,
+     "tokens": 11246
+    },
+    "1": {
+     "vocab": 765,
+     "top1": 0.501,
+     "ce": 2.5907,
+     "bigram_top1": 0.4794,
+     "bigram_ce": 2.6566,
+     "delta_top1": 0.0216,
+     "ce_ratio": 0.5129,
+     "tokens": 11189
+    },
+    "2": {
+     "vocab": 765,
+     "top1": 0.4905,
+     "ce": 2.6316,
+     "bigram_top1": 0.468,
+     "bigram_ce": 2.7203,
+     "delta_top1": 0.0225,
+     "ce_ratio": 0.5157,
+     "tokens": 11052
+    },
+    "3": {
+     "vocab": 753,
+     "top1": 0.4868,
+     "ce": 2.6186,
+     "bigram_top1": 0.4738,
+     "bigram_ce": 2.6807,
+     "delta_top1": 0.0129,
+     "ce_ratio": 0.501,
+     "tokens": 11359
+    },
+    "4": {
+     "vocab": 764,
+     "top1": 0.4918,
+     "ce": 2.6281,
+     "bigram_top1": 0.4685,
+     "bigram_ce": 2.6548,
+     "delta_top1": 0.0234,
+     "ce_ratio": 0.5123,
+     "tokens": 10609
+    },
+    "5": {
+     "vocab": 763,
+     "top1": 0.5233,
+     "ce": 2.4645,
+     "bigram_top1": 0.4869,
+     "bigram_ce": 2.6175,
+     "delta_top1": 0.0364,
+     "ce_ratio": 0.503,
+     "tokens": 10989
+    }
+   },
+   "mean_top1": 0.4973,
+   "mean_bigram_top1": 0.4765,
+   "mean_delta": 0.0208,
+   "folds_winning": 6,
+   "loss_falls_all": true
+  },
+  "M": {
+   "folds": {
+    "0": {
+     "vocab": 801,
+     "top1": 0.2342,
+     "ce": 4.299,
+     "bigram_top1": 0.3492,
+     "bigram_ce": 3.6437,
+     "delta_top1": -0.115,
+     "ce_ratio": 0.7335,
+     "tokens": 11729
+    },
+    "1": {
+     "vocab": 801,
+     "top1": 0.2373,
+     "ce": 4.2275,
+     "bigram_top1": 0.348,
+     "bigram_ce": 3.7059,
+     "delta_top1": -0.1107,
+     "ce_ratio": 0.7192,
+     "tokens": 13565
+    },
+    "2": {
+     "vocab": 801,
+     "top1": 0.2496,
+     "ce": 4.1342,
+     "bigram_top1": 0.3543,
+     "bigram_ce": 3.6132,
+     "delta_top1": -0.1047,
+     "ce_ratio": 0.7139,
+     "tokens": 10734
+    },
+    "3": {
+     "vocab": 801,
+     "top1": 0.2294,
+     "ce": 4.3225,
+     "bigram_top1": 0.3371,
+     "bigram_ce": 3.7114,
+     "delta_top1": -0.1077,
+     "ce_ratio": 0.7187,
+     "tokens": 12008
+    },
+    "4": {
+     "vocab": 801,
+     "top1": 0.2447,
+     "ce": 4.1966,
+     "bigram_top1": 0.3492,
+     "bigram_ce": 3.6786,
+     "delta_top1": -0.1044,
+     "ce_ratio": 0.7194,
+     "tokens": 12495
+    },
+    "5": {
+     "vocab": 801,
+     "top1": 0.2389,
+     "ce": 4.2072,
+     "bigram_top1": 0.3397,
+     "bigram_ce": 3.7339,
+     "delta_top1": -0.1007,
+     "ce_ratio": 0.7084,
+     "tokens": 13342
+    }
+   },
+   "mean_top1": 0.239,
+   "mean_bigram_top1": 0.3463,
+   "mean_delta": -0.1072,
+   "folds_winning": 0,
+   "loss_falls_all": false
+  },
+  "H": {
+   "folds": {
+    "0": {
+     "vocab": 801,
+     "top1": 0.1786,
+     "ce": 4.6021,
+     "bigram_top1": 0.2947,
+     "bigram_ce": 3.8518,
+     "delta_top1": -0.1162,
+     "ce_ratio": 0.7966,
+     "tokens": 13732
+    },
+    "1": {
+     "vocab": 801,
+     "top1": 0.1553,
+     "ce": 4.814,
+     "bigram_top1": 0.292,
+     "bigram_ce": 3.8609,
+     "delta_top1": -0.1367,
+     "ce_ratio": 0.8229,
+     "tokens": 13047
+    },
+    "2": {
+     "vocab": 801,
+     "top1": 0.1807,
+     "ce": 4.642,
+     "bigram_top1": 0.2932,
+     "bigram_ce": 3.8705,
+     "delta_top1": -0.1125,
+     "ce_ratio": 0.7969,
+     "tokens": 15625
+    },
+    "3": {
+     "vocab": 801,
+     "top1": 0.1869,
+     "ce": 4.6043,
+     "bigram_top1": 0.2887,
+     "bigram_ce": 3.878,
+     "delta_top1": -0.1018,
+     "ce_ratio": 0.7949,
+     "tokens": 13306
+    },
+    "4": {
+     "vocab": 801,
+     "top1": 0.1753,
+     "ce": 4.5999,
+     "bigram_top1": 0.2916,
+     "bigram_ce": 3.868,
+     "delta_top1": -0.1163,
+     "ce_ratio": 0.7981,
+     "tokens": 15147
+    },
+    "5": {
+     "vocab": 801,
+     "top1": 0.1745,
+     "ce": 4.6984,
+     "bigram_top1": 0.2911,
+     "bigram_ce": 3.8828,
+     "delta_top1": -0.1166,
+     "ce_ratio": 0.8085,
+     "tokens": 16546
+    }
+   },
+   "mean_top1": 0.1752,
+   "mean_bigram_top1": 0.2919,
+   "mean_delta": -0.1167,
+   "folds_winning": 0,
+   "loss_falls_all": false
+  }
+ },
+ "criteria": {
+  "r1_2_loss_falls": false,
+  "r1_3_monotone": true,
+  "r1_4_middle_wins": false
+ }
+}
