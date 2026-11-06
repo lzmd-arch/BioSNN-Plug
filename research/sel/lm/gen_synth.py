@@ -72,12 +72,47 @@ TOPICS = [
 FORMAT_RULE = "严格格式：每行以「用户：」或「千岁：」开头，不加旁白，不加解释。"
 
 
-def build_prompt(topic: str, persona: str, turns: int, twist: bool) -> str:
+def real_stats(path: Path) -> dict:
+    """从真实语料只取**聚合量**：每轮字数的 10/90 分位、标点占比。**不取任何正文。**"""
+    import statistics
+
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    lengths = [len(row[side]) for row in rows for side in ("user", "assistant")]
+    marks = sum(
+        text.count(ch)
+        for row in rows
+        for text in (row["user"], row["assistant"])
+        for ch in "，。？！"
+    )
+    chars = sum(len(row["user"]) + len(row["assistant"]) for row in rows)
+    ordered = sorted(lengths)
+    p10 = ordered[int(len(ordered) * 0.10)]
+    p90 = ordered[int(len(ordered) * 0.90)]
+    return {
+        "p10": max(p10, 2),
+        "p90": max(p90, p10 + 1),
+        "p50": max(ordered[int(len(ordered) * 0.50)], 2),
+        "p80": max(ordered[int(len(ordered) * 0.80)], 3),
+        "punct": marks / max(chars, 1),
+        "median": int(statistics.median(lengths)),
+    }
+
+
+def build_prompt(
+    topic: str, persona: str, turns: int, twist: bool, stats: dict | None = None
+) -> str:
     extra = "其中一轮要出现情绪转折或打断。" if twist else ""
+    if stats:
+        length_rule = (
+            f"每句 {stats['p50']}–{stats['p80']} 字（多数句子在这个区间），"
+            f"标点密度约 {stats['punct']:.0%}"
+        )
+    else:
+        length_rule = "每句 5–25 字"
     return (
         f"请写一段日常对话，双方是用户和 AI 伴侣“千岁”。\n"
         f"千岁的性格：{persona}。\n话题：{topic}。\n长度：{turns} 轮。\n"
-        f"要求：口语化，用语气词，不书面，每句 5–25 字。{extra}\n{FORMAT_RULE}"
+        f"要求：口语化，用语气词，不书面，{length_rule}。{extra}\n{FORMAT_RULE}"
     )
 
 
@@ -125,12 +160,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--pairs", type=int, default=3000)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--out-dir", type=Path, default=OUT_DIR)
+    parser.add_argument("--name", default="", help="输出文件名（不含 .jsonl）；空=用 level")
+    parser.add_argument(
+        "--stats-from", type=Path, default=None, help="真实语料；给了就用它的聚合量约束 prompt"
+    )
     args = parser.parse_args(argv)
 
     config = LEVELS[args.level]
+    stats = real_stats(args.stats_from) if args.stats_from else None
+    if stats:
+        print(
+            f"[stats] 每轮 {stats['p10']}–{stats['p90']} 字（中位 {stats['median']}），标点 {stats['punct']:.1%}"
+        )
     rng = random.Random(args.seed)
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    path = args.out_dir / f"{args.level}.jsonl"
+    path = args.out_dir / f"{args.name or args.level}.jsonl"
 
     written = 0
     attempts = 0
@@ -142,7 +186,7 @@ def main(argv: list[str] | None = None) -> int:
             topic = TOPICS[rng.randrange(config["topics"])]
             persona = PERSONAS[rng.randrange(config["personas"])]
             turns = rng.randint(*config["turns"])
-            prompt = build_prompt(topic, persona, turns, config["twists"])
+            prompt = build_prompt(topic, persona, turns, config["twists"], stats)
             raw = call(prompt, config["temperature"])
             pairs = parse(raw)
             if not pairs:
