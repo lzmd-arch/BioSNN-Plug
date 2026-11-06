@@ -56,8 +56,13 @@ class MultiTapEProp(RegionEProp):
     # -- 更新 ---------------------------------------------------------------
 
     @torch.no_grad()
-    def update(self, inputs: torch.Tensor, targets: torch.Tensor) -> float:
-        """每个抽头做一遍"最后一步"的 e-prop，梯度按抽头求和。"""
+    def update(
+        self, inputs: torch.Tensor, targets: torch.Tensor, *, learn_recurrent: bool = True
+    ) -> float:
+        """每个抽头做一遍"最后一步"的 e-prop，梯度按抽头求和。
+
+        ``learn_recurrent=False`` 时冻结 ``w_rec``（A9 用它做"去掉递推"的对照）。
+        """
         batch = inputs.shape[1]
         spikes, scaled = self.simulate(inputs)
         filtered = exp_convolve(spikes, self.decay_out)
@@ -92,6 +97,7 @@ class MultiTapEProp(RegionEProp):
                 "kbi,kbi->i", rec_trace[:, :, self.pre_index[:, slot]], post
             )
         self.w_in.add_(grad_in, alpha=-self.learning_rate_in)
-        self.w_rec.add_(grad_rec, alpha=-self.learning_rate_rec)
+        if learn_recurrent:
+            self.w_rec.add_(grad_rec, alpha=-self.learning_rate_rec)
         self.w_out.add_(-self.learning_rate_out * (self._features(filtered).T @ output_gradient))
         return loss

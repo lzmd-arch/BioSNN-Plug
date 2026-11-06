@@ -1,0 +1,46 @@
+{
+ "kind": "A9: line A with the recurrence removed",
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "taps": 28,
+ "epochs": 2,
+ "n_rec": 8192,
+ "fan_in": 32,
+ "a3_reference": {
+  "by_seed": {
+   "0": 0.917,
+   "1": 0.873,
+   "2": 0.906
+  },
+  "median": 0.899
+ },
+ "rows": {
+  "0": {
+   "accuracy": 0.904,
+   "firing_rate": 0.0962
+  },
+  "1": {
+   "accuracy": 0.89,
+   "firing_rate": 0.0969
+  },
+  "2": {
+   "accuracy": 0.918,
+   "firing_rate": 0.0966
+  }
+ },
+ "criteria": {
+  "a9_0_rate_in_band": true,
+  "a9_1_meaningful_gain": false,
+  "a9_2_limited_gain": true,
+  "a9_3_hypothesis_refuted": false,
+  "median": 0.904,
+  "per_seed_delta_vs_a3": {
+   "0": -0.013,
+   "1": 0.017,
+   "2": 0.012
+  }
+ }
+}

@@ -159,9 +159,10 @@ configuration**; any recurrent current is a drag. The SSM branch closes with it:
 helped while drowned nor needs a fair re-test, because **even the simplest recurrence is not worth keeping**.
 
 **Aside**: the A-line `EventDrivenEProp` (sMNIST, N=8192, fan-in 32) has a recurrent/input current ratio of
-**1.106**, the same regime that cost 4.9pp here. The A-line's **relative** conclusions are unaffected (both
-arms share the recurrence), but its **absolute** numbers may be conservative: "no recurrence vs recurrence"
-has never been measured there.
+**1.106**, the same regime that cost 4.9pp here. The A-line's **relative** conclusions are unaffected (both arms share
+the recurrence). **A9, run the same day, refutes the corollary**: removing the recurrence gives a median of
+0.904 vs 0.899, only +0.5pp (per seed −1.3 / +1.7 / +1.2pp). **So the "recurrent-current slope" does not
+transfer across tasks**, and the A-line's absolute numbers are not depressed by the recurrence.
 
 
 **2026-11-06, fourth round: S2 confirms across five seeds — 0.717 was not luck.**
