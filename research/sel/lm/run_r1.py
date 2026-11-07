@@ -83,7 +83,16 @@ def bigram_accuracy(
     return hits / max(total, 1), ce / max(total, 1)
 
 
-def run_fold(train_texts: list[str], test_texts: list[str], device, updates: int) -> dict:
+def run_fold(
+    train_texts: list[str],
+    test_texts: list[str],
+    device,
+    updates: int,
+    *,
+    readout_width: int | None = None,
+    eval_every: int = 0,
+    n_rec: int = N_REC,
+) -> dict:
     torch.manual_seed(SEED)
     vocab = build_vocab(train_texts)
     train = [encode(text, vocab, cap=MAX_LEN) for text in train_texts]
@@ -91,7 +100,7 @@ def run_fold(train_texts: list[str], test_texts: list[str], device, updates: int
     pad = vocab["<unk>"]
     model = TokenEProp(
         len(vocab),
-        N_REC,
+        n_rec,
         fan_in=FAN_IN,
         tau=TAU,
         tau_read=TAU_READ,
@@ -99,19 +108,32 @@ def run_fold(train_texts: list[str], test_texts: list[str], device, updates: int
         lr_in=LR_IN,
         lr_out=LR_OUT,
         recurrence="none",
+        readout_width=readout_width,
         generator=torch.Generator().manual_seed(SEED),
         device=device,
     )
     generator = torch.Generator().manual_seed(SEED + 17)
     losses: list[float] = []
-    for _ in range(updates):
+    curve: list[dict] = []
+    probe_tokens, probe_valid = make_batches(test, order=list(range(len(test))), pad=pad)
+    for step in range(updates):
         order = torch.randperm(len(train), generator=generator)[:BATCH].tolist()
         tokens, valid = make_batches(train, order=order, pad=pad)
         result = model.run(
             tokens.to(device), model.new_trace(tokens.shape[0]), valid=valid.to(device)
         )
         losses.append(result["ce"])
-    tokens, valid = make_batches(test, order=list(range(len(test))), pad=pad)
+        if eval_every and (step + 1) % eval_every == 0:
+            probe = model.evaluate(
+                probe_tokens.to(device),
+                model.new_trace(probe_tokens.shape[0]),
+                valid=probe_valid.to(device),
+            )
+            curve.append(
+                {"updates": step + 1, "top1": round(probe["top1"], 4), "ce": round(probe["ce"], 4)}
+            )
+            print(f"    step {step + 1}: top1 {probe['top1']:.4f} ce {probe['ce']:.3f}", flush=True)
+    tokens, valid = probe_tokens, probe_valid
     metrics = model.evaluate(
         tokens.to(device), model.new_trace(tokens.shape[0]), valid=valid.to(device)
     )
@@ -127,6 +149,7 @@ def run_fold(train_texts: list[str], test_texts: list[str], device, updates: int
         "delta_top1": round(metrics["top1"] - base_top1, 4),
         "ce_ratio": round(tail / head, 4) if head else None,
         "tokens": metrics["tokens"],
+        "curve": curve,
     }
 
 
@@ -137,6 +160,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--levels", default=",".join(LEVELS))
     parser.add_argument("--folds", default="", help="逗号分隔的留出 group；空=全部")
     parser.add_argument("--name", default="", help="语料文件名（不含 .jsonl）；空=用 level")
+    parser.add_argument("--readout-width", type=int, default=0, help="0=读全部神经元")
+    parser.add_argument("--eval-every", type=int, default=0)
+    parser.add_argument("--n-rec", type=int, default=N_REC)
     parser.add_argument("--tag", default="r1")
     args = parser.parse_args(argv)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -150,7 +176,15 @@ def main(argv: list[str] | None = None) -> int:
         folds: dict[str, dict] = {}
         for held in held_ids:
             train_texts = [text for g in groups if g != held for text in groups[g]]
-            folds[str(held)] = run_fold(train_texts, groups[held], device, args.updates)
+            folds[str(held)] = run_fold(
+                train_texts,
+                groups[held],
+                device,
+                args.updates,
+                readout_width=args.readout_width or None,
+                eval_every=args.eval_every,
+                n_rec=args.n_rec,
+            )
         deltas = [fold["delta_top1"] for fold in folds.values()]
         report[level] = {
             "folds": folds,

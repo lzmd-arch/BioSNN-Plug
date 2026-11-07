@@ -88,6 +88,7 @@ class TokenEProp:
         lr_rec: float = 1e-4,
         lr_out: float = 0.5,
         recurrence: str = "random",
+        readout_width: int | None = None,
         n_state: int = 32,
         tau_state: tuple[float, float] = (1.0, 128.0),
         generator: torch.Generator | None = None,
@@ -112,7 +113,14 @@ class TokenEProp:
 
         gen = generator or torch.Generator()
         self.w_in = torch.randn(n_vocab, n_rec, generator=gen).to(self.device) * input_std
-        self.w_out = torch.randn(n_rec, n_vocab, generator=gen).to(self.device) / math.sqrt(n_rec)
+        # 读出宽度：None 或等于 n_rec 时读全部；否则初始化时固定抽一个子集（R3 的 (b) 臂）
+        if readout_width is None or int(readout_width) >= n_rec:
+            self.readout_index: torch.Tensor | None = None
+            width = n_rec
+        else:
+            width = int(readout_width)
+            self.readout_index = torch.randperm(n_rec, generator=gen)[:width].to(self.device)
+        self.w_out = torch.randn(width, n_vocab, generator=gen).to(self.device) / math.sqrt(width)
 
         post = torch.arange(n_rec, device=self.device).unsqueeze(1)
         candidates = torch.randint(0, n_rec - 1, (n_rec, fan_in), generator=gen).to(self.device)
@@ -141,6 +149,10 @@ class TokenEProp:
         )
 
     # -- 前向与更新 ------------------------------------------------------------
+
+    def _readout_features(self, readout: torch.Tensor) -> torch.Tensor:
+        """读出看到的特征：默认全部神经元；``readout_width`` 给定时只看固定子集。"""
+        return readout if self.readout_index is None else readout[:, self.readout_index]
 
     def _recurrent_current(self, z_previous: torch.Tensor) -> torch.Tensor:
         if self.recurrence != "random":
@@ -204,7 +216,8 @@ class TokenEProp:
                 active.view(-1, 1, 1).expand(-1, 1, self.n_state),
             )
 
-        logits = trace.readout @ self.w_out  # (B, V)
+        features = self._readout_features(trace.readout)
+        logits = features @ self.w_out  # (B, V)
         loss = torch.nn.functional.cross_entropy(
             logits, targets, ignore_index=-100, reduction="none"
         )
@@ -216,7 +229,19 @@ class TokenEProp:
             one_hot.scatter_(1, targets.clamp(min=0).reshape(-1, 1), 1.0)
             gradient = (probability - one_hot) * active
             gradient = gradient / max(batch, 1)
-            signal = gradient @ self.w_out.T  # (B, N)
+            signal_sub = gradient @ self.w_out.T  # (B, M)
+            if self.readout_index is None:
+                signal = signal_sub
+            else:
+                signal = torch.zeros(
+                    signal_sub.shape[0],
+                    self.n_rec,
+                    device=signal_sub.device,
+                    dtype=signal_sub.dtype,
+                )
+                signal.scatter_(
+                    1, self.readout_index.unsqueeze(0).expand(signal_sub.shape[0], -1), signal_sub
+                )
             psi = (self.dampening_factor / self.threshold) * torch.clamp(
                 1.0 - scaled.abs(), min=0.0
             )
@@ -236,8 +261,8 @@ class TokenEProp:
                 self.C.add_(post.T @ h_new, alpha=-self.lr_rec)
                 # D：跳跃连接，与 w_in 同构
                 self.D.index_add_(0, tokens, post, alpha=-self.lr_in)
-            norm = float(trace.readout.pow(2).sum(dim=1).mean().clamp(min=1e-3))
-            self.w_out.add_(trace.readout.T @ gradient / norm, alpha=-self.lr_out)
+            norm = float(features.pow(2).sum(dim=1).mean().clamp(min=1e-3))
+            self.w_out.add_(features.T @ gradient / norm, alpha=-self.lr_out)
         return loss, fired
 
     # -- 标定与诊断 ------------------------------------------------------------
@@ -374,7 +399,7 @@ class TokenEProp:
             mask = target != -100
             if not bool(mask.any()):
                 continue
-            logits = trace.readout @ self.w_out
+            logits = self._readout_features(trace.readout) @ self.w_out
             hits += int((logits.argmax(dim=-1)[mask] == target[mask]).sum())
             counted += int(mask.sum())
             total_loss += float(loss[mask].sum())

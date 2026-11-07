@@ -30,3 +30,21 @@ def test_no_recurrence_reports_zero() -> None:
 def test_ssm_has_no_random_recurrence() -> None:
     model = TokenEProp(VOCAB, N_REC, fan_in=FAN_IN, recurrence="ssm", n_state=8, device="cpu")
     assert model.measure_current_ratio(_tokens()) == 0.0
+
+
+def test_readout_width_full_is_bit_identical() -> None:
+    """``readout_width=n_rec`` 必须与默认逐位一致——否则 R3 的对照不是单变量。"""
+    base = TokenEProp(VOCAB, N_REC, fan_in=FAN_IN, device="cpu")
+    same = TokenEProp(VOCAB, N_REC, fan_in=FAN_IN, readout_width=N_REC, device="cpu")
+    assert torch.equal(base.w_out, same.w_out)
+
+
+def test_readout_width_narrow_shrinks_only_the_readout() -> None:
+    """窄读出只改 ``w_out``，神经元数与输入权重都不动。"""
+    base = TokenEProp(VOCAB, N_REC, fan_in=FAN_IN, device="cpu")
+    narrow = TokenEProp(VOCAB, N_REC, fan_in=FAN_IN, readout_width=32, device="cpu")
+    assert narrow.w_out.shape == (32, VOCAB)
+    assert narrow.w_in.shape == base.w_in.shape
+    assert torch.equal(narrow.w_in, base.w_in)
+    tokens = _tokens()
+    narrow.run(tokens, narrow.new_trace(4))  # 形状不对会抛
