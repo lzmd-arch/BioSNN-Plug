@@ -89,6 +89,7 @@ def run_fold(
     *,
     tau: float = TAU,
     readout_width: int | None = None,
+    readout_taus: tuple[float, ...] | None = None,
 ) -> dict:
     torch.manual_seed(SEED)
     vocab = build_vocab(train_texts)
@@ -106,6 +107,7 @@ def run_fold(
         lr_out=LR_OUT,
         recurrence="none",
         readout_width=readout_width,
+        readout_taus=readout_taus,
         generator=torch.Generator().manual_seed(SEED),
         device=device,
     )
@@ -169,10 +171,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--eval-every", type=int, default=0)
     parser.add_argument("--tau", type=float, default=TAU, help="膜时间常数（R5 的变量）")
     parser.add_argument(
-        "--readout-width", type=int, default=0, help="0=读全部神经元；给了就是 R7 的变量"
+        "--readout-width", type=int, default=0, help="0=读全部神经元；给了就是 R6q 的变量"
+    )
+    parser.add_argument(
+        "--readout-taus", default="", help="逗号分隔；给了就是 R8（多时间尺度读出）"
     )
     args = parser.parse_args(argv)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    taus = tuple(float(item) for item in args.readout_taus.split(",") if item.strip()) or None
 
     by_session = load_sequences(args.data)
     sessions = sorted(by_session)
@@ -196,6 +202,7 @@ def main(argv: list[str] | None = None) -> int:
             args.eval_every,
             tau=args.tau,
             readout_width=args.readout_width or None,
+            readout_taus=taus,
         )
         print(f"[hold-out {held}] {folds[held]}", flush=True)
 
@@ -232,6 +239,7 @@ def main(argv: list[str] | None = None) -> int:
             "seed": SEED,
             "data": str(args.data),
             "readout_width": args.readout_width or None,
+            "readout_taus": list(taus) if taus else None,
         },
         "folds": folds,
         "criteria": criteria,
