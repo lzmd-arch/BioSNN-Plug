@@ -1,0 +1,158 @@
+{
+ "kind": "R1: difficulty ladder for the feedforward local-rule LM",
+ "seed": 0,
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "max_len": 192,
+  "max_vocab": 800,
+  "batch": 16,
+  "updates": 18750,
+  "lr_in": 0.001,
+  "lr_out": 0.5,
+  "readout_width": 256,
+  "readout_taus": null
+ },
+ "levels": {
+  "H": {
+   "folds": {
+    "0": {
+     "vocab": 801,
+     "top1": 0.1795,
+     "ce": 4.4371,
+     "bigram_top1": 0.2828,
+     "bigram_ce": 3.8341,
+     "delta_top1": -0.1033,
+     "ce_ratio": 0.7481,
+     "tokens": 21602,
+     "readout_dims": 256,
+     "curve": [
+      {
+       "updates": 1875,
+       "top1": 0.1126,
+       "ce": 4.8868
+      },
+      {
+       "updates": 3750,
+       "top1": 0.1409,
+       "ce": 4.709
+      },
+      {
+       "updates": 5625,
+       "top1": 0.155,
+       "ce": 4.6164
+      },
+      {
+       "updates": 7500,
+       "top1": 0.1609,
+       "ce": 4.5595
+      },
+      {
+       "updates": 9375,
+       "top1": 0.1623,
+       "ce": 4.5501
+      },
+      {
+       "updates": 11250,
+       "top1": 0.1692,
+       "ce": 4.5173
+      },
+      {
+       "updates": 13125,
+       "top1": 0.1757,
+       "ce": 4.4924
+      },
+      {
+       "updates": 15000,
+       "top1": 0.179,
+       "ce": 4.4518
+      },
+      {
+       "updates": 16875,
+       "top1": 0.1792,
+       "ce": 4.4358
+      },
+      {
+       "updates": 18750,
+       "top1": 0.1795,
+       "ce": 4.4371
+      }
+     ]
+    },
+    "1": {
+     "vocab": 801,
+     "top1": 0.1816,
+     "ce": 4.4586,
+     "bigram_top1": 0.281,
+     "bigram_ce": 3.853,
+     "delta_top1": -0.0995,
+     "ce_ratio": 0.7483,
+     "tokens": 18297,
+     "readout_dims": 256,
+     "curve": [
+      {
+       "updates": 1875,
+       "top1": 0.1201,
+       "ce": 5.056
+      },
+      {
+       "updates": 3750,
+       "top1": 0.1439,
+       "ce": 4.7965
+      },
+      {
+       "updates": 5625,
+       "top1": 0.1586,
+       "ce": 4.6599
+      },
+      {
+       "updates": 7500,
+       "top1": 0.1644,
+       "ce": 4.6122
+      },
+      {
+       "updates": 9375,
+       "top1": 0.1689,
+       "ce": 4.5688
+      },
+      {
+       "updates": 11250,
+       "top1": 0.1737,
+       "ce": 4.5204
+      },
+      {
+       "updates": 13125,
+       "top1": 0.1774,
+       "ce": 4.4915
+      },
+      {
+       "updates": 15000,
+       "top1": 0.1767,
+       "ce": 4.4958
+      },
+      {
+       "updates": 16875,
+       "top1": 0.1793,
+       "ce": 4.4675
+      },
+      {
+       "updates": 18750,
+       "top1": 0.1816,
+       "ce": 4.4586
+      }
+     ]
+    }
+   },
+   "mean_top1": 0.1805,
+   "mean_bigram_top1": 0.2819,
+   "mean_delta": -0.1014,
+   "folds_winning": 0,
+   "loss_falls_all": false
+  }
+ },
+ "criteria": {
+  "r1_2_loss_falls": false,
+  "r1_3_monotone": true,
+  "r1_4_middle_wins": null
+ }
+}
