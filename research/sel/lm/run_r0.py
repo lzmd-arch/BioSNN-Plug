@@ -81,7 +81,13 @@ def bigram_accuracy(
 
 
 def run_fold(
-    train_texts: list[str], test_texts: list[str], device, updates: int, eval_every: int = 0
+    train_texts: list[str],
+    test_texts: list[str],
+    device,
+    updates: int,
+    eval_every: int = 0,
+    *,
+    tau: float = TAU,
 ) -> dict:
     torch.manual_seed(SEED)
     vocab = build_vocab(train_texts)
@@ -92,7 +98,7 @@ def run_fold(
         len(vocab),
         N_REC,
         fan_in=FAN_IN,
-        tau=TAU,
+        tau=tau,
         tau_read=TAU_READ,
         input_std=INPUT_STD,
         lr_in=LR_IN,
@@ -144,6 +150,8 @@ def run_fold(
         "delta_top1": round(metrics["top1"] - base_top1, 4),
         "ce_ratio": round(tail / head, 4) if head else None,
         "tokens": metrics["tokens"],
+        "tau": tau,
+        "firing_rate": round(metrics["firing_rate"], 5),
         "curve": curve,
     }
 
@@ -156,6 +164,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--tag", default="r0")
     parser.add_argument("--sessions", default="", help="逗号分隔的留出会话；空=全部")
     parser.add_argument("--eval-every", type=int, default=0)
+    parser.add_argument("--tau", type=float, default=TAU, help="膜时间常数（R5 的变量）")
     args = parser.parse_args(argv)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -173,7 +182,14 @@ def main(argv: list[str] | None = None) -> int:
     folds: dict[str, dict] = {}
     for held in held_sessions:
         train_texts = [text for s in sessions if s != held for text in by_session[s]]
-        folds[held] = run_fold(train_texts, by_session[held], device, args.updates, args.eval_every)
+        folds[held] = run_fold(
+            train_texts,
+            by_session[held],
+            device,
+            args.updates,
+            args.eval_every,
+            tau=args.tau,
+        )
         print(f"[hold-out {held}] {folds[held]}", flush=True)
 
     deltas = [fold["delta_top1"] for fold in folds.values()]
@@ -202,6 +218,7 @@ def main(argv: list[str] | None = None) -> int:
             "updates": args.updates,
             "lr_in": LR_IN,
             "lr_out": LR_OUT,
+            "tau": args.tau,
         },
         "folds": folds,
         "criteria": criteria,
