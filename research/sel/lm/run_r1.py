@@ -223,7 +223,8 @@ def main(argv: list[str] | None = None) -> int:
         "kind": "R1: difficulty ladder for the feedforward local-rule LM",
         "seed": SEED,
         "config": {
-            "n_rec": N_REC,
+            # 必须记 args.n_rec：记模块常量会让 --n-rec 的臂在 JSON 里全部冒充 1024
+            "n_rec": args.n_rec,
             "fan_in": FAN_IN,
             "max_len": MAX_LEN,
             "max_vocab": MAX_VOCAB,
