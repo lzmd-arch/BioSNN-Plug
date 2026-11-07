@@ -128,10 +128,9 @@ class TokenEProp:
             self.readout_decays = torch.exp(
                 -1.0 / torch.tensor(readout_taus, device=self.device, dtype=torch.float32)
             )
-            # 每个抽头的 EMA 幅度不同（越慢越大），按 (1-d)/(1+d) 的平方根归一化后再拼接
-            self.readout_scales = torch.rsqrt(
-                (1.0 - self.readout_decays) / (1.0 + self.readout_decays)
-            ).to(self.device)
+            # y_t = d·y_{t-1} + z_t 的稳态方差是 var(z)/(1-d²)（越慢越大），
+            # 乘 sqrt(1-d²) 后各抽头方差相同；不归一化的话慢抽头大 6–8 倍，会盖过快抽头
+            self.readout_scales = torch.sqrt(1.0 - self.readout_decays**2).to(self.device)
             self.readout_index = None
             width = len(readout_taus) * n_rec
         elif readout_width is None or int(readout_width) >= n_rec:
