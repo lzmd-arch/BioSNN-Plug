@@ -282,3 +282,29 @@ not affect the directional conclusion.
 **Only three fixes remain**: more data (synthetic expansion into the hundreds of thousands of pairs, to bring the
 parameter/data ratio down), a smaller readout (or stronger regularisation), and early stopping (which limits damage
 but cannot lift top-1). **More training is not among them.**
+
+
+**2026-11-07, ninth round: R2 — more data is a lever (+4.49pp), but 15k still has not crossed zero.**
+
+Same generator, same 120 epochs, only the data volume changed:
+
+| Arm | corpus | top-1 | bigram | delta | CE tail/head |
+| :--- | ---: | ---: | ---: | ---: | :--- |
+| A | 3,000 pairs | 0.2203 | 0.2819 | **-6.16pp** | 0.651 / 0.659 |
+| **B** | **15,000 pairs** | 0.2639 | 0.2806 | **-1.67pp** | 0.661 / 0.673 |
+
+**5x the data buys +4.49pp** (above the pre-registered +3pp), but **neither arm passes the 0.6 convergence gate**,
+so under the rules written down in advance this is **reported as an observation, not as a pass**.
+
+**Two methodological by-products** (now in `AGENTS.md` section 2.7):
+
+1. **The CE ratio is not a cross-corpus gate** -- arm B's ratio (0.661/0.673) is *higher* than arm A's, because 5x
+   the samples makes memorisation harder. R0b's curve (CE rising, top-1 flat) is the direct evidence;
+2. **bigram alone does not align difficulty** -- arm A (0.288 / 2,544 chars / 39.6 chars per pair) versus R1b-H
+   (0.294 / 1,663 / 27.1) have nearly identical bigram yet differ by 2.2pp in delta. From now on, report the
+   **difficulty triple**.
+
+**Where the five rounds converge**: both training volume (R1b) and data volume (R2) move delta, but neither pushes
+it past zero on the hardest synthetic corpus; and on synthetic corpora with epoch alignment the model **wins by
++13.6pp** (R1b-E). So **both the 10pp on real text and the 1.67pp on the hardest synthetic corpus live on the
+"difficulty" axis, not on the "not trained enough" axis**.

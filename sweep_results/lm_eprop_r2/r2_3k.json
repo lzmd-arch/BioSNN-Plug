@@ -1,0 +1,50 @@
+{
+ "kind": "R1: difficulty ladder for the feedforward local-rule LM",
+ "seed": 0,
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "max_len": 192,
+  "max_vocab": 800,
+  "batch": 16,
+  "updates": 18750,
+  "lr_in": 0.001,
+  "lr_out": 0.5
+ },
+ "levels": {
+  "H": {
+   "folds": {
+    "0": {
+     "vocab": 801,
+     "top1": 0.2205,
+     "ce": 4.1835,
+     "bigram_top1": 0.2828,
+     "bigram_ce": 3.8341,
+     "delta_top1": -0.0623,
+     "ce_ratio": 0.6586,
+     "tokens": 21602
+    },
+    "1": {
+     "vocab": 801,
+     "top1": 0.22,
+     "ce": 4.2016,
+     "bigram_top1": 0.281,
+     "bigram_ce": 3.853,
+     "delta_top1": -0.061,
+     "ce_ratio": 0.6505,
+     "tokens": 18297
+    }
+   },
+   "mean_top1": 0.2203,
+   "mean_bigram_top1": 0.2819,
+   "mean_delta": -0.0616,
+   "folds_winning": 0,
+   "loss_falls_all": false
+  }
+ },
+ "criteria": {
+  "r1_2_loss_falls": false,
+  "r1_3_monotone": true,
+  "r1_4_middle_wins": null
+ }
+}
