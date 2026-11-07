@@ -223,15 +223,21 @@ def main(argv: list[str] | None = None) -> int:
         "kind": "R1: difficulty ladder for the feedforward local-rule LM",
         "seed": SEED,
         "config": {
-            # 必须记 args.n_rec：记模块常量会让 --n-rec 的臂在 JSON 里全部冒充 1024
+            # 必须记 args 里的**生效值**，不能记模块常量：曾把 --n-rec 256 的臂记成 1024
             "n_rec": args.n_rec,
             "fan_in": FAN_IN,
             "max_len": MAX_LEN,
             "max_vocab": MAX_VOCAB,
             "batch": BATCH,
             "updates": args.updates,
+            "eval_every": args.eval_every,
             "lr_in": LR_IN,
             "lr_out": LR_OUT,
+            "tau": TAU,
+            "tau_read": TAU_READ,
+            "input_std": INPUT_STD,
+            "seed": SEED,
+            "corpus": args.name or args.levels,
             "readout_width": args.readout_width or None,
             "readout_taus": list(taus) if taus else None,
         },
