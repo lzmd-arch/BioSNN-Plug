@@ -90,6 +90,7 @@ def run_fold(
     updates: int,
     *,
     readout_width: int | None = None,
+    readout_taus: tuple[float, ...] | None = None,
     eval_every: int = 0,
     n_rec: int = N_REC,
 ) -> dict:
@@ -109,6 +110,7 @@ def run_fold(
         lr_out=LR_OUT,
         recurrence="none",
         readout_width=readout_width,
+        readout_taus=readout_taus,
         generator=torch.Generator().manual_seed(SEED),
         device=device,
     )
@@ -149,6 +151,7 @@ def run_fold(
         "delta_top1": round(metrics["top1"] - base_top1, 4),
         "ce_ratio": round(tail / head, 4) if head else None,
         "tokens": metrics["tokens"],
+        "readout_dims": int(model.w_out.shape[0]),
         "curve": curve,
     }
 
@@ -161,12 +164,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--folds", default="", help="逗号分隔的留出 group；空=全部")
     parser.add_argument("--name", default="", help="语料文件名（不含 .jsonl）；空=用 level")
     parser.add_argument("--readout-width", type=int, default=0, help="0=读全部神经元")
+    parser.add_argument(
+        "--readout-taus", default="", help="逗号分隔；空=单 EMA（tau_read）。给了就走 R4"
+    )
     parser.add_argument("--eval-every", type=int, default=0)
     parser.add_argument("--n-rec", type=int, default=N_REC)
     parser.add_argument("--tag", default="r1")
     args = parser.parse_args(argv)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     levels = [item.strip() for item in args.levels.split(",") if item.strip()]
+    taus = tuple(float(item) for item in args.readout_taus.split(",") if item.strip()) or None
 
     report: dict[str, dict] = {}
     fold_ids = [int(item) for item in args.folds.split(",") if item.strip()] if args.folds else None
@@ -182,6 +189,7 @@ def main(argv: list[str] | None = None) -> int:
                 device,
                 args.updates,
                 readout_width=args.readout_width or None,
+                readout_taus=taus,
                 eval_every=args.eval_every,
                 n_rec=args.n_rec,
             )
@@ -223,6 +231,8 @@ def main(argv: list[str] | None = None) -> int:
             "updates": args.updates,
             "lr_in": LR_IN,
             "lr_out": LR_OUT,
+            "readout_width": args.readout_width or None,
+            "readout_taus": list(taus) if taus else None,
         },
         "levels": report,
         "criteria": criteria,

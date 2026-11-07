@@ -32,6 +32,7 @@ class LMTrace:
     eps_in: torch.Tensor  # (B, V) 输入痕迹（one-hot 的衰减计数）
     eps_rec: torch.Tensor  # (B, N) 循环痕迹
     readout: torch.Tensor  # (B, N) 读出 EMA
+    readouts: torch.Tensor | None = None  # (B, K, N) 多时间尺度 EMA（仅 readout_taus）
     h: torch.Tensor | None = None  # (B, S) SSM 状态（仅 recurrence="ssm"）
     eps_e: torch.Tensor | None = None  # (B, V, S) SSM 输入投影的资格痕迹
 
@@ -43,6 +44,7 @@ class LMTrace:
         n_vocab: int,
         *,
         n_state: int = 0,
+        n_taus: int = 0,
         device=None,
         dtype=torch.float32,
     ):
@@ -56,6 +58,7 @@ class LMTrace:
             eps_in=zeros(batch, n_vocab),
             eps_rec=zeros(batch, n_rec),
             readout=zeros(batch, n_rec),
+            readouts=zeros(batch, n_taus, n_rec) if n_taus else None,
             h=zeros(batch, n_state) if n_state else None,
             eps_e=zeros(batch, n_vocab, n_state) if n_state else None,
         )
@@ -63,6 +66,8 @@ class LMTrace:
     def reset(self, rows: torch.Tensor) -> None:
         """把指定行清零（会话边界）。``rows`` 是 bool 掩码或下标张量。"""
         names = ["v", "z", "refractory", "eps_in", "eps_rec", "readout"]
+        if self.readouts is not None:
+            names += ["readouts"]
         if self.h is not None:
             names += ["h", "eps_e"]
         for name in names:
@@ -89,6 +94,7 @@ class TokenEProp:
         lr_out: float = 0.5,
         recurrence: str = "random",
         readout_width: int | None = None,
+        readout_taus: tuple[float, ...] | None = None,
         n_state: int = 32,
         tau_state: tuple[float, float] = (1.0, 128.0),
         generator: torch.Generator | None = None,
@@ -114,10 +120,28 @@ class TokenEProp:
         gen = generator or torch.Generator()
         self.w_in = torch.randn(n_vocab, n_rec, generator=gen).to(self.device) * input_std
         # 读出宽度：None 或等于 n_rec 时读全部；否则初始化时固定抽一个子集（R3 的 (b) 臂）
-        if readout_width is None or int(readout_width) >= n_rec:
+        if readout_taus:
+            if readout_width is not None:
+                raise ValueError(
+                    "readout_taus 与 readout_width 互斥（R4 与 R3 的变量不能同时开）。"
+                )
+            self.readout_decays = torch.exp(
+                -1.0 / torch.tensor(readout_taus, device=self.device, dtype=torch.float32)
+            )
+            # 每个抽头的 EMA 幅度不同（越慢越大），按 (1-d)/(1+d) 的平方根归一化后再拼接
+            self.readout_scales = torch.rsqrt(
+                (1.0 - self.readout_decays) / (1.0 + self.readout_decays)
+            ).to(self.device)
+            self.readout_index = None
+            width = len(readout_taus) * n_rec
+        elif readout_width is None or int(readout_width) >= n_rec:
+            self.readout_decays = None
+            self.readout_scales = None
             self.readout_index: torch.Tensor | None = None
             width = n_rec
         else:
+            self.readout_decays = None
+            self.readout_scales = None
             width = int(readout_width)
             self.readout_index = torch.randperm(n_rec, generator=gen)[:width].to(self.device)
         self.w_out = torch.randn(width, n_vocab, generator=gen).to(self.device) / math.sqrt(width)
@@ -144,11 +168,23 @@ class TokenEProp:
     # -- 状态 -----------------------------------------------------------------
 
     def new_trace(self, batch: int) -> LMTrace:
+        n_taus = 0 if self.readout_decays is None else int(self.readout_decays.numel())
         return LMTrace.zeros(
-            batch, self.n_rec, self.n_vocab, n_state=self.n_state, device=self.device
+            batch,
+            self.n_rec,
+            self.n_vocab,
+            n_state=self.n_state,
+            n_taus=n_taus,
+            device=self.device,
         )
 
     # -- 前向与更新 ------------------------------------------------------------
+
+    def _features(self, trace: LMTrace) -> torch.Tensor:
+        if self.readout_decays is None:
+            return self._readout_features(trace.readout)
+        scaled = trace.readouts * self.readout_scales.view(1, -1, 1)
+        return scaled.reshape(scaled.shape[0], -1)
 
     def _readout_features(self, readout: torch.Tensor) -> torch.Tensor:
         """读出看到的特征：默认全部神经元；``readout_width`` 给定时只看固定子集。"""
@@ -216,7 +252,11 @@ class TokenEProp:
                 active.view(-1, 1, 1).expand(-1, 1, self.n_state),
             )
 
-        features = self._readout_features(trace.readout)
+        if self.readout_decays is not None:
+            trace.readouts = trace.readouts * self.readout_decays.view(
+                1, -1, 1
+            ) + trace.z.unsqueeze(1)
+        features = self._features(trace)
         logits = features @ self.w_out  # (B, V)
         loss = torch.nn.functional.cross_entropy(
             logits, targets, ignore_index=-100, reduction="none"
@@ -230,7 +270,10 @@ class TokenEProp:
             gradient = (probability - one_hot) * active
             gradient = gradient / max(batch, 1)
             signal_sub = gradient @ self.w_out.T  # (B, M)
-            if self.readout_index is None:
+            if self.readout_decays is not None:
+                # 多时间尺度：每个抽头的信号属于同一批神经元，按抽头求和
+                signal = signal_sub.view(signal_sub.shape[0], -1, self.n_rec).sum(dim=1)
+            elif self.readout_index is None:
                 signal = signal_sub
             else:
                 signal = torch.zeros(
@@ -399,7 +442,7 @@ class TokenEProp:
             mask = target != -100
             if not bool(mask.any()):
                 continue
-            logits = self._readout_features(trace.readout) @ self.w_out
+            logits = self._features(trace) @ self.w_out
             hits += int((logits.argmax(dim=-1)[mask] == target[mask]).sum())
             counted += int(mask.sum())
             total_loss += float(loss[mask].sum())
