@@ -1,0 +1,67 @@
+{
+ "kind": "R1: difficulty ladder for the feedforward local-rule LM",
+ "seed": 0,
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "max_len": 192,
+  "max_vocab": 800,
+  "batch": 16,
+  "updates": 93750,
+  "eval_every": 0,
+  "lr_in": 0.001,
+  "lr_out": 0.5,
+  "tau": 20.0,
+  "tau_read": 8.0,
+  "input_std": 0.12,
+  "seed": 0,
+  "corpus": "H_r2",
+  "readout_width": null,
+  "readout_taus": [
+   2.0,
+   8.0,
+   32.0,
+   128.0
+  ]
+ },
+ "levels": {
+  "H": {
+   "folds": {
+    "0": {
+     "vocab": 801,
+     "top1": 0.2857,
+     "ce": 3.6893,
+     "bigram_top1": 0.28,
+     "bigram_ce": 3.4385,
+     "delta_top1": 0.0057,
+     "ce_ratio": 0.6476,
+     "tokens": 103706,
+     "readout_dims": 4096,
+     "curve": []
+    },
+    "1": {
+     "vocab": 801,
+     "top1": 0.2866,
+     "ce": 3.6927,
+     "bigram_top1": 0.2812,
+     "bigram_ce": 3.4264,
+     "delta_top1": 0.0053,
+     "ce_ratio": 0.6606,
+     "tokens": 100111,
+     "readout_dims": 4096,
+     "curve": []
+    }
+   },
+   "mean_top1": 0.2862,
+   "mean_bigram_top1": 0.2806,
+   "mean_delta": 0.0055,
+   "folds_winning": 2,
+   "loss_falls_all": false
+  }
+ },
+ "criteria": {
+  "r1_2_loss_falls": false,
+  "r1_3_monotone": true,
+  "r1_4_middle_wins": null
+ }
+}
