@@ -42,16 +42,28 @@ def eprop_delta(
     n_refractory: float,
     fixed_mask: bool,
     backward_ema: bool = False,
+    readout_taus: tuple[float, ...] | None = None,
 ) -> torch.Tensor:
     """返回规则给出的 ``Σ_t post_t ⊗ eps_in_t``（形状同 ``w_in``）。"""
     batch, steps = tokens.shape
     n_vocab, n_rec = w_in.shape
     alpha = math.exp(-1.0 / tau)
-    decay_read = math.exp(-1.0 / tau_read)
+    if readout_taus is None:
+        decays = torch.tensor([math.exp(-1.0 / tau_read)], device=w_in.device)
+    else:
+        decays = torch.exp(
+            -1.0 / torch.tensor(readout_taus, dtype=torch.float32, device=w_in.device)
+        )
+    scales = (
+        torch.ones_like(decays)
+        if readout_taus is None
+        else torch.rsqrt((1.0 - decays) / (1.0 + decays))
+    )
+    n_taps = int(decays.numel())
     v = w_in.new_zeros(batch, n_rec)
     z = torch.zeros_like(v)
     refractory = torch.zeros_like(v)
-    readout = torch.zeros_like(v)
+    readouts = w_in.new_zeros(batch, n_taps, n_rec)
     eps_in = w_in.new_zeros(batch, n_vocab)
     posts: list[torch.Tensor] = []
     traces: list[torch.Tensor] = []
@@ -74,34 +86,37 @@ def eprop_delta(
         v = torch.where(active > 0, new_v, v)
         z = torch.where(active > 0, new_z, torch.zeros_like(new_z))
         refractory = torch.where(active > 0, new_r, refractory)
-        readout = decay_read * readout + z
+        readouts = decays.view(1, -1, 1) * readouts + z.unsqueeze(1)
+        features = (readouts * scales.view(1, -1, 1)).reshape(batch, -1)
 
         eps_in = alpha * eps_in
         eps_in.scatter_add_(1, token.reshape(-1, 1), active.to(eps_in.dtype))
 
-        logits = readout @ w_out
+        logits = features @ w_out
         probability = torch.softmax(logits, dim=-1)
         one_hot = torch.zeros_like(probability)
         one_hot.scatter_(1, target.clamp(min=0).reshape(-1, 1), 1.0)
         gradient = (probability - one_hot) * active / max(batch, 1)
-        signal = gradient @ w_out.T
+        signal_sub = gradient @ w_out.T
+        signal_taps = signal_sub.view(batch, n_taps, n_rec)
+        signal = signal_taps.sum(dim=1)
         psi_full = (dampening / threshold) * torch.clamp(1.0 - scaled.abs(), min=0.0)
         mask = refractory if not fixed_mask else pre_refractory.to(v.dtype)
         psi = torch.where(mask > 0, torch.zeros_like(psi_full), psi_full)
         post = signal * psi * active
-        signals.append(signal.clone())
+        signals.append(signal_taps.clone())
         posts.append(post)
         traces.append(eps_in.clone())
         psis.append((psi * active).clone())
     if backward_ema:
-        # 读出滤波的反向路径：signal'_t = Σ_{u≥t} decay^{u-t} · signal_u，再乘 ψ
+        # 读出滤波的反向路径：每个抽头各做一次 signal'_t = Σ_{u≥t} decay_k^{u-t} · signal_u
         acc = torch.zeros_like(signals[0])
         fixed: list[torch.Tensor] = []
         for item in reversed(signals):
-            acc = decay_read * acc + item
+            acc = decays.view(1, -1, 1) * acc + item
             fixed.append(acc.clone())
         fixed = list(reversed(fixed))
-        posts = [sig * ps for sig, ps in zip(fixed, psis, strict=True)]
+        posts = [sig.sum(dim=1) * ps for sig, ps in zip(fixed, psis, strict=True)]
     total = torch.zeros_like(w_in)
     for post, trace in zip(posts, traces, strict=True):
         total += torch.einsum("bn,bv->vn", post, trace)
@@ -115,13 +130,32 @@ class DiffLM(nn.Module):
     """`TokenEProp` 前向的可微镜像（替代梯度用同一个 ψ）。"""
 
     def __init__(
-        self, w_in, w_out, *, tau, tau_read, threshold, dampening, n_refractory, fixed_mask
+        self,
+        w_in,
+        w_out,
+        *,
+        tau,
+        tau_read,
+        threshold,
+        dampening,
+        n_refractory,
+        fixed_mask,
+        readout_taus=None,
     ):
         super().__init__()
         self.w_in = nn.Parameter(w_in.clone())
         self.register_buffer("w_out", w_out.clone())
         self.alpha = math.exp(-1.0 / tau)
-        self.decay_read = math.exp(-1.0 / tau_read)
+        if readout_taus is None:
+            decays = torch.tensor([math.exp(-1.0 / tau_read)], device=w_in.device)
+            scales = torch.ones_like(decays)
+        else:
+            decays = torch.exp(
+                -1.0 / torch.tensor(readout_taus, dtype=torch.float32, device=w_in.device)
+            )
+            scales = torch.rsqrt((1.0 - decays) / (1.0 + decays))
+        self.register_buffer("decays", decays)
+        self.register_buffer("scales", scales)
         self.threshold = threshold
         self.dampening = dampening
         self.n_refractory = n_refractory
@@ -133,7 +167,7 @@ class DiffLM(nn.Module):
         v = self.w_in.new_zeros(batch, n_rec)
         z = torch.zeros_like(v)
         refractory = torch.zeros_like(v)
-        readout = torch.zeros_like(v)
+        readouts = self.w_in.new_zeros(batch, int(self.decays.numel()), n_rec)
         total = v.new_zeros(())
         counted = 0
         for t in range(steps - 1):
@@ -159,8 +193,9 @@ class DiffLM(nn.Module):
             v = torch.where(active > 0, new_v, v)
             z = torch.where(active > 0, new_z, torch.zeros_like(new_z))
             refractory = torch.where(active > 0, new_r, refractory)
-            readout = self.decay_read * readout + z
-            logits = readout @ self.w_out
+            readouts = self.decays.view(1, -1, 1) * readouts + z.unsqueeze(1)
+            features = (readouts * self.scales.view(1, -1, 1)).reshape(batch, -1)
+            logits = features @ self.w_out
             loss = torch.nn.functional.cross_entropy(
                 logits, target, ignore_index=-100, reduction="none"
             )
@@ -192,12 +227,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--batch", type=int, default=8)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--tau-read", type=float, default=8.0, help="读出 EMA 的 τ；很小=无滤波")
+    parser.add_argument("--readout-taus", default="", help="逗号分隔；给了就走多抽头")
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
 
     gen = torch.Generator().manual_seed(args.seed)
+    taus = tuple(float(item) for item in args.readout_taus.split(",") if item.strip()) or None
+    width = args.n_rec * (1 if taus is None else len(taus))
     w_in = torch.randn(args.vocab, args.n_rec, generator=gen) * 0.12
-    w_out = torch.randn(args.n_rec, args.vocab, generator=gen) / math.sqrt(args.n_rec)
+    w_out = torch.randn(width, args.vocab, generator=gen) / math.sqrt(width)
     tokens = torch.randint(0, args.vocab, (args.batch, args.steps), generator=gen)
     targets = tokens.clone()
     targets[:, 0] = -100
@@ -209,14 +247,23 @@ def main(argv: list[str] | None = None) -> int:
         "dampening": 0.3,
         "n_refractory": 2.0,
     }
-    eprop = eprop_delta(tokens, targets, w_in, w_out, fixed_mask=False, **common)
-    eprop_fix = eprop_delta(tokens, targets, w_in, w_out, fixed_mask=True, **common)
+    eprop = eprop_delta(tokens, targets, w_in, w_out, fixed_mask=False, readout_taus=taus, **common)
+    eprop_fix = eprop_delta(
+        tokens, targets, w_in, w_out, fixed_mask=True, readout_taus=taus, **common
+    )
     eprop_bwd = eprop_delta(
-        tokens, targets, w_in, w_out, fixed_mask=True, backward_ema=True, **common
+        tokens,
+        targets,
+        w_in,
+        w_out,
+        fixed_mask=True,
+        backward_ema=True,
+        readout_taus=taus,
+        **common,
     )
     report: dict = {"seed": args.seed, "cos_vs_bptt": {}}
-    fixed_model = DiffLM(w_in, w_out, fixed_mask=True, **common)
-    cur_model = DiffLM(w_in, w_out, fixed_mask=False, **common)
+    fixed_model = DiffLM(w_in, w_out, fixed_mask=True, readout_taus=taus, **common)
+    cur_model = DiffLM(w_in, w_out, fixed_mask=False, readout_taus=taus, **common)
     # 第一轮只做**整段** BPTT（本序列 48 步，B≥48 都等于整段）；
     # 分段（B=1/6/64）要另一份按块清零的镜像，等这一轮结论出来再写。
     grad = bptt_delta(fixed_model, tokens, targets, tokens.shape[1])

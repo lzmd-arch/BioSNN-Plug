@@ -38,7 +38,9 @@ OUT = REPO / "sweep_results" / "lm_eprop_gradcos"
 CHECKPOINTS = (2000, 8000)
 
 
-def measure(model: TokenEProp, tokens: torch.Tensor, targets: torch.Tensor) -> dict:
+def measure(
+    model: TokenEProp, tokens: torch.Tensor, targets: torch.Tensor, *, readout_taus=None
+) -> dict:
     """在一个 batch 上算三种方向对真梯度的余弦。"""
     common = {
         "tau": TAU,
@@ -49,12 +51,23 @@ def measure(model: TokenEProp, tokens: torch.Tensor, targets: torch.Tensor) -> d
     }
     w_in = model.w_in.detach()
     w_out = model.w_out.detach()
-    plain = eprop_delta(tokens, targets, w_in, w_out, fixed_mask=False, **common)
-    fixed = eprop_delta(tokens, targets, w_in, w_out, fixed_mask=True, **common)
-    corrected = eprop_delta(
-        tokens, targets, w_in, w_out, fixed_mask=True, backward_ema=True, **common
+    plain = eprop_delta(
+        tokens, targets, w_in, w_out, fixed_mask=False, readout_taus=readout_taus, **common
     )
-    mirror = DiffLM(w_in, w_out, fixed_mask=True, **common)
+    fixed = eprop_delta(
+        tokens, targets, w_in, w_out, fixed_mask=True, readout_taus=readout_taus, **common
+    )
+    corrected = eprop_delta(
+        tokens,
+        targets,
+        w_in,
+        w_out,
+        fixed_mask=True,
+        backward_ema=True,
+        readout_taus=readout_taus,
+        **common,
+    )
+    mirror = DiffLM(w_in, w_out, fixed_mask=True, readout_taus=readout_taus, **common)
     grad = bptt_delta(mirror, tokens, targets, tokens.shape[1])
     return {
         "eprop": round(cosine(plain, grad), 4),
@@ -72,8 +85,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--updates", type=int, default=8000)
     parser.add_argument("--out", type=Path, default=OUT)
     parser.add_argument("--tag", default="gradcos_trained")
+    parser.add_argument("--readout-taus", default="", help="逗号分隔；给了就用多抽头训练")
     args = parser.parse_args(argv)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    readout_taus = tuple(float(x) for x in args.readout_taus.split(",") if x.strip()) or None
 
     by_session = load_sequences(args.data)
     sessions = sorted(by_session)
@@ -95,6 +110,7 @@ def main(argv: list[str] | None = None) -> int:
         lr_in=LR_IN,
         lr_out=LR_OUT,
         recurrence="none",
+        readout_taus=readout_taus,
         generator=torch.Generator().manual_seed(SEED),
         device=device,
     )
@@ -119,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
             tokens, valid = make_batches(train, order=order, pad=pad)
             model.run(tokens.to(device), model.new_trace(tokens.shape[0]), valid=valid.to(device))
             step += 1
-        result = measure(model, probe_tokens, probe_targets)
+        result = measure(model, probe_tokens, probe_targets, readout_taus=readout_taus)
         result["updates"] = step
         report["checkpoints"][str(step)] = result
         print(f"step {step}: {result}", flush=True)
