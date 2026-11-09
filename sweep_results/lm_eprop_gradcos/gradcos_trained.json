@@ -1,0 +1,24 @@
+{
+ "config": {
+  "updates": 8000,
+  "sessions": "20261018-154235-861faf"
+ },
+ "checkpoints": {
+  "2000": {
+   "eprop": 0.6538,
+   "f1_fix": 0.8876,
+   "f1_f2": 0.9315,
+   "grad_norm": 0.524013,
+   "eprop_norm": 24.068382,
+   "updates": 2000
+  },
+  "8000": {
+   "eprop": 0.88,
+   "f1_fix": 0.9321,
+   "f1_f2": 0.9412,
+   "grad_norm": 0.907941,
+   "eprop_norm": 39.167133,
+   "updates": 8000
+  }
+ }
+}
