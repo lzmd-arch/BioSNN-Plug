@@ -1,0 +1,12 @@
+{
+ "seed": 0,
+ "cos_vs_bptt": {
+  "full": {
+   "eprop": 0.8035,
+   "eprop_fix": 0.8191,
+   "eprop_bwd": 0.8973
+  }
+ },
+ "cos_eprop_vs_eprop_fix": 0.9579,
+ "cos_eprop_vs_bptt_current_mirror": 0.8035
+}
