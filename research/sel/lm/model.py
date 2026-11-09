@@ -287,7 +287,11 @@ class TokenEProp:
             psi = (self.dampening_factor / self.threshold) * torch.clamp(
                 1.0 - scaled.abs(), min=0.0
             )
-            psi = torch.where(trace.refractory > 0, torch.zeros_like(psi), psi)
+            # F1（2026-11-10）：ψ 的掩码必须用**上一步结束时**的计数器（即本步进入时的
+            # `refractory` 局部量），不能用 `trace.refractory`——后者已含本步的脉冲，
+            # 会把 ψ 在脉冲时刻置零。口径出处：`research/eprop/traces.py::refractory_mask`
+            # 的 docstring（"判据是上一步之后的计数器，不是本步之后的"）。
+            psi = torch.where(refractory, torch.zeros_like(psi), psi)
             post = signal * psi * active
 
             if learn_hidden and self.recurrence != "ssm":

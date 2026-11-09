@@ -48,11 +48,11 @@ def eprop_delta(
     n_vocab, n_rec = w_in.shape
     alpha = math.exp(-1.0 / tau)
     decay_read = math.exp(-1.0 / tau_read)
-    v = torch.zeros(batch, n_rec)
+    v = w_in.new_zeros(batch, n_rec)
     z = torch.zeros_like(v)
     refractory = torch.zeros_like(v)
     readout = torch.zeros_like(v)
-    eps_in = torch.zeros(batch, n_vocab)
+    eps_in = w_in.new_zeros(batch, n_vocab)
     posts: list[torch.Tensor] = []
     traces: list[torch.Tensor] = []
     psis: list[torch.Tensor] = []
