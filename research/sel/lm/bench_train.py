@@ -42,6 +42,7 @@ def run_case(
     updates: int,
     taus: tuple[float, ...],
     device: torch.device,
+    readout_rank: int | None = None,
 ) -> dict:
     """跑一个配置，返回 tokens/s、每步耗时与峰值显存。"""
     if device.type == "cuda":
@@ -58,14 +59,18 @@ def run_case(
         lr_out=0.5,
         recurrence="none",
         readout_taus=taus,
+        readout_rank=readout_rank,
         generator=torch.Generator().manual_seed(0),
         device=device,
     )
     gen = torch.Generator().manual_seed(0)
     tokens = torch.randint(0, vocab, (batch, steps), generator=gen).to(device)
     valid = torch.ones(batch, steps, dtype=torch.bool, device=device)
-    width = int(model.w_out.shape[0])
-    params = vocab * n_rec + width * vocab
+    width = model.readout_width
+    if model.w_b is None:
+        params = vocab * n_rec + width * vocab
+    else:
+        params = vocab * n_rec + int(model.w_a.numel()) + int(model.w_b.numel())
 
     # 预热一次（分配器/内核选择），不计时
     model.run(tokens, model.new_trace(batch), valid=valid)
@@ -92,6 +97,7 @@ def run_case(
         "updates": updates,
         "taus": len(taus),
         "width": width,
+        "readout_rank": readout_rank,
         "params": params,
         "tokens": processed,
         "elapsed_s": round(elapsed, 3),
@@ -111,6 +117,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--vocabs", default="3001")
     parser.add_argument("--steps", type=int, default=32)
     parser.add_argument("--updates", type=int, default=10)
+    parser.add_argument("--readout-rank", type=int, default=0, help="A3：低秩读出 r；0=稠密")
     parser.add_argument(
         "--preset", choices=("", "1b"), default="", help="1b = N=40000 / V=5000 / batch 256"
     )
@@ -136,6 +143,7 @@ def main(argv: list[str] | None = None) -> int:
                 updates=args.updates,
                 taus=TAUS_DEFAULT,
                 device=device,
+                readout_rank=args.readout_rank or None,
             )
         except torch.cuda.OutOfMemoryError:
             row = {"n_rec": n_rec, "vocab": vocab, "batch": batch, "oom": True}
