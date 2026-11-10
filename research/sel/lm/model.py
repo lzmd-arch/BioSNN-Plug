@@ -113,6 +113,7 @@ class TokenEProp:
         tau_groups: int = 1,
         beta: float = 0.0,
         rho: float = 0.99,
+        amp: bool = False,
         n_state: int = 32,
         tau_state: tuple[float, float] = (1.0, 128.0),
         generator: torch.Generator | None = None,
@@ -133,6 +134,8 @@ class TokenEProp:
         #: ``beta=0`` 时与 LIF 逐位一致。
         self.beta = float(beta)
         self.rho = float(rho)
+        #: T3：把**大矩阵乘**降到 bf16（状态与权重仍是 fp32，所以不影响阈值判据）。
+        self.amp = bool(amp)
         self.n_groups = max(1, int(tau_groups))
         if self.n_groups > 1:
             # 注意：self.device 在这一段之后才设，这里直接用传入的 device
@@ -311,11 +314,17 @@ class TokenEProp:
         """读出特征宽度 M（与是否低秩无关）。"""
         return int(self.w_out.shape[0]) if self.w_b is None else int(self.w_a.shape[0])
 
+    def _mm(self, left: torch.Tensor, right: torch.Tensor) -> torch.Tensor:
+        """大矩阵乘：``amp`` 时降 bf16 再升回 fp32（状态/权重本身不变精度）。"""
+        if self.amp:
+            return (left.to(torch.bfloat16) @ right.to(torch.bfloat16)).float()
+        return left @ right
+
     def _logits(self, features: torch.Tensor) -> torch.Tensor:
         """``features -> logits``。稠密版直乘；低秩版先投影到 r 再展开。"""
         if self.w_b is None:
-            return features @ self.w_out
-        return (features @ self.w_a) @ self.w_b
+            return self._mm(features, self.w_out)
+        return self._mm(self._mm(features, self.w_a), self.w_b)
 
     def _features(self, trace: LMTrace) -> torch.Tensor:
         if self.readout_decays is None:
@@ -431,7 +440,7 @@ class TokenEProp:
                 gradient = (probability - one_hot) * active
                 gradient = gradient / max(batch, 1)
                 if self.w_b is None:
-                    signal_sub = gradient @ self.w_out.T  # (B, M)
+                    signal_sub = self._mm(gradient, self.w_out.T)  # (B, M)
                 else:
                     signal_sub = (gradient @ self.w_b.T) @ self.w_a.T  # (B, M)
             if self.readout_decays is not None:
@@ -487,7 +496,7 @@ class TokenEProp:
             if cols is not None:
                 self._candidate_update(features, cols, grad_cols, grad_target, targets, norm)
             elif self.w_b is None:
-                self.w_out.add_(features.T @ gradient / norm, alpha=-self.lr_out)
+                self.w_out.add_(self._mm(features.T, gradient) / norm, alpha=-self.lr_out)
             else:
                 grad_a = gradient @ self.w_b.T  # (B, r)
                 self.w_a.add_(features.T @ grad_a / norm, alpha=-self.lr_out)

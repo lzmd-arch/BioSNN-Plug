@@ -44,6 +44,7 @@ def run_case(
     device: torch.device,
     readout_rank: int | None = None,
     embed_rank: int | None = None,
+    amp: bool = False,
 ) -> dict:
     """跑一个配置，返回 tokens/s、每步耗时与峰值显存。"""
     if device.type == "cuda":
@@ -62,6 +63,7 @@ def run_case(
         readout_taus=taus,
         readout_rank=readout_rank,
         embed_rank=embed_rank,
+        amp=amp,
         generator=torch.Generator().manual_seed(0),
         device=device,
     )
@@ -131,6 +133,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--updates", type=int, default=10)
     parser.add_argument("--readout-rank", type=int, default=0, help="A3：低秩读出 r；0=稠密")
     parser.add_argument("--embed-rank", type=int, default=0, help="A2：低秩输入 d；0=稠密")
+    parser.add_argument("--amp", action="store_true", help="T3：矩阵乘用 bf16")
     parser.add_argument(
         "--preset", choices=("", "1b"), default="", help="1b = N=40000 / V=5000 / batch 256"
     )
@@ -158,6 +161,7 @@ def main(argv: list[str] | None = None) -> int:
                 device=device,
                 readout_rank=args.readout_rank or None,
                 embed_rank=args.embed_rank or None,
+                amp=args.amp,
             )
         except torch.cuda.OutOfMemoryError:
             row = {"n_rec": n_rec, "vocab": vocab, "batch": batch, "oom": True}
