@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import collections
 from collections.abc import Iterable
+from itertools import pairwise
 
 __all__ = ["encode", "train"]
 
