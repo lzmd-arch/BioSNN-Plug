@@ -165,3 +165,60 @@ def test_update_reduces_nll() -> None:
         readout.step(features, targets)
     after = readout.nll(features, targets).mean()
     assert float(after) < float(before), (before, after)
+
+
+# -- 接进 TokenEProp 之后仍然学得动（模型级守卫） --------------------------------
+
+
+def _toy_cycle(vocab: int = 12, batch: int = 8, length: int = 24) -> torch.Tensor:
+    return torch.tensor([[(i + t) % vocab for t in range(length)] for i in range(batch)])
+
+
+def test_tree_readout_learns_in_model() -> None:
+    from research.sel.lm.model import TokenEProp
+
+    seq = _toy_cycle()
+    vocab = 12
+    paths = build_huffman_paths(torch.ones(vocab))
+    model = TokenEProp(
+        vocab,
+        64,
+        recurrence="none",
+        tree=paths,
+        generator=torch.Generator().manual_seed(0),
+        device="cpu",
+    )
+    before = model.evaluate(seq, model.new_trace(seq.shape[0]))
+    assert abs(before["ce"] - 2.485) < 0.06, "零权重 + 频次偏置应恰好是一元分布 log(12)"
+    trace = model.new_trace(seq.shape[0])
+    for _ in range(300):
+        model.run(seq, trace)
+    after = model.evaluate(seq, model.new_trace(seq.shape[0]))
+    assert after["ce"] < 1.2, after
+    assert after["top1"] > 0.5, after
+    assert after["top10"] >= after["top5"] >= after["top1"]
+
+
+def test_tree_bias_is_frozen_prior() -> None:
+    """偏置是从训练频次算出来的**先验**，不跟着 NLMS 走。
+
+    实测：让偏置跟权重共用同一个 `1/norm` 步长时它会发散（600 步内 [-29.6, +99.3]，
+    sigmoid 全程饱和），训练 CE 0.41 而评测 CE 11.3。冻结之后两边都是纯权重。
+    """
+    from research.sel.lm.model import TokenEProp
+
+    seq = _toy_cycle()
+    paths = build_huffman_paths(torch.ones(12))
+    model = TokenEProp(
+        12,
+        32,
+        recurrence="none",
+        tree=paths,
+        generator=torch.Generator().manual_seed(1),
+        device="cpu",
+    )
+    bias_before = model.tree.bias.clone()
+    trace = model.new_trace(seq.shape[0])
+    for _ in range(10):
+        model.run(seq, trace)
+    assert torch.equal(model.tree.bias, bias_before)

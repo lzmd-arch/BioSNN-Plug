@@ -121,11 +121,15 @@ def build_huffman_paths(counts: torch.Tensor) -> HuffmanPaths:
 
 
 def path_probabilities(
-    features: torch.Tensor, weight: torch.Tensor, paths: HuffmanPaths
+    features: torch.Tensor,
+    weight: torch.Tensor,
+    paths: HuffmanPaths,
+    bias: torch.Tensor | None = None,
 ) -> torch.Tensor:
     """返回 ``(B, V)`` 的路径概率；对每个 token 是路径上各节点二分类概率之积。
 
     实现按 H-0 的口径：**权重存 ``(n_nodes, M)``，按行取**（连续行，带宽友好）。
+    ``bias`` 必须与训练时用的是同一个，否则评测的分布与训练的不是同一个。
     """
     depth = paths.nodes.shape[1]
     batch = features.shape[0]
@@ -138,6 +142,8 @@ def path_probabilities(
         node_ids = ids[valid]
         targets = paths.bits[valid, j].to(features.dtype)
         logits = torch.einsum("bm,km->bk", features, weight[node_ids])
+        if bias is not None:
+            logits = logits + bias[node_ids]
         prob = torch.sigmoid(logits)
         prob = torch.where(targets.unsqueeze(0) > 0.5, prob, 1.0 - prob)
         logp[:, valid] += torch.log(prob.clamp(min=1e-12))
@@ -210,6 +216,12 @@ class TreeReadout:
     ``bias``（``n_nodes`` 个标量）不是可选项，是为了**初始化公平**：零权重时
     每个节点都是 0.5，于是每个 token 的概率是 ``2^-深度``，高频短路径词的先验
     会远离一元分布。按 ``right_share`` 取 log-odds 后，零权重处恰好复现经验一元分布。
+
+    **偏置默认冻结**（``bias_train=False``）。它是从训练频次算出来的**先验**，与树结构
+    同一个地位，不是学出来的参数。这不是保守，是实测：让偏置跟着权重一起走同一个
+    NLMS 步长时它会发散 —— 偏置没有 ``features`` 乘着，`1/norm` 这个归一化对它毫无意义，
+    实测 600 步内跑到 ``[-29.6, +99.3]``（``sigmoid`` 全程饱和），训练 CE 0.41 而
+    评测 CE 11.3。稠密读出本来就不带偏置，冻结偏置让两边"学的部分"都是纯权重。
     """
 
     def __init__(
@@ -219,6 +231,7 @@ class TreeReadout:
         *,
         lr_out: float = 0.5,
         bias_init: bool = True,
+        bias_train: bool = False,
         generator: torch.Generator | None = None,
         device=None,
         dtype: torch.dtype = torch.float32,
@@ -226,6 +239,7 @@ class TreeReadout:
         self.paths = paths
         self.n_features = int(n_features)
         self.lr_out = float(lr_out)
+        self.bias_train = bool(bias_train)
         gen = generator or torch.Generator()
         weight = torch.randn(paths.n_nodes, n_features, generator=gen) / math.sqrt(n_features)
         self.weight = weight.to(device=device, dtype=dtype)
@@ -244,15 +258,28 @@ class TreeReadout:
         out, _, _, _, _ = path_nll(features, self.weight, self.paths, targets, self.bias)
         return out
 
-    def step(self, features: torch.Tensor, targets: torch.Tensor, *, update: bool = True):
+    def step(
+        self,
+        features: torch.Tensor,
+        targets: torch.Tensor,
+        *,
+        update: bool = True,
+        mask: torch.Tensor | None = None,
+    ):
         """一步：返回 ``(nll (B,), signal (B, M))``。
 
         返回的 ``signal`` 就是稠密版里 ``gradient @ w_out`` 的角色 —— 交给 e-prop
         的 ψ 与资格痕迹继续往下传。**这一路没有 autograd。**
+
+        ``mask``（``(B,)`` 的 bool）为 False 的行不参与损失、信号与更新，
+        与稠密版 ``gradient = gradient * active`` 同口径。
         """
         nll, prob, bits, valid, safe = path_nll(
             features, self.weight, self.paths, targets, self.bias
         )
+        if mask is not None:
+            valid = valid & mask.unsqueeze(1)
+            nll = torch.where(mask, nll, torch.zeros_like(nll))
         delta = path_deltas(prob, bits, valid)
         depth = int(safe.shape[1])
         signal = torch.zeros_like(features)
@@ -268,5 +295,6 @@ class TreeReadout:
         for j in range(depth):
             scale = (delta[:, j] / (denom * batch)).unsqueeze(1)
             self.weight.index_add_(0, safe[:, j], features * scale, alpha=-self.lr_out)
-            self.bias.index_add_(0, safe[:, j], scale.squeeze(1), alpha=-self.lr_out)
+            if self.bias_train:
+                self.bias.index_add_(0, safe[:, j], scale.squeeze(1), alpha=-self.lr_out)
         return nll, signal

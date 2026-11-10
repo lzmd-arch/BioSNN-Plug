@@ -58,7 +58,7 @@ def stream_pass(
         total += 1
         if not update:
             with torch.no_grad():
-                logits = model._logits(model._features(trace))[:, : model.n_vocab]
+                logits = model._token_probabilities(model._features(trace))
             hit = int(logits.argmax(dim=-1)[0] == target)
             buckets[bucket][1] += hit
             total_hits += hit

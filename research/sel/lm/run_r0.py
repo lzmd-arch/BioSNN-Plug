@@ -16,6 +16,7 @@ from pathlib import Path
 
 import torch
 
+from research.sel.lm.hierarchical import build_huffman_paths
 from research.sel.lm.model import TokenEProp
 from research.sel.lm.run_m0 import BATCH, FAN_IN, N_REC, make_batches
 
@@ -210,6 +211,7 @@ def run_fold(
     n_rec: int = N_REC,
     lr_in: float = LR_IN,
     learn_hidden: bool = True,
+    hierarchical: bool = False,
 ) -> dict:
     torch.manual_seed(SEED)
     vocab = build_vocab(train_texts, max_vocab=max_vocab)
@@ -227,6 +229,12 @@ def run_fold(
     if candidate_count > 0:
         candidates = build_candidates(train, len(vocab), candidate_count)
         hit = round(candidate_hit_rate(test, candidates), 4)
+    paths = None
+    if hierarchical:
+        # 树的频次只从**训练集**统计：用测试集的频次建树等于把答案漏进结构里
+        flat = torch.tensor([t for seq in train for t in seq], dtype=torch.long)
+        counts = torch.bincount(flat, minlength=len(vocab)).to(torch.float32)
+        paths = build_huffman_paths(counts)
     model = TokenEProp(
         len(vocab),
         n_rec,
@@ -240,6 +248,7 @@ def run_fold(
         readout_width=readout_width,
         readout_taus=readout_taus,
         candidates=candidates,
+        tree=paths,
         pad_vocab=pad_vocab,
         bf16_weights=bf16_weights,
         weight_dtype=weight_dtype,
@@ -356,6 +365,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--readout-rank", type=int, default=0, help="A3：低秩读出 r；0=稠密")
     parser.add_argument("--embed-rank", type=int, default=0, help="A2：低秩输入 d；0=稠密")
     parser.add_argument("--bucket-lengths", action="store_true", help="按长度分桶采样（省填充）")
+    parser.add_argument(
+        "--hierarchical",
+        action="store_true",
+        help="H-1：读出换成 Huffman 树的路径概率（局部更新不变）；评测仍走全词表 top-k",
+    )
     parser.add_argument("--no-pad-vocab", action="store_true", help="S1：关掉词表补零（默认开）")
     parser.add_argument("--bf16-weights", action="store_true", help="S2：读出权重存 bf16")
     parser.add_argument(
@@ -426,6 +440,7 @@ def main(argv: list[str] | None = None) -> int:
             n_rec=args.n_rec,
             lr_in=args.lr_in,
             learn_hidden=not args.no_learn_hidden,
+            hierarchical=bool(args.hierarchical),
             beta=args.beta,
             tau=args.tau,
             readout_width=args.readout_width or None,
@@ -475,6 +490,7 @@ def main(argv: list[str] | None = None) -> int:
             "norm_groups": args.norm_groups,
             "trace_decay": args.trace_decay,
             "learn_hidden": not args.no_learn_hidden,
+            "hierarchical": bool(args.hierarchical),
             "bf16_input": args.bf16_input,
             "beta": args.beta,
             "tau_read": TAU_READ,

@@ -19,6 +19,8 @@ from statistics import median as statistics_median
 
 import torch
 
+from research.sel.lm.hierarchical import HuffmanPaths, TreeReadout, path_probabilities
+
 __all__ = ["LMTrace", "TokenEProp"]
 
 
@@ -106,6 +108,7 @@ class TokenEProp:
         readout_width: int | None = None,
         readout_taus: tuple[float, ...] | None = None,
         candidates: torch.Tensor | None = None,
+        tree: HuffmanPaths | None = None,
         pad_vocab: bool = True,
         bf16_weights: bool = False,
         weight_dtype: str = "fp32",
@@ -229,12 +232,33 @@ class TokenEProp:
             self.readout_scales = None
             width = int(readout_width)
             self.readout_index = torch.randperm(n_rec, generator=gen)[:width].to(self.device)
-        self.w_out = (
-            torch.randn(width, self.n_pad, generator=gen).to(self.device) / math.sqrt(width)
-        ).to(self.w_dtype)
-        self.w_out_mirror: torch.Tensor | None = (
-            self.w_out.to(self.mirror_dtype) if self.mirror_dtype is not None else None
-        )
+        #: 层次 softmax（H-1）：读出换成「树上每个内部节点一个 M 维向量」。
+        #: 参数量 (V-1)·M 与稠密版 M·V 同量级，省的是**算力**不是显存。
+        self.tree: TreeReadout | None = None
+        if tree is not None:
+            if candidates is not None:
+                raise ValueError("树读出与候选剪枝互斥（两条都改输出层的归一化范围）")
+            if readout_rank is not None:
+                raise ValueError("树读出与低秩读出互斥（低秩改的正是读出矩阵的形状）")
+            if norm_groups > 1:
+                raise ValueError("树读出的归一化口径未定义，norm_groups 只能为 1")
+            self.tree = TreeReadout(
+                tree,
+                width,
+                lr_out=lr_out,
+                generator=gen,
+                device=self.device,
+                dtype=self.w_dtype,
+            )
+            self.w_out = None
+            self.w_out_mirror = None
+        else:
+            self.w_out = (
+                torch.randn(width, self.n_pad, generator=gen).to(self.device) / math.sqrt(width)
+            ).to(self.w_dtype)
+            self.w_out_mirror: torch.Tensor | None = (
+                self.w_out.to(self.mirror_dtype) if self.mirror_dtype is not None else None
+            )
         bounds = [round(g * width / self.norm_groups) for g in range(self.norm_groups + 1)]
         self.norm_bounds = [(bounds[g], bounds[g + 1]) for g in range(self.norm_groups)]
         self.norm_sizes = torch.tensor([hi - lo for lo, hi in self.norm_bounds], device=self.device)
@@ -365,6 +389,8 @@ class TokenEProp:
     @property
     def readout_width(self) -> int:
         """读出特征宽度 M（与是否低秩无关）。"""
+        if self.tree is not None:
+            return int(self.tree.n_features)
         return int(self.w_out.shape[0]) if self.w_b is None else int(self.w_a.shape[0])
 
     def _mm(self, left: torch.Tensor, right: torch.Tensor) -> torch.Tensor:
@@ -391,6 +417,16 @@ class TokenEProp:
     @property
     def _w_read_t(self) -> torch.Tensor:
         return self._w_read.T
+
+    def _token_probabilities(self, features: torch.Tensor) -> torch.Tensor:
+        """整词表上的概率 ``(B, V)``。树读出下走路径概率，稠密下就是 softmax。
+
+        top-1 / top-k 只在概率上取 argmax / topk，所以**评测口径不变**——
+        这是 H-1 能与稠密基线直接比的前提。
+        """
+        if self.tree is not None:
+            return path_probabilities(features, self.tree.weight, self.tree.paths, self.tree.bias)
+        return torch.softmax(self._logits(features)[:, : self.n_vocab], dim=-1)
 
     def _logits(self, features: torch.Tensor) -> torch.Tensor:
         """``features -> logits``。稠密版直乘；低秩版先投影到 r 再展开。"""
@@ -500,7 +536,13 @@ class TokenEProp:
             ) + trace.z.unsqueeze(1)
         features = self._features(trace)
         cols = None
-        if self.candidates is not None:
+        tree_signal = None
+        if self.tree is not None:
+            # 目标为 -100 的行不进损失 / 信号 / 更新（与稠密版 active 同口径）
+            loss, tree_signal = self.tree.step(
+                features, targets.clamp(min=0), update=update, mask=targets != -100
+            )
+        elif self.candidates is not None:
             cols, logits, loss = self._candidate_forward(features, tokens, targets)
         else:
             logits = self._logits(features)[:, : self.n_vocab]  # (B, V)；补出来的列丢掉
@@ -511,7 +553,10 @@ class TokenEProp:
 
         if update:
             grad_cols = grad_target = None
-            if cols is not None:
+            if self.tree is not None:
+                # 树的更新已在 `tree.step` 里就地做完，这里只把信号接着往下传
+                signal_sub = tree_signal
+            elif cols is not None:
                 signal_sub, grad_cols, grad_target = self._candidate_gradient(
                     logits, cols, targets, active, batch
                 )
@@ -612,7 +657,9 @@ class TokenEProp:
                 scale = 1.0 / (self.norm_groups * per_group)
                 features = features * torch.repeat_interleave(scale, self.norm_sizes)
                 denom = 1.0
-            if cols is not None:
+            if self.tree is not None:
+                pass
+            elif cols is not None:
                 self._candidate_update(features, cols, grad_cols, grad_target, targets, norm)
             elif self.w_b is None:
                 # 原地 addmm：省掉 (M,V) 的 fp32 临时与一次"读+写"整表（实测 8%）
@@ -774,7 +821,7 @@ class TokenEProp:
             mask = target != -100
             if not bool(mask.any()):
                 continue
-            logits = self._logits(self._features(trace))[:, : self.n_vocab]
+            logits = self._token_probabilities(self._features(trace))
             matched = logits.argmax(dim=-1)[mask] == target[mask]
             hits += int(matched.sum())
             probe_target = target[mask].unsqueeze(1)
