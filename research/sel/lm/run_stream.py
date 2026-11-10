@@ -227,6 +227,9 @@ def run_bptt(args, train_stream, test_stream, boundary, device) -> int:
         )
         optimizer.zero_grad(set_to_none=True)
         loss.mean().backward()
+        # batch=1 + 脉冲稀疏梯度下 Adam 会给出巨大步长（实测 lr=1e-3 直接发散到 CE 38.7），
+        # 必须裁剪。这一条写进日志，作为 BPTT 臂的**调参记录**，不是"BPTT 不行"。
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
         running += float(loss.mean())
         done += 1

@@ -17,7 +17,9 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-dependencies = []
+dependencies = [
+    "tokenizers>=0.23.3",
+]
 
 [project.urls]
 Homepage = "https://github.com/lzmd-arch/BioSNN-Plug"
