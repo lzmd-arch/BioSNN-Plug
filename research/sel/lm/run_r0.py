@@ -82,6 +82,38 @@ def _mask_context(tokens, valid, vocab) -> None:
             valid[row, : int(hits[0]) + 1] = False
 
 
+class LengthBucketedSampler:
+    """按长度分桶的批采样：**同批长度相近**（填充从 93–204% 降到 ~1%），但桶内与桶序都打乱。
+
+    只是**抽样顺序**变了：同一个 epoch 里每条样本仍然被看一次，损失口径不变。
+    """
+
+    def __init__(self, lengths, batch: int, generator, *, pool_factor: int = 10):
+        self.lengths = list(lengths)
+        self.batch = int(batch)
+        self.generator = generator
+        self.pool = max(self.batch, self.batch * int(pool_factor))
+        self.queue: list[int] = []
+
+    def _refill(self) -> None:
+        order = torch.randperm(len(self.lengths), generator=self.generator).tolist()
+        order.sort(key=lambda index: self.lengths[index])  # 长度升序
+        pools = [order[i : i + self.pool] for i in range(0, len(order), self.pool)]
+        pool_order = torch.randperm(len(pools), generator=self.generator).tolist()
+        self.queue = []
+        for pool_index in pool_order:
+            pool = pools[pool_index]
+            perm = torch.randperm(len(pool), generator=self.generator).tolist()
+            self.queue.extend(pool[j] for j in perm)
+
+    def next(self) -> list[int]:
+        if len(self.queue) < self.batch:
+            self._refill()
+        out = self.queue[: self.batch]
+        self.queue = self.queue[self.batch :]
+        return out
+
+
 def build_candidates(train: list[list[int]], size: int, count: int) -> torch.Tensor:
     """A1：``(V, C)`` 候选表——给定上一个字，最可能的 C 个下一个字。
 
@@ -162,6 +194,7 @@ def run_fold(
     candidate_count: int = 0,
     readout_rank: int | None = None,
     embed_rank: int | None = None,
+    bucket_lengths: bool = False,
     tau_groups: int = 1,
     beta: float = 0.0,
     tau: float = TAU,
@@ -205,13 +238,22 @@ def run_fold(
         device=device,
     )
     generator = torch.Generator().manual_seed(SEED + 17)
+    sampler = (
+        LengthBucketedSampler([len(sequence) for sequence in train], BATCH, generator)
+        if bucket_lengths
+        else None
+    )
     losses: list[float] = []
     curve: list[dict] = []
     test_tokens, test_valid = make_batches(test, order=list(range(len(test))), pad=pad)
     if use_context:
         _mask_context(test_tokens, test_valid, vocab)
     for step in range(updates):
-        order = torch.randperm(len(train), generator=generator)[:BATCH].tolist()
+        order = (
+            sampler.next()
+            if sampler is not None
+            else torch.randperm(len(train), generator=generator)[:BATCH].tolist()
+        )
         tokens, valid = make_batches(train, order=order, pad=pad)
         if use_context:
             _mask_context(tokens, valid, vocab)
@@ -282,6 +324,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--readout-rank", type=int, default=0, help="A3：低秩读出 r；0=稠密")
     parser.add_argument("--embed-rank", type=int, default=0, help="A2：低秩输入 d；0=稠密")
+    parser.add_argument("--bucket-lengths", action="store_true", help="按长度分桶采样（省填充）")
     parser.add_argument("--tau-groups", type=int, default=1, help="G2：异质膜 τ 的组数；1=同质")
     parser.add_argument("--beta", type=float, default=0.0, help="G1：ALIF 适应强度 β；0=纯 LIF")
     args = parser.parse_args(argv)
@@ -313,6 +356,7 @@ def main(argv: list[str] | None = None) -> int:
             candidate_count=args.candidates,
             readout_rank=args.readout_rank or None,
             embed_rank=args.embed_rank or None,
+            bucket_lengths=args.bucket_lengths,
             tau_groups=args.tau_groups,
             beta=args.beta,
             tau=args.tau,
@@ -354,6 +398,7 @@ def main(argv: list[str] | None = None) -> int:
             "candidates": args.candidates,
             "readout_rank": args.readout_rank or None,
             "embed_rank": args.embed_rank or None,
+            "bucket_lengths": bool(args.bucket_lengths),
             "tau_groups": args.tau_groups,
             "beta": args.beta,
             "tau_read": TAU_READ,
