@@ -290,20 +290,24 @@ class TreeReadout:
             valid = valid & mask.unsqueeze(1)
             nll = torch.where(mask, nll, torch.zeros_like(nll))
         delta = path_deltas(prob, bits, valid)
-        depth = int(safe.shape[1])
+        batch = int(features.shape[0])
+        # **扁平实现**：把 (B·depth) 个节点摊成一次 index_select / 一次 index_add。
+        # 逐层写（`for j in range(depth)`）会调 depth 次小内核，实测在 V=3,001 上是
+        # 0.22x（比稠密慢 4.6 倍）；扁平化之后同一形状 0.92x、V=32,000 上 6.5x。
+        # 峰值内存是 (B·depth, M) 的临时张量——1B 形状（256×10.6×16,384×4B）约 177 MB。
+        flat = safe.reshape(-1)
+        rows = torch.arange(batch, device=features.device).repeat_interleave(safe.shape[1])
+        delta_flat = delta.reshape(-1)
         signal = torch.zeros_like(features)
-        for j in range(depth):
-            signal.add_(self.weight.index_select(0, safe[:, j]) * delta[:, j].unsqueeze(1))
+        signal.index_add_(0, rows, self.weight.index_select(0, flat) * delta_flat.unsqueeze(1))
         if not update:
             return nll, signal
 
-        batch = max(int(features.shape[0]), 1)
         denom = features.pow(2).sum(dim=1).mean().clamp(min=1e-3)
-        # 逐层 index_add_：峰值内存是 (B, M) 而不是 (B·depth, M)。
-        # B=256、depth=12、M=16384 时那是 16 MB 对 201 MB。
-        for j in range(depth):
-            scale = (delta[:, j] / (denom * batch)).unsqueeze(1)
-            self.weight.index_add_(0, safe[:, j], features * scale, alpha=-self.lr_out)
-            if self.bias_train:
-                self.bias.index_add_(0, safe[:, j], scale.squeeze(1), alpha=-self.lr_out)
+        scale = delta_flat / (denom * max(batch, 1))
+        self.weight.index_add_(
+            0, flat, features.index_select(0, rows) * scale.unsqueeze(1), alpha=-self.lr_out
+        )
+        if self.bias_train:
+            self.bias.index_add_(0, flat, scale, alpha=-self.lr_out)
         return nll, signal
