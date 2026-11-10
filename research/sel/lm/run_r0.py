@@ -292,7 +292,9 @@ def run_fold(
                 {"updates": step + 1, "top1": round(probe["top1"], 4), "ce": round(probe["ce"], 4)}
             )
             print(
-                f"    step {step + 1}: test top1 {probe['top1']:.4f} ce {probe['ce']:.3f}",
+                f"    step {step + 1}: test top1 {probe['top1']:.4f}"
+                f" top5 {probe.get('top5', 0):.4f} top10 {probe.get('top10', 0):.4f}"
+                f" ce {probe['ce']:.3f}",
                 flush=True,
             )
     tokens, valid = test_tokens, test_valid
@@ -307,6 +309,8 @@ def run_fold(
         "train_pairs": len(train),
         "test_pairs": len(test),
         "top1": round(metrics["top1"], 4),
+        "top5": round(metrics.get("top5", 0.0), 4),
+        "top10": round(metrics.get("top10", 0.0), 4),
         "ce": round(metrics["ce"], 4),
         "bigram_top1": round(base_top1, 4),
         "bigram_ce": round(base_ce, 4),

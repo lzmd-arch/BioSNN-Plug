@@ -20,6 +20,7 @@ from pathlib import Path
 import torch
 
 from research.sel.lm import run_r0 as data_utils
+from research.sel.lm.bptt_lif import BPTTLIF
 from research.sel.lm.model import TokenEProp
 
 REPO = Path(__file__).resolve().parents[3]
@@ -87,6 +88,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--trace-decay", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--out", type=Path, default=OUT)
+    parser.add_argument(
+        "--rule",
+        default="local",
+        choices=("local", "bptt"),
+        help="STREAM-3：bptt = 同架构的 **T=1 截断 BPTT**（每步更新、状态 detach）",
+    )
+    parser.add_argument("--lr", type=float, default=1e-3, help="仅 bptt 臂使用（Adam）")
     parser.add_argument("--tag", default="stream_local")
     args = parser.parse_args(argv)
 
@@ -103,6 +111,9 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"训练流 {train_stream.numel():,} token；测试流 {test_stream.numel():,} token", flush=True
     )
+
+    if args.rule == "bptt":
+        return run_bptt(args, train_stream, test_stream, boundary, device)
 
     taus = tuple(float(x) for x in args.readout_taus.split(",") if x.strip())
     model = TokenEProp(
@@ -185,6 +196,79 @@ def main(argv: list[str] | None = None) -> int:
     path = args.out / f"{args.tag}.json"
     path.write_text(
         json.dumps(result, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n"
+    )
+    print(f"写入 {path}")
+    return 0
+
+
+def run_bptt(args, train_stream, test_stream, boundary, device) -> int:
+    """STREAM-3：**T=1 截断 BPTT**，与局部规则同一协议（batch=1、无回放、常数状态）。"""
+    taus = tuple(float(x) for x in args.readout_taus.split(",") if x.strip())
+    model = BPTTLIF(
+        int(max(train_stream.max().item(), test_stream.max().item())) + 1,
+        args.n_rec,
+        readout_taus=taus,
+        generator=torch.Generator().manual_seed(args.seed),
+        device=device,
+    )
+    # 词表大小以上面为界会偏小；用真实 vocab 更稳
+    print(f"BPTT 臂：Adam lr {args.lr}，T=1，状态每步 detach", flush=True)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    state = model.new_state(1)
+    steps = min(args.train_tokens, train_stream.numel() - 1)
+    tokens = train_stream.to(device)
+    running = 0.0
+    done = 0
+    for index in range(steps):
+        if int(tokens[index]) == boundary:
+            continue
+        loss, _, state = model.forward_stream(
+            tokens[index].unsqueeze(0), tokens[index + 1].unsqueeze(0), state
+        )
+        optimizer.zero_grad(set_to_none=True)
+        loss.mean().backward()
+        optimizer.step()
+        running += float(loss.mean())
+        done += 1
+        if done % 50000 == 0:
+            print(f"    {done} 步，近 5 万步平均 CE {running / 50000:.3f}", flush=True)
+            running = 0.0
+    print(f"  训练流走完 {done:,} 步（batch=1，每步一次更新）", flush=True)
+
+    hits = counted = 0
+    total = 0.0
+    state = model.new_state(1)
+    test = test_stream.to(device)
+    limit = min(args.test_tokens, test.numel() - 1)
+    with torch.no_grad():
+        for index in range(limit):
+            if int(test[index]) == boundary:
+                continue
+            loss, logits, state = model.forward_stream(
+                test[index].unsqueeze(0), test[index + 1].unsqueeze(0), state
+            )
+            hits += int(logits.argmax(dim=-1)[0] == test[index + 1])
+            total += float(loss[0])
+            counted += 1
+    stats = {"ce": total / max(counted, 1), "top1": hits / max(counted, 1), "tokens": counted}
+    print(f"  流后（不更新）: ce {stats['ce']:.3f} top1 {stats['top1']:.4f}", flush=True)
+    result = {
+        "kind": "STREAM-3：T=1 截断 BPTT（同协议对照）",
+        "config": {
+            "rule": "bptt",
+            "lr": args.lr,
+            "n_rec": args.n_rec,
+            "train_tokens": args.train_tokens,
+            "test_tokens": args.test_tokens,
+        },
+        "after": stats,
+    }
+    args.out.mkdir(parents=True, exist_ok=True)
+    path = args.out / f"{args.tag}.json"
+    path.write_text(
+        json.dumps(result, ensure_ascii=False, indent=1) + chr(10),
+        encoding="utf-8",
+        newline=chr(10),
     )
     print(f"写入 {path}")
     return 0

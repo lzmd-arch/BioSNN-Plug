@@ -1,0 +1,12 @@
+{
+ "n_memories": 334,
+ "n_scored": 334,
+ "median_ce": 6.054264545440674,
+ "mean_ce": 5.781840801239014,
+ "corr": {
+  "access_count": 0.022814882919192314,
+  "reinforce_count": 0.03880656510591507,
+  "weight": 0.0011718356981873512,
+  "tier": null
+ }
+}

@@ -109,6 +109,48 @@ class BPTTLIF(nn.Module):
             )
         return torch.stack(losses, dim=1), torch.stack(logit_list, dim=1)
 
+    # -- 流式：跨步状态结转 + 每步 detach（STREAM-3）--------------------------
+
+    def new_state(self, batch: int) -> dict:
+        def z(*shape: int) -> torch.Tensor:
+            return torch.zeros(*shape, device=self.w_in.device, dtype=self.w_in.dtype)
+
+        return {
+            "v": z(batch, self.n_rec),
+            "z": z(batch, self.n_rec),
+            "r": z(batch, self.n_rec),
+            "readouts": z(batch, self.n_taps, self.n_rec),
+        }
+
+    def forward_stream(
+        self, prev: torch.Tensor, target: torch.Tensor, state: dict, *, detach_state: bool = True
+    ):
+        """**单步**前向：用结转的状态，产出一个预测，再把状态交回去。
+
+        这是 **T=1 截断 BPTT** 的实现口径：每步 `backward()` 后 `detach`，
+        梯度不跨步 —— 与局部规则在**同样的信息约束**下比较（都看不到未来）。
+        """
+        dtype = self.w_in.dtype
+        v, z, r = state["v"], state["z"], state["r"]
+        readouts = state["readouts"].to(dtype)
+        current = self.w_in[prev]
+        new_v = self.alpha * v + current - z * self.threshold
+        scaled = (new_v - self.threshold) / self.threshold
+        hard = (scaled > 0).to(dtype)
+        surrogate = self.dampening_factor * torch.clamp(1.0 - scaled.abs(), min=0.0)
+        fresh = hard.detach() + surrogate * (scaled - scaled.detach())
+        blocked = r > 0
+        new_z = fresh * (1.0 - blocked.to(dtype))
+        new_r = torch.clamp(r + self.n_refractory * new_z - 1.0, 0.0, float(self.n_refractory))
+        new_readouts = readouts * self.readout_decays.view(1, -1, 1) + new_z.unsqueeze(1)
+        features = (new_readouts * self.readout_scales.view(1, -1, 1)).reshape(prev.shape[0], -1)
+        logits = features @ self.w_out
+        loss = torch.nn.functional.cross_entropy(logits, target, reduction="none")
+        new_state = {"v": new_v, "z": new_z, "r": new_r, "readouts": new_readouts}
+        if detach_state:
+            new_state = {k: t.detach() for k, t in new_state.items()}
+        return loss, logits, new_state
+
     @torch.no_grad()
     def evaluate(
         self, tokens: torch.Tensor, valid: torch.Tensor | None = None, chunk: int = 64

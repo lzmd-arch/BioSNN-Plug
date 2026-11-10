@@ -1,0 +1,51 @@
+{
+ "config": {
+  "data": "D:\\AxoData\\sel\\lm\\v1\\public\\kdconv\\dialogue.jsonl",
+  "sessions": "test",
+  "max_vocab": "3000",
+  "n_rec": "1024",
+  "updates": "4000",
+  "eval_every": "1000",
+  "batch": "16",
+  "lr_in": "0.001",
+  "lr_mid": "0.001",
+  "w12_scale": "0.4",
+  "readout_taus": "2,128",
+  "seed": "0",
+  "out": "D:\\Projects\\BioSNN-Plug\\sweep_results\\lm_eprop_d2",
+  "tag": "d2_2tap_4k"
+ },
+ "fold": {
+  "top1": 0.0132,
+  "ce": 13.813,
+  "bigram_top1": 0.2887,
+  "bigram_ce": 3.769,
+  "delta_top1": -0.2756,
+  "firing_rate": 278.36688,
+  "params": 10267648,
+  "w12_params": 1048576,
+  "tokens": 929788,
+  "curve": [
+   {
+    "updates": 1000,
+    "top1": 0.0097,
+    "ce": 11.7936
+   },
+   {
+    "updates": 2000,
+    "top1": 0.0102,
+    "ce": 8.5895
+   },
+   {
+    "updates": 3000,
+    "top1": 0.0126,
+    "ce": 9.1233
+   },
+   {
+    "updates": 4000,
+    "top1": 0.0132,
+    "ce": 13.813
+   }
+  ]
+ }
+}

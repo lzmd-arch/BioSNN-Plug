@@ -69,3 +69,29 @@ def test_surrogate_gradient_flows_to_input_weights() -> None:
     losses.mean().backward()
     assert bptt.w_in.grad is not None
     assert float(bptt.w_in.grad.abs().sum()) > 0, "伪导数没把梯度送回去"
+
+
+def test_forward_stream_matches_full_forward() -> None:
+    """STREAM-3 守卫：逐步结转的状态必须与整段前向**逐位等价**。
+
+    否则 T=1 截断 BPTT 测的就不是同一个模型，"同协议对照"没有意义。
+    """
+    _, bptt = _pair()
+    tokens = torch.randint(0, VOCAB, (3, STEPS), generator=torch.Generator().manual_seed(11))
+    full, _ = bptt(tokens)
+    state = bptt.new_state(3)
+    stepwise = []
+    for t in range(STEPS - 1):
+        loss, _, state = bptt.forward_stream(tokens[:, t], tokens[:, t + 1], state)
+        stepwise.append(loss)
+    got = torch.stack(stepwise, dim=1)
+    assert torch.allclose(full, got, atol=1e-6), "逐步结转与整段前向不等价"
+
+
+def test_forward_stream_detaches_state() -> None:
+    """结转的状态必须是 detach 过的，否则 T=1 会悄悄变成全序列 BPTT。"""
+    _, bptt = _pair()
+    tokens = torch.randint(0, VOCAB, (2, 4), generator=torch.Generator().manual_seed(12))
+    state = bptt.new_state(2)
+    _, _, state = bptt.forward_stream(tokens[:, 0], tokens[:, 1], state)
+    assert not state["v"].requires_grad, "状态没 detach"
