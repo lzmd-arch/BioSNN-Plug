@@ -62,6 +62,15 @@ class HuffmanPaths:
     def depth(self) -> int:
         return int(self.nodes.shape[1])
 
+    def to(self, device) -> HuffmanPaths:
+        """建树在 CPU（heapq 是纯 Python），进模型前要搬到与权重同一个设备。"""
+        self.nodes = self.nodes.to(device)
+        self.bits = self.bits.to(device)
+        self.length = self.length.to(device)
+        if self.right_share is not None:
+            self.right_share = self.right_share.to(device)
+        return self
+
 
 def build_huffman_paths(counts: torch.Tensor) -> HuffmanPaths:
     """按 token 频次建 Huffman 树，返回路径表。频次越高路径越短（经典做法）。

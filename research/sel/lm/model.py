@@ -243,7 +243,7 @@ class TokenEProp:
             if norm_groups > 1:
                 raise ValueError("树读出的归一化口径未定义，norm_groups 只能为 1")
             self.tree = TreeReadout(
-                tree,
+                tree.to(self.device),
                 width,
                 lr_out=lr_out,
                 generator=gen,
