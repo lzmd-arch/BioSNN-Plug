@@ -66,3 +66,17 @@ def test_learning_changes_readout() -> None:
     tokens = torch.randint(0, VOCAB, (BATCH, LEN))
     model.run(tokens, model.new_trace(BATCH))
     assert not torch.equal(before, model.w_out)
+
+
+def test_evaluate_returns_python_floats() -> None:
+    """去同步改造后的守卫：`evaluate` 的标量字段必须是 Python float/int，不是张量。"""
+    from research.sel.lm.model import TokenEProp
+
+    model = TokenEProp(20, 16, fan_in=4, generator=torch.Generator().manual_seed(0), device="cpu")
+    tokens = torch.randint(0, 20, (3, 8), generator=torch.Generator().manual_seed(0))
+    metrics = model.evaluate(tokens, model.new_trace(3))
+    assert isinstance(metrics["ce"], float)
+    assert isinstance(metrics["top1"], float)
+    assert isinstance(metrics["tokens"], int)
+    assert isinstance(metrics["firing_rate"], float)
+    round(metrics["firing_rate"], 5)  # 调用方就是这么用的

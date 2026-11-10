@@ -619,7 +619,7 @@ class TokenEProp:
         return {
             "ce": float(total_loss / counted.clamp(min=1)),
             "tokens": int(counted),
-            "firing_rate": fired / max(counted * self.n_rec, 1),
+            "firing_rate": float(fired) / max(int(counted) * self.n_rec, 1),
         }
 
     @torch.no_grad()
@@ -655,7 +655,7 @@ class TokenEProp:
             "ce": total_loss / max(counted, 1),
             "top1": hits / max(counted, 1),
             "tokens": counted,
-            "firing_rate": fired / max(counted * self.n_rec, 1),
+            "firing_rate": float(fired) / max(int(counted) * self.n_rec, 1),
             "top1_by_pos": {
                 f"{low}-{high if high < 10**9 else '+'}": round(hit / total, 4)
                 for (low, high), (hit, total) in zip(buckets, bucket_hits, strict=True)
