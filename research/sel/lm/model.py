@@ -425,9 +425,9 @@ class TokenEProp:
             loss = torch.nn.functional.cross_entropy(
                 logits, targets, ignore_index=-100, reduction="none"
             )
-        fired = int(trace.z.sum())
+        fired = trace.z.sum()
 
-        if update and bool(valid.any()):
+        if update:
             grad_cols = grad_target = None
             if cols is not None:
                 signal_sub, grad_cols, grad_target = self._candidate_gradient(
@@ -492,7 +492,8 @@ class TokenEProp:
                 self.C.add_(post.T @ h_new, alpha=-self.lr_rec)
                 # D：跳跃连接，与 w_in 同构
                 self.D.index_add_(0, tokens, post, alpha=-self.lr_in)
-            norm = float(features.pow(2).sum(dim=1).mean().clamp(min=1e-3))
+            # 不取 float()：每一步都 `.item()` 会强制 GPU→CPU 同步，实测是主要开销之一
+            norm = features.pow(2).sum(dim=1).mean().clamp(min=1e-3)
             if cols is not None:
                 self._candidate_update(features, cols, grad_cols, grad_target, targets, norm)
             elif self.w_b is None:
@@ -595,9 +596,10 @@ class TokenEProp:
         learn_recurrent: bool = True,
     ) -> dict:
         """跑一整块 ``(B, L)``：内部按位移一位做 next-token。"""
-        total_loss = 0.0
-        counted = 0
-        fired = 0
+        # 全部用张量累加，**循环里不做任何 `.item()`**——每一步同步一次是这条路径最大的隐藏开销
+        total_loss = torch.zeros((), device=tokens.device)
+        counted = torch.zeros((), device=tokens.device)
+        fired = torch.zeros((), device=tokens.device)
         for t in range(tokens.shape[1] - 1):
             target = tokens[:, t + 1]
             if valid is not None:
@@ -610,14 +612,13 @@ class TokenEProp:
                 learn_hidden=learn_hidden,
                 learn_recurrent=learn_recurrent,
             )
-            mask = target != -100
-            if bool(mask.any()):
-                total_loss += float(loss[mask].sum())
-                counted += int(mask.sum())
-            fired += shots
+            mask = (target != -100).to(loss.dtype)
+            total_loss = total_loss + (loss * mask).sum()
+            counted = counted + mask.sum()
+            fired = fired + shots
         return {
-            "ce": total_loss / max(counted, 1),
-            "tokens": counted,
+            "ce": float(total_loss / counted.clamp(min=1)),
+            "tokens": int(counted),
             "firing_rate": fired / max(counted * self.n_rec, 1),
         }
 
