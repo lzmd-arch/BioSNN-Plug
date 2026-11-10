@@ -1,0 +1,99 @@
+{
+ "kind": "R0: feedforward local-rule LM on a real conversation corpus",
+ "seed": 0,
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "max_len": 192,
+  "batch": 16,
+  "updates": 16000,
+  "eval_every": 2000,
+  "lr_in": 0.001,
+  "lr_out": 0.5,
+  "tau": 20.0,
+  "tau_read": 8.0,
+  "input_std": 0.12,
+  "seed": 0,
+  "data": "D:\\AxoData\\sel\\lm\\v1\\real.jsonl",
+  "readout_width": null,
+  "readout_taus": [
+   1.0,
+   2.0,
+   4.0,
+   8.0,
+   16.0,
+   32.0,
+   64.0,
+   128.0
+  ]
+ },
+ "folds": {
+  "20261018-154235-861faf": {
+   "vocab": 1216,
+   "train_pairs": 252,
+   "test_pairs": 13,
+   "top1": 0.1155,
+   "ce": 6.9481,
+   "bigram_top1": 0.1669,
+   "bigram_ce": 5.6564,
+   "delta_top1": -0.0514,
+   "ce_ratio": 0.1289,
+   "tokens": 1810,
+   "tau": 20.0,
+   "readout_dims": 8192,
+   "firing_rate": 0.03662,
+   "curve": [
+    {
+     "updates": 2000,
+     "top1": 0.0967,
+     "ce": 5.6003
+    },
+    {
+     "updates": 4000,
+     "top1": 0.1127,
+     "ce": 5.7473
+    },
+    {
+     "updates": 6000,
+     "top1": 0.111,
+     "ce": 5.9833
+    },
+    {
+     "updates": 8000,
+     "top1": 0.1215,
+     "ce": 6.1502
+    },
+    {
+     "updates": 10000,
+     "top1": 0.1116,
+     "ce": 6.4056
+    },
+    {
+     "updates": 12000,
+     "top1": 0.1039,
+     "ce": 6.6232
+    },
+    {
+     "updates": 14000,
+     "top1": 0.1033,
+     "ce": 6.7804
+    },
+    {
+     "updates": 16000,
+     "top1": 0.1155,
+     "ce": 6.9481
+    }
+   ]
+  }
+ },
+ "criteria": {
+  "r0_0_loss_falls": true,
+  "r0_1_beats_bigram": false,
+  "r0_2_most_folds_win": false,
+  "r0_3_ce_better": false,
+  "mean_delta_top1": -0.0514,
+  "folds_winning": 0,
+  "mean_top1": 0.1155,
+  "mean_bigram_top1": 0.1669
+ }
+}
