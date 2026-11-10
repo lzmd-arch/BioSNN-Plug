@@ -161,6 +161,7 @@ def run_fold(
     use_context: bool = False,
     candidate_count: int = 0,
     readout_rank: int | None = None,
+    tau_groups: int = 1,
     tau: float = TAU,
     readout_width: int | None = None,
     readout_taus: tuple[float, ...] | None = None,
@@ -195,6 +196,7 @@ def run_fold(
         readout_taus=readout_taus,
         candidates=candidates,
         readout_rank=readout_rank,
+        tau_groups=tau_groups,
         generator=torch.Generator().manual_seed(SEED),
         device=device,
     )
@@ -275,6 +277,7 @@ def main(argv: list[str] | None = None) -> int:
         "--readout-taus", default="", help="逗号分隔；给了就是 R8（多时间尺度读出）"
     )
     parser.add_argument("--readout-rank", type=int, default=0, help="A3：低秩读出 r；0=稠密")
+    parser.add_argument("--tau-groups", type=int, default=1, help="G2：异质膜 τ 的组数；1=同质")
     args = parser.parse_args(argv)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     taus = tuple(float(item) for item in args.readout_taus.split(",") if item.strip()) or None
@@ -303,6 +306,7 @@ def main(argv: list[str] | None = None) -> int:
             use_context=args.use_context,
             candidate_count=args.candidates,
             readout_rank=args.readout_rank or None,
+            tau_groups=args.tau_groups,
             tau=args.tau,
             readout_width=args.readout_width or None,
             readout_taus=taus,
@@ -341,6 +345,7 @@ def main(argv: list[str] | None = None) -> int:
             "use_context": bool(args.use_context),
             "candidates": args.candidates,
             "readout_rank": args.readout_rank or None,
+            "tau_groups": args.tau_groups,
             "tau_read": TAU_READ,
             "input_std": INPUT_STD,
             "seed": SEED,

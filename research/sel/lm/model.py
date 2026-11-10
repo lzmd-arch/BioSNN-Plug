@@ -35,6 +35,7 @@ class LMTrace:
     readouts: torch.Tensor | None = None  # (B, K, N) 多时间尺度 EMA（仅 readout_taus）
     h: torch.Tensor | None = None  # (B, S) SSM 状态（仅 recurrence="ssm"）
     eps_e: torch.Tensor | None = None  # (B, V, S) SSM 输入投影的资格痕迹
+    eps_in_groups: torch.Tensor | None = None  # (K, B, V) 异质 τ 的分组输入痕迹
 
     @classmethod
     def zeros(
@@ -45,6 +46,7 @@ class LMTrace:
         *,
         n_state: int = 0,
         n_taus: int = 0,
+        n_groups: int = 1,
         device=None,
         dtype=torch.float32,
     ):
@@ -61,6 +63,7 @@ class LMTrace:
             readouts=zeros(batch, n_taus, n_rec) if n_taus else None,
             h=zeros(batch, n_state) if n_state else None,
             eps_e=zeros(batch, n_vocab, n_state) if n_state else None,
+            eps_in_groups=zeros(n_groups, batch, n_vocab) if n_groups > 1 else None,
         )
 
     def reset(self, rows: torch.Tensor) -> None:
@@ -70,6 +73,8 @@ class LMTrace:
             names += ["readouts"]
         if self.h is not None:
             names += ["h", "eps_e"]
+        if self.eps_in_groups is not None:
+            names += ["eps_in_groups"]
         for name in names:
             getattr(self, name)[rows] = 0.0
 
@@ -100,6 +105,7 @@ class TokenEProp:
         readout_basis: torch.Tensor | None = None,
         embed_rank: int | None = None,
         embed_proj: torch.Tensor | None = None,
+        tau_groups: int = 1,
         n_state: int = 32,
         tau_state: tuple[float, float] = (1.0, 128.0),
         generator: torch.Generator | None = None,
@@ -114,6 +120,26 @@ class TokenEProp:
         self.dampening_factor = float(dampening_factor)
         self.n_refractory = int(n_refractory)
         self.alpha = float(math.exp(-1.0 / tau))
+        #: G2 异质膜 τ：神经元分成 ``tau_groups`` 组，各组一个 τ（log 均匀 [5, 500]，**冻结**）。
+        #: ``tau_groups=1`` 时走原路径、逐位一致。
+        self.n_groups = max(1, int(tau_groups))
+        if self.n_groups > 1:
+            # 注意：self.device 在这一段之后才设，这里直接用传入的 device
+            target = torch.device(device)
+            taus = torch.logspace(math.log10(5.0), math.log10(500.0), self.n_groups)
+            repeats = (n_rec + self.n_groups - 1) // self.n_groups
+            self.tau_vec = taus.repeat_interleave(repeats)[:n_rec].to(target)
+            self.alpha_vec = torch.exp(-1.0 / self.tau_vec)
+            index = torch.arange(n_rec, device=target)
+            self.group_ids = [index[index % self.n_groups == g] for g in range(self.n_groups)]
+            self.group_alphas = torch.tensor(
+                [float(self.alpha_vec[ids[0]]) for ids in self.group_ids], device=target
+            )
+        else:
+            self.tau_vec = None
+            self.alpha_vec = None
+            self.group_ids = None
+            self.group_alphas = None
         self.decay_read = float(math.exp(-1.0 / tau_read))
         self.lr_in = float(lr_in)
         self.lr_rec = float(lr_rec)
@@ -220,6 +246,7 @@ class TokenEProp:
             self.n_vocab,
             n_state=self.n_state,
             n_taus=n_taus,
+            n_groups=self.n_groups,
             device=self.device,
         )
 
@@ -324,7 +351,8 @@ class TokenEProp:
             direct = self.w_in[tokens] if self.emb is None else self.emb[tokens] @ self.proj
             current = direct + self._recurrent_current(z_previous)
 
-        new_v = self.alpha * trace.v + current - z_previous * self.threshold
+        alpha_used = self.alpha if self.n_groups == 1 else self.alpha_vec
+        new_v = alpha_used * trace.v + current - z_previous * self.threshold
         scaled = (new_v - self.threshold) / self.threshold
         refractory = trace.refractory > 0
         fresh = (scaled > 0).to(dtype)  # 硬阈值；本类不做反传，不需要伪导数
@@ -341,8 +369,14 @@ class TokenEProp:
 
         # 资格痕迹：用**本步之前**的脉冲与本步的输入累积（与 EventDrivenEProp 同口径）
         trace.eps_rec = self.alpha * trace.eps_rec + z_previous
-        trace.eps_in = self.alpha * trace.eps_in
-        trace.eps_in.scatter_add_(1, tokens.reshape(-1, 1), active.to(trace.eps_in.dtype))
+        if trace.eps_in_groups is None:
+            trace.eps_in = self.alpha * trace.eps_in
+            trace.eps_in.scatter_add_(1, tokens.reshape(-1, 1), active.to(trace.eps_in.dtype))
+        else:
+            groups = trace.eps_in_groups
+            groups.mul_(self.group_alphas.view(-1, 1, 1))
+            index = tokens.view(1, -1, 1).expand(groups.shape[0], -1, 1)
+            groups.scatter_add_(2, index, active.to(groups.dtype).view(1, -1, 1).expand_as(index))
         if self.recurrence == "ssm":
             trace.eps_e = trace.eps_e * self.poles.view(1, 1, -1)
             trace.eps_e.scatter_add_(
