@@ -82,6 +82,35 @@ def _mask_context(tokens, valid, vocab) -> None:
             valid[row, : int(hits[0]) + 1] = False
 
 
+def build_candidates(train: list[list[int]], size: int, count: int) -> torch.Tensor:
+    """A1：``(V, C)`` 候选表——给定上一个字，最可能的 C 个下一个字。
+
+    用训练集 bigram 计数，**加一元频率兜底**（``1e-3 × unigram``），
+    否则没见过的上下文会退化成按 id 排序的任意候选。
+    """
+    import numpy as np
+
+    counts = np.zeros((size, size), dtype=np.float32)
+    for sequence in train:
+        for left, right in pairwise(sequence):
+            counts[left, right] += 1.0
+    unigram = counts.sum(axis=0)
+    unigram = unigram / max(float(unigram.sum()), 1.0)
+    order = np.argsort(-(counts + 1e-3 * unigram[None, :]), axis=1)[:, :count]
+    return torch.tensor(order, dtype=torch.long)
+
+
+def candidate_hit_rate(test: list[list[int]], table: torch.Tensor) -> float:
+    """target 落在候选集里的比例（A1-1 的前置判据）。"""
+    hits = total = 0
+    for sequence in test:
+        for left, right in pairwise(sequence):
+            total += 1
+            if bool((table[left] == right).any()):
+                hits += 1
+    return hits / max(total, 1)
+
+
 def build_vocab(texts: list[str], *, max_vocab: int = 0) -> dict[str, int]:
     """词表。``max_vocab=0`` 时保持历史行为（全部唯一字、按码位排序）；
     给了上限时按**训练集频率**取前 N 个（公共语料稀有字太多，全收会撑爆读出）。"""
@@ -130,6 +159,7 @@ def run_fold(
     *,
     max_vocab: int = 0,
     use_context: bool = False,
+    candidate_count: int = 0,
     tau: float = TAU,
     readout_width: int | None = None,
     readout_taus: tuple[float, ...] | None = None,
@@ -145,6 +175,11 @@ def run_fold(
     else:
         train_plain, test_plain = train, test
     pad = vocab["<unk>"]
+    candidates = None
+    hit = None
+    if candidate_count > 0:
+        candidates = build_candidates(train, len(vocab), candidate_count)
+        hit = round(candidate_hit_rate(test, candidates), 4)
     model = TokenEProp(
         len(vocab),
         N_REC,
@@ -157,6 +192,7 @@ def run_fold(
         recurrence="none",
         readout_width=readout_width,
         readout_taus=readout_taus,
+        candidates=candidates,
         generator=torch.Generator().manual_seed(SEED),
         device=device,
     )
@@ -207,6 +243,7 @@ def run_fold(
         "delta_top1": round(metrics["top1"] - base_top1, 4),
         "ce_ratio": round(tail / head, 4) if head else None,
         "tokens": metrics["tokens"],
+        "candidate_hit": hit,
         "tau": tau,
         "readout_dims": int(model.w_out.shape[0]),
         "firing_rate": round(metrics["firing_rate"], 5),
@@ -225,6 +262,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--tau", type=float, default=TAU, help="膜时间常数（R5 的变量）")
     parser.add_argument("--max-vocab", type=int, default=0, help="0=全部唯一字；给了按频率截断")
     parser.add_argument("--use-context", action="store_true", help="P2：把 context 字段前置")
+    parser.add_argument(
+        "--candidates", type=int, default=0, help="A1：候选集大小 C；0=全量 softmax"
+    )
     parser.add_argument(
         "--readout-width", type=int, default=0, help="0=读全部神经元；给了就是 R6q 的变量"
     )
@@ -257,6 +297,7 @@ def main(argv: list[str] | None = None) -> int:
             args.eval_every,
             max_vocab=args.max_vocab,
             use_context=args.use_context,
+            candidate_count=args.candidates,
             tau=args.tau,
             readout_width=args.readout_width or None,
             readout_taus=taus,
@@ -293,6 +334,7 @@ def main(argv: list[str] | None = None) -> int:
             "tau": args.tau,
             "max_vocab": args.max_vocab,
             "use_context": bool(args.use_context),
+            "candidates": args.candidates,
             "tau_read": TAU_READ,
             "input_std": INPUT_STD,
             "seed": SEED,

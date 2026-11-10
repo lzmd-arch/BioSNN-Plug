@@ -95,6 +95,7 @@ class TokenEProp:
         recurrence: str = "random",
         readout_width: int | None = None,
         readout_taus: tuple[float, ...] | None = None,
+        candidates: torch.Tensor | None = None,
         n_state: int = 32,
         tau_state: tuple[float, float] = (1.0, 128.0),
         generator: torch.Generator | None = None,
@@ -116,6 +117,9 @@ class TokenEProp:
         self.recurrence = recurrence
         self.n_state = int(n_state) if recurrence == "ssm" else 0
         self.device = torch.device(device)
+        #: A1 候选剪枝：``(n_vocab, C)`` 的 long 张量，每行是"上一个字 → 最可能的 C 个下一个字"。
+        #: ``None`` = 全量 softmax（历史行为，逐位不变）。
+        self.candidates = None if candidates is None else candidates.to(self.device)
 
         gen = generator or torch.Generator()
         self.w_in = torch.randn(n_vocab, n_rec, generator=gen).to(self.device) * input_std
@@ -178,6 +182,48 @@ class TokenEProp:
         )
 
     # -- 前向与更新 ------------------------------------------------------------
+
+    def _candidate_forward(self, features, tokens, targets):
+        """A1：只在候选列上算 logits。target 单独一列（并把它在候选里的副本屏蔽掉）。
+
+        返回 ``(cols, logits, loss)``；``logits`` 是 ``(B, C+1)``，最后一列是 target。
+        """
+        cols = self.candidates[tokens]  # (B, C)
+        w_c = self.w_out[:, cols]  # (M, B, C)
+        logits_c = torch.einsum("bm,mbc->bc", features, w_c)
+        tgt = targets.clamp(min=0)
+        w_t = self.w_out[:, tgt]  # (M, B)
+        logit_t = torch.einsum("bm,mb->b", features, w_t)
+        collide = cols == tgt.unsqueeze(1)
+        logits_c = logits_c.masked_fill(collide, float("-inf"))
+        logits = torch.cat([logits_c, logit_t.unsqueeze(1)], dim=1)  # (B, C+1)
+        index = torch.full(
+            (logits.shape[0],), logits.shape[1] - 1, dtype=torch.long, device=logits.device
+        )
+        loss = torch.nn.functional.cross_entropy(logits, index, reduction="none")
+        return cols, logits, loss
+
+    def _candidate_gradient(self, logits, cols, targets, active, batch):
+        """候选版的梯度与学习信号。返回 ``(signal_sub, grad_cols, grad_target)``。"""
+        probability = torch.softmax(logits, dim=-1)  # (B, C+1)
+        grad_cols = probability[:, :-1] * active  # (B, C)
+        grad_target = (probability[:, -1:] - 1.0) * active  # (B, 1)
+        scale = 1.0 / max(batch, 1)
+        w_c = self.w_out[:, cols]  # (M, B, C)
+        signal_c = torch.einsum("bc,mbc->bm", grad_cols, w_c)
+        w_t = self.w_out[:, targets.clamp(min=0)]  # (M, B)
+        signal_t = torch.einsum("b,mb->bm", grad_target.squeeze(1), w_t)
+        return (signal_c + signal_t) * scale, grad_cols * scale, grad_target * scale
+
+    def _candidate_update(self, features, cols, grad_cols, grad_target, targets, norm) -> None:
+        """只更新候选列与 target 列（A1 的全部算力收益在这里）。"""
+        delta = torch.einsum("bm,bc->mbc", features, grad_cols)  # (M, B, C)
+        tgt = targets.clamp(min=0)
+        for row in range(features.shape[0]):
+            block = self.w_out[:, cols[row]]
+            block.add_(delta[:, row, :], alpha=-self.lr_out / norm)
+            self.w_out[:, cols[row]] = block
+            self.w_out[:, tgt[row]] -= self.lr_out * features[row] * grad_target[row, 0] / norm
 
     def _features(self, trace: LMTrace) -> torch.Tensor:
         if self.readout_decays is None:
@@ -256,19 +302,29 @@ class TokenEProp:
                 1, -1, 1
             ) + trace.z.unsqueeze(1)
         features = self._features(trace)
-        logits = features @ self.w_out  # (B, V)
-        loss = torch.nn.functional.cross_entropy(
-            logits, targets, ignore_index=-100, reduction="none"
-        )
+        cols = None
+        if self.candidates is not None:
+            cols, logits, loss = self._candidate_forward(features, tokens, targets)
+        else:
+            logits = features @ self.w_out  # (B, V)
+            loss = torch.nn.functional.cross_entropy(
+                logits, targets, ignore_index=-100, reduction="none"
+            )
         fired = int(trace.z.sum())
 
         if update and bool(valid.any()):
-            probability = torch.softmax(logits, dim=-1)
-            one_hot = torch.zeros_like(probability)
-            one_hot.scatter_(1, targets.clamp(min=0).reshape(-1, 1), 1.0)
-            gradient = (probability - one_hot) * active
-            gradient = gradient / max(batch, 1)
-            signal_sub = gradient @ self.w_out.T  # (B, M)
+            grad_cols = grad_target = None
+            if cols is not None:
+                signal_sub, grad_cols, grad_target = self._candidate_gradient(
+                    logits, cols, targets, active, batch
+                )
+            else:
+                probability = torch.softmax(logits, dim=-1)
+                one_hot = torch.zeros_like(probability)
+                one_hot.scatter_(1, targets.clamp(min=0).reshape(-1, 1), 1.0)
+                gradient = (probability - one_hot) * active
+                gradient = gradient / max(batch, 1)
+                signal_sub = gradient @ self.w_out.T  # (B, M)
             if self.readout_decays is not None:
                 # 多时间尺度：每个抽头的信号属于同一批神经元，按抽头求和
                 signal = signal_sub.view(signal_sub.shape[0], -1, self.n_rec).sum(dim=1)
@@ -308,7 +364,10 @@ class TokenEProp:
                 # D：跳跃连接，与 w_in 同构
                 self.D.index_add_(0, tokens, post, alpha=-self.lr_in)
             norm = float(features.pow(2).sum(dim=1).mean().clamp(min=1e-3))
-            self.w_out.add_(features.T @ gradient / norm, alpha=-self.lr_out)
+            if cols is not None:
+                self._candidate_update(features, cols, grad_cols, grad_target, targets, norm)
+            else:
+                self.w_out.add_(features.T @ gradient / norm, alpha=-self.lr_out)
         return loss, fired
 
     # -- 标定与诊断 ------------------------------------------------------------
