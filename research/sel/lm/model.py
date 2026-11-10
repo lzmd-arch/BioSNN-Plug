@@ -354,8 +354,14 @@ class TokenEProp:
         update: bool = True,
         learn_hidden: bool = True,
         learn_recurrent: bool = True,
+        all_valid: bool = False,
     ) -> tuple[torch.Tensor, int]:
-        """跑一个时刻。返回 (逐样本 CE, 本步发放数)。``targets`` 里的 -100 不参与损失。"""
+        """跑一个时刻。返回 (逐样本 CE, 本步发放数)。
+
+        ``all_valid=True`` 时走**全有效快路径**：跳过三个 ``torch.where(active...)`` 与
+        ``* active`` 的乘法（实测每步省 4–5 个内核）。它与慢路径**逐位等价**——``active`` 全 1 时
+        ``where(active, x, y) == x``、``x*active == x``。
+        """
         batch = tokens.shape[0]
         dtype = trace.v.dtype
         valid = targets != -100
@@ -377,7 +383,7 @@ class TokenEProp:
         if trace.a is not None:
             # G1：适应变量用**上一步**的脉冲更新，阈值抬到 θ + β·a；复位仍用基阈值。
             adapt = self.rho * trace.a + z_previous
-            trace.a = torch.where(active > 0, adapt, trace.a)
+            trace.a = adapt if all_valid else torch.where(active > 0, adapt, trace.a)
             theta = self.threshold + self.beta * trace.a
         new_v = alpha_used * trace.v + current - z_previous * self.threshold
         scaled = (new_v - theta) / theta
@@ -389,9 +395,12 @@ class TokenEProp:
             min=0.0,
             max=float(self.n_refractory),
         )
-        trace.v = torch.where(active > 0, new_v, trace.v)
-        trace.z = torch.where(active > 0, new_z, torch.zeros_like(new_z))
-        trace.refractory = torch.where(active > 0, new_r, trace.refractory)
+        if all_valid:
+            trace.v, trace.z, trace.refractory = new_v, new_z, new_r
+        else:
+            trace.v = torch.where(active > 0, new_v, trace.v)
+            trace.z = torch.where(active > 0, new_z, torch.zeros_like(new_z))
+            trace.refractory = torch.where(active > 0, new_r, trace.refractory)
         trace.readout = self.decay_read * trace.readout + trace.z
 
         # 资格痕迹：用**本步之前**的脉冲与本步的输入累积（与 EventDrivenEProp 同口径）
@@ -437,7 +446,7 @@ class TokenEProp:
                 probability = torch.softmax(logits, dim=-1)
                 one_hot = torch.zeros_like(probability)
                 one_hot.scatter_(1, targets.clamp(min=0).reshape(-1, 1), 1.0)
-                gradient = (probability - one_hot) * active
+                gradient = (probability - one_hot) if all_valid else (probability - one_hot) * active
                 gradient = gradient / max(batch, 1)
                 if self.w_b is None:
                     signal_sub = self._mm(gradient, self.w_out.T)  # (B, M)
@@ -466,7 +475,7 @@ class TokenEProp:
             # 会把 ψ 在脉冲时刻置零。口径出处：`research/eprop/traces.py::refractory_mask`
             # 的 docstring（"判据是上一步之后的计数器，不是本步之后的"）。
             psi = torch.where(refractory, torch.zeros_like(psi), psi)
-            post = signal * psi * active
+            post = signal * psi if all_valid else signal * psi * active
 
             if learn_hidden and self.recurrence != "ssm":
                 if self.emb is None:
@@ -596,6 +605,8 @@ class TokenEProp:
         learn_recurrent: bool = True,
     ) -> dict:
         """跑一整块 ``(B, L)``：内部按位移一位做 next-token。"""
+        # 整块判定一次：全有效时走快路径（每步省 4–5 个内核），与慢路径逐位等价
+        all_valid = valid is None or bool(valid.all())
         # 全部用张量累加，**循环里不做任何 `.item()`**——每一步同步一次是这条路径最大的隐藏开销
         total_loss = torch.zeros((), device=tokens.device)
         counted = torch.zeros((), device=tokens.device)
@@ -611,6 +622,7 @@ class TokenEProp:
                 update=update,
                 learn_hidden=learn_hidden,
                 learn_recurrent=learn_recurrent,
+                all_valid=all_valid,
             )
             mask = (target != -100).to(loss.dtype)
             total_loss = total_loss + (loss * mask).sum()
