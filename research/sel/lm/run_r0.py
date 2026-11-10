@@ -200,6 +200,16 @@ def run_fold(
     tau: float = TAU,
     readout_width: int | None = None,
     readout_taus: tuple[float, ...] | None = None,
+    pad_vocab: bool = True,
+    bf16_weights: bool = False,
+    weight_dtype: str = "fp32",
+    mirror_dtype: str = "",
+    bf16_input: bool = False,
+    norm_groups: int = 1,
+    trace_decay: float = 0.0,
+    n_rec: int = N_REC,
+    lr_in: float = LR_IN,
+    learn_hidden: bool = True,
 ) -> dict:
     torch.manual_seed(SEED)
     vocab = build_vocab(train_texts, max_vocab=max_vocab)
@@ -219,17 +229,24 @@ def run_fold(
         hit = round(candidate_hit_rate(test, candidates), 4)
     model = TokenEProp(
         len(vocab),
-        N_REC,
+        n_rec,
         fan_in=FAN_IN,
         tau=tau,
         tau_read=TAU_READ,
         input_std=INPUT_STD,
-        lr_in=LR_IN,
+        lr_in=lr_in,
         lr_out=LR_OUT,
         recurrence="none",
         readout_width=readout_width,
         readout_taus=readout_taus,
         candidates=candidates,
+        pad_vocab=pad_vocab,
+        bf16_weights=bf16_weights,
+        weight_dtype=weight_dtype,
+        mirror_dtype=mirror_dtype,
+        bf16_input=bf16_input,
+        norm_groups=norm_groups,
+        trace_decay=trace_decay,
         readout_rank=readout_rank,
         embed_rank=embed_rank,
         tau_groups=tau_groups,
@@ -258,7 +275,10 @@ def run_fold(
         if use_context:
             _mask_context(tokens, valid, vocab)
         result = model.run(
-            tokens.to(device), model.new_trace(tokens.shape[0]), valid=valid.to(device)
+            tokens.to(device),
+            model.new_trace(tokens.shape[0]),
+            valid=valid.to(device),
+            learn_hidden=learn_hidden,
         )
         losses.append(result["ce"])
         if eval_every and (step + 1) % eval_every == 0:
@@ -311,6 +331,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--sessions", default="", help="逗号分隔的留出会话；空=全部")
     parser.add_argument("--eval-every", type=int, default=0)
     parser.add_argument("--tau", type=float, default=TAU, help="膜时间常数（R5 的变量）")
+    parser.add_argument("--n-rec", type=int, default=N_REC, help="神经元数 N（R3 的变量）")
+    parser.add_argument("--lr-in", type=float, default=LR_IN, help="S7 对照臂：输入权重学习率")
+    parser.add_argument(
+        "--no-learn-hidden",
+        action="store_true",
+        help="S11 判决臂：冻结 w_in。若性能不变 ⇒ 隐层学习无贡献，针对隐层的辅助目标没有增益空间",
+    )
     parser.add_argument("--max-vocab", type=int, default=0, help="0=全部唯一字；给了按频率截断")
     parser.add_argument("--use-context", action="store_true", help="P2：把 context 字段前置")
     parser.add_argument(
@@ -325,6 +352,33 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--readout-rank", type=int, default=0, help="A3：低秩读出 r；0=稠密")
     parser.add_argument("--embed-rank", type=int, default=0, help="A2：低秩输入 d；0=稠密")
     parser.add_argument("--bucket-lengths", action="store_true", help="按长度分桶采样（省填充）")
+    parser.add_argument("--no-pad-vocab", action="store_true", help="S1：关掉词表补零（默认开）")
+    parser.add_argument("--bf16-weights", action="store_true", help="S2：读出权重存 bf16")
+    parser.add_argument(
+        "--weight-dtype",
+        default="fp32",
+        choices=("fp32", "bf16", "fp16"),
+        help="S2：读出权重存储精度（fp16 的尾数比 bf16 多 2 位）",
+    )
+    parser.add_argument(
+        "--mirror-dtype",
+        default="",
+        choices=("", "bf16", "fp16"),
+        help="S2'：主权重留 fp32，另存一份低精度镜像供矩阵乘读",
+    )
+    parser.add_argument("--bf16-input", action="store_true", help="S2b：输入权重 w_in 存 bf16")
+    parser.add_argument(
+        "--trace-decay",
+        type=float,
+        default=0.0,
+        help="S7：资格痕迹衰减 β（与膜常数解耦）；0=跟 alpha（历史行为）。β=0.99 对应窗口 ~100 步",
+    )
+    parser.add_argument(
+        "--norm-groups",
+        type=int,
+        default=1,
+        help="S5：读出的 NLMS 归一化分几组；1=全局标量（历史行为）",
+    )
     parser.add_argument("--tau-groups", type=int, default=1, help="G2：异质膜 τ 的组数；1=同质")
     parser.add_argument("--beta", type=float, default=0.0, help="G1：ALIF 适应强度 β；0=纯 LIF")
     args = parser.parse_args(argv)
@@ -358,6 +412,16 @@ def main(argv: list[str] | None = None) -> int:
             embed_rank=args.embed_rank or None,
             bucket_lengths=args.bucket_lengths,
             tau_groups=args.tau_groups,
+            pad_vocab=not args.no_pad_vocab,
+            bf16_weights=args.bf16_weights,
+            weight_dtype=args.weight_dtype,
+            mirror_dtype=args.mirror_dtype,
+            bf16_input=args.bf16_input,
+            norm_groups=args.norm_groups,
+            trace_decay=args.trace_decay,
+            n_rec=args.n_rec,
+            lr_in=args.lr_in,
+            learn_hidden=not args.no_learn_hidden,
             beta=args.beta,
             tau=args.tau,
             readout_width=args.readout_width or None,
@@ -384,13 +448,13 @@ def main(argv: list[str] | None = None) -> int:
         "kind": "R0: feedforward local-rule LM on a real conversation corpus",
         "seed": SEED,
         "config": {
-            "n_rec": N_REC,
+            "n_rec": args.n_rec,
             "fan_in": FAN_IN,
             "max_len": MAX_LEN,
             "batch": BATCH,
             "updates": args.updates,
             "eval_every": args.eval_every,
-            "lr_in": LR_IN,
+            "lr_in": args.lr_in,
             "lr_out": LR_OUT,
             "tau": args.tau,
             "max_vocab": args.max_vocab,
@@ -400,6 +464,14 @@ def main(argv: list[str] | None = None) -> int:
             "embed_rank": args.embed_rank or None,
             "bucket_lengths": bool(args.bucket_lengths),
             "tau_groups": args.tau_groups,
+            "pad_vocab": not args.no_pad_vocab,
+            "bf16_weights": args.bf16_weights,
+            "weight_dtype": args.weight_dtype,
+            "mirror_dtype": args.mirror_dtype,
+            "norm_groups": args.norm_groups,
+            "trace_decay": args.trace_decay,
+            "learn_hidden": not args.no_learn_hidden,
+            "bf16_input": args.bf16_input,
             "beta": args.beta,
             "tau_read": TAU_READ,
             "input_std": INPUT_STD,

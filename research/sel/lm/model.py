@@ -106,6 +106,13 @@ class TokenEProp:
         readout_width: int | None = None,
         readout_taus: tuple[float, ...] | None = None,
         candidates: torch.Tensor | None = None,
+        pad_vocab: bool = True,
+        bf16_weights: bool = False,
+        weight_dtype: str = "fp32",
+        mirror_dtype: str = "",
+        norm_groups: int = 1,
+        trace_decay: float = 0.0,
+        bf16_input: bool = False,
         readout_rank: int | None = None,
         readout_basis: torch.Tensor | None = None,
         embed_rank: int | None = None,
@@ -122,12 +129,38 @@ class TokenEProp:
         if recurrence not in ("random", "none", "ssm"):
             raise ValueError(f"recurrence 只能是 random / none / ssm，收到 {recurrence!r}")
         self.n_vocab = int(n_vocab)
+        #: S1：词表维补到 8 的倍数。cuBLAS 在 V=3001 这类"非 tile 倍数"的形状上掉出张量核
+        #: （实测 bf16 16.3 → 33.6 TFLOPS）。补出来的列不参与 softmax，**输出逐位不变**。
+        self.n_pad = (self.n_vocab + 7) // 8 * 8 if pad_vocab else self.n_vocab
+        #: S2：读出权重存 bf16（cuBLAS 内部 fp32 累加）。显存减半、走张量核。
+        #: `weight_dtype` 优先；`bf16_weights=True` 是它的旧写法。
+        name = "bf16" if bf16_weights else weight_dtype
+        self.w_dtype = {"fp32": torch.float32, "bf16": torch.bfloat16, "fp16": torch.float16}[name]
+        self.weight_dtype_name = name
+        #: S2'：**主权重保持 fp32**，只把一份镜像降到低精度供两次矩阵乘读；更新写回 fp32 主权重，
+        #: 然后刷新镜像。低精度存储（S2）会把舍入直接打进累加器，实测 top-1 −11.1pp；镜像不会。
+        self.mirror_dtype = (
+            {"bf16": torch.bfloat16, "fp16": torch.float16}[mirror_dtype] if mirror_dtype else None
+        )
+        self.mirror_dtype_name = mirror_dtype
+        #: S5：读出的 NLMS 归一化从**一个全局标量**改成**每组一个**。零算力成本。
+        #: 脑区局部抑制的计算对应物：一个组活动大不该把别的组的步长一起压小。
+        #: 1 = 历史行为（逐位不变）。
+        self.norm_groups = max(1, int(norm_groups))
+        #: S2b：输入权重 `w_in` 也存 bf16。它在 1B 下是 `V·N` = 200M MAC/token，
+        #: 是低秩读出之后**最大的一项**，而且此刻完全没进 bf16。
+        self.w_dtype_in = torch.bfloat16 if bf16_input else torch.float32
         self.n_rec = int(n_rec)
         self.fan_in = int(fan_in)
         self.threshold = float(threshold)
         self.dampening_factor = float(dampening_factor)
         self.n_refractory = int(n_refractory)
         self.alpha = float(math.exp(-1.0 / tau))
+        #: S7：资格痕迹自己的衰减 β，**与膜常数解耦**。e-prop 的推导里两者相同（都等于 α），
+        #: 但 Traces Propagation（arXiv:2509.13053，NCE 2026）把 β 当作每层独立的超参在调
+        #: （SHD 递归臂 0.85、前馈 0.96、DVS-CIFAR10 0.18）——也就是说"因果窗口"本身是个自由度。
+        #: 我们的 α=e^(−1/20) ⇒ 窗口只有 ~20 步，而序列是 192 步。``0`` = 跟 `alpha` 相同（历史行为，逐位不变）。
+        self.trace_decay = float(trace_decay) if trace_decay > 0 else self.alpha
         #: G2 异质膜 τ：神经元分成 ``tau_groups`` 组，各组一个 τ（log 均匀 [5, 500]，**冻结**）。
         #: ``tau_groups=1`` 时走原路径、逐位一致。
         #: G1 ALIF：阈值 ``θ + beta·a``，``a = rho·a + z``（用**上一步**的脉冲）。
@@ -140,19 +173,22 @@ class TokenEProp:
         if self.n_groups > 1:
             # 注意：self.device 在这一段之后才设，这里直接用传入的 device
             target = torch.device(device)
-            taus = torch.logspace(math.log10(5.0), math.log10(500.0), self.n_groups)
-            repeats = (n_rec + self.n_groups - 1) // self.n_groups
-            self.tau_vec = taus.repeat_interleave(repeats)[:n_rec].to(target)
+            taus = torch.logspace(math.log10(5.0), math.log10(500.0), self.n_groups).to(target)
+            # **分组必须与 tau_vec 同一口径**：`tau_vec` 是连续块（repeat_interleave），
+            # 而原先的 `group_ids` 用的是交错下标（index % n_groups），两者对不上 ⇒
+            # 输入痕迹按错误的 τ 衰减。2026-11-10 修：统一切成连续块。
+            bounds = [round(g * n_rec / self.n_groups) for g in range(self.n_groups + 1)]
+            self.group_slices = [(bounds[g], bounds[g + 1]) for g in range(self.n_groups)]
+            counts = [hi - lo for lo, hi in self.group_slices]
+            self.tau_vec = torch.repeat_interleave(taus, torch.tensor(counts, device=target))
             self.alpha_vec = torch.exp(-1.0 / self.tau_vec)
-            index = torch.arange(n_rec, device=target)
-            self.group_ids = [index[index % self.n_groups == g] for g in range(self.n_groups)]
-            self.group_alphas = torch.tensor(
-                [float(self.alpha_vec[ids[0]]) for ids in self.group_ids], device=target
-            )
+            self.group_ids = [torch.arange(lo, hi, device=target) for lo, hi in self.group_slices]
+            self.group_alphas = torch.exp(-1.0 / taus)  # 与 `alpha` 同口径：e^(−1/τ)
         else:
             self.tau_vec = None
             self.alpha_vec = None
             self.group_ids = None
+            self.group_slices = None
             self.group_alphas = None
         self.decay_read = float(math.exp(-1.0 / tau_read))
         self.lr_in = float(lr_in)
@@ -166,7 +202,9 @@ class TokenEProp:
         self.candidates = None if candidates is None else candidates.to(self.device)
 
         gen = generator or torch.Generator()
-        self.w_in = torch.randn(n_vocab, n_rec, generator=gen).to(self.device) * input_std
+        self.w_in = (torch.randn(n_vocab, n_rec, generator=gen).to(self.device) * input_std).to(
+            self.w_dtype_in
+        )
         # 读出宽度：None 或等于 n_rec 时读全部；否则初始化时固定抽一个子集（R3 的 (b) 臂）
         if readout_taus:
             if readout_width is not None:
@@ -191,7 +229,15 @@ class TokenEProp:
             self.readout_scales = None
             width = int(readout_width)
             self.readout_index = torch.randperm(n_rec, generator=gen)[:width].to(self.device)
-        self.w_out = torch.randn(width, n_vocab, generator=gen).to(self.device) / math.sqrt(width)
+        self.w_out = (
+            torch.randn(width, self.n_pad, generator=gen).to(self.device) / math.sqrt(width)
+        ).to(self.w_dtype)
+        self.w_out_mirror: torch.Tensor | None = (
+            self.w_out.to(self.mirror_dtype) if self.mirror_dtype is not None else None
+        )
+        bounds = [round(g * width / self.norm_groups) for g in range(self.norm_groups + 1)]
+        self.norm_bounds = [(bounds[g], bounds[g + 1]) for g in range(self.norm_groups)]
+        self.norm_sizes = torch.tensor([hi - lo for lo, hi in self.norm_bounds], device=self.device)
         #: A3 低秩读出：``w_out ≈ w_a @ w_b``。``w_b`` 固定（随机基），只学 ``w_a``。
         #: ``readout_rank=None``（或 ≥ width）= 稠密读出，逐位不变。
         #: A2 低秩输入：``w_in ≈ emb(V×d) @ proj(d×N)``。给了 ``embed_rank`` 时 ``w_in`` 不用。
@@ -219,15 +265,22 @@ class TokenEProp:
         self.w_b: torch.Tensor | None = None
         if readout_rank is not None and 0 < int(readout_rank) < width:
             self.readout_rank = int(readout_rank)
-            self.w_a = torch.randn(width, self.readout_rank, generator=gen).to(
-                self.device
-            ) / math.sqrt(width)
+            self.w_a = (
+                torch.randn(width, self.readout_rank, generator=gen).to(self.device)
+                / math.sqrt(width)
+            ).to(self.w_dtype)
             if readout_basis is not None:
                 self.w_b = readout_basis.to(self.device)
+                if self.w_b.shape[1] < self.n_pad:  # 补零列，保持与 w_out 同形
+                    self.w_b = torch.nn.functional.pad(
+                        self.w_b, (0, self.n_pad - self.w_b.shape[1])
+                    )
+                self.w_b = self.w_b.to(self.w_dtype)
             else:
-                self.w_b = torch.randn(self.readout_rank, n_vocab, generator=gen).to(
-                    self.device
-                ) / math.sqrt(self.readout_rank)
+                self.w_b = (
+                    torch.randn(self.readout_rank, self.n_pad, generator=gen).to(self.device)
+                    / math.sqrt(self.readout_rank)
+                ).to(self.w_dtype)
             del self.w_out
             self.w_out = None
 
@@ -315,15 +368,34 @@ class TokenEProp:
         return int(self.w_out.shape[0]) if self.w_b is None else int(self.w_a.shape[0])
 
     def _mm(self, left: torch.Tensor, right: torch.Tensor) -> torch.Tensor:
-        """大矩阵乘：``amp`` 时降 bf16 再升回 fp32（状态/权重本身不变精度）。"""
-        if self.amp:
-            return (left.to(torch.bfloat16) @ right.to(torch.bfloat16)).float()
-        return left @ right
+        """大矩阵乘：右操作数是什么精度就用什么精度（fp32 直乘；低精度走张量核，升回 fp32）。
+
+        ``amp`` 是老开关，强制 bf16。**精度跟着权重走**，所以低精度存储与低精度镜像共用这一条路径。
+        """
+        dtype = torch.bfloat16 if self.amp else right.dtype
+        if dtype == torch.float32:
+            return left @ right
+        return (left.to(dtype) @ right.to(dtype)).float()
+
+    def _mm_in(self, left: torch.Tensor, right: torch.Tensor) -> torch.Tensor:
+        """输入权重的更新矩阵乘；精度跟随 ``w_dtype_in``（交给 ``add_`` 落回目标精度）。"""
+        if self.w_dtype_in == torch.float32:
+            return left @ right
+        return left.to(torch.bfloat16) @ right.to(torch.bfloat16)
+
+    @property
+    def _w_read(self) -> torch.Tensor:
+        """矩阵乘该读的读出权重：有镜像读镜像（低精度），否则读主权重。"""
+        return self.w_out if self.w_out_mirror is None else self.w_out_mirror
+
+    @property
+    def _w_read_t(self) -> torch.Tensor:
+        return self._w_read.T
 
     def _logits(self, features: torch.Tensor) -> torch.Tensor:
         """``features -> logits``。稠密版直乘；低秩版先投影到 r 再展开。"""
         if self.w_b is None:
-            return self._mm(features, self.w_out)
+            return self._mm(features, self._w_read)
         return self._mm(self._mm(features, self.w_a), self.w_b)
 
     def _features(self, trace: LMTrace) -> torch.Tensor:
@@ -376,6 +448,7 @@ class TokenEProp:
             trace.h = torch.where(active > 0, h_new, trace.h)
         else:
             direct = self.w_in[tokens] if self.emb is None else self.emb[tokens] @ self.proj
+            direct = direct.float()  # bf16 存储时升回 fp32，膜电位与阈值判据保持 fp32
             current = direct + self._recurrent_current(z_previous)
 
         alpha_used = self.alpha if self.n_groups == 1 else self.alpha_vec
@@ -404,9 +477,9 @@ class TokenEProp:
         trace.readout = self.decay_read * trace.readout + trace.z
 
         # 资格痕迹：用**本步之前**的脉冲与本步的输入累积（与 EventDrivenEProp 同口径）
-        trace.eps_rec = self.alpha * trace.eps_rec + z_previous
+        trace.eps_rec = self.trace_decay * trace.eps_rec + z_previous
         if trace.eps_in_groups is None:
-            trace.eps_in = self.alpha * trace.eps_in
+            trace.eps_in = self.trace_decay * trace.eps_in
             trace.eps_in.scatter_add_(1, tokens.reshape(-1, 1), active.to(trace.eps_in.dtype))
         else:
             groups = trace.eps_in_groups
@@ -430,7 +503,7 @@ class TokenEProp:
         if self.candidates is not None:
             cols, logits, loss = self._candidate_forward(features, tokens, targets)
         else:
-            logits = self._logits(features)  # (B, V)
+            logits = self._logits(features)[:, : self.n_vocab]  # (B, V)；补出来的列丢掉
             loss = torch.nn.functional.cross_entropy(
                 logits, targets, ignore_index=-100, reduction="none"
             )
@@ -444,14 +517,22 @@ class TokenEProp:
                 )
             else:
                 probability = torch.softmax(logits, dim=-1)
-                one_hot = torch.zeros_like(probability)
-                one_hot.scatter_(1, targets.clamp(min=0).reshape(-1, 1), 1.0)
-                gradient = (probability - one_hot) if all_valid else (probability - one_hot) * active
+                # 梯度只在前 n_vocab 列非零；补出来的列留 0，好让 addmm 与原矩阵同形
+                gradient = torch.zeros(
+                    probability.shape[0],
+                    self.n_pad,
+                    device=probability.device,
+                    dtype=probability.dtype,
+                )
+                gradient[:, : self.n_vocab] = probability
+                gradient.scatter_(1, targets.clamp(min=0).reshape(-1, 1), -1.0, reduce="add")
+                if not all_valid:
+                    gradient = gradient * active
                 gradient = gradient / max(batch, 1)
                 if self.w_b is None:
-                    signal_sub = self._mm(gradient, self.w_out.T)  # (B, M)
+                    signal_sub = self._mm(gradient, self._w_read_t)  # (B, M)
                 else:
-                    signal_sub = (gradient @ self.w_b.T) @ self.w_a.T  # (B, M)
+                    signal_sub = self._mm(self._mm(gradient, self.w_b.T), self.w_a.T)  # (B, M)
             if self.readout_decays is not None:
                 # 多时间尺度：每个抽头的信号属于同一批神经元，按抽头求和
                 signal = signal_sub.view(signal_sub.shape[0], -1, self.n_rec).sum(dim=1)
@@ -478,8 +559,18 @@ class TokenEProp:
             post = signal * psi if all_valid else signal * psi * active
 
             if learn_hidden and self.recurrence != "ssm":
-                if self.emb is None:
-                    self.w_in.add_(torch.einsum("bn,bv->vn", post, trace.eps_in), alpha=-self.lr_in)
+                if self.emb is None and trace.eps_in_groups is not None:
+                    # G2：每个 τ 组有自己的输入痕迹，只更新本组那几列。
+                    # 各组列宽之和 = N ⇒ **总成本与同质路径相同**（V·B·N），不是 K 倍。
+                    for g, (lo, hi) in enumerate(self.group_slices):
+                        self.w_in[:, lo:hi].add_(
+                            self._mm_in(trace.eps_in_groups[g].T, post[:, lo:hi]),
+                            alpha=-self.lr_in,
+                        )
+                elif self.emb is None:
+                    # 一次 (V,B)@(B,N) 的 GEMM；原先的 einsum 会被降成 bmm（收缩维长度为 1），
+                    # FLOP 相同但访存差。数学完全一样。
+                    self.w_in.add_(self._mm_in(trace.eps_in.T, post), alpha=-self.lr_in)
                 else:
                     # A2：dL/dE = eps_inᵀ (post·Pᵀ) = (V,d)；dL/dP = (eps_in·E)ᵀ post = (d,N)。
                     # **结合顺序是关键**：先右乘再左乘，避免物化 (V,N)。
@@ -503,13 +594,41 @@ class TokenEProp:
                 self.D.index_add_(0, tokens, post, alpha=-self.lr_in)
             # 不取 float()：每一步都 `.item()` 会强制 GPU→CPU 同步，实测是主要开销之一
             norm = features.pow(2).sum(dim=1).mean().clamp(min=1e-3)
+            # 分母：全局版就是 `norm`；分组版把 **全部**归一化搬进 features 的逐列缩放，
+            # 这里必须是 1——否则会多出一个 1/norm 的因子，等于顺手把学习率乘了 G 倍。
+            denom = norm
+            if self.norm_groups > 1 and cols is None:
+                # S5：每组自己的归一化。更新对 features 是线性的，所以只要把每组乘上 1/norm_g，
+                # 后面完全不用改——FLOPs 与内核次数都不变，只多一次逐元素乘。
+                per_group = torch.stack(
+                    [
+                        features[:, lo:hi].pow(2).sum(dim=1).mean().clamp(min=1e-3)
+                        for lo, hi in self.norm_bounds
+                    ]
+                )
+                # **必须再除一个 G**：每一步的总修正量是 Σ_g (f_g·Δw_g) = Σ_g g/G = g，
+                # 才与全局归一化"一步把 g 投影掉"同量级。少了这个 1/G，等于每步过冲 G 倍
+                # ——实测 CE 从 8.0 一路涨到 18.1（发散），不是"分组没用"，是**实现放大了步长**。
+                scale = 1.0 / (self.norm_groups * per_group)
+                features = features * torch.repeat_interleave(scale, self.norm_sizes)
+                denom = 1.0
             if cols is not None:
                 self._candidate_update(features, cols, grad_cols, grad_target, targets, norm)
             elif self.w_b is None:
-                self.w_out.add_(self._mm(features.T, gradient) / norm, alpha=-self.lr_out)
+                # 原地 addmm：省掉 (M,V) 的 fp32 临时与一次"读+写"整表（实测 8%）
+                torch.addmm(
+                    self.w_out,
+                    features.to(self.w_dtype).T,
+                    (gradient / denom).to(self.w_dtype),
+                    alpha=-self.lr_out,
+                    beta=1.0,
+                    out=self.w_out,
+                )
+                if self.w_out_mirror is not None:
+                    self.w_out_mirror.copy_(self.w_out)
             else:
-                grad_a = gradient @ self.w_b.T  # (B, r)
-                self.w_a.add_(features.T @ grad_a / norm, alpha=-self.lr_out)
+                grad_a = self._mm(gradient, self.w_b.T)  # (B, r)
+                self.w_a.add_(features.T @ grad_a / denom, alpha=-self.lr_out)
         return loss, fired
 
     # -- 标定与诊断 ------------------------------------------------------------
@@ -652,7 +771,7 @@ class TokenEProp:
             mask = target != -100
             if not bool(mask.any()):
                 continue
-            logits = self._logits(self._features(trace))
+            logits = self._logits(self._features(trace))[:, : self.n_vocab]
             matched = logits.argmax(dim=-1)[mask] == target[mask]
             hits += int(matched.sum())
             counted += int(mask.sum())

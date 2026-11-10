@@ -1,0 +1,28 @@
+{
+ "device": "cuda",
+ "cases": [
+  {
+   "n_rec": 4096,
+   "vocab": 3001,
+   "batch": 256,
+   "steps": 32,
+   "updates": 10,
+   "taus": 4,
+   "width": 16384,
+   "readout_rank": null,
+   "graph": false,
+   "compile": false,
+   "bf16_weights": false,
+   "weight_dtype": "fp32",
+   "mirror_dtype": "fp16",
+   "norm_groups": 1,
+   "pad_vocab": true,
+   "params": 61460480,
+   "tokens": 79360,
+   "elapsed_s": 2.641,
+   "tokens_per_s": 30051.3,
+   "ms_per_update": 264.08,
+   "peak_mib": 561.2
+  }
+ ]
+}

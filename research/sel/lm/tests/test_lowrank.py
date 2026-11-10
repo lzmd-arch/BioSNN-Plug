@@ -11,6 +11,9 @@ TAUS = (2.0, 8.0)
 
 
 def _make(**kwargs) -> TokenEProp:
+    # 这一组测的是"低秩 = 稠密"的代数等价，与词表补零无关，所以关掉补零；
+    # 补零本身的精确性由 test_vocab_padding.py 守。
+    kwargs.setdefault("pad_vocab", False)
     return TokenEProp(
         VOCAB,
         N_REC,

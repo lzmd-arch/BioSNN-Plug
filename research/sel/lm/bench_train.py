@@ -45,6 +45,11 @@ def run_case(
     readout_rank: int | None = None,
     embed_rank: int | None = None,
     amp: bool = False,
+    bf16_weights: bool = False,
+    weight_dtype: str = "fp32",
+    mirror_dtype: str = "",
+    norm_groups: int = 1,
+    pad_vocab: bool = True,
     graph_mode: bool = False,
     compile_mode: bool = False,
 ) -> dict:
@@ -66,6 +71,11 @@ def run_case(
         readout_rank=readout_rank,
         embed_rank=embed_rank,
         amp=amp,
+        bf16_weights=bf16_weights,
+        weight_dtype=weight_dtype,
+        mirror_dtype=mirror_dtype,
+        norm_groups=norm_groups,
+        pad_vocab=pad_vocab,
         generator=torch.Generator().manual_seed(0),
         device=device,
     )
@@ -134,6 +144,11 @@ def run_case(
         "readout_rank": readout_rank,
         "graph": graph_mode,
         "compile": compile_mode,
+        "bf16_weights": bf16_weights,
+        "weight_dtype": weight_dtype,
+        "mirror_dtype": mirror_dtype,
+        "norm_groups": norm_groups,
+        "pad_vocab": pad_vocab,
         "params": params,
         "tokens": processed,
         "elapsed_s": round(elapsed, 3),
@@ -156,6 +171,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--readout-rank", type=int, default=0, help="A3：低秩读出 r；0=稠密")
     parser.add_argument("--embed-rank", type=int, default=0, help="A2：低秩输入 d；0=稠密")
     parser.add_argument("--amp", action="store_true", help="T3：矩阵乘用 bf16")
+    parser.add_argument("--bf16-weights", action="store_true", help="S2：读出权重存 bf16")
+    parser.add_argument("--weight-dtype", default="fp32", choices=("fp32", "bf16", "fp16"))
+    parser.add_argument("--mirror-dtype", default="", choices=("", "bf16", "fp16"))
+    parser.add_argument("--norm-groups", type=int, default=1)
+    parser.add_argument("--no-pad-vocab", action="store_true", help="S1：关掉词表补零")
     parser.add_argument("--graph", action="store_true", help="T4：CUDA graph 捕获整段 step")
     parser.add_argument("--compile", action="store_true", help="T4：torch.compile 包住 run")
     parser.add_argument(
@@ -186,6 +206,11 @@ def main(argv: list[str] | None = None) -> int:
                 readout_rank=args.readout_rank or None,
                 embed_rank=args.embed_rank or None,
                 amp=args.amp,
+                bf16_weights=args.bf16_weights,
+                weight_dtype=args.weight_dtype,
+                mirror_dtype=args.mirror_dtype,
+                norm_groups=args.norm_groups,
+                pad_vocab=not args.no_pad_vocab,
                 graph_mode=args.graph,
                 compile_mode=args.compile,
             )
