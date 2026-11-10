@@ -113,8 +113,11 @@ def main(argv: list[str] | None = None) -> int:
 
         flat = np.memmap(args.corpus_bin, dtype=np.uint16, mode="r")
         split = int(flat.size * (1.0 - args.test_frac))
-        train_stream = torch.from_numpy(np.array(flat[:split], dtype=np.int64))
-        test_stream = torch.from_numpy(np.array(flat[split:], dtype=np.int64))
+        # **只物化要流的那一段**：整条语料 np.array(int64) 在 2.4B token 下是 19 GB。
+        need_train = min(args.train_tokens + 2, split)
+        need_test = min(args.test_tokens + 2, flat.size - split)
+        train_stream = torch.from_numpy(np.array(flat[:need_train], dtype=np.int64))
+        test_stream = torch.from_numpy(np.array(flat[split : split + need_test], dtype=np.int64))
         n_vocab = int(flat.max()) + 1
         boundary = -1  # 预分词语料没有对话边界标记，不做跳过
         print(
