@@ -78,6 +78,26 @@ N=4096、V=3001、batch 256、A2+A3 全开：**53,219 → 51,569 tok/s**（−3%
 ⇒ **T3 是"规模条件收益"**：1B 配置下 matmul 大约大 100 倍，那时 bf16 才会兑现。
 **在当前实验规模上不启用**（`--amp` 默认关），等 1B 探针时再开。
 
+## 2026-11-10 实测：T4（torch.compile）**在本机被 Triton 挡住**
+
+`torch.compile(model.step)` 能进入 Dynamo（有几处 graph break，来自 `int(trace.z.sum())`），
+但 Inductor 在 CUDA 上要 Triton 生成内核，本机**没有可用的 Triton**：
+
+```
+triton not found; flop counting will not work for triton kernels
+TritonMissing: Cannot find a working triton installation.
+```
+
+⇒ **T4 在 Windows 上不是"能不能编译"的问题，是环境缺件**。两条备选：
+
+1. **装 `triton-windows`（社区构建）**——版本风险高，且本仓 CI 在 Linux 上，本地与 CI 会分叉；
+2. **CUDA graphs**（`torch.cuda.CUDAGraph`）——不依赖 Triton，但要求**静态形状**：
+   固定 batch、固定序列长度、整段循环一次性捕获。实现约半天，且要保证每步的原地更新
+   在捕获图上成立。
+
+**当前判断**：T4 的 5–20× 预期**尚未兑现**，也不该在没解决环境之前继续投入。
+先记在这里；如果后面要冲 1B，第一步是"CUDA graph 包住整段训练循环 + 静态形状"。
+
 ## 已知的代价与边界
 
 - 候选剪枝**有偏**：长尾字永远进不了候选 ⇒ **CE 不再与全量版可比，只认全词表 top-1**；
