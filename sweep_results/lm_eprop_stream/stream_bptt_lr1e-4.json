@@ -1,0 +1,15 @@
+{
+ "kind": "STREAM-3：T=1 截断 BPTT（同协议对照）",
+ "config": {
+  "rule": "bptt",
+  "lr": 0.0001,
+  "n_rec": 1024,
+  "train_tokens": 300000,
+  "test_tokens": 60000
+ },
+ "after": {
+  "ce": 7.16030519338421,
+  "top1": 0.1922343648929289,
+  "tokens": 58746
+ }
+}
