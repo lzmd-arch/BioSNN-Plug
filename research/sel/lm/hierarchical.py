@@ -22,6 +22,8 @@ import math
 
 import torch
 
+from research.sel.lm import tree_kernel
+
 __all__ = [
     "HuffmanPaths",
     "TreeReadout",
@@ -241,6 +243,7 @@ class TreeReadout:
         lr_out: float = 0.5,
         bias_init: bool = True,
         bias_train: bool = False,
+        use_kernel: bool | None = None,
         generator: torch.Generator | None = None,
         device=None,
         dtype: torch.dtype = torch.float32,
@@ -252,6 +255,11 @@ class TreeReadout:
         gen = generator or torch.Generator()
         weight = torch.randn(paths.n_nodes, n_features, generator=gen) / math.sqrt(n_features)
         self.weight = weight.to(device=device, dtype=dtype)
+        #: 融合核把「gather + 点积」「gather + 信号」各压成**一次** DRAM 读。
+        #: 没有 CUDA / Triton 时退回 PyTorch 路径；两条路在 `test_tree_kernel.py` 里逐项对齐。
+        self.use_kernel = (
+            tree_kernel.available(self.weight.device) if use_kernel is None else bool(use_kernel)
+        )
         if bias_init and paths.right_share is not None:
             share = paths.right_share.to(device=device, dtype=torch.float32).clamp(1e-6, 1 - 1e-6)
             self.bias = torch.log(share / (1.0 - share)).to(dtype)
@@ -261,6 +269,17 @@ class TreeReadout:
     @property
     def n_nodes(self) -> int:
         return self.paths.n_nodes
+
+    def _path_logits(self, features: torch.Tensor, targets: torch.Tensor):
+        """``(logits, valid, safe_ids)``；有融合核就走核，否则走 PyTorch。"""
+        if not self.use_kernel:
+            return path_logits(features, self.weight, self.paths, targets, self.bias)
+        safe, valid = _gather_path_nodes(self.paths, targets)
+        logits = tree_kernel.gather_dot(features, self.weight, safe)
+        if self.bias is not None:
+            logits = logits + self.bias.index_select(0, safe.reshape(-1)).view(safe.shape)
+        logits = torch.where(valid, logits, torch.zeros_like(logits))
+        return logits, valid, safe
 
     def nll(self, features: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """逐样本 NLL ``(B,)``，不更新。"""
@@ -283,9 +302,11 @@ class TreeReadout:
         ``mask``（``(B,)`` 的 bool）为 False 的行不参与损失、信号与更新，
         与稠密版 ``gradient = gradient * active`` 同口径。
         """
-        nll, prob, bits, valid, safe = path_nll(
-            features, self.weight, self.paths, targets, self.bias
-        )
+        logits, valid, safe = self._path_logits(features, targets)
+        bits = self.paths.bits.index_select(0, targets).to(logits.dtype)
+        prob = torch.sigmoid(logits)
+        taken = torch.where(bits > 0.5, prob, 1.0 - prob)
+        nll = -(torch.log(taken.clamp(min=1e-12)) * valid).sum(dim=-1)
         if mask is not None:
             valid = valid & mask.unsqueeze(1)
             nll = torch.where(mask, nll, torch.zeros_like(nll))
@@ -298,8 +319,11 @@ class TreeReadout:
         flat = safe.reshape(-1)
         rows = torch.arange(batch, device=features.device).repeat_interleave(safe.shape[1])
         delta_flat = delta.reshape(-1)
-        signal = torch.zeros_like(features)
-        signal.index_add_(0, rows, self.weight.index_select(0, flat) * delta_flat.unsqueeze(1))
+        if self.use_kernel:
+            signal = tree_kernel.gather_signal(delta, self.weight, safe).to(features.dtype)
+        else:
+            signal = torch.zeros_like(features)
+            signal.index_add_(0, rows, self.weight.index_select(0, flat) * delta_flat.unsqueeze(1))
         if not update:
             return nll, signal
 

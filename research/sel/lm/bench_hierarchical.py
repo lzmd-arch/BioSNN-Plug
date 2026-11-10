@@ -134,6 +134,26 @@ def main(argv: list[str] | None = None) -> int:
         src = features.index_select(0, rows_index) * (delta_flat / (step_denom * b)).unsqueeze(1)
         readout.weight.index_add_(0, flat, src, alpha=-readout.lr_out)
 
+    # ---- 三条诊断：把"能碰到多少字节"与"物化了多少临时"分开 ----
+    def probe_copy():
+        return dense_w.clone()
+
+    def probe_gather():
+        return readout.weight.index_select(0, flat)
+
+    def probe_gather_dot():
+        return torch.einsum("bm,bkm->bk", features, flat_gathered)
+
+    flat_gathered = readout.weight.index_select(0, flat).view(b, safe0.shape[1], m)
+    diag = []
+    for name, fn, mb in (
+        ("整张表拷一遍（带宽探针）", probe_copy, m * v * 4 / 1e6),
+        ("只 gather 不计算", probe_gather, safe0.numel() * m * 4 / 1e6),
+        ("gather + 点积（会物化再读一次）", probe_gather_dot, safe0.numel() * m * 4 / 1e6),
+    ):
+        ms = timeit(fn)
+        diag.append((name, ms, mb, 2 * mb / ms if ms else 0.0))
+
     rows = []
     for name, dense_fn, tree_fn, tree_flat in (
         ("前向", dense_forward, tree_forward, flat_forward),
@@ -157,6 +177,11 @@ def main(argv: list[str] | None = None) -> int:
             }
         )
 
+    for name, ms, mb, gbs in diag:
+        print(
+            f"  [诊断] {name}: {ms:8.3f} ms，{mb:7.1f} MB ⇒ {gbs:6.1f} GB/s（按读+写两趟算）",
+            flush=True,
+        )
     total_dense = rows[-1]["dense_ms"]
     total_tree = rows[-1]["flat_ms"]
     print(
