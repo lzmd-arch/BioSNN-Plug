@@ -245,6 +245,7 @@ def run_fold(
         "delta_top1": round(metrics["top1"] - base_top1, 4),
         "ce_ratio": round(tail / head, 4) if head else None,
         "tokens": metrics["tokens"],
+        "top1_by_pos": metrics.get("top1_by_pos"),
         "candidate_hit": hit,
         "tau": tau,
         "readout_dims": model.readout_width,
