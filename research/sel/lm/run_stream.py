@@ -95,19 +95,43 @@ def main(argv: list[str] | None = None) -> int:
         help="STREAM-3：bptt = 同架构的 **T=1 截断 BPTT**（每步更新、状态 detach）",
     )
     parser.add_argument("--lr", type=float, default=1e-3, help="仅 bptt 臂使用（Adam）")
+    parser.add_argument(
+        "--corpus-bin",
+        type=Path,
+        default=None,
+        help="预分词的 uint16 语料（build_tokenized_corpus.py 的产物）。给了就走 memmap，"
+        "热路径零 Python；不给则退回 JSONL 现场编码。",
+    )
+    parser.add_argument("--test-frac", type=float, default=0.01, help="尾部留作测试的比例")
     parser.add_argument("--tag", default="stream_local")
     args = parser.parse_args(argv)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(args.seed)
-    by_session = data_utils.load_sequences(args.data)
-    held = [s for s in args.sessions.split(",") if s]
-    test_texts = [t for s in held for t in by_session[s]]
-    train_texts = [t for s, v in by_session.items() if s not in held for t in v]
-    vocab = data_utils.build_vocab(train_texts, max_vocab=args.max_vocab)
-    boundary = vocab[chr(1)]
-    train_stream = flatten(train_texts, vocab)
-    test_stream = flatten(test_texts, vocab)
+    if args.corpus_bin is not None:
+        import numpy as np
+
+        flat = np.memmap(args.corpus_bin, dtype=np.uint16, mode="r")
+        split = int(flat.size * (1.0 - args.test_frac))
+        train_stream = torch.from_numpy(np.array(flat[:split], dtype=np.int64))
+        test_stream = torch.from_numpy(np.array(flat[split:], dtype=np.int64))
+        n_vocab = int(flat.max()) + 1
+        boundary = -1  # 预分词语料没有对话边界标记，不做跳过
+        print(
+            f"memmap 语料 {flat.size:,} token"
+            f"（训练 {split:,} / 测试 {flat.size - split:,}，V={n_vocab}）",
+            flush=True,
+        )
+    else:
+        by_session = data_utils.load_sequences(args.data)
+        held = [s for s in args.sessions.split(",") if s]
+        test_texts = [t for s in held for t in by_session[s]]
+        train_texts = [t for s, v in by_session.items() if s not in held for t in v]
+        vocab = data_utils.build_vocab(train_texts, max_vocab=args.max_vocab)
+        boundary = vocab[chr(1)]
+        n_vocab = len(vocab)
+        train_stream = flatten(train_texts, vocab)
+        test_stream = flatten(test_texts, vocab)
     print(
         f"训练流 {train_stream.numel():,} token；测试流 {test_stream.numel():,} token", flush=True
     )
@@ -117,7 +141,7 @@ def main(argv: list[str] | None = None) -> int:
 
     taus = tuple(float(x) for x in args.readout_taus.split(",") if x.strip())
     model = TokenEProp(
-        len(vocab),
+        n_vocab,
         args.n_rec,
         fan_in=data_utils.FAN_IN,
         tau=data_utils.TAU,
