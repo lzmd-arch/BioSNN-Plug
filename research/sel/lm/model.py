@@ -36,6 +36,7 @@ class LMTrace:
     h: torch.Tensor | None = None  # (B, S) SSM 状态（仅 recurrence="ssm"）
     eps_e: torch.Tensor | None = None  # (B, V, S) SSM 输入投影的资格痕迹
     eps_in_groups: torch.Tensor | None = None  # (K, B, V) 异质 τ 的分组输入痕迹
+    a: torch.Tensor | None = None  # (B, N) ALIF 适应变量（仅 beta>0）
 
     @classmethod
     def zeros(
@@ -47,6 +48,7 @@ class LMTrace:
         n_state: int = 0,
         n_taus: int = 0,
         n_groups: int = 1,
+        use_adapt: bool = False,
         device=None,
         dtype=torch.float32,
     ):
@@ -64,6 +66,7 @@ class LMTrace:
             h=zeros(batch, n_state) if n_state else None,
             eps_e=zeros(batch, n_vocab, n_state) if n_state else None,
             eps_in_groups=zeros(n_groups, batch, n_vocab) if n_groups > 1 else None,
+            a=zeros(batch, n_rec) if use_adapt else None,
         )
 
     def reset(self, rows: torch.Tensor) -> None:
@@ -75,6 +78,8 @@ class LMTrace:
             names += ["h", "eps_e"]
         if self.eps_in_groups is not None:
             names += ["eps_in_groups"]
+        if self.a is not None:
+            names += ["a"]
         for name in names:
             getattr(self, name)[rows] = 0.0
 
@@ -106,6 +111,8 @@ class TokenEProp:
         embed_rank: int | None = None,
         embed_proj: torch.Tensor | None = None,
         tau_groups: int = 1,
+        beta: float = 0.0,
+        rho: float = 0.99,
         n_state: int = 32,
         tau_state: tuple[float, float] = (1.0, 128.0),
         generator: torch.Generator | None = None,
@@ -122,6 +129,10 @@ class TokenEProp:
         self.alpha = float(math.exp(-1.0 / tau))
         #: G2 异质膜 τ：神经元分成 ``tau_groups`` 组，各组一个 τ（log 均匀 [5, 500]，**冻结**）。
         #: ``tau_groups=1`` 时走原路径、逐位一致。
+        #: G1 ALIF：阈值 ``θ + beta·a``，``a = rho·a + z``（用**上一步**的脉冲）。
+        #: ``beta=0`` 时与 LIF 逐位一致。
+        self.beta = float(beta)
+        self.rho = float(rho)
         self.n_groups = max(1, int(tau_groups))
         if self.n_groups > 1:
             # 注意：self.device 在这一段之后才设，这里直接用传入的 device
@@ -247,6 +258,7 @@ class TokenEProp:
             n_state=self.n_state,
             n_taus=n_taus,
             n_groups=self.n_groups,
+            use_adapt=self.beta > 0.0,
             device=self.device,
         )
 
@@ -352,8 +364,14 @@ class TokenEProp:
             current = direct + self._recurrent_current(z_previous)
 
         alpha_used = self.alpha if self.n_groups == 1 else self.alpha_vec
+        theta = self.threshold
+        if trace.a is not None:
+            # G1：适应变量用**上一步**的脉冲更新，阈值抬到 θ + β·a；复位仍用基阈值。
+            adapt = self.rho * trace.a + z_previous
+            trace.a = torch.where(active > 0, adapt, trace.a)
+            theta = self.threshold + self.beta * trace.a
         new_v = alpha_used * trace.v + current - z_previous * self.threshold
-        scaled = (new_v - self.threshold) / self.threshold
+        scaled = (new_v - theta) / theta
         refractory = trace.refractory > 0
         fresh = (scaled > 0).to(dtype)  # 硬阈值；本类不做反传，不需要伪导数
         new_z = torch.where(refractory, torch.zeros_like(fresh), fresh)
