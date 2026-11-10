@@ -161,6 +161,7 @@ def run_fold(
     use_context: bool = False,
     candidate_count: int = 0,
     readout_rank: int | None = None,
+    embed_rank: int | None = None,
     tau_groups: int = 1,
     beta: float = 0.0,
     tau: float = TAU,
@@ -197,6 +198,7 @@ def run_fold(
         readout_taus=readout_taus,
         candidates=candidates,
         readout_rank=readout_rank,
+        embed_rank=embed_rank,
         tau_groups=tau_groups,
         beta=beta,
         generator=torch.Generator().manual_seed(SEED),
@@ -279,6 +281,7 @@ def main(argv: list[str] | None = None) -> int:
         "--readout-taus", default="", help="逗号分隔；给了就是 R8（多时间尺度读出）"
     )
     parser.add_argument("--readout-rank", type=int, default=0, help="A3：低秩读出 r；0=稠密")
+    parser.add_argument("--embed-rank", type=int, default=0, help="A2：低秩输入 d；0=稠密")
     parser.add_argument("--tau-groups", type=int, default=1, help="G2：异质膜 τ 的组数；1=同质")
     parser.add_argument("--beta", type=float, default=0.0, help="G1：ALIF 适应强度 β；0=纯 LIF")
     args = parser.parse_args(argv)
@@ -309,6 +312,7 @@ def main(argv: list[str] | None = None) -> int:
             use_context=args.use_context,
             candidate_count=args.candidates,
             readout_rank=args.readout_rank or None,
+            embed_rank=args.embed_rank or None,
             tau_groups=args.tau_groups,
             beta=args.beta,
             tau=args.tau,
@@ -349,6 +353,7 @@ def main(argv: list[str] | None = None) -> int:
             "use_context": bool(args.use_context),
             "candidates": args.candidates,
             "readout_rank": args.readout_rank or None,
+            "embed_rank": args.embed_rank or None,
             "tau_groups": args.tau_groups,
             "beta": args.beta,
             "tau_read": TAU_READ,
