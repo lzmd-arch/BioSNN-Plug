@@ -60,6 +60,25 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+#: 前置上下文的总预算（字符）。192 是 `MAX_LEN`；留 5 个控制字符的余量，
+#: 并**先截上下文、绝不截回复**——回复是监督目标，被截掉比不喂上下文更糟。
+CONTEXT_BUDGET = 80.0
+CONTROL_RESERVE = 5
+
+
+def _context_text(attrs: list[dict]) -> str:
+    """把该条回复挂着的三元组拼成一行短文本（按 `CONTEXT_BUDGET` 先截）。"""
+    parts = []
+    for attr in attrs:
+        name = (attr.get("name") or "").strip()
+        relation = (attr.get("attrname") or "").strip()
+        value = (attr.get("attrvalue") or "").strip()
+        if name and relation and value:
+            parts.append(f"{name}{relation}{value}")
+    text = "；".join(parts)
+    return text[: int(CONTEXT_BUDGET)]
+
+
 def _pairs(conversation: dict) -> list[tuple[str, str, list[dict]]]:
     """把一段对话切成 (user, assistant, attrs)，按 user→assistant 交替。"""
     messages = conversation.get("messages", [])
@@ -94,6 +113,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     rows: list[dict] = []
+    ctx_rows: list[dict] = []
     triples: dict[tuple[str, str, str, str], None] = {}
     for domain in DOMAINS:
         for split in SPLITS:
@@ -104,6 +124,12 @@ def main(argv: list[str] | None = None) -> int:
             for conversation in conversations:
                 for user, assistant, attrs in _pairs(conversation):
                     rows.append({"session": split, "user": user, "assistant": assistant})
+                    # 上下文按**剩余预算**再截一次：保证 len(ctx)+len(pair)+控制符 ≤ MAX_LEN
+                    room = 192 - CONTROL_RESERVE - len(user) - len(assistant)
+                    context = _context_text(attrs)[: max(room, 0)]
+                    ctx_rows.append(
+                        {"session": split, "user": user, "assistant": assistant, "context": context}
+                    )
                     kept += 1
                     for attr in attrs:
                         name = (attr.get("name") or "").strip()
@@ -119,6 +145,9 @@ def main(argv: list[str] | None = None) -> int:
         encoding="utf-8",
         newline="\n",
     )
+    ctx_path = out_dir / "dialogue_ctx.jsonl"
+    ctx_lines = [json.dumps(row, ensure_ascii=False) + chr(10) for row in ctx_rows]
+    ctx_path.write_text("".join(ctx_lines), encoding="utf-8", newline=chr(10))
     kb_path = out_dir / "kb.jsonl"
     kb_path.write_text(
         "".join(
@@ -146,6 +175,10 @@ def main(argv: list[str] | None = None) -> int:
                 "sha256": _sha256(dialogue_path),
                 "bytes": dialogue_path.stat().st_size,
             },
+            "dialogue_ctx.jsonl": {
+                "sha256": _sha256(ctx_path),
+                "bytes": ctx_path.stat().st_size,
+            },
             "kb.jsonl": {"sha256": _sha256(kb_path), "bytes": kb_path.stat().st_size},
         },
         "stats": {
@@ -156,6 +189,7 @@ def main(argv: list[str] | None = None) -> int:
             "chars_per_pair_median": statistics.median(lengths),
             "unique_chars_raw": unique,
             "kb_triples": len(triples),
+            "pairs_with_context": sum(1 for row in ctx_rows if row["context"]),
         },
     }
     manifest_path.write_text(

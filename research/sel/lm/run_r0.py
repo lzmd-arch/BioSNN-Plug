@@ -39,12 +39,47 @@ WIN_DELTA = 0.03
 WIN_FOLDS = 4
 
 
-def load_sequences(path: Path) -> dict[str, list[str]]:
+def load_sequences(path: Path, *, use_context: bool = False) -> dict[str, list[str]]:
+    """按会话分组。``use_context`` 时把 ``context`` 字段**前置**（P2 的判别实验）。
+
+    理由：这个模型没有注意力，上下文能起作用的唯一机制是**膜电位 priming**——
+    上下文必须先到，才能影响用户那句话。分隔符与原有的对分隔符区分开。
+    """
     by_session: dict[str, list[str]] = defaultdict(list)
     for line in path.read_text(encoding="utf-8").splitlines():
         row = json.loads(line)
-        by_session[row["session"]].append(f"\x01{row['user']}\x02{row['assistant']}\x03")
+        text = f"\x01{row['user']}\x02{row['assistant']}\x03"
+        if use_context and row.get("context"):
+            text = f"\x04{row['context']}\x05" + text
+        by_session[row["session"]].append(text)
     return dict(by_session)
+
+
+def strip_context(text: str) -> str:
+    """去掉前置的 context（chr(4)…chr(5)），只留 user / assistant 那一对。
+
+    P2 的 bigram 基线用**剥掉上下文**的序列算——bigram 只能看前一个字符，本来就吃不到
+    上下文；用剥掉的版本才与 P1 的 0.2887 完全同口径。
+    """
+    open_mark, close_mark = chr(4), chr(5)
+    if not text.startswith(open_mark):
+        return text
+    end = text.find(close_mark)
+    return text[end + 1 :] if end >= 0 else text
+
+
+def _mask_context(tokens, valid, vocab) -> None:
+    """把上下文那一段从 ``valid`` 里划掉——只对 user/assistant 计分（P2）。
+
+    判据是每行第一个 ``chr(1)``（user 段的开头）；它之前的 token 全是前置上下文。
+    """
+    mark = vocab.get(chr(1))
+    if mark is None:
+        return
+    for row in range(tokens.shape[0]):
+        hits = (tokens[row] == mark).nonzero(as_tuple=True)[0]
+        if hits.numel():
+            valid[row, : int(hits[0]) + 1] = False
 
 
 def build_vocab(texts: list[str], *, max_vocab: int = 0) -> dict[str, int]:
@@ -94,6 +129,7 @@ def run_fold(
     eval_every: int = 0,
     *,
     max_vocab: int = 0,
+    use_context: bool = False,
     tau: float = TAU,
     readout_width: int | None = None,
     readout_taus: tuple[float, ...] | None = None,
@@ -102,6 +138,12 @@ def run_fold(
     vocab = build_vocab(train_texts, max_vocab=max_vocab)
     train = [encode(text, vocab, cap=MAX_LEN) for text in train_texts]
     test = [encode(text, vocab, cap=MAX_LEN) for text in test_texts]
+    # P2：bigram 基线用**剥掉上下文**的序列（它只能看前一个字符，本来就吃不到上下文）
+    if use_context:
+        train_plain = [encode(strip_context(text), vocab, cap=MAX_LEN) for text in train_texts]
+        test_plain = [encode(strip_context(text), vocab, cap=MAX_LEN) for text in test_texts]
+    else:
+        train_plain, test_plain = train, test
     pad = vocab["<unk>"]
     model = TokenEProp(
         len(vocab),
@@ -122,9 +164,13 @@ def run_fold(
     losses: list[float] = []
     curve: list[dict] = []
     test_tokens, test_valid = make_batches(test, order=list(range(len(test))), pad=pad)
+    if use_context:
+        _mask_context(test_tokens, test_valid, vocab)
     for step in range(updates):
         order = torch.randperm(len(train), generator=generator)[:BATCH].tolist()
         tokens, valid = make_batches(train, order=order, pad=pad)
+        if use_context:
+            _mask_context(tokens, valid, vocab)
         result = model.run(
             tokens.to(device), model.new_trace(tokens.shape[0]), valid=valid.to(device)
         )
@@ -147,7 +193,7 @@ def run_fold(
     metrics = model.evaluate(
         tokens.to(device), model.new_trace(tokens.shape[0]), valid=valid.to(device)
     )
-    base_top1, base_ce = bigram_accuracy(train, test, len(vocab))
+    base_top1, base_ce = bigram_accuracy(train_plain, test_plain, len(vocab))
     head = statistics.median(losses[:200])
     tail = statistics.median(losses[-200:])
     return {
@@ -178,6 +224,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--eval-every", type=int, default=0)
     parser.add_argument("--tau", type=float, default=TAU, help="膜时间常数（R5 的变量）")
     parser.add_argument("--max-vocab", type=int, default=0, help="0=全部唯一字；给了按频率截断")
+    parser.add_argument("--use-context", action="store_true", help="P2：把 context 字段前置")
     parser.add_argument(
         "--readout-width", type=int, default=0, help="0=读全部神经元；给了就是 R6q 的变量"
     )
@@ -188,7 +235,7 @@ def main(argv: list[str] | None = None) -> int:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     taus = tuple(float(item) for item in args.readout_taus.split(",") if item.strip()) or None
 
-    by_session = load_sequences(args.data)
+    by_session = load_sequences(args.data, use_context=args.use_context)
     sessions = sorted(by_session)
     held_sessions = sessions
     if args.sessions:
@@ -209,6 +256,7 @@ def main(argv: list[str] | None = None) -> int:
             args.updates,
             args.eval_every,
             max_vocab=args.max_vocab,
+            use_context=args.use_context,
             tau=args.tau,
             readout_width=args.readout_width or None,
             readout_taus=taus,
@@ -244,6 +292,7 @@ def main(argv: list[str] | None = None) -> int:
             "lr_out": LR_OUT,
             "tau": args.tau,
             "max_vocab": args.max_vocab,
+            "use_context": bool(args.use_context),
             "tau_read": TAU_READ,
             "input_std": INPUT_STD,
             "seed": SEED,

@@ -437,6 +437,9 @@ class TokenEProp:
         hits = 0
         counted = 0
         fired = 0
+        # 按位置分桶（P2 的位置切片分析，零额外机时）
+        buckets = ((0, 9), (10, 24), (25, 39), (40, 10**9))
+        bucket_hits = [[0, 0] for _ in buckets]
         for t in range(tokens.shape[1] - 1):
             target = tokens[:, t + 1]
             if valid is not None:
@@ -446,8 +449,14 @@ class TokenEProp:
             if not bool(mask.any()):
                 continue
             logits = self._features(trace) @ self.w_out
-            hits += int((logits.argmax(dim=-1)[mask] == target[mask]).sum())
+            matched = logits.argmax(dim=-1)[mask] == target[mask]
+            hits += int(matched.sum())
             counted += int(mask.sum())
+            for index, (low, high) in enumerate(buckets):
+                if low <= t <= high:
+                    bucket_hits[index][0] += int(matched.sum())
+                    bucket_hits[index][1] += int(mask.sum())
+                    break
             total_loss += float(loss[mask].sum())
             fired += shots
         return {
@@ -455,4 +464,9 @@ class TokenEProp:
             "top1": hits / max(counted, 1),
             "tokens": counted,
             "firing_rate": fired / max(counted * self.n_rec, 1),
+            "top1_by_pos": {
+                f"{low}-{high if high < 10**9 else '+'}": round(hit / total, 4)
+                for (low, high), (hit, total) in zip(buckets, bucket_hits, strict=True)
+                if total
+            },
         }
