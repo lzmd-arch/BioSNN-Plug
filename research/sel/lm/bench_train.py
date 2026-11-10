@@ -46,6 +46,7 @@ def run_case(
     embed_rank: int | None = None,
     amp: bool = False,
     graph_mode: bool = False,
+    compile_mode: bool = False,
 ) -> dict:
     """跑一个配置，返回 tokens/s、每步耗时与峰值显存。"""
     if device.type == "cuda":
@@ -102,12 +103,17 @@ def run_case(
         torch.cuda.synchronize()
         torch.cuda.reset_peak_memory_stats()
     started = time.perf_counter()
+    runner = torch.compile(model.run, fullgraph=False) if compile_mode else model.run
+    if compile_mode:
+        # 编译发生在第一次调用里——必须放到计时之外，否则量到的是编译时间
+        runner(tokens, model.new_trace(batch), valid=valid)
+        torch.cuda.synchronize()
     if graph is not None:
         for _ in range(updates):
             graph.replay()
     else:
         for _ in range(updates):
-            model.run(tokens, model.new_trace(batch), valid=valid)
+            runner(tokens, model.new_trace(batch), valid=valid)
     if device.type == "cuda":
         torch.cuda.synchronize()
     elapsed = time.perf_counter() - started
@@ -127,6 +133,7 @@ def run_case(
         "width": width,
         "readout_rank": readout_rank,
         "graph": graph_mode,
+        "compile": compile_mode,
         "params": params,
         "tokens": processed,
         "elapsed_s": round(elapsed, 3),
@@ -150,6 +157,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--embed-rank", type=int, default=0, help="A2：低秩输入 d；0=稠密")
     parser.add_argument("--amp", action="store_true", help="T3：矩阵乘用 bf16")
     parser.add_argument("--graph", action="store_true", help="T4：CUDA graph 捕获整段 step")
+    parser.add_argument("--compile", action="store_true", help="T4：torch.compile 包住 run")
     parser.add_argument(
         "--preset", choices=("", "1b"), default="", help="1b = N=40000 / V=5000 / batch 256"
     )
@@ -179,6 +187,7 @@ def main(argv: list[str] | None = None) -> int:
                 embed_rank=args.embed_rank or None,
                 amp=args.amp,
                 graph_mode=args.graph,
+                compile_mode=args.compile,
             )
         except torch.cuda.OutOfMemoryError:
             row = {"n_rec": n_rec, "vocab": vocab, "batch": batch, "oom": True}
