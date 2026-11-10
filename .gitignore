@@ -100,3 +100,6 @@ paper/*.bbl
 # ---- 本地编辑器 / 工具链（不进库）----
 .vscode/
 ToolsRuby/
+
+# Rust 构建产物
+rust/**/target/

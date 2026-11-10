@@ -1,0 +1,14 @@
+[package]
+name = "snn_sparse"
+version = "0.1.0"
+edition = "2021"
+description = "BioSNN 稀疏 LIF 前向核的最小可测实现（立项见 research/sel/plan-rust-sparse-kernel.md）"
+
+[lib]
+name = "snn_sparse"
+path = "src/lib.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
