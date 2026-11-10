@@ -43,6 +43,7 @@ def run_case(
     taus: tuple[float, ...],
     device: torch.device,
     readout_rank: int | None = None,
+    embed_rank: int | None = None,
 ) -> dict:
     """跑一个配置，返回 tokens/s、每步耗时与峰值显存。"""
     if device.type == "cuda":
@@ -60,6 +61,7 @@ def run_case(
         recurrence="none",
         readout_taus=taus,
         readout_rank=readout_rank,
+        embed_rank=embed_rank,
         generator=torch.Generator().manual_seed(0),
         device=device,
     )
@@ -68,9 +70,19 @@ def run_case(
     valid = torch.ones(batch, steps, dtype=torch.bool, device=device)
     width = model.readout_width
     if model.w_b is None:
-        params = vocab * n_rec + width * vocab
+        params = (
+            model.w_in.numel() if model.w_in is not None else model.emb.numel() + model.proj.numel()
+        ) + width * vocab
     else:
-        params = vocab * n_rec + int(model.w_a.numel()) + int(model.w_b.numel())
+        params = (
+            (
+                model.w_in.numel()
+                if model.w_in is not None
+                else model.emb.numel() + model.proj.numel()
+            )
+            + int(model.w_a.numel())
+            + int(model.w_b.numel())
+        )
 
     # 预热一次（分配器/内核选择），不计时
     model.run(tokens, model.new_trace(batch), valid=valid)
@@ -118,6 +130,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--steps", type=int, default=32)
     parser.add_argument("--updates", type=int, default=10)
     parser.add_argument("--readout-rank", type=int, default=0, help="A3：低秩读出 r；0=稠密")
+    parser.add_argument("--embed-rank", type=int, default=0, help="A2：低秩输入 d；0=稠密")
     parser.add_argument(
         "--preset", choices=("", "1b"), default="", help="1b = N=40000 / V=5000 / batch 256"
     )
@@ -144,6 +157,7 @@ def main(argv: list[str] | None = None) -> int:
                 taus=TAUS_DEFAULT,
                 device=device,
                 readout_rank=args.readout_rank or None,
+                embed_rank=args.embed_rank or None,
             )
         except torch.cuda.OutOfMemoryError:
             row = {"n_rec": n_rec, "vocab": vocab, "batch": batch, "oom": True}

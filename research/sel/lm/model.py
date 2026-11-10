@@ -98,6 +98,8 @@ class TokenEProp:
         candidates: torch.Tensor | None = None,
         readout_rank: int | None = None,
         readout_basis: torch.Tensor | None = None,
+        embed_rank: int | None = None,
+        embed_proj: torch.Tensor | None = None,
         n_state: int = 32,
         tau_state: tuple[float, float] = (1.0, 128.0),
         generator: torch.Generator | None = None,
@@ -152,6 +154,26 @@ class TokenEProp:
         self.w_out = torch.randn(width, n_vocab, generator=gen).to(self.device) / math.sqrt(width)
         #: A3 低秩读出：``w_out ≈ w_a @ w_b``。``w_b`` 固定（随机基），只学 ``w_a``。
         #: ``readout_rank=None``（或 ≥ width）= 稠密读出，逐位不变。
+        #: A2 低秩输入：``w_in ≈ emb(V×d) @ proj(d×N)``。给了 ``embed_rank`` 时 ``w_in`` 不用。
+        #: ``embed_proj`` 给定即冻结（不学），否则也学。
+        self.embed_rank: int | None = None
+        self.emb: torch.Tensor | None = None
+        self.proj: torch.Tensor | None = None
+        self.proj_frozen = False
+        if embed_rank is not None and 0 < int(embed_rank) <= n_rec:
+            self.embed_rank = int(embed_rank)
+            self.emb = (
+                torch.randn(n_vocab, self.embed_rank, generator=gen).to(self.device) * input_std
+            )
+            if embed_proj is not None:
+                self.proj = embed_proj.to(self.device)
+                self.proj_frozen = True
+            else:
+                self.proj = torch.randn(self.embed_rank, n_rec, generator=gen).to(
+                    self.device
+                ) / math.sqrt(self.embed_rank)
+            del self.w_in
+            self.w_in = None
         self.readout_rank: int | None = None
         self.w_a: torch.Tensor | None = None
         self.w_b: torch.Tensor | None = None
@@ -299,7 +321,8 @@ class TokenEProp:
             current = self.D[tokens] + h_new @ self.C.T
             trace.h = torch.where(active > 0, h_new, trace.h)
         else:
-            current = self.w_in[tokens] + self._recurrent_current(z_previous)
+            direct = self.w_in[tokens] if self.emb is None else self.emb[tokens] @ self.proj
+            current = direct + self._recurrent_current(z_previous)
 
         new_v = self.alpha * trace.v + current - z_previous * self.threshold
         scaled = (new_v - self.threshold) / self.threshold
@@ -385,7 +408,18 @@ class TokenEProp:
             post = signal * psi * active
 
             if learn_hidden and self.recurrence != "ssm":
-                self.w_in.add_(torch.einsum("bn,bv->vn", post, trace.eps_in), alpha=-self.lr_in)
+                if self.emb is None:
+                    self.w_in.add_(torch.einsum("bn,bv->vn", post, trace.eps_in), alpha=-self.lr_in)
+                else:
+                    # A2：dL/dE = eps_inᵀ (post·Pᵀ) = (V,d)；dL/dP = (eps_in·E)ᵀ post = (d,N)。
+                    # **结合顺序是关键**：先右乘再左乘，避免物化 (V,N)。
+                    signal_emb = post @ self.proj.T  # (B, d)
+                    self.emb.add_(
+                        torch.einsum("bv,bd->vd", trace.eps_in, signal_emb), alpha=-self.lr_in
+                    )
+                    if not self.proj_frozen:
+                        hidden = trace.eps_in @ self.emb  # (B, d)
+                        self.proj.add_(torch.einsum("bd,bn->dn", hidden, post), alpha=-self.lr_in)
             if learn_recurrent and self.recurrence == "random":
                 gathered = trace.eps_rec[:, self.pre_index]  # (B, N, fan_in)
                 self.w_rec.add_(torch.einsum("bnf,bn->nf", gathered, post), alpha=-self.lr_rec)
