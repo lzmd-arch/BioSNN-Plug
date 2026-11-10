@@ -160,6 +160,7 @@ def run_fold(
     max_vocab: int = 0,
     use_context: bool = False,
     candidate_count: int = 0,
+    readout_rank: int | None = None,
     tau: float = TAU,
     readout_width: int | None = None,
     readout_taus: tuple[float, ...] | None = None,
@@ -193,6 +194,7 @@ def run_fold(
         readout_width=readout_width,
         readout_taus=readout_taus,
         candidates=candidates,
+        readout_rank=readout_rank,
         generator=torch.Generator().manual_seed(SEED),
         device=device,
     )
@@ -245,7 +247,7 @@ def run_fold(
         "tokens": metrics["tokens"],
         "candidate_hit": hit,
         "tau": tau,
-        "readout_dims": int(model.w_out.shape[0]),
+        "readout_dims": model.readout_width,
         "firing_rate": round(metrics["firing_rate"], 5),
         "curve": curve,
     }
@@ -271,6 +273,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--readout-taus", default="", help="逗号分隔；给了就是 R8（多时间尺度读出）"
     )
+    parser.add_argument("--readout-rank", type=int, default=0, help="A3：低秩读出 r；0=稠密")
     args = parser.parse_args(argv)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     taus = tuple(float(item) for item in args.readout_taus.split(",") if item.strip()) or None
@@ -298,6 +301,7 @@ def main(argv: list[str] | None = None) -> int:
             max_vocab=args.max_vocab,
             use_context=args.use_context,
             candidate_count=args.candidates,
+            readout_rank=args.readout_rank or None,
             tau=args.tau,
             readout_width=args.readout_width or None,
             readout_taus=taus,
@@ -335,6 +339,7 @@ def main(argv: list[str] | None = None) -> int:
             "max_vocab": args.max_vocab,
             "use_context": bool(args.use_context),
             "candidates": args.candidates,
+            "readout_rank": args.readout_rank or None,
             "tau_read": TAU_READ,
             "input_std": INPUT_STD,
             "seed": SEED,

@@ -96,6 +96,8 @@ class TokenEProp:
         readout_width: int | None = None,
         readout_taus: tuple[float, ...] | None = None,
         candidates: torch.Tensor | None = None,
+        readout_rank: int | None = None,
+        readout_basis: torch.Tensor | None = None,
         n_state: int = 32,
         tau_state: tuple[float, float] = (1.0, 128.0),
         generator: torch.Generator | None = None,
@@ -148,6 +150,24 @@ class TokenEProp:
             width = int(readout_width)
             self.readout_index = torch.randperm(n_rec, generator=gen)[:width].to(self.device)
         self.w_out = torch.randn(width, n_vocab, generator=gen).to(self.device) / math.sqrt(width)
+        #: A3 低秩读出：``w_out ≈ w_a @ w_b``。``w_b`` 固定（随机基），只学 ``w_a``。
+        #: ``readout_rank=None``（或 ≥ width）= 稠密读出，逐位不变。
+        self.readout_rank: int | None = None
+        self.w_a: torch.Tensor | None = None
+        self.w_b: torch.Tensor | None = None
+        if readout_rank is not None and 0 < int(readout_rank) < width:
+            self.readout_rank = int(readout_rank)
+            self.w_a = torch.randn(width, self.readout_rank, generator=gen).to(
+                self.device
+            ) / math.sqrt(width)
+            if readout_basis is not None:
+                self.w_b = readout_basis.to(self.device)
+            else:
+                self.w_b = torch.randn(self.readout_rank, n_vocab, generator=gen).to(
+                    self.device
+                ) / math.sqrt(self.readout_rank)
+            del self.w_out
+            self.w_out = None
 
         post = torch.arange(n_rec, device=self.device).unsqueeze(1)
         candidates = torch.randint(0, n_rec - 1, (n_rec, fan_in), generator=gen).to(self.device)
@@ -224,6 +244,17 @@ class TokenEProp:
             block.add_(delta[:, row, :], alpha=-self.lr_out / norm)
             self.w_out[:, cols[row]] = block
             self.w_out[:, tgt[row]] -= self.lr_out * features[row] * grad_target[row, 0] / norm
+
+    @property
+    def readout_width(self) -> int:
+        """读出特征宽度 M（与是否低秩无关）。"""
+        return int(self.w_out.shape[0]) if self.w_b is None else int(self.w_a.shape[0])
+
+    def _logits(self, features: torch.Tensor) -> torch.Tensor:
+        """``features -> logits``。稠密版直乘；低秩版先投影到 r 再展开。"""
+        if self.w_b is None:
+            return features @ self.w_out
+        return (features @ self.w_a) @ self.w_b
 
     def _features(self, trace: LMTrace) -> torch.Tensor:
         if self.readout_decays is None:
@@ -306,7 +337,7 @@ class TokenEProp:
         if self.candidates is not None:
             cols, logits, loss = self._candidate_forward(features, tokens, targets)
         else:
-            logits = features @ self.w_out  # (B, V)
+            logits = self._logits(features)  # (B, V)
             loss = torch.nn.functional.cross_entropy(
                 logits, targets, ignore_index=-100, reduction="none"
             )
@@ -324,7 +355,10 @@ class TokenEProp:
                 one_hot.scatter_(1, targets.clamp(min=0).reshape(-1, 1), 1.0)
                 gradient = (probability - one_hot) * active
                 gradient = gradient / max(batch, 1)
-                signal_sub = gradient @ self.w_out.T  # (B, M)
+                if self.w_b is None:
+                    signal_sub = gradient @ self.w_out.T  # (B, M)
+                else:
+                    signal_sub = (gradient @ self.w_b.T) @ self.w_a.T  # (B, M)
             if self.readout_decays is not None:
                 # 多时间尺度：每个抽头的信号属于同一批神经元，按抽头求和
                 signal = signal_sub.view(signal_sub.shape[0], -1, self.n_rec).sum(dim=1)
@@ -366,8 +400,11 @@ class TokenEProp:
             norm = float(features.pow(2).sum(dim=1).mean().clamp(min=1e-3))
             if cols is not None:
                 self._candidate_update(features, cols, grad_cols, grad_target, targets, norm)
-            else:
+            elif self.w_b is None:
                 self.w_out.add_(features.T @ gradient / norm, alpha=-self.lr_out)
+            else:
+                grad_a = gradient @ self.w_b.T  # (B, r)
+                self.w_a.add_(features.T @ grad_a / norm, alpha=-self.lr_out)
         return loss, fired
 
     # -- 标定与诊断 ------------------------------------------------------------
@@ -507,7 +544,7 @@ class TokenEProp:
             mask = target != -100
             if not bool(mask.any()):
                 continue
-            logits = self._features(trace) @ self.w_out
+            logits = self._logits(self._features(trace))
             matched = logits.argmax(dim=-1)[mask] == target[mask]
             hits += int(matched.sum())
             counted += int(mask.sum())
