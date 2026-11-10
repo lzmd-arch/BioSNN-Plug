@@ -153,7 +153,14 @@ class DeepTokenLM:
                 # 换成 matmul 会在 ~1e-7 量级上分叉，D2-0 就守不住"逐位"。
                 self.w_in.add_(torch.einsum("bn,bv->vn", post2, trace.eps_in), alpha=-self.lr_in)
             else:
-                self.w12.add_(torch.einsum("bn,bm->nm", trace.eps_z1, post2), alpha=-self.lr_mid)
+                # **必须按 eps_z1 的逐列范数归一化**：不归一化时 w12 单调放大，
+                # 第 2 层发放率从 4% 涨到 43%、CE 冲到 13.8（实测）。读出用的是 NLMS，
+                # 中间层这条之前漏了同一件事。
+                norm_mid = trace.eps_z1.pow(2).sum(dim=0).clamp(min=1e-3)
+                self.w12.add_(
+                    torch.einsum("bn,bm->nm", trace.eps_z1, post2) / norm_mid.unsqueeze(1),
+                    alpha=-self.lr_mid,
+                )
                 signal1 = post2 @ self.w12.T
                 post1 = signal1 * psi1 * ok.unsqueeze(1)
                 self.w_in.add_(torch.einsum("bn,bv->vn", post1, trace.eps_in), alpha=-self.lr_in)
