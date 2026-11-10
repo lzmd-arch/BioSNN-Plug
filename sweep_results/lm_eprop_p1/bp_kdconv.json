@@ -1,0 +1,43 @@
+{
+ "kind": "B0: same-size backprop control on the real corpus",
+ "seed": 0,
+ "config": {
+  "emb": 128,
+  "hidden": 512,
+  "dropout": 0.1,
+  "weight_decay": 0.0001,
+  "clip": 1.0,
+  "batch": 16,
+  "max_len": 192,
+  "updates": 8000,
+  "eval_every": 0,
+  "lrs": [
+   0.001
+  ],
+  "data": "D:\\AxoData\\sel\\lm\\v1\\public\\kdconv\\dialogue.jsonl"
+ },
+ "folds": {
+  "test|lr=0.001": {
+   "vocab": 3001,
+   "params": 2909753,
+   "lr": 0.001,
+   "train_pairs": 33238,
+   "test_pairs": 4868,
+   "top1": 0.5318,
+   "ce": 2.2571,
+   "bigram_top1": 0.2887,
+   "bigram_ce": 3.7688,
+   "delta_top1": 0.2431,
+   "ce_ratio": 0.4658,
+   "tokens": 226709,
+   "elapsed_s": 236.0,
+   "curve": []
+  }
+ },
+ "criteria": {
+  "b0_1_bp_beats_bigram": true,
+  "best_top1": 0.5318,
+  "bigram_top1": 0.2887,
+  "best_delta": 0.2431
+ }
+}

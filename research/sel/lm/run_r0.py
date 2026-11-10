@@ -47,8 +47,14 @@ def load_sequences(path: Path) -> dict[str, list[str]]:
     return dict(by_session)
 
 
-def build_vocab(texts: list[str]) -> dict[str, int]:
-    chars = sorted({ch for text in texts for ch in text})
+def build_vocab(texts: list[str], *, max_vocab: int = 0) -> dict[str, int]:
+    """词表。``max_vocab=0`` 时保持历史行为（全部唯一字、按码位排序）；
+    给了上限时按**训练集频率**取前 N 个（公共语料稀有字太多，全收会撑爆读出）。"""
+    if max_vocab <= 0:
+        chars = sorted({ch for text in texts for ch in text})
+    else:
+        counts = Counter(ch for text in texts for ch in text)
+        chars = [ch for ch, _ in counts.most_common(max_vocab)]
     return {token: index for index, token in enumerate(["<unk>", *chars])}
 
 
@@ -87,12 +93,13 @@ def run_fold(
     updates: int,
     eval_every: int = 0,
     *,
+    max_vocab: int = 0,
     tau: float = TAU,
     readout_width: int | None = None,
     readout_taus: tuple[float, ...] | None = None,
 ) -> dict:
     torch.manual_seed(SEED)
-    vocab = build_vocab(train_texts)
+    vocab = build_vocab(train_texts, max_vocab=max_vocab)
     train = [encode(text, vocab, cap=MAX_LEN) for text in train_texts]
     test = [encode(text, vocab, cap=MAX_LEN) for text in test_texts]
     pad = vocab["<unk>"]
@@ -170,6 +177,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--sessions", default="", help="逗号分隔的留出会话；空=全部")
     parser.add_argument("--eval-every", type=int, default=0)
     parser.add_argument("--tau", type=float, default=TAU, help="膜时间常数（R5 的变量）")
+    parser.add_argument("--max-vocab", type=int, default=0, help="0=全部唯一字；给了按频率截断")
     parser.add_argument(
         "--readout-width", type=int, default=0, help="0=读全部神经元；给了就是 R6q 的变量"
     )
@@ -200,6 +208,7 @@ def main(argv: list[str] | None = None) -> int:
             device,
             args.updates,
             args.eval_every,
+            max_vocab=args.max_vocab,
             tau=args.tau,
             readout_width=args.readout_width or None,
             readout_taus=taus,
@@ -234,6 +243,7 @@ def main(argv: list[str] | None = None) -> int:
             "lr_in": LR_IN,
             "lr_out": LR_OUT,
             "tau": args.tau,
+            "max_vocab": args.max_vocab,
             "tau_read": TAU_READ,
             "input_std": INPUT_STD,
             "seed": SEED,

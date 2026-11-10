@@ -85,11 +85,12 @@ def run_fold(
     device,
     updates: int,
     *,
+    max_vocab: int = 0,
     lr: float,
     eval_every: int = 0,
 ) -> dict:
     torch.manual_seed(SEED)
-    vocab = build_vocab(train_texts)
+    vocab = build_vocab(train_texts, max_vocab=max_vocab)
     train = [encode(text, vocab, cap=MAX_LEN) for text in train_texts]
     test = [encode(text, vocab, cap=MAX_LEN) for text in test_texts]
     pad = vocab["<unk>"]
@@ -153,6 +154,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--sessions", default="", help="逗号分隔的留出会话；空=全部")
     parser.add_argument("--eval-every", type=int, default=0)
     parser.add_argument("--tag", default="b0")
+    parser.add_argument("--max-vocab", type=int, default=0, help="0=全部唯一字；给了按频率截断")
     args = parser.parse_args(argv)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     learning_rates = [float(item) for item in args.lr.split(",") if item.strip()]
@@ -178,9 +180,14 @@ def main(argv: list[str] | None = None) -> int:
                 by_session[held],
                 device,
                 args.updates,
+                max_vocab=args.max_vocab,
                 lr=lr,
                 eval_every=args.eval_every,
             )
+            # 一折跑完就清一次缓存：2026-11-10 在 KdConv（V=3001、长句）上，
+            # 第二个 lr 因上一折的残留分配 OOM（11.2 GB）。
+            if device.type == "cuda":
+                torch.cuda.empty_cache()
             row = folds[key]
             print(
                 f"[{key}] params {row['params']} top1 {row['top1']} vs bigram {row['bigram_top1']} "
