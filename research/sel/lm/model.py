@@ -463,6 +463,7 @@ class TokenEProp:
         learn_hidden: bool = True,
         learn_recurrent: bool = True,
         all_valid: bool = False,
+        learn_mask: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, int]:
         """跑一个时刻。返回 (逐样本 CE, 本步发放数)。
 
@@ -539,8 +540,11 @@ class TokenEProp:
         tree_signal = None
         if self.tree is not None:
             # 目标为 -100 的行不进损失 / 信号 / 更新（与稠密版 active 同口径）
+            tree_mask = targets != -100
+            if learn_mask is not None:
+                tree_mask = tree_mask & learn_mask
             loss, tree_signal = self.tree.step(
-                features, targets.clamp(min=0), update=update, mask=targets != -100
+                features, targets.clamp(min=0), update=update, mask=tree_mask
             )
         elif self.candidates is not None:
             cols, logits, loss = self._candidate_forward(features, tokens, targets)
@@ -574,6 +578,12 @@ class TokenEProp:
                 if not all_valid:
                     gradient = gradient * active
                 gradient = gradient / max(batch, 1)
+                # **学习掩码与状态掩码是两件事**：`valid` 决定"这一步要不要更新膜电位"，
+                # `learn_mask` 决定"这一步要不要产生梯度"。探针里填充位必须更新状态
+                # （否则膜电位被冻结、网络不发放），但不该产生梯度（否则读出被"预测填充"
+                # 淹没：259 个平凡位置对 1 个真正要学的位置）。
+                if learn_mask is not None:
+                    gradient = gradient * learn_mask.to(gradient.dtype).unsqueeze(1)
                 if self.w_b is None:
                     signal_sub = self._mm(gradient, self._w_read_t)  # (B, M)
                 else:

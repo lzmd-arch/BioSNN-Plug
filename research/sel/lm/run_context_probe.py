@@ -96,19 +96,34 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(f"探针：V={VOCAB} n_rec={args.n_rec} taus={taus} 更新 {args.updates}", flush=True)
 
+    running = 0.0
     for step in range(1, args.updates + 1):
         delays = torch.tensor(TRAIN_N)[torch.randint(0, len(TRAIN_N), (args.batch,), generator=gen)]
         symbols = torch.randint(0, N_SYMBOL, (args.batch,), generator=gen)
         tokens, answer = build(symbols, delays)
-        valid = tokens != PAD
-        valid[:, 0] = True
-        model.run(
-            tokens.to(device),
-            model.new_trace(tokens.shape[0]),
-            valid=valid.to(device),
-        )
+        # **状态与梯度必须分开**：填充位要更新膜电位（否则网络不发放），但不该产生梯度
+        # （否则读出被 259 个"预测填充"淹没，实测整体 CE 0.065 而答案位置全错）。
+        trace = model.new_trace(tokens.shape[0])
+        rows = tokens.shape[0]
+        tokens = tokens.to(device)
+        answer_dev = answer.to(device)
+        batch_loss = 0.0
+        for t in range(tokens.shape[1] - 1):
+            learn = answer_dev[:, t + 1]
+            loss, _ = model.step(
+                tokens[:, t],
+                tokens[:, t + 1],
+                trace,
+                update=True,
+                all_valid=True,
+                learn_mask=learn,
+            )
+            if bool(learn.any()):
+                batch_loss += float(loss[learn].sum())
+        running += batch_loss / max(rows, 1)
         if step % 500 == 0:
-            print(f"  {step} 步", flush=True)
+            print(f"  {step} 步：近 500 步答案位 CE {running / 500:.3f}", flush=True)
+            running = 0.0
 
     curve = []
     for delay in TEST_N:
