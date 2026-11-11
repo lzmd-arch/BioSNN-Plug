@@ -82,3 +82,36 @@ def test_readout_kernel_and_pytorch_paths_agree() -> None:
     assert torch.allclose(nll_k, nll_r, atol=1e-3)
     assert torch.allclose(sig_k, sig_r, atol=1e-3), (sig_k - sig_r).abs().max()
     assert torch.allclose(ker.weight, ref.weight, atol=1e-3), (ker.weight - ref.weight).abs().max()
+
+
+def test_packed_path_matches_reference() -> None:
+    """ragged 布局与 PyTorch 参考路径同值——补位被跳过，但数学不变。"""
+    from research.sel.lm.hierarchical import TreeReadout
+
+    paths, _weight, features, targets = _setup(4)
+    ref = TreeReadout(paths, 96, generator=torch.Generator().manual_seed(4), device="cuda")
+    ref.use_kernel = False
+    pack = TreeReadout(
+        paths, 96, generator=torch.Generator().manual_seed(4), device="cuda", packed=True
+    )
+    assert pack.use_kernel and pack.packed
+
+    for _ in range(3):
+        nll_r, sig_r = ref.step(features, targets)
+        nll_p, sig_p = pack.step(features, targets)
+    assert torch.allclose(nll_p, nll_r, atol=1e-3), (nll_p - nll_r).abs().max()
+    assert torch.allclose(sig_p, sig_r, atol=1e-3), (sig_p - sig_r).abs().max()
+    assert torch.allclose(pack.weight, ref.weight, atol=1e-3), (
+        (pack.weight - ref.weight).abs().max()
+    )
+
+
+def test_packed_skips_padding() -> None:
+    """打包后的配对数 = Σ 各样本路径长度，严格小于矩形 B·D_max。"""
+    paths, _weight, _features, targets = _setup(5)
+    flat, rows, _bits, offs = tree_kernel.pack_paths(paths, targets)
+    length = paths.length.index_select(0, targets)
+    assert flat.numel() == int(length.sum())
+    assert flat.numel() < targets.numel() * paths.depth
+    assert torch.equal(offs[1:] - offs[:-1], length.to(offs.dtype))
+    assert torch.equal(rows.sort().values, rows)  # 同一样本连续

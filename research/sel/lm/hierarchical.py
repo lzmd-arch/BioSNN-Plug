@@ -244,6 +244,7 @@ class TreeReadout:
         bias_init: bool = True,
         bias_train: bool = False,
         use_kernel: bool | None = None,
+        packed: bool = False,
         generator: torch.Generator | None = None,
         device=None,
         dtype: torch.dtype = torch.float32,
@@ -260,6 +261,10 @@ class TreeReadout:
         self.use_kernel = (
             tree_kernel.available(self.weight.device) if use_kernel is None else bool(use_kernel)
         )
+        #: ragged 布局：只走真实存在的 (b, j) 对。**默认关**——实测（V=32,000、B=256、M=4,096）
+        #: 打包本身的开销（8 个小内核 + 布尔索引）比省下的访存还贵：整步 2.23 → 2.77 ms。
+        #: 真正吃掉补位的是核里的 `if v < 0: return`（早退），那条路默认就走。
+        self.packed = bool(packed)
         if bias_init and paths.right_share is not None:
             share = paths.right_share.to(device=device, dtype=torch.float32).clamp(1e-6, 1 - 1e-6)
             self.bias = torch.log(share / (1.0 - share)).to(dtype)
@@ -274,12 +279,42 @@ class TreeReadout:
         """``(logits, valid, safe_ids)``；有融合核就走核，否则走 PyTorch。"""
         if not self.use_kernel:
             return path_logits(features, self.weight, self.paths, targets, self.bias)
-        safe, valid = _gather_path_nodes(self.paths, targets)
-        logits = tree_kernel.gather_dot(features, self.weight, safe)
+        # 传**未夹取**的 ids：补位是 -1，核里直接早退，一行都不读
+        ids = self.paths.nodes.index_select(0, targets)
+        valid = ids >= 0
+        safe = ids.clamp(min=0)
+        logits = tree_kernel.gather_dot(features, self.weight, ids)
         if self.bias is not None:
             logits = logits + self.bias.index_select(0, safe.reshape(-1)).view(safe.shape)
         logits = torch.where(valid, logits, torch.zeros_like(logits))
         return logits, valid, safe
+
+    def _step_packed(self, features: torch.Tensor, targets: torch.Tensor, *, update, mask):
+        """ragged 版的一步：只处理真实配对，不碰补位。"""
+        flat, rows, bits, offs = tree_kernel.pack_paths(self.paths, targets)
+        logits = tree_kernel.packed_dot(features, self.weight, flat, rows)
+        if self.bias is not None:
+            logits = logits + self.bias.index_select(0, flat)
+        prob = torch.sigmoid(logits)
+        bits_f = bits.to(logits.dtype)
+        taken = torch.where(bits_f > 0.5, prob, 1.0 - prob)
+        logp = -torch.log(taken.clamp(min=1e-12))
+        delta = prob - bits_f
+        batch = int(features.shape[0])
+        if mask is not None:
+            keep = mask.index_select(0, rows)
+            logp = logp * keep
+            delta = torch.where(keep, delta, torch.zeros_like(delta))
+        nll = torch.zeros(batch, dtype=logp.dtype, device=logp.device).index_add_(0, rows, logp)
+        signal = tree_kernel.packed_signal(delta, self.weight, flat, offs, batch)
+        signal = signal.to(features.dtype)
+        if update:
+            denom = features.pow(2).sum(dim=1).mean().clamp(min=1e-3)
+            scale = delta / (denom * max(batch, 1))
+            self.weight.index_add_(
+                0, flat, features.index_select(0, rows) * scale.unsqueeze(1), alpha=-self.lr_out
+            )
+        return nll, signal
 
     def nll(self, features: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """逐样本 NLL ``(B,)``，不更新。"""
@@ -302,6 +337,8 @@ class TreeReadout:
         ``mask``（``(B,)`` 的 bool）为 False 的行不参与损失、信号与更新，
         与稠密版 ``gradient = gradient * active`` 同口径。
         """
+        if self.use_kernel and self.packed:
+            return self._step_packed(features, targets, update=update, mask=mask)
         logits, valid, safe = self._path_logits(features, targets)
         bits = self.paths.bits.index_select(0, targets).to(logits.dtype)
         prob = torch.sigmoid(logits)
