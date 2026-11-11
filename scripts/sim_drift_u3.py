@@ -72,12 +72,20 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--days", type=int, default=8)
     ap.add_argument("--step", type=float, default=0.6, help="权重扰动步长")
     ap.add_argument("--gold", type=Path, default=GOLD)
+    ap.add_argument(
+        "--queries",
+        type=Path,
+        default=None,
+        help="查询文件；默认 gold/queries.jsonl。换成改述集可把每天样本量提 5 倍",
+    )
     args = ap.parse_args(argv)
 
     memories = [
         json.loads(x) for x in (args.gold / "memories.jsonl").read_text("utf-8").splitlines()
     ]
-    queries = [json.loads(x) for x in (args.gold / "queries.jsonl").read_text("utf-8").splitlines()]
+    query_path = args.queries or (args.gold / "queries.jsonl")
+    queries = [json.loads(x) for x in query_path.read_text("utf-8").splitlines()]
+    print(f"查询来源 {query_path.name}：{len(queries)} 条", flush=True)
     queries = [q for q in queries if q.get("expect")]
     ids = [m["id"] for m in memories]
     where = {mid: index for index, mid in enumerate(ids)}
