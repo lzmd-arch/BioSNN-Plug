@@ -59,7 +59,7 @@ def load_model(ckpt: Path, device):
     blob = torch.load(ckpt, map_location="cpu")
     cfg = blob["config"]
     vocab = int(cfg["vocab"])
-    width = int(cfg["params"]) // vocab
+    width = int(float(cfg["params"])) // vocab
     n_rec = max(width // 2, 64)
     counts_path = ckpt.parent / f"counts_{vocab}.npy"
     if counts_path.exists():
