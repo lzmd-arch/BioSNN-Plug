@@ -16,7 +16,7 @@ from pathlib import Path
 
 import torch
 
-from research.sel.lm.hierarchical import build_huffman_paths
+from research.sel.lm.hierarchical import build_huffman_paths, quantize_weight_
 from research.sel.lm.model import TokenEProp
 from research.sel.lm.run_m0 import BATCH, FAN_IN, N_REC, make_batches
 
@@ -214,6 +214,7 @@ def run_fold(
     hierarchical: bool = False,
     tree_signal_scale: float = 1.0,
     seed: int = SEED,
+    quantize_int8: bool = False,
 ) -> dict:
     torch.manual_seed(seed)
     vocab = build_vocab(train_texts, max_vocab=max_vocab)
@@ -313,6 +314,21 @@ def run_fold(
     metrics = model.evaluate(
         tokens.to(device), model.new_trace(tokens.shape[0]), valid=valid.to(device)
     )
+    quantized = None
+    if quantize_int8 and model.tree is not None:
+        # H-A：推理期量化——权重只读，所以这是一次性损失，与训练期"权重即累加器"无关
+        quantize_weight_(model.tree.weight, 8)
+        probe = model.evaluate(
+            tokens.to(device), model.new_trace(tokens.shape[0]), valid=valid.to(device)
+        )
+        quantized = {
+            "top1": round(probe["top1"], 4),
+            "top5": round(probe.get("top5", 0.0), 4),
+            "top10": round(probe.get("top10", 0.0), 4),
+            "ce": round(probe["ce"], 4),
+            "mean_rank_cost": round(probe.get("mean_rank_cost", 0.0), 4),
+        }
+        print(f"[H-A] int8 之后 {quantized}", flush=True)
     base_top1, base_ce = bigram_accuracy(train_plain, test_plain, len(vocab))
     head = statistics.median(losses[:200])
     tail = statistics.median(losses[-200:])
@@ -334,6 +350,7 @@ def run_fold(
         "candidate_hit": hit,
         "tau": tau,
         "readout_dims": model.readout_width,
+        "int8": quantized,
         "firing_rate": round(metrics["firing_rate"], 5),
         "curve": curve,
     }
@@ -346,6 +363,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--updates", type=int, default=UPDATES)
     parser.add_argument("--tag", default="r0")
     parser.add_argument("--seed", type=int, default=SEED)
+    parser.add_argument(
+        "--quantize-int8",
+        action="store_true",
+        help="H-A：训练完把树的读出按行量化到 int8，报一次量化后的指标（推理期量化）",
+    )
     parser.add_argument("--sessions", default="", help="逗号分隔的留出会话；空=全部")
     parser.add_argument("--eval-every", type=int, default=0)
     parser.add_argument("--tau", type=float, default=TAU, help="膜时间常数（R5 的变量）")
@@ -451,6 +473,7 @@ def main(argv: list[str] | None = None) -> int:
             hierarchical=bool(args.hierarchical),
             tree_signal_scale=args.tree_signal_scale,
             seed=args.seed,
+            quantize_int8=bool(args.quantize_int8),
             beta=args.beta,
             tau=args.tau,
             readout_width=args.readout_width or None,

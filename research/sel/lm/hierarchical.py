@@ -32,6 +32,7 @@ __all__ = [
     "path_logits",
     "path_nll",
     "path_probabilities",
+    "quantize_weight_",
 ]
 
 
@@ -400,3 +401,16 @@ class TreeReadout:
         if self.bias_train:
             self.bias.index_add_(0, flat, scale, alpha=-self.lr_out)
         return nll, signal
+
+
+def quantize_weight_(weight: torch.Tensor, bits: int = 8) -> torch.Tensor:
+    """**按行**做对称量化再反量化，原地改 ``weight``。返回每行的 scale。
+
+    为什么要按行：树的一行对应一个内部节点，各行的幅值差得很远；整表一个 scale 会让
+    小幅值的行整行归零。这是推理期量化（权重只读），与训练期的"权重即累加器"不同。
+    """
+    qmax = float(2 ** (bits - 1) - 1)
+    scale = weight.abs().amax(dim=1).clamp(min=1e-12) / qmax
+    quantized = torch.round(weight / scale.unsqueeze(1)).clamp(-qmax, qmax)
+    weight.copy_(quantized * scale.unsqueeze(1))
+    return scale
