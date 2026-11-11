@@ -319,9 +319,15 @@ class TreeReadout:
         if update:
             denom = features.pow(2).sum(dim=1).mean().clamp(min=1e-3)
             scale = delta / denom
-            self.weight.index_add_(
-                0, flat, features.index_select(0, rows) * scale.unsqueeze(1), alpha=-self.lr_out
-            )
+            if self.use_kernel:
+                tree_kernel.scatter_update(self.weight, features, flat, rows, scale, self.lr_out)
+            else:
+                self.weight.index_add_(
+                    0,
+                    flat,
+                    features.index_select(0, rows) * scale.unsqueeze(1),
+                    alpha=-self.lr_out,
+                )
         return nll, signal
 
     def nll(self, features: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
@@ -380,14 +386,17 @@ class TreeReadout:
         # 1B 形状上那是 12,800 × 31,250 × 4 B = **1.6 GB**，加上一份乘积再翻倍。
         # 实测在 8 GB 卡上直接把显存打满、allocator 反复换页（一步从 8 s 掉到 >100 s）。
         # 按 1024 行一块，临时降到 128 MB，FLOP 与总写入量不变。
-        for start in range(0, flat.numel(), 1024):
-            chunk = slice(start, start + 1024)
-            self.weight.index_add_(
-                0,
-                flat[chunk],
-                features.index_select(0, rows[chunk]) * scale[chunk].unsqueeze(1),
-                alpha=-self.lr_out,
-            )
+        if self.use_kernel:
+            tree_kernel.scatter_update(self.weight, features, flat, rows, scale, self.lr_out)
+        else:
+            for start in range(0, flat.numel(), 1024):
+                chunk = slice(start, start + 1024)
+                self.weight.index_add_(
+                    0,
+                    flat[chunk],
+                    features.index_select(0, rows[chunk]) * scale[chunk].unsqueeze(1),
+                    alpha=-self.lr_out,
+                )
         if self.bias_train:
             self.bias.index_add_(0, flat, scale, alpha=-self.lr_out)
         return nll, signal

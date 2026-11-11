@@ -103,11 +103,11 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="1B 训练入口（memmap + 树 + 低秩输入）")
     ap.add_argument("--corpus", nargs="+", default=[str(DATA / "corpus.u16")])
     ap.add_argument("--vocab", type=int, default=32000)
-    ap.add_argument("--params", type=float, default=1.0e9, help="读出参数预算（决定 M）")
+    ap.add_argument("--params", type=float, default=5.0e8, help="读出参数预算（决定 M）")
     ap.add_argument("--window", type=int, default=192)
     #: 实测：B=256、M=31,250 时峰值 6.11 GB，8 GB 卡上换页 ⇒ 一步 225 ms。
     #: B=128 把特征与临时张量全部减半，是第一个该降的旋钮。
-    ap.add_argument("--batch", type=int, default=128)
+    ap.add_argument("--batch", type=int, default=1024)
     ap.add_argument("--steps", type=int, default=200_000)
     ap.add_argument("--eval-every", type=int, default=2000)
     ap.add_argument("--ckpt-every", type=int, default=500)
