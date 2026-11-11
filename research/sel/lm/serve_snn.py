@@ -99,6 +99,45 @@ def encode_texts(model, tokenizer, texts: list[str], max_len: int = 256) -> torc
     return out / norms
 
 
+@torch.no_grad()
+def complete(model, tokenizer, context: str, k: int = 10, max_len: int = 256):
+    """给一段上下文，返回**下一个 token 的 top-k**（id / 解码文本 / logprob）。
+
+    **只做候选，不做生成**：这个模型记不住超过 ~64 步，把它包装成"会写句子"是在
+    接口层面撒谎。调用方拿到的是一张分布表，怎么用由它决定。
+    """
+    ids = tokenizer.encode(context).ids[-max_len:]
+    if not ids:
+        return []
+    trace = model.new_trace(1)
+    device = model.device
+    for step in range(len(ids) - 1):
+        model.step(
+            torch.tensor([ids[step]], device=device),
+            torch.tensor([ids[step + 1]], device=device),
+            trace,
+            update=False,
+            all_valid=True,
+        )
+    if len(ids) >= 2:
+        probs = model._token_probabilities(model._features(trace))[0]
+    else:
+        probs = torch.full((model.n_vocab,), 1.0 / model.n_vocab, device=device)
+    top = torch.topk(probs, min(k, probs.numel()))
+    # **先取对数再 tolist()**：`top.values.tolist()` 给的是 Python float，
+    # 再调 `.clamp` 会抛 AttributeError，而 http.server 会把连接直接掐掉——
+    # 客户端看到的是"空正文"，不是 500。
+    logprobs = torch.log(top.values.clamp(min=1e-12))
+    return [
+        {
+            "id": int(index),
+            "token": tokenizer.decode([int(index)]),
+            "logprob": round(float(lp), 4),
+        }
+        for index, lp in zip(top.indices.tolist(), logprobs.tolist(), strict=True)
+    ]
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="本地 SNN 编码服务")
     ap.add_argument("--ckpt", type=Path, required=True)
@@ -133,6 +172,19 @@ def main(argv: list[str] | None = None) -> int:
                 self._send(404, {"error": "unknown path"})
 
         def do_POST(self) -> None:
+            if self.path.rstrip("/") == "/complete":
+                length = int(self.headers.get("Content-Length", "0"))
+                try:
+                    body = json.loads(self.rfile.read(length) or b"{}")
+                    context = str(body.get("context") or "")
+                    k = int(body.get("k") or 10)
+                except Exception as exc:
+                    self._send(400, {"error": f"{type(exc).__name__}: {exc}"})
+                    return
+                with lock:
+                    items = complete(model, tokenizer, context, k)
+                self._send(200, {"candidates": items, "space_id": space})
+                return
             if self.path.rstrip("/") != "/encode":
                 self._send(404, {"error": "unknown path"})
                 return
