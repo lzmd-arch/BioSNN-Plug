@@ -107,7 +107,9 @@ def main(argv: list[str] | None = None) -> int:
         rows = tokens.shape[0]
         tokens = tokens.to(device)
         answer_dev = answer.to(device)
-        batch_loss = 0.0
+        # **循环里不做 .item() / bool(...)**：每步一次 GPU→CPU 同步会把一次更新拖到
+        # 几十毫秒（实测 500 步卡了 20 分钟）。全部张量累加，循环结束只取一次。
+        acc = torch.zeros((), device=device)
         for t in range(tokens.shape[1] - 1):
             learn = answer_dev[:, t + 1]
             loss, _ = model.step(
@@ -118,9 +120,8 @@ def main(argv: list[str] | None = None) -> int:
                 all_valid=True,
                 learn_mask=learn,
             )
-            if bool(learn.any()):
-                batch_loss += float(loss[learn].sum())
-        running += batch_loss / max(rows, 1)
+            acc = acc + (loss * learn.to(loss.dtype)).sum()
+        running += float(acc) / max(rows, 1)
         if step % 500 == 0:
             print(f"  {step} 步：近 500 步答案位 CE {running / 500:.3f}", flush=True)
             running = 0.0

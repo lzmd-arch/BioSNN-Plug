@@ -213,8 +213,9 @@ def run_fold(
     learn_hidden: bool = True,
     hierarchical: bool = False,
     tree_signal_scale: float = 1.0,
+    seed: int = SEED,
 ) -> dict:
-    torch.manual_seed(SEED)
+    torch.manual_seed(seed)
     vocab = build_vocab(train_texts, max_vocab=max_vocab)
     train = [encode(text, vocab, cap=MAX_LEN) for text in train_texts]
     test = [encode(text, vocab, cap=MAX_LEN) for text in test_texts]
@@ -262,10 +263,10 @@ def run_fold(
         embed_rank=embed_rank,
         tau_groups=tau_groups,
         beta=beta,
-        generator=torch.Generator().manual_seed(SEED),
+        generator=torch.Generator().manual_seed(seed),
         device=device,
     )
-    generator = torch.Generator().manual_seed(SEED + 17)
+    generator = torch.Generator().manual_seed(seed + 17)
     sampler = (
         LengthBucketedSampler([len(sequence) for sequence in train], BATCH, generator)
         if bucket_lengths
@@ -344,6 +345,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, default=OUT)
     parser.add_argument("--updates", type=int, default=UPDATES)
     parser.add_argument("--tag", default="r0")
+    parser.add_argument("--seed", type=int, default=SEED)
     parser.add_argument("--sessions", default="", help="逗号分隔的留出会话；空=全部")
     parser.add_argument("--eval-every", type=int, default=0)
     parser.add_argument("--tau", type=float, default=TAU, help="膜时间常数（R5 的变量）")
@@ -448,6 +450,7 @@ def main(argv: list[str] | None = None) -> int:
             learn_hidden=not args.no_learn_hidden,
             hierarchical=bool(args.hierarchical),
             tree_signal_scale=args.tree_signal_scale,
+            seed=args.seed,
             beta=args.beta,
             tau=args.tau,
             readout_width=args.readout_width or None,
@@ -503,7 +506,7 @@ def main(argv: list[str] | None = None) -> int:
             "beta": args.beta,
             "tau_read": TAU_READ,
             "input_std": INPUT_STD,
-            "seed": SEED,
+            "seed": args.seed,
             "data": str(args.data),
             "readout_width": args.readout_width or None,
             "readout_taus": list(taus) if taus else None,

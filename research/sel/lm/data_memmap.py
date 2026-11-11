@@ -22,7 +22,7 @@ class WindowSampler:
 
     def __init__(
         self,
-        path: Path,
+        path: Path | list[Path],
         *,
         batch: int,
         window: int,
@@ -30,8 +30,13 @@ class WindowSampler:
         limit: int | None = None,
         device="cpu",
     ) -> None:
-        self.flat = np.memmap(path, dtype=np.uint16, mode="r")
-        self.size = int(self.flat.size if limit is None else min(limit, self.flat.size))
+        paths = [path] if isinstance(path, Path) else list(path)
+        self.shards = [(np.memmap(p, dtype=np.uint16, mode="r"), None) for p in paths]
+        self.shards = [(mm, int(mm.size)) for mm, _ in self.shards]
+        self.weights = np.asarray([n for _, n in self.shards], dtype=np.float64)
+        self.weights /= self.weights.sum()
+        self.flat, self.size = self.shards[0]
+        self.size = int(sum(n for _, n in self.shards))
         self.batch = int(batch)
         self.window = int(window)
         self.generator = generator
@@ -44,12 +49,15 @@ class WindowSampler:
 
     def next(self) -> tuple[torch.Tensor, torch.Tensor]:
         """切一个 batch。窗口内全有效，所以 ``valid`` 恒为 True。"""
-        high = self.size - self.window - 1
-        offsets = torch.randint(0, high, (self.batch,), generator=self.generator).tolist()
-        # 只有这一步把数据搬进内存：batch × window 个 uint16
+        # 多分片：每行按分片长度加权随机选一片，再在片内取随机起点
+        picks = np.random.default_rng(int(self.generator.initial_seed())).choice(
+            len(self.shards), size=self.batch, p=self.weights
+        )
         chunk = np.empty((self.batch, self.window + 1), dtype=np.int64)
-        for row, start in enumerate(offsets):
-            chunk[row] = self.flat[start : start + self.window + 1]
+        for row, shard in enumerate(picks):
+            mm, size = self.shards[int(shard)]
+            start = int(torch.randint(0, size - self.window - 1, (1,), generator=self.generator))
+            chunk[row] = mm[start : start + self.window + 1]
         tokens = torch.from_numpy(chunk).to(self.device)
         valid = torch.ones(self.batch, self.window + 1, dtype=torch.bool, device=self.device)
         return tokens, valid

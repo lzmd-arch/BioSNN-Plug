@@ -1,0 +1,121 @@
+{
+ "kind": "R0: feedforward local-rule LM on a real conversation corpus",
+ "seed": 0,
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "max_len": 192,
+  "batch": 16,
+  "updates": 16000,
+  "eval_every": 2000,
+  "lr_in": 0.001,
+  "lr_out": 0.5,
+  "tau": 20.0,
+  "max_vocab": 3000,
+  "use_context": false,
+  "candidates": 0,
+  "readout_rank": null,
+  "embed_rank": null,
+  "bucket_lengths": false,
+  "tau_groups": 1,
+  "pad_vocab": true,
+  "bf16_weights": false,
+  "weight_dtype": "fp32",
+  "mirror_dtype": "",
+  "norm_groups": 1,
+  "trace_decay": 0.0,
+  "learn_hidden": true,
+  "hierarchical": true,
+  "tree_signal_scale": 3.0,
+  "bf16_input": false,
+  "beta": 0.0,
+  "tau_read": 8.0,
+  "input_std": 0.12,
+  "seed": 2,
+  "data": "D:\\AxoData\\sel\\lm\\v1\\public\\kdconv\\dialogue.jsonl",
+  "readout_width": null,
+  "readout_taus": [
+   2.0,
+   128.0
+  ]
+ },
+ "folds": {
+  "test": {
+   "vocab": 3001,
+   "train_pairs": 33238,
+   "test_pairs": 4868,
+   "top1": 0.3345,
+   "top5": 0.5492,
+   "top10": 0.6378,
+   "mean_rank_cost": 5.6484,
+   "ce": 3.6527,
+   "bigram_top1": 0.2887,
+   "bigram_ce": 3.7688,
+   "delta_top1": 0.0458,
+   "ce_ratio": 0.646,
+   "tokens": 226709,
+   "top1_by_pos": {
+    "0-9": 0.3411,
+    "10-24": 0.3586,
+    "25-39": 0.3175,
+    "40-+": 0.3138
+   },
+   "candidate_hit": null,
+   "tau": 20.0,
+   "readout_dims": 2048,
+   "firing_rate": 0.13287,
+   "curve": [
+    {
+     "updates": 2000,
+     "top1": 0.2515,
+     "ce": 4.28
+    },
+    {
+     "updates": 4000,
+     "top1": 0.28,
+     "ce": 4.066
+    },
+    {
+     "updates": 6000,
+     "top1": 0.2869,
+     "ce": 4.049
+    },
+    {
+     "updates": 8000,
+     "top1": 0.3089,
+     "ce": 3.8656
+    },
+    {
+     "updates": 10000,
+     "top1": 0.3028,
+     "ce": 3.8808
+    },
+    {
+     "updates": 12000,
+     "top1": 0.318,
+     "ce": 3.7808
+    },
+    {
+     "updates": 14000,
+     "top1": 0.286,
+     "ce": 4.1757
+    },
+    {
+     "updates": 16000,
+     "top1": 0.3345,
+     "ce": 3.6527
+    }
+   ]
+  }
+ },
+ "criteria": {
+  "r0_0_loss_falls": false,
+  "r0_1_beats_bigram": true,
+  "r0_2_most_folds_win": false,
+  "r0_3_ce_better": true,
+  "mean_delta_top1": 0.0458,
+  "folds_winning": 1,
+  "mean_top1": 0.3345,
+  "mean_bigram_top1": 0.2887
+ }
+}
