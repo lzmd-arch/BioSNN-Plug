@@ -28,6 +28,28 @@ DATA = Path("D:/AxoData/sel/lm/corpus/skypile_tok")
 OUT = REPO / "sweep_results" / "lm_1b"
 
 
+def model_state(model: TokenEProp) -> dict:
+    """读出的 4 GB 权重挂在 `model.tree`（不是 Tensor 属性），**必须单独存**。
+
+    第一版漏了它 —— 检查点只有 54 MB，续训出来等于换了个模型。
+    """
+    blob = {k: v for k, v in vars(model).items() if isinstance(v, torch.Tensor)}
+    if model.tree is not None:
+        blob["__tree_weight"] = model.tree.weight
+        blob["__tree_bias"] = model.tree.bias
+    return blob
+
+
+def load_state(model: TokenEProp, blob: dict) -> None:
+    for key, value in blob.items():
+        if key == "__tree_weight":
+            model.tree.weight = value
+        elif key == "__tree_bias":
+            model.tree.bias = value
+        else:
+            setattr(model, key, value)
+
+
 def corpus_counts(paths: list[Path], vocab: int, cache: Path) -> torch.Tensor:
     """词频：算一次存下来（2B token 上重算要几分钟，续训时不该重复付）。"""
     if cache.exists():
@@ -91,6 +113,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--ckpt-every", type=int, default=500)
     ap.add_argument("--embed-rank", type=int, default=256)
     ap.add_argument("--tree-signal-scale", type=float, default=3.0)
+    ap.add_argument(
+        "--tree-packed",
+        action="store_true",
+        help="ragged 布局：只走真实配对。矩形按 depth_max=50 补位，4x 浪费",
+    )
     ap.add_argument("--lr-in", type=float, default=1e-3)
     ap.add_argument("--lr-out", type=float, default=0.5)
     ap.add_argument("--out", type=Path, default=OUT)
@@ -125,6 +152,7 @@ def main(argv: list[str] | None = None) -> int:
         readout_taus=(2.0, 128.0),
         tree=paths_t,
         tree_signal_scale=args.tree_signal_scale,
+        tree_packed=bool(args.tree_packed),
         embed_rank=args.embed_rank,
         lr_in=args.lr_in,
         lr_out=args.lr_out,
@@ -143,8 +171,7 @@ def main(argv: list[str] | None = None) -> int:
     start_step = 0
     if args.resume:
         blob = torch.load(args.resume, map_location=device)
-        for key, value in blob["tensors"].items():
-            setattr(model, key, value)
+        load_state(model, blob["tensors"])
         start_step = int(blob["step"])
         print(f"从 {args.resume} 续训，第 {start_step} 步", flush=True)
 
@@ -189,11 +216,13 @@ def main(argv: list[str] | None = None) -> int:
         if args.ckpt_every and step % args.ckpt_every == 0:
             blob = {
                 "step": step,
-                "tensors": {k: v for k, v in vars(model).items() if isinstance(v, torch.Tensor)},
+                "tensors": model_state(model),
                 "config": {k: str(v) for k, v in vars(args).items()},
             }
             torch.save(blob, args.out / f"{args.tag}_ckpt.pt")
     elapsed = time.time() - started
+    peak_gb = torch.cuda.max_memory_allocated() / 1e9 if device.type == "cuda" else 0.0
+    print(f"峰值显存 {peak_gb:.2f} GB", flush=True)
     print(
         f"完成 {args.steps - start_step} 步，{elapsed / 60:.1f} 分，"
         f"{tokens_seen / elapsed / 1e3:.1f}k tok/s，"
