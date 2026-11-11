@@ -124,7 +124,12 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="ragged 布局：只走真实配对。矩形按 depth_max=50 补位，4x 浪费",
     )
-    ap.add_argument("--lr-in", type=float, default=1e-3)
+    ap.add_argument(
+        "--lr-in",
+        type=float,
+        default=1e-3,
+        help="**参考工作点（batch=16、signal_scale=1）上的学习率**；实际值按 16/(batch×scale) 自动折算",
+    )
     ap.add_argument("--lr-out", type=float, default=0.5)
     ap.add_argument("--out", type=Path, default=OUT)
     ap.add_argument("--tag", default="run1b")
@@ -163,7 +168,10 @@ def main(argv: list[str] | None = None) -> int:
         embed_init=(
             torch.load(args.emb_init, map_location="cpu")["emb"] if args.emb_init else None
         ),
-        lr_in=args.lr_in,
+        # **隐层更新是 `eps_inᵀ @ post` 对 batch 求和** ⇒ 有效步长 ∝ lr_in × batch × signal_scale。
+        # P1 的 1e-3 是在 batch=16、scale=1 上标的；直接拿到 batch=1024 上会把隐层打崩
+        # （实测：发放率 0.0087 → 0.0006、CE 8.2 → 51.4，模型完全塌掉）。
+        lr_in=args.lr_in * 16.0 / max(args.batch * args.tree_signal_scale, 1e-9),
         lr_out=args.lr_out,
         generator=torch.Generator().manual_seed(0),
         device=device,
