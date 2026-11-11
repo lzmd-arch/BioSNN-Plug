@@ -44,7 +44,9 @@ def model_state(model: TokenEProp) -> dict:
 def load_state(model: TokenEProp, blob: dict) -> None:
     """**先丢掉旧的再装新的**：直接赋值会让新旧两份权重同时在显存里（各 2 GB），
     实测把占用顶到 7.68 GB / 8.15 GB，训练随即落进换页区。"""
-    for key, value in blob.items():
+    # **树权重先装**：它最大（2 GB），先腾出旧的那份，峰值才不会新旧两份同时在显存里
+    ordered = sorted(blob.items(), key=lambda kv: 0 if kv[0] == "__tree_weight" else 1)
+    for key, value in ordered:
         if key == "__tree_weight":
             model.tree.weight = None
             if torch.cuda.is_available():
@@ -216,6 +218,8 @@ def main(argv: list[str] | None = None) -> int:
         tree=paths_t,
         tree_signal_scale=args.tree_signal_scale,
         tree_packed=bool(args.tree_packed),
+        # 续训时树权重马上被覆盖，别先建 2 GB 随机权重
+        tree_init_weight=not bool(args.resume),
         embed_rank=args.embed_rank,
         embed_init=(
             torch.load(args.emb_init, map_location="cpu")["emb"] if args.emb_init else None

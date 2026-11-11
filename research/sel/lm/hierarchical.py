@@ -247,6 +247,7 @@ class TreeReadout:
         use_kernel: bool | None = None,
         packed: bool = False,
         signal_scale: float = 1.0,
+        init_weight: bool = True,
         generator: torch.Generator | None = None,
         device=None,
         dtype: torch.dtype = torch.float32,
@@ -255,9 +256,15 @@ class TreeReadout:
         self.n_features = int(n_features)
         self.lr_out = float(lr_out)
         self.bias_train = bool(bias_train)
-        gen = generator or torch.Generator()
-        weight = torch.randn(paths.n_nodes, n_features, generator=gen) / math.sqrt(n_features)
-        self.weight = weight.to(device=device, dtype=dtype)
+        if init_weight:
+            gen = generator or torch.Generator()
+            weight = torch.randn(paths.n_nodes, n_features, generator=gen) / math.sqrt(n_features)
+            self.weight = weight.to(device=device, dtype=dtype)
+        else:
+            # 续训时这份权重马上会被检查点覆盖。**不要先建 2 GB 的随机权重**：
+            # 主机端 randn + 除法 + 拷贝会留下 4 GB 的主机峰值和一段显存碎片，
+            # 实测让系统占用停在 7.15 GB / 8.15 GB、吞吐从 27.5k 掉到 8.8k。
+            self.weight = torch.empty(paths.n_nodes, n_features, device=device, dtype=dtype)
         #: 融合核把「gather + 点积」「gather + 信号」各压成**一次** DRAM 读。
         #: 没有 CUDA / Triton 时退回 PyTorch 路径；两条路在 `test_tree_kernel.py` 里逐项对齐。
         self.use_kernel = (
