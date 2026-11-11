@@ -212,6 +212,7 @@ def run_fold(
     lr_in: float = LR_IN,
     learn_hidden: bool = True,
     hierarchical: bool = False,
+    tree_signal_scale: float = 1.0,
 ) -> dict:
     torch.manual_seed(SEED)
     vocab = build_vocab(train_texts, max_vocab=max_vocab)
@@ -249,6 +250,7 @@ def run_fold(
         readout_taus=readout_taus,
         candidates=candidates,
         tree=paths,
+        tree_signal_scale=tree_signal_scale,
         pad_vocab=pad_vocab,
         bf16_weights=bf16_weights,
         weight_dtype=weight_dtype,
@@ -367,6 +369,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--embed-rank", type=int, default=0, help="A2：低秩输入 d；0=稠密")
     parser.add_argument("--bucket-lengths", action="store_true", help="按长度分桶采样（省填充）")
     parser.add_argument(
+        "--tree-signal-scale", type=float, default=1.0, help="H-1c：树的隐层信号再乘这个系数"
+    )
+    parser.add_argument(
         "--hierarchical",
         action="store_true",
         help="H-1：读出换成 Huffman 树的路径概率（局部更新不变）；评测仍走全词表 top-k",
@@ -442,6 +447,7 @@ def main(argv: list[str] | None = None) -> int:
             lr_in=args.lr_in,
             learn_hidden=not args.no_learn_hidden,
             hierarchical=bool(args.hierarchical),
+            tree_signal_scale=args.tree_signal_scale,
             beta=args.beta,
             tau=args.tau,
             readout_width=args.readout_width or None,
@@ -492,6 +498,7 @@ def main(argv: list[str] | None = None) -> int:
             "trace_decay": args.trace_decay,
             "learn_hidden": not args.no_learn_hidden,
             "hierarchical": bool(args.hierarchical),
+            "tree_signal_scale": args.tree_signal_scale,
             "bf16_input": args.bf16_input,
             "beta": args.beta,
             "tau_read": TAU_READ,

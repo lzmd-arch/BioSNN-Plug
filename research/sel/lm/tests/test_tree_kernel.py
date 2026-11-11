@@ -58,8 +58,7 @@ def test_signal_matches_full_step_signal() -> None:
 
     logits, valid, safe = path_logits(features, readout.weight, paths, targets, readout.bias)
     bits = paths.bits.index_select(0, targets).to(logits.dtype)
-    # 与 `TreeReadout.step` 同口径：delta 已经除以 batch
-    delta = path_deltas(torch.sigmoid(logits), bits, valid) / features.shape[0]
+    delta = path_deltas(torch.sigmoid(logits), bits, valid)
     signal = tree_kernel.gather_signal(delta.contiguous(), readout.weight, safe)
     assert torch.allclose(signal, signal_ref, atol=5e-4, rtol=5e-4), (
         (signal - signal_ref).abs().max()
