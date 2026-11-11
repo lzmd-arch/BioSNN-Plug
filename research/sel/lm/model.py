@@ -122,6 +122,7 @@ class TokenEProp:
         readout_basis: torch.Tensor | None = None,
         embed_rank: int | None = None,
         embed_proj: torch.Tensor | None = None,
+        embed_init: torch.Tensor | None = None,
         tau_groups: int = 1,
         beta: float = 0.0,
         rho: float = 0.99,
@@ -276,9 +277,18 @@ class TokenEProp:
         self.proj_frozen = False
         if embed_rank is not None and 0 < int(embed_rank) <= n_rec:
             self.embed_rank = int(embed_rank)
-            self.emb = (
-                torch.randn(n_vocab, self.embed_rank, generator=gen).to(self.device) * input_std
-            )
+            if embed_init is not None:
+                # 词嵌入**几何**迁移：从千问的 token_embd 投影而来（见 scripts/transfer_embedding.py）
+                if tuple(embed_init.shape) != (n_vocab, self.embed_rank):
+                    raise ValueError(
+                        f"embed_init 形状 {tuple(embed_init.shape)} 与 "
+                        f"{(n_vocab, self.embed_rank)} 不符"
+                    )
+                self.emb = embed_init.to(device=self.device, dtype=torch.float32)
+            else:
+                self.emb = (
+                    torch.randn(n_vocab, self.embed_rank, generator=gen).to(self.device) * input_std
+                )
             if embed_proj is not None:
                 self.proj = embed_proj.to(self.device)
                 self.proj_frozen = True

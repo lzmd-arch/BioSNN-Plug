@@ -112,6 +112,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--eval-every", type=int, default=2000)
     ap.add_argument("--ckpt-every", type=int, default=500)
     ap.add_argument("--embed-rank", type=int, default=256)
+    ap.add_argument(
+        "--emb-init",
+        type=Path,
+        default=None,
+        help="词嵌入几何迁移的产物（transfer_embedding.py 的 .pt）",
+    )
     ap.add_argument("--tree-signal-scale", type=float, default=3.0)
     ap.add_argument(
         "--tree-packed",
@@ -154,6 +160,9 @@ def main(argv: list[str] | None = None) -> int:
         tree_signal_scale=args.tree_signal_scale,
         tree_packed=bool(args.tree_packed),
         embed_rank=args.embed_rank,
+        embed_init=(
+            torch.load(args.emb_init, map_location="cpu")["emb"] if args.emb_init else None
+        ),
         lr_in=args.lr_in,
         lr_out=args.lr_out,
         generator=torch.Generator().manual_seed(0),
