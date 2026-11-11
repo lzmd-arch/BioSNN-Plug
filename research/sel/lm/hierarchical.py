@@ -319,7 +319,8 @@ class TreeReadout:
         signal = signal.to(features.dtype) * self.signal_scale
         if update:
             denom = features.pow(2).sum(dim=1).mean().clamp(min=1e-3)
-            scale = delta / denom
+            # 同上：读出更新是 batch 平均，信号是另一支（见 `_step_packed` 的 signal）
+            scale = delta / (denom * max(batch, 1))
             if self.use_kernel:
                 tree_kernel.scatter_update(self.weight, features, flat, rows, scale, self.lr_out)
             else:
@@ -382,7 +383,12 @@ class TreeReadout:
             return nll, signal
 
         denom = features.pow(2).sum(dim=1).mean().clamp(min=1e-3)
-        scale = delta_flat / denom
+        # **读出的更新必须是 batch 平均，不是求和**：稠密路径的 `gradient` 在算更新之前
+        # 就除了 batch；这里漏掉的话，单步改动量 ∝ batch，B=256 时比标定点大 16 倍，
+        # 读出会被推离频率先验（实测 CE 从 8.21 升到 9.64 以上）。
+        # 注意：**信号仍用未除 batch 的 delta**，它的尺度由 `signal_scale` 单独控制——
+        # H-1c 的 ×3 就是在那个口径下选的，两者不能混。
+        scale = delta_flat / (denom * max(batch, 1))
         # **按块更新**：整块写会物化 `(B·depth_max, M)` 的临时张量——
         # 1B 形状上那是 12,800 × 31,250 × 4 B = **1.6 GB**，加上一份乘积再翻倍。
         # 实测在 8 GB 卡上直接把显存打满、allocator 反复换页（一步从 8 s 掉到 >100 s）。
