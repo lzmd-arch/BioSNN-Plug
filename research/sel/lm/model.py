@@ -112,6 +112,7 @@ class TokenEProp:
         tree_signal_scale: float = 1.0,
         tree_packed: bool = False,
         tree_init_weight: bool = True,
+        sensor_dim: int = 0,
         pad_vocab: bool = True,
         bf16_weights: bool = False,
         weight_dtype: str = "fp32",
@@ -324,6 +325,15 @@ class TokenEProp:
             del self.w_out
             self.w_out = None
 
+        #: **传感器通道**（Semprea-4.5B 的独有输入）：环境/多模态向量 → 神经元电流。
+        #: `sensor_dim=0` 时完全不建，逐位不变；建了也**零初始化** ⇒ 与没有它逐位相同。
+        #: 这是"信息不对称"的落点：这些数据不出设备，云端永远拿不到。
+        self.sensor_proj: torch.Tensor | None = None
+        self.sensors: torch.Tensor | None = None
+        self.sensor_dim = int(sensor_dim)
+        if self.sensor_dim > 0:
+            self.sensor_proj = torch.zeros(self.sensor_dim, n_rec, device=self.device)
+
         post = torch.arange(n_rec, device=self.device).unsqueeze(1)
         candidates = torch.randint(0, n_rec - 1, (n_rec, fan_in), generator=gen).to(self.device)
         self.pre_index = candidates + (candidates >= post).long()
@@ -503,6 +513,10 @@ class TokenEProp:
             direct = self.w_in[tokens] if self.emb is None else self.emb[tokens] @ self.proj
             direct = direct.float()  # bf16 存储时升回 fp32，膜电位与阈值判据保持 fp32
             current = direct + self._recurrent_current(z_previous)
+        if self.sensor_proj is not None and self.sensors is not None:
+            # 传感器向量加进**电流**而不是特征：它作用于膜电位，与输入通路正交，
+            # 因此不影响 e-prop 的资格痕迹（那些乘的是 w_in 的输入）。
+            current = current + self.sensors.to(current.dtype) @ self.sensor_proj
 
         alpha_used = self.alpha if self.n_groups == 1 else self.alpha_vec
         theta = self.threshold

@@ -27,7 +27,7 @@ REPO = Path(__file__).resolve().parents[3]
 BPE = Path("D:/AxoData/sel/lm/corpus/skypile_tok/bpe")
 
 
-def load_model(ckpt: Path, bpe: Path, device: torch.device):
+def load_model(ckpt: Path, bpe: Path, device: torch.device, sensor_dim: int = 0):
     """按检查点里记的配置重建模型。**形状对不上就报错，不静默降级。**"""
     from tokenizers import ByteLevelBPETokenizer
 
@@ -57,6 +57,8 @@ def load_model(ckpt: Path, bpe: Path, device: torch.device):
         tree_packed=True,
         embed_rank=int(cfg["embed_rank"]),
         tree_init_weight=False,
+        #: Semprea-4.5B 的传感器通道；0 = 关闭（逐位等同旧模型）
+        sensor_dim=sensor_dim,
         generator=torch.Generator().manual_seed(0),
         device=device,
     )
@@ -144,10 +146,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--bpe", type=Path, default=BPE)
     ap.add_argument("--device", default="cpu", choices=("cpu", "cuda"))
     ap.add_argument("--port", type=int, default=18734)
+    ap.add_argument(
+        "--sensor-dim",
+        type=int,
+        default=16,
+        help="传感器通道维度；投影头零初始化，所以没有向量时逐位无副作用",
+    )
     args = ap.parse_args(argv)
 
     device = torch.device(args.device)
-    model, tokenizer, step = load_model(args.ckpt, args.bpe, device)
+    model, tokenizer, step = load_model(args.ckpt, args.bpe, device, args.sensor_dim)
     space = f"snn/tree-0.5b-step{step}@{model.readout_width}"
     state = {"ready": True, "device": str(device), "step": step, "space_id": space}
     lock = threading.Lock()
@@ -178,11 +186,20 @@ def main(argv: list[str] | None = None) -> int:
                     body = json.loads(self.rfile.read(length) or b"{}")
                     context = str(body.get("context") or "")
                     k = int(body.get("k") or 10)
+                    sensors = body.get("sensors")
                 except Exception as exc:
                     self._send(400, {"error": f"{type(exc).__name__}: {exc}"})
                     return
                 with lock:
+                    # **传感器是这一整套里千问唯一拿不到的信息**：环境/多模态数据不出设备。
+                    # 没有配对数据时传零向量，投影头也是零初始化 ⇒ 与不传逐位相同。
+                    model.sensors = (
+                        torch.tensor(sensors, dtype=torch.float32, device=model.device)
+                        if sensors
+                        else None
+                    )
                     items = complete(model, tokenizer, context, k)
+                    model.sensors = None
                 self._send(200, {"candidates": items, "space_id": space})
                 return
             if self.path.rstrip("/") != "/encode":
