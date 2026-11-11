@@ -299,8 +299,11 @@ class TreeReadout:
         bits_f = bits.to(logits.dtype)
         taken = torch.where(bits_f > 0.5, prob, 1.0 - prob)
         logp = -torch.log(taken.clamp(min=1e-12))
-        delta = prob - bits_f
+        # **信号必须与稠密同口径除以 batch**：稠密的 `gradient` 在算信号**之前**就除了 batch，
+        # 这里漏掉的话回给隐层的信号会大 B 倍（B=16 时实测隐层发放率 0.0424 → 0.1439，
+        # top-1 掉 3.8pp）。H-1 那一臂就是踩了这个。
         batch = int(features.shape[0])
+        delta = (prob - bits_f) / max(batch, 1)
         if mask is not None:
             keep = mask.index_select(0, rows)
             logp = logp * keep
@@ -310,7 +313,7 @@ class TreeReadout:
         signal = signal.to(features.dtype)
         if update:
             denom = features.pow(2).sum(dim=1).mean().clamp(min=1e-3)
-            scale = delta / (denom * max(batch, 1))
+            scale = delta / denom
             self.weight.index_add_(
                 0, flat, features.index_select(0, rows) * scale.unsqueeze(1), alpha=-self.lr_out
             )
@@ -347,7 +350,8 @@ class TreeReadout:
         if mask is not None:
             valid = valid & mask.unsqueeze(1)
             nll = torch.where(mask, nll, torch.zeros_like(nll))
-        delta = path_deltas(prob, bits, valid)
+        # 与稠密同口径：信号、更新共用一个已经除以 batch 的 delta
+        delta = path_deltas(prob, bits, valid) / max(int(features.shape[0]), 1)
         batch = int(features.shape[0])
         # **扁平实现**：把 (B·depth) 个节点摊成一次 index_select / 一次 index_add。
         # 逐层写（`for j in range(depth)`）会调 depth 次小内核，实测在 V=3,001 上是
@@ -365,7 +369,7 @@ class TreeReadout:
             return nll, signal
 
         denom = features.pow(2).sum(dim=1).mean().clamp(min=1e-3)
-        scale = delta_flat / (denom * max(batch, 1))
+        scale = delta_flat / denom
         self.weight.index_add_(
             0, flat, features.index_select(0, rows) * scale.unsqueeze(1), alpha=-self.lr_out
         )

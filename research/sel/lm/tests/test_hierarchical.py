@@ -222,3 +222,29 @@ def test_tree_bias_is_frozen_prior() -> None:
     for _ in range(10):
         model.run(seq, trace)
     assert torch.equal(model.tree.bias, bias_before)
+
+
+def test_tree_signal_scales_with_batch() -> None:
+    """信号必须**与 batch 成反比**——稠密的 `gradient` 在算信号之前就除了 batch。
+
+    H-1 那一臂漏了这个（信号大 B 倍），隐层发放率 0.0424 → 0.1439、top-1 掉 3.8pp。
+    这条守卫不比对实现细节，只钉住"翻倍 batch ⇒ 单样本信号减半"这个性质。
+    """
+    torch.manual_seed(7)
+    counts = torch.tensor([20.0, 9.0, 5.0, 3.0, 2.0, 1.0])
+    paths = build_huffman_paths(counts)
+    small = torch.tensor([0, 3])
+    big = torch.tensor([0, 3, 0, 3])
+    features = torch.randn(2, 32)
+
+    def signal_for(targets: torch.Tensor) -> torch.Tensor:
+        readout = TreeReadout(paths, 32, generator=torch.Generator().manual_seed(7), device="cpu")
+        feat = features.repeat(len(targets) // 2, 1)
+        _, sig = readout.step(feat, targets, update=False)
+        return sig
+
+    s_small = signal_for(small)
+    s_big = signal_for(big)
+    assert torch.allclose(s_big[:2] * 2.0, s_small, atol=1e-6), (
+        (s_big[:2] * 2.0 - s_small).abs().max()
+    )
