@@ -79,7 +79,16 @@ def save_async(blob: dict, path: Path) -> None:
             "tensors": {k: v.detach().to("cpu", copy=True) for k, v in blob["tensors"].items()},
             "config": blob["config"],
         }
-        _SAVE_THREAD = threading.Thread(target=torch.save, args=(snapshot, path), daemon=True)
+
+        def _write() -> None:
+            # **先轮转再写**：写盘中途崩掉时，`<tag>.prev.pt` 还是上一次的完整文件。
+            # 只有一个检查点文件的跑法，一次写坏就等于把 50 小时清零。
+            previous = path.with_suffix(".prev.pt")
+            if path.exists():
+                path.replace(previous)
+            torch.save(snapshot, path)
+
+        _SAVE_THREAD = threading.Thread(target=_write, daemon=True)
         _SAVE_THREAD.start()
 
 
@@ -150,6 +159,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--batch", type=int, default=1024)
     ap.add_argument("--steps", type=int, default=200_000)
     ap.add_argument("--eval-every", type=int, default=2000)
+    #: 单个窗口只有 256×192 = 49k token，top-1≈0.1 时标准误就有 0.13pp ——
+    #: 看不出 2,000 步之间的差别。默认取 4 个窗口（≈20 万 token）。
+    ap.add_argument("--eval-windows", type=int, default=4)
     ap.add_argument("--ckpt-every", type=int, default=500)
     ap.add_argument("--embed-rank", type=int, default=256)
     ap.add_argument(
@@ -229,13 +241,18 @@ def main(argv: list[str] | None = None) -> int:
     if args.resume:
         # 先落到 CPU 再逐个搬到显存：`map_location=device` 会让新旧两份 2 GB 权重
         # 同时在场，实测把占用顶到 7.68 GB / 8.15 GB。
-        blob = torch.load(args.resume, map_location="cpu")
+        source = Path(args.resume)
+        if not source.exists():
+            fallback = source.with_suffix(".prev.pt")
+            print(f"{source} 不存在，回退到 {fallback}", flush=True)
+            source = fallback
+        blob = torch.load(source, map_location="cpu")
         load_state(model, blob["tensors"])
         start_step = int(blob["step"])
         del blob  # 2 GB 的 CPU 副本，读完立刻释放
         if device.type == "cuda":
             torch.cuda.empty_cache()
-        print(f"从 {args.resume} 续训，第 {start_step} 步", flush=True)
+        print(f"从 {source} 续训，第 {start_step} 步", flush=True)
 
     sampler = WindowSampler(
         paths,
@@ -244,7 +261,7 @@ def main(argv: list[str] | None = None) -> int:
         generator=torch.Generator().manual_seed(1),
         device=device,
     )
-    probe_tokens, probe_valid = sampler.next()
+    probes = [sampler.next() for _ in range(max(args.eval_windows, 1))]
     torch.cuda.reset_peak_memory_stats()
     running = 0.0
     started = time.time()
@@ -273,7 +290,17 @@ def main(argv: list[str] | None = None) -> int:
             )
             running = 0.0
         if args.eval_every and step % args.eval_every == 0:
-            stats = evaluate(model, probe_tokens, probe_valid)
+            tally: dict[str, float] = {}
+            total = 0
+            for probe_tokens, probe_valid in probes:
+                part = evaluate(model, probe_tokens, probe_valid)
+                weight = part["tokens"]
+                total += weight
+                for key, value in part.items():
+                    if key != "tokens":
+                        tally[key] = tally.get(key, 0.0) + float(value) * weight
+            stats = {k: round(v / max(total, 1), 4) for k, v in tally.items()}
+            stats["tokens"] = total
             print(f"  [评测 {step}] {json.dumps(stats, ensure_ascii=False)}", flush=True)
             # 评测会为全词表 (B, V) 分配大张量，分配器会把它缓存住不还。
             # 实测 `max_memory_allocated` 从 2.33 GB 涨到 4.47 GB，系统占用 6.5 GB——
