@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import threading
 import time
 from pathlib import Path
 
@@ -41,13 +42,52 @@ def model_state(model: TokenEProp) -> dict:
 
 
 def load_state(model: TokenEProp, blob: dict) -> None:
+    """**先丢掉旧的再装新的**：直接赋值会让新旧两份权重同时在显存里（各 2 GB），
+    实测把占用顶到 7.68 GB / 8.15 GB，训练随即落进换页区。"""
     for key, value in blob.items():
         if key == "__tree_weight":
-            model.tree.weight = value
+            model.tree.weight = None
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            model.tree.weight = value.to(model.device)
         elif key == "__tree_bias":
-            model.tree.bias = value
+            model.tree.bias = value.to(model.device)
         else:
-            setattr(model, key, value)
+            setattr(model, key, value.to(model.device))
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
+_SAVE_LOCK = threading.Lock()
+_SAVE_THREAD: threading.Thread | None = None
+
+
+def save_async(blob: dict, path: Path) -> None:
+    """把检查点**先快照到 CPU，再后台写盘**。
+
+    2 GB 的写盘会把 GPU 空转几秒，每 500 步一次（≈15 分钟）——实测这就是
+    `nvidia-smi` 上周期性掉坑的主要来源。GPU→CPU 的 2 GB 拷贝约 0.2 s（PCIe），
+    比写盘短一个量级，而且可以等上一次写完再开始，不排队。
+    """
+    global _SAVE_THREAD
+    with _SAVE_LOCK:
+        if _SAVE_THREAD is not None and _SAVE_THREAD.is_alive():
+            print("  （上一次检查点还在写，跳过这次）", flush=True)
+            return
+        snapshot = {
+            "step": blob["step"],
+            "tensors": {k: v.detach().to("cpu", copy=True) for k, v in blob["tensors"].items()},
+            "config": blob["config"],
+        }
+        _SAVE_THREAD = threading.Thread(target=torch.save, args=(snapshot, path), daemon=True)
+        _SAVE_THREAD.start()
+
+
+def wait_saves() -> None:
+    global _SAVE_THREAD
+    if _SAVE_THREAD is not None:
+        _SAVE_THREAD.join()
+        _SAVE_THREAD = None
 
 
 def corpus_counts(paths: list[Path], vocab: int, cache: Path) -> torch.Tensor:
@@ -187,9 +227,14 @@ def main(argv: list[str] | None = None) -> int:
 
     start_step = 0
     if args.resume:
-        blob = torch.load(args.resume, map_location=device)
+        # 先落到 CPU 再逐个搬到显存：`map_location=device` 会让新旧两份 2 GB 权重
+        # 同时在场，实测把占用顶到 7.68 GB / 8.15 GB。
+        blob = torch.load(args.resume, map_location="cpu")
         load_state(model, blob["tensors"])
         start_step = int(blob["step"])
+        del blob  # 2 GB 的 CPU 副本，读完立刻释放
+        if device.type == "cuda":
+            torch.cuda.empty_cache()
         print(f"从 {args.resume} 续训，第 {start_step} 步", flush=True)
 
     sampler = WindowSampler(
@@ -230,13 +275,19 @@ def main(argv: list[str] | None = None) -> int:
         if args.eval_every and step % args.eval_every == 0:
             stats = evaluate(model, probe_tokens, probe_valid)
             print(f"  [评测 {step}] {json.dumps(stats, ensure_ascii=False)}", flush=True)
+            # 评测会为全词表 (B, V) 分配大张量，分配器会把它缓存住不还。
+            # 实测 `max_memory_allocated` 从 2.33 GB 涨到 4.47 GB，系统占用 6.5 GB——
+            # 训练从此只剩 1.6 GB 余量，和 1B 掉进换页是同一类风险。评测完就还给驱动。
+            if device.type == "cuda":
+                torch.cuda.empty_cache()
         if args.ckpt_every and step % args.ckpt_every == 0:
             blob = {
                 "step": step,
                 "tensors": model_state(model),
                 "config": {k: str(v) for k, v in vars(args).items()},
             }
-            torch.save(blob, args.out / f"{args.tag}_ckpt.pt")
+            save_async(blob, args.out / f"{args.tag}_ckpt.pt")
+    wait_saves()
     elapsed = time.time() - started
     peak_gb = torch.cuda.max_memory_allocated() / 1e9 if device.type == "cuda" else 0.0
     print(f"峰值显存 {peak_gb:.2f} GB", flush=True)
