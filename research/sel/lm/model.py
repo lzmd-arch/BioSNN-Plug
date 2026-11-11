@@ -810,6 +810,9 @@ class TokenEProp:
         #: **top-k 才是"能不能当补全候选条"的指标。** top-1 只回答"第一个对不对"，
         #: 而产品里用户看的是前几个里有没有。这一项之前一直没量。
         topk_hits = {5: 0, 10: 0}
+        #: **产品口径**：10 格候选条上，选中正确答案要按几下。
+        #: 第 r 位就按 r 下；不在 10 格里就按 11 下（等于自己打）。**越低越好，与 BPTT 无关。**
+        rank_cost_sum = 0.0
         # 按位置分桶（P2 的位置切片分析，零额外机时）
         buckets = ((0, 9), (10, 24), (25, 39), (40, 10**9))
         bucket_hits = [[0, 0] for _ in buckets]
@@ -828,6 +831,11 @@ class TokenEProp:
             top10 = logits[mask].topk(10, dim=-1).indices
             for k in topk_hits:
                 topk_hits[k] += int((top10[:, :k] == probe_target).any(dim=1).sum())
+            matched_rank = top10 == probe_target
+            in_top = matched_rank.any(dim=1)
+            rank = matched_rank.to(torch.float32).argmax(dim=1) + 1
+            cost = torch.where(in_top, rank, torch.full_like(rank, 11.0))
+            rank_cost_sum += float(cost.sum())
             counted += int(mask.sum())
             for index, (low, high) in enumerate(buckets):
                 if low <= t <= high:
@@ -841,6 +849,7 @@ class TokenEProp:
             "top1": hits / max(counted, 1),
             "top5": topk_hits[5] / max(counted, 1),
             "top10": topk_hits[10] / max(counted, 1),
+            "mean_rank_cost": rank_cost_sum / max(counted, 1),
             "tokens": counted,
             "firing_rate": float(fired) / max(int(counted) * self.n_rec, 1),
             "top1_by_pos": {

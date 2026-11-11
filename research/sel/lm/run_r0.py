@@ -320,6 +320,7 @@ def run_fold(
         "top1": round(metrics["top1"], 4),
         "top5": round(metrics.get("top5", 0.0), 4),
         "top10": round(metrics.get("top10", 0.0), 4),
+        "mean_rank_cost": round(metrics.get("mean_rank_cost", 0.0), 4),
         "ce": round(metrics["ce"], 4),
         "bigram_top1": round(base_top1, 4),
         "bigram_ce": round(base_ce, 4),
