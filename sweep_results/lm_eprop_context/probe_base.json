@@ -1,0 +1,72 @@
+{
+ "config": {
+  "updates": "4000",
+  "batch": "32",
+  "n_rec": "512",
+  "readout_taus": "2,128",
+  "test_per_n": "16",
+  "seed": "0",
+  "tag": "probe_base",
+  "out": "D:\\Projects\\BioSNN-Plug\\sweep_results\\lm_eprop_context"
+ },
+ "curve": [
+  {
+   "delay": 1,
+   "top1": 0.6875
+  },
+  {
+   "delay": 2,
+   "top1": 0.5
+  },
+  {
+   "delay": 4,
+   "top1": 0.5625
+  },
+  {
+   "delay": 8,
+   "top1": 0.25
+  },
+  {
+   "delay": 16,
+   "top1": 0.3125
+  },
+  {
+   "delay": 32,
+   "top1": 0.5
+  },
+  {
+   "delay": 64,
+   "top1": 0.3125
+  },
+  {
+   "delay": 96,
+   "top1": 0.0
+  },
+  {
+   "delay": 128,
+   "top1": 0.25
+  },
+  {
+   "delay": 160,
+   "top1": 0.1875
+  },
+  {
+   "delay": 192,
+   "top1": 0.125
+  },
+  {
+   "delay": 256,
+   "top1": 0.0625
+  },
+  {
+   "delay": 384,
+   "top1": 0.0625
+  },
+  {
+   "delay": 512,
+   "top1": 0.0625
+  }
+ ],
+ "p0_short_ok": false,
+ "cross_50": 8
+}

@@ -1,0 +1,425 @@
+{
+ "n": 30,
+ "rows": [
+  {
+   "context": "安徽艺术职业学院音乐系建",
+   "truth": "立。",
+   "snn": [
+    "，",
+    "。"
+   ],
+   "qwen": [
+    "系",
+    "制"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "和半透明橡胶中的作用：作",
+   "truth": "硫化",
+   "snn": [
+    "\n",
+    "、"
+   ],
+   "qwen": [
+    "填充",
+    "着"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "针对家用电冰箱、平板电视",
+   "truth": "、转",
+   "snn": [
+    "、",
+    "，"
+   ],
+   "qwen": [
+    "、",
+    "等"
+   ],
+   "hit_snn": true,
+   "hit_qwen": true
+  },
+  {
+   "context": "夏凉产品的需求大大增加。",
+   "truth": "届时",
+   "snn": [
+    "，",
+    "。"
+   ],
+   "qwen": [
+    "同时",
+    "因此"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "端正，具有良好的职业道德",
+   "truth": "，无",
+   "snn": [
+    "，",
+    "。"
+   ],
+   "qwen": [
+    "，",
+    "和"
+   ],
+   "hit_snn": true,
+   "hit_qwen": true
+  },
+  {
+   "context": "推销产品而支出的各种费用",
+   "truth": "均属",
+   "snn": [
+    "，",
+    "。"
+   ],
+   "qwen": [
+    "，",
+    ","
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "和职业生涯管理等学校人力",
+   "truth": "资源",
+   "snn": [
+    "、",
+    "，"
+   ],
+   "qwen": [
+    "资本",
+    " "
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "的平台之上，实现资源要素",
+   "truth": "与生",
+   "snn": [
+    "，",
+    "。"
+   ],
+   "qwen": [
+    "的",
+    "在"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "小鸭来说是微不足道的。\n",
+   "truth": "虽然",
+   "snn": [
+    "\n",
+    "在"
+   ],
+   "qwen": [
+    " ",
+    "丑"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "的点点波澜，街头巷尾的早",
+   "truth": "点摊",
+   "snn": [
+    "，",
+    "。"
+   ],
+   "qwen": [
+    "茶",
+    "市"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "元。\n引江济淮工程沟通长",
+   "truth": "江、",
+   "snn": [
+    "，",
+    "、"
+   ],
+   "qwen": [
+    "淮",
+    "江西"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "，哪来的成功?谁说我们一",
+   "truth": "定要",
+   "snn": [
+    "，",
+    "。"
+   ],
+   "qwen": [
+    "无",
+    "无所"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "造业发展注入强大动能。今",
+   "truth": "天，",
+   "snn": [
+    "\n",
+    "，"
+   ],
+   "qwen": [
+    "\n",
+    "春"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "合同、重信用，与全国各地",
+   "truth": "的多",
+   "snn": [
+    "、",
+    "，"
+   ],
+   "qwen": [
+    "的",
+    "客户"
+   ],
+   "hit_snn": false,
+   "hit_qwen": true
+  },
+  {
+   "context": "依旧作威作福，但正如宣传",
+   "truth": "语中",
+   "snn": [
+    "在",
+    "，"
+   ],
+   "qwen": [
+    "语",
+    "所说"
+   ],
+   "hit_snn": false,
+   "hit_qwen": true
+  },
+  {
+   "context": "尊重的优秀人才。\n人才是",
+   "truth": "企业",
+   "snn": [
+    "，",
+    "在"
+   ],
+   "qwen": [
+    "第一",
+    "企业"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "半干半湿法：半干半湿法是",
+   "truth": "介于",
+   "snn": [
+    "，",
+    "、"
+   ],
+   "qwen": [
+    "将",
+    "介"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "其违法违规经营侵害群众利",
+   "truth": "益的",
+   "snn": [
+    "，",
+    "、"
+   ],
+   "qwen": [
+    "\n",
+    "。"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "气先。你这么关心我我很感",
+   "truth": "动啊",
+   "snn": [
+    "，",
+    "。"
+   ],
+   "qwen": [
+    "動",
+    "到了"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "目，由李英子、金生珉、全",
+   "truth": "炫茂",
+   "snn": [
+    "、",
+    "等"
+   ],
+   "qwen": [
+    "在",
+    "俊"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "做西餐，岛台的设计，也显",
+   "truth": "得很",
+   "snn": [
+    "，",
+    "。"
+   ],
+   "qwen": [
+    "的",
+    "贵"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "生57509起火灾。\n此",
+   "truth": "前一",
+   "snn": [
+    "月",
+    "年"
+   ],
+   "qwen": [
+    "数据",
+    "句"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "让老百姓明白了洗钱的危害",
+   "truth": "，掌",
+   "snn": [
+    "，",
+    "。"
+   ],
+   "qwen": [
+    "，",
+    "性"
+   ],
+   "hit_snn": true,
+   "hit_qwen": true
+  },
+  {
+   "context": "的欲望”。有时甚至忘记了",
+   "truth": "自己",
+   "snn": [
+    "，",
+    "\n"
+   ],
+   "qwen": [
+    "自己",
+    "自我"
+   ],
+   "hit_snn": false,
+   "hit_qwen": true
+  },
+  {
+   "context": "而不是新州政府。所有旅客",
+   "truth": "都须",
+   "snn": [
+    "，",
+    "、"
+   ],
+   "qwen": [
+    "在",
+    "必须"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "建奔驰的成立标志着福建汽",
+   "truth": "车工",
+   "snn": [
+    "，",
+    "。"
+   ],
+   "qwen": [
+    "配",
+    " "
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "荣登“2020江苏民营企",
+   "truth": "业制",
+   "snn": [
+    "”",
+    "年"
+   ],
+   "qwen": [
+    " ",
+    "\n"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "…正所谓“两江浮广厦，三",
+   "truth": "镇耸",
+   "snn": [
+    "”",
+    "”，"
+   ],
+   "qwen": [
+    "镇",
+    "楚"
+   ],
+   "hit_snn": false,
+   "hit_qwen": true
+  },
+  {
+   "context": "雨计划”捐款50万元，在",
+   "truth": "20",
+   "snn": [
+    "在",
+    "."
+   ],
+   "qwen": [
+    "云南",
+    "2"
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  },
+  {
+   "context": "学院、马克思主义学院。\n",
+   "truth": "主持",
+   "snn": [
+    "\n",
+    "、"
+   ],
+   "qwen": [
+    "-",
+    "  "
+   ],
+   "hit_snn": false,
+   "hit_qwen": false
+  }
+ ]
+}

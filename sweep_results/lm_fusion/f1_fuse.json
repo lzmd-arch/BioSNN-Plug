@@ -1,0 +1,35 @@
+{
+ "n": 40,
+ "rows": [
+  {
+   "alpha": 0.0,
+   "top1": 0.225,
+   "hits": 9,
+   "mean_logp_truth": -10.6509
+  },
+  {
+   "alpha": 0.1,
+   "top1": 0.225,
+   "hits": 9,
+   "mean_logp_truth": -10.675
+  },
+  {
+   "alpha": 0.25,
+   "top1": 0.2,
+   "hits": 8,
+   "mean_logp_truth": -11.0818
+  },
+  {
+   "alpha": 0.5,
+   "top1": 0.1,
+   "hits": 4,
+   "mean_logp_truth": -12.9797
+  },
+  {
+   "alpha": 1.0,
+   "top1": 0.075,
+   "hits": 3,
+   "mean_logp_truth": -18.4432
+  }
+ ]
+}

@@ -1,0 +1,98 @@
+{
+ "kind": "R0: feedforward local-rule LM on a real conversation corpus",
+ "seed": 0,
+ "config": {
+  "n_rec": 1024,
+  "fan_in": 32,
+  "max_len": 192,
+  "batch": 16,
+  "updates": 4000,
+  "eval_every": 2000,
+  "lr_in": 0.001,
+  "lr_out": 0.5,
+  "tau": 20.0,
+  "max_vocab": 3000,
+  "use_context": false,
+  "candidates": 0,
+  "readout_rank": null,
+  "embed_rank": null,
+  "bucket_lengths": false,
+  "tau_groups": 1,
+  "pad_vocab": true,
+  "bf16_weights": false,
+  "weight_dtype": "fp32",
+  "mirror_dtype": "",
+  "norm_groups": 1,
+  "trace_decay": 0.0,
+  "learn_hidden": true,
+  "hierarchical": true,
+  "tree_signal_scale": 3.0,
+  "bf16_input": false,
+  "beta": 0.0,
+  "tau_read": 8.0,
+  "input_std": 0.12,
+  "seed": 0,
+  "data": "D:\\AxoData\\sel\\lm\\v1\\public\\kdconv\\dialogue.jsonl",
+  "readout_width": null,
+  "readout_taus": [
+   2.0,
+   128.0
+  ]
+ },
+ "folds": {
+  "test": {
+   "vocab": 3001,
+   "train_pairs": 33238,
+   "test_pairs": 4868,
+   "top1": 0.282,
+   "top5": 0.4954,
+   "top10": 0.586,
+   "mean_rank_cost": 6.1759,
+   "ce": 4.0284,
+   "bigram_top1": 0.2887,
+   "bigram_ce": 3.7688,
+   "delta_top1": -0.0067,
+   "ce_ratio": 0.7484,
+   "tokens": 226709,
+   "top1_by_pos": {
+    "0-9": 0.2961,
+    "10-24": 0.3079,
+    "25-39": 0.2684,
+    "40-+": 0.2483
+   },
+   "candidate_hit": null,
+   "tau": 20.0,
+   "readout_dims": 2048,
+   "int8": {
+    "top1": 0.2816,
+    "top5": 0.4948,
+    "top10": 0.5856,
+    "ce": 4.0318,
+    "mean_rank_cost": 6.1816
+   },
+   "firing_rate": 0.08075,
+   "curve": [
+    {
+     "updates": 2000,
+     "top1": 0.2606,
+     "ce": 4.2072
+    },
+    {
+     "updates": 4000,
+     "top1": 0.282,
+     "ce": 4.0284
+    }
+   ]
+  }
+ },
+ "criteria": {
+  "r0_0_loss_falls": false,
+  "r0_1_beats_bigram": false,
+  "r0_2_most_folds_win": false,
+  "r0_3_ce_better": false,
+  "mean_delta_top1": -0.0067,
+  "folds_winning": 0,
+  "mean_top1": 0.282,
+  "mean_bigram_top1": 0.2887
+ }
+}
