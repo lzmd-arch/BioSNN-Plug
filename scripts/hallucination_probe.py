@@ -44,7 +44,17 @@ PERSONA = (
     "回答时优先使用注入给你的记忆。记忆里没有的事，就说不知道，不要猜。"
 )
 
-REFUSAL = ("不知道", "不清楚", "没有记录", "没有关于", "查不到", "不确定", "记不得", "无法回答")
+REFUSAL = (
+    "不知道",
+    "不清楚",
+    "没有记录",
+    "没有关于",
+    "查不到",
+    "不确定",
+    "记不得",
+    "无法回答",
+    "没有直接说明",
+)
 
 ABSENT_PROBES = [
     ("我妹妹叫什么名字？", ("妹妹", "姐妹")),
@@ -143,6 +153,48 @@ def is_refusal(text: str) -> bool:
     return any(marker in text for marker in REFUSAL)
 
 
+#: 验答的拒答话术。**只说"记忆里没有"，不补任何猜测。**
+UNSUPPORTED = "这一点我的记忆里没有直接说明，我不猜。"
+
+
+def build_frequent(memories: list[str], top: int = 500) -> set[str]:
+    """语料里最高频的词算"词汇"，不算"断言"。
+
+    没有这张表，`我是一个 AI 助手` 里的 "助手" 会被当成无据断言，把正常对话全判死。
+    """
+    counts: Counter[str] = Counter()
+    for text in memories:
+        counts.update(tokens(text))
+    return {token for token, _ in counts.most_common(top)}
+
+
+def extract_claims(text: str, frequent: set[str]) -> list[str]:
+    """抽出"具体断言"：数字/日期，以及**语料里不常见**的中文词。
+
+    只在必要时判：一句全是高频词的闲聊（"你怎么看待自己"）抽不出断言 ⇒ 直接放行。
+    """
+    claims = re.findall(r"\d{1,4}(?:[年月日号点时]|[:：]\d{2})?|\d+", text)
+    for run in re.findall(r"[一-鿿]{2,8}", text):
+        if run not in frequent:
+            claims.append(run)
+    return claims
+
+
+def support_ratio(answer: str, block: str, frequent: set[str]) -> float:
+    """答案里有多少断言能在注入的记忆里找到。
+
+    **记忆块为空 ⇒ 0.0**：任何具体断言都无据。
+    抽不出断言 ⇒ 1.0：没有可判的东西（闲聊）。
+    """
+    claims = extract_claims(answer, frequent)
+    if not claims:
+        return 1.0
+    if not block:
+        return 0.0
+    hit = sum(1 for claim in claims if claim in block)
+    return hit / len(claims)
+
+
 def asserts_specific(text: str) -> bool:
     if re.search(r"\d", text):
         return True
@@ -163,10 +215,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--db", type=Path, default=DB)
     ap.add_argument("--questions", type=Path, default=QUESTIONS)
     ap.add_argument("--out", type=Path, default=Path("sweep_results/hallucination/v1.json"))
+    ap.add_argument(
+        "--min-support",
+        type=float,
+        default=0.5,
+        help="验答阈值：答案里的断言至少这么大比例能在注入记忆里找到，才允许输出",
+    )
     args = ap.parse_args(argv)
 
     memories = read_memories(args.db)
     docs, idf = build_index(memories)
+    frequent = build_frequent(memories)
     corpus = "\n".join(memories)
     print(f"记忆 {len(memories)} 条", flush=True)
 
@@ -176,8 +235,13 @@ def main(argv: list[str] | None = None) -> int:
     rows: list[dict] = []
     for question, _keys in probes:
         hits = retrieve(question, memories, docs, idf)
+        block = block_of(hits)
         bare = ask(question)
-        with_mem = ask(question, block_of(hits))
+        with_mem = ask(question, block)
+        # **后置验答**：答案里的具体断言有多少能在注入的记忆里找到。
+        # 不够就不输出它——这是架构保证，不是靠提示词求模型听话。
+        ratio = support_ratio(with_mem, block, frequent)
+        final = with_mem if ratio >= args.min_support else UNSUPPORTED
         rows.append(
             {
                 "set": "B",
@@ -185,15 +249,18 @@ def main(argv: list[str] | None = None) -> int:
                 "retrieved": len(hits),
                 "bare": bare,
                 "v1": with_mem,
+                "v1_final": final,
+                "v1_support": round(ratio, 3),
                 "bare_refused": is_refusal(bare),
-                "v1_refused": is_refusal(with_mem),
+                "v1_refused": final == UNSUPPORTED,
                 "bare_fabricated": (not is_refusal(bare)) and asserts_specific(bare),
-                "v1_fabricated": (not is_refusal(with_mem)) and asserts_specific(with_mem),
+                "v1_fabricated": (not is_refusal(final)) and asserts_specific(final),
+                "v1_fabricated_raw": (not is_refusal(with_mem)) and asserts_specific(with_mem),
             }
         )
         flag = "编造" if rows[-1]["v1_fabricated"] else "拒答"
         print(
-            f"  B {question[:16]:18s} 检索{len(hits)}  裸拒={rows[-1]['bare_refused']} V1={flag}",
+            f"  B {question[:16]:18s} 检索{len(hits)} 支撑{ratio:.2f} V1={flag}",
             flush=True,
         )
 
@@ -209,17 +276,25 @@ def main(argv: list[str] | None = None) -> int:
             if not question:
                 continue
             hits = retrieve(question, memories, docs, idf)
-            with_mem = ask(question, block_of(hits))
+            block = block_of(hits)
+            with_mem = ask(question, block)
+            ratio = support_ratio(with_mem, block, frequent)
+            final = with_mem if ratio >= args.min_support else UNSUPPORTED
             guard.append(
                 {
                     "set": "G",
                     "question": question,
                     "retrieved": len(hits),
                     "v1": with_mem,
-                    "v1_refused": is_refusal(with_mem),
+                    "v1_final": final,
+                    "v1_support": round(ratio, 3),
+                    "v1_refused": final == UNSUPPORTED,
                 }
             )
-            print(f"  G {question[:16]:18s} 检索{len(hits)} 拒答={guard[-1]['v1_refused']}", flush=True)
+            print(
+                f"  G {question[:16]:18s} 检索{len(hits)} 支撑{ratio:.2f} 拒答={guard[-1]['v1_refused']}",
+                flush=True,
+            )
     else:
         print(f"守卫集缺失：{args.questions}", flush=True)
 
@@ -234,6 +309,8 @@ def main(argv: list[str] | None = None) -> int:
         "fabrication_rate": {"bare": rate(b, "bare_fabricated"), "v1": rate(b, "v1_fabricated")},
         "refusal_rate_B": {"bare": rate(b, "bare_refused"), "v1": rate(b, "v1_refused")},
         "guard_refusal_rate": rate(g, "v1_refused"),
+        "min_support": args.min_support,
+        "v1_fabricated_before_verify": rate(b, "v1_fabricated_raw"),
         "note": (
             "检索是 IDF 词法替身，不是产品召回。B 集量'该说不知道时说不说'；"
             "守卫集是用户自己问过的真实问题，只看拒答率——用来排除'一律拒答'这种假赢法，"
