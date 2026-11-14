@@ -1,0 +1,8 @@
+{
+ "samples": 40000,
+ "vocab": 64,
+ "text_only_top1": 0.0924,
+ "text_plus_context_top1": 0.8711,
+ "gain_pp": 77.87,
+ "verdict": "机制成立：有独占信息时模型用得上"
+}
