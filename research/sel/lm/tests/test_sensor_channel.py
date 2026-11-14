@@ -210,3 +210,38 @@ def test_ramp_encoder_places_thresholds_where_designed() -> None:
     model.sensors = None
     assert counts == sorted(counts), counts  # 单调
     assert counts[0] < counts[-1], counts  # 两端确实分开
+
+
+def test_protos_scale_with_pool_size() -> None:
+    """原型必须跟着池大小走。
+
+    `memory` / `persona` 的池 64 臂曾经整个丢掉，因为 `PROTOS` 写死成 (10, 16)，
+    `rng.normal(..., (batch, POOL))` 和它广播不上——整条臂静默失败，扫表里只留一个空行。
+    """
+    import numpy as np
+
+    from research.sel.lm.train_sensor_task import _protos
+
+    for n in (8, 16, 64, 128):
+        p = _protos(n)
+        assert p.shape == (10, n), (n, p.shape)
+        assert np.allclose(np.linalg.norm(p, axis=1), 1.0, atol=1e-5)
+    assert _protos(16) is _protos(16)  # 有缓存
+    assert not np.allclose(_protos(16)[:, :8], _protos(8))
+
+
+def test_design_encoder_with_multiple_pools_and_wide_blocks() -> None:
+    """多池 + 池宽 > 默认 16 时，编码必须写进**每池自己的行块**。
+
+    第一版用绝对输入列下标去索引局部的 `block`，单池（从 0 开始）恰好没暴露；
+    五池 + 池 64 直接越界，`memory`/`persona` 的两条臂整批静默消失。
+    """
+    model = _pooled(n_text=8, n_pool=4, n_extra=4)
+    for name, kind in (("a", "ramp"), ("b", "ortho")):
+        model.design_sensor_encoder(name, kind=kind, steps=2)
+    _i_a, c_a = model.sensor_pools["a"]
+    _i_b, c_b = model.sensor_pools["b"]
+    assert float(model.sensor_proj[:, c_a].abs().sum()) > 0
+    assert float(model.sensor_proj[:, c_b].abs().sum()) > 0
+    # 块外必须为零
+    assert float(model.sensor_proj.masked_select(~model._pool_mask).abs().max()) == 0.0

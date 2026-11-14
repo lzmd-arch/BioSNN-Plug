@@ -35,8 +35,18 @@ PREFIX = ["当前温度"]
 TEXT_N = 156
 POOL = 16
 POOLS = ("temp", "time", "memory", "persona", "presence")
-PROTOS = np.random.default_rng(11).normal(0, 1, (10, POOL)).astype(np.float32)
-PROTOS = (PROTOS / np.linalg.norm(PROTOS, axis=1, keepdims=True)).astype(np.float32)
+_PROTO_CACHE: dict[int, np.ndarray] = {}
+
+
+def _protos(n: int) -> np.ndarray:
+    """10 个长度为 ``n`` 的单位原型。**按池大小缓存**——原先写死成 POOL=16，
+    池 64 时形状对不上、直接崩（`memory`/`persona` 的池 64 臂就是这样丢的）。"""
+    if n not in _PROTO_CACHE:
+        r = np.random.default_rng(11).normal(0, 1, (10, n)).astype(np.float32)
+        _PROTO_CACHE[n] = (r / np.linalg.norm(r, axis=1, keepdims=True)).astype(np.float32)
+    return _PROTO_CACHE[n]
+
+
 #: 一个回合里模型真的跑几步（= 前缀 token 数）。`presence` 的随机游走长度必须等于它，
 #: 否则"答案取末值"的那个末值**从来没被喂进去**——这正是它单跑 0.24 的直接原因。
 _N_STEPS = 2
@@ -69,7 +79,7 @@ def _make_episode(name: str, batch: int, rng: np.random.Generator, persona_clust
             cl = rng.integers(0, 10, size=batch)
         else:
             cl = np.full(batch, persona_cluster)
-        v = PROTOS[cl] + rng.normal(0, 0.3, (batch, POOL)).astype(np.float32)
+        v = _protos(POOL)[cl] + rng.normal(0, 0.3, (batch, POOL)).astype(np.float32)
         s = np.zeros((POOL, batch, 1), dtype=np.float32)
         s[:, :, 0] = v.T.astype(np.float32)
         return cl, s, None
@@ -342,8 +352,14 @@ def main(argv=None) -> int:
                     x_tr = x_tr[:, probe_idx[p]]  # 与原型探针看同一批维度
                     y_tr = torch.stack(buf_y[p][:cut]).reshape(-1)
                     y_oh = torch.nn.functional.one_hot(y_tr, 10).float()
-                    a_ = x_tr.T @ x_tr + 1e-2 * torch.eye(x_tr.shape[1])
-                    w_lin = torch.linalg.solve(a_, x_tr.T @ y_oh)
+                    # **标准化再岭回归**：两个时间尺度的 EMA 范数差几个数量级，
+                    # 不标准化时 λ 在不同维度上的作用完全不同，解会病态
+                    # （`time` 池曾因此掉到 0.200 = 常数预测）。
+                    mu_ = x_tr.mean(0)
+                    sd_ = x_tr.std(0) + 1e-6
+                    xs_tr = (x_tr - mu_) / sd_
+                    a_ = xs_tr.T @ xs_tr + 1.0 * torch.eye(x_tr.shape[1])
+                    w_lin = torch.linalg.solve(a_, xs_tr.T @ y_oh)
                     proto_cos = proto / (proto.norm(dim=1, keepdim=True) + 1e-9)
                     acc = acc_cos = acc_lin = n = 0
                     r_acc = 0.0
@@ -367,7 +383,8 @@ def main(argv=None) -> int:
                         acc += int((d2.argmin(1).cpu().numpy() == a2).sum())
                         q_cos = q / (q.norm(dim=1, keepdim=True) + 1e-9)
                         acc_cos += int(((q_cos @ proto_cos.T).argmax(1).cpu().numpy() == a2).sum())
-                        acc_lin += int(((q @ w_lin).argmax(1).cpu().numpy() == a2).sum())
+                        q_std = (q - mu_) / sd_
+                        acc_lin += int(((q_std @ w_lin).argmax(1).cpu().numpy() == a2).sum())
                         n += args.batch
                     hit[p] = acc / max(n, 1)
                     hit_cos[p] = acc_cos / max(n, 1)

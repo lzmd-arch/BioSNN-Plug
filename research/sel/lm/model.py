@@ -511,7 +511,9 @@ class TokenEProp:
             # 单位正交行 × (thr/0.5)：单位范数输入下 |I| 最大到 2×阈值 ⇒ 既不塌也不饱和
             g = torch.Generator().manual_seed(1000 + 17 * seed)
             q, _ = torch.linalg.qr(torch.randn((n_col, n_col), generator=g))
-            block[i_sl, c_sl] = q.to(self.device) * (thr / 0.5)
+            # block 的行是**本池内部的**输入列（0..n_in），不是全局列号——
+            # 用绝对下标会在多池 + 池>16 时越界（单池恰好从 0 开始，把 bug 藏住了）
+            block[:, c_sl] = q.to(self.device) * (thr / 0.5)
         else:
             raise ValueError(f"未知的编码类型：{kind}")
         self.sensor_proj[i_sl] = block * float(scale)
