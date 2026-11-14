@@ -472,6 +472,7 @@ class TokenEProp:
         scale: float = 1.0,
         seed: int = 0,
         steps: int = 2,
+        levels: int = 0,
     ) -> None:
         """把某个池的输入投影**解析构造**出来，而不是随机抽。
 
@@ -499,7 +500,12 @@ class TokenEProp:
         thr = float(self.threshold) / gain
         block = torch.zeros((n_in, self.n_rec), device=self.device)
         if kind == "ramp":
-            xs = torch.linspace(lo, hi, n_col, device=self.device)
+            # `levels` < n_col 时**每级重复若干次**：神经元变多但分辨率不变。
+            # 这是把"数量"和"分辨率"分开的唯一办法。
+            n_lev = levels if levels and levels > 0 else n_col
+            xs = torch.linspace(lo, hi, n_lev, device=self.device)
+            if n_lev < n_col:
+                xs = xs.repeat_interleave(math.ceil(n_col / n_lev))[:n_col]
             block[0, c_sl] = thr / xs
         elif kind == "ortho":
             # 单位正交行 × (thr/0.5)：单位范数输入下 |I| 最大到 2×阈值 ⇒ 既不塌也不饱和

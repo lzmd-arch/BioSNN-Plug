@@ -113,6 +113,12 @@ def main(argv=None) -> int:
         default="random",
         help="random = 随机投影（旧口径）；design = 解析构造（ramp / ortho）",
     )
+    ap.add_argument(
+        "--encoder-levels",
+        type=int,
+        default=0,
+        help="温度计码的阈值级数；0 = 等于池神经元数（满分辨率）",
+    )
     ap.add_argument("--pool-size", type=int, default=16, help="每个池的神经元数（基因 B-4）")
     ap.add_argument("--tau-text", type=float, default=20.0, help="文本神经元的膜时间常数")
     ap.add_argument(
@@ -191,6 +197,7 @@ def main(argv=None) -> int:
                     scale=scales.get(name, args.init_scale),
                     seed=args.seed,
                     steps=n_steps,
+                    levels=args.encoder_levels,
                 )
             pools_done = True
         else:
@@ -301,6 +308,7 @@ def main(argv=None) -> int:
         if step % args.eval_every == 0:
             hit = {}
             hit_cos = {}
+            hit_lin = {}
             rates = {}
             cv = {}
             pool_means: dict[str, torch.Tensor] = {}
@@ -326,8 +334,18 @@ def main(argv=None) -> int:
                             else torch.zeros(z_pool.shape[1])
                         )
                     proto = torch.stack(protos)
+                    # **学习型读出**：岭回归闭式解。原型探针对"维度加权"敏感
+                    # （复制一维就等于给那一维加倍权重），所以必须另有一个自己学权重的
+                    # 读出，才能把"信息"和"度量"分开。
+                    cut = int(0.7 * len(buf_x[p]))
+                    x_tr = torch.stack(buf_x[p][:cut]).reshape(-1, model.readout_width)
+                    x_tr = x_tr[:, probe_idx[p]]  # 与原型探针看同一批维度
+                    y_tr = torch.stack(buf_y[p][:cut]).reshape(-1)
+                    y_oh = torch.nn.functional.one_hot(y_tr, 10).float()
+                    a_ = x_tr.T @ x_tr + 1e-2 * torch.eye(x_tr.shape[1])
+                    w_lin = torch.linalg.solve(a_, x_tr.T @ y_oh)
                     proto_cos = proto / (proto.norm(dim=1, keepdim=True) + 1e-9)
-                    acc = acc_cos = n = 0
+                    acc = acc_cos = acc_lin = n = 0
                     r_acc = 0.0
                     per_class: dict[int, list[float]] = {}
                     mean_feat = torch.zeros(len(probe_idx[p]))
@@ -349,9 +367,11 @@ def main(argv=None) -> int:
                         acc += int((d2.argmin(1).cpu().numpy() == a2).sum())
                         q_cos = q / (q.norm(dim=1, keepdim=True) + 1e-9)
                         acc_cos += int(((q_cos @ proto_cos.T).argmax(1).cpu().numpy() == a2).sum())
+                        acc_lin += int(((q @ w_lin).argmax(1).cpu().numpy() == a2).sum())
                         n += args.batch
                     hit[p] = acc / max(n, 1)
                     hit_cos[p] = acc_cos / max(n, 1)
+                    hit_lin[p] = acc_lin / max(n, 1)
                     rates[p] = r_acc / max(args.eval_batches, 1)
                     # **饱和检测**：各答案档之间发放率的变异系数。
                     # 标量平均发放率看不出饱和——饱和的特征是"档与档之间没有差别"。
@@ -386,7 +406,9 @@ def main(argv=None) -> int:
                 "cos": cos,
                 "corr": corr,
             }
-            detail = "  ".join(f"{p} e{hit[p]:.3f}/c{hit_cos[p]:.3f}" for p in pools)
+            detail = "  ".join(
+                f"{p} e{hit[p]:.3f}/c{hit_cos[p]:.3f}/l{hit_lin[p]:.3f}" for p in pools
+            )
             cv_s = "  ".join(f"{k} {v:.2f}" for k, v in cv.items())
             rate_s = (
                 "  " + "  ".join(f"{p} {rates[p]:.2f}" for p in pools) if args.arm != "zero" else ""

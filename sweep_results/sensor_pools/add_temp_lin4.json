@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["temp"], "steps": 400, "batch": 64, "init_scale": 1.0, "inhibition": 0.0, "hormone": "tonic", "receptors": "perpool", "tag": "lin4", "hit": {"temp": 0.89375}, "hit_cos": {"temp": 0.89375}, "rate": {"temp": 0.15726318359375}, "rate_cv": {"temp": 0.45754841428924964}, "norm": 34.12593078613281, "cos": {}, "corr": {}}
