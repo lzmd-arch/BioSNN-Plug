@@ -122,19 +122,18 @@ def main(argv=None) -> int:
                                tr, update=False, all_valid=True)
                     model.sensors = None
                     # 用树上 10 个数字 token 的路径概率当分类器
-                    # **kNN：非线性、无参数、不吃语言先验**——线性探针只能测"线性可解码"，
-                    # 树读出被先验淹没，两者都不干净。kNN 是唯一不带这两条假设的探针。
-                    # **只看传感器池的维**：全特征里 156 个恒定的文本维会把 16 个有信息的维稀释掉
-                    # （实测：全特征最近邻 [1,0,4,4,2,4,8,8,7,8]，只看池 [1,0,3,4,5,4,7,8,7,8]）。
-                    X = torch.stack(buf_x[-50:])[:, -2 * POOL :].reshape(-1, 2 * POOL)
+                    # **原型法**：每类取训练缓冲里的均值向量，查询按余弦最近归类。
+                    # 比 topk 简单、没有索引越界的空间；同样是非线性、无参数的探针。
+                    X = torch.stack(buf_x[-50:]).reshape(-1, model.readout_width)[:, -2 * POOL :]
                     Y = torch.stack(buf_y[-50:]).reshape(-1)
                     X = X / (X.norm(dim=1, keepdim=True) + 1e-9)
+                    protos = torch.stack(
+                        [X[Y == c].mean(0) if (Y == c).any() else torch.zeros(X.shape[1]) for c in range(10)]
+                    )
+                    protos = protos / (protos.norm(dim=1, keepdim=True) + 1e-9)
                     Q = model._features(tr)[:, -2 * POOL :]
                     Q = Q / (Q.norm(dim=1, keepdim=True) + 1e-9)
-                    sim = Q @ X.T
-                    topk = sim.topk(5, dim=1).indices
-                    votes = Y[topk]
-                    pred = torch.mode(votes, dim=1).values.cpu().numpy()
+                    pred = (Q @ protos.T).argmax(1).cpu().numpy()
                     hit += int((pred == t2).sum()); n += args.batch
             print(f"  [{args.arm}] {step} 步  评测 top-1 {hit/n:.3f}  ({time.time()-t0:.0f}s)", flush=True)
 
