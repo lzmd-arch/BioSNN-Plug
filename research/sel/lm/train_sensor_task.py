@@ -34,6 +34,10 @@ from research.sel.lm.model import TokenEProp
 PREFIX = ["当前温度"]
 TEXT_N = 156
 POOL = 16
+#: 逐池神经元数（`--pool-sizes`）；空时全部用 `--pool-size`
+POOL_SIZES: dict[str, int] = {}
+#: 逐池在传感器向量里的列偏移（由 `POOL_SIZES` 累加得到）
+POOL_OFFSET: dict[str, int] = {}
 POOLS = ("temp", "time", "memory", "persona", "presence")
 _PROTO_CACHE: dict[int, np.ndarray] = {}
 
@@ -53,9 +57,13 @@ _N_STEPS = 2
 
 
 def _pool_columns(name: str, pool_index: int) -> tuple[slice, slice]:
-    """该池的 (输入列, 神经元列)。输入列在 `sensors` 向量里，神经元列在 `n_rec` 里。"""
-    lo = pool_index * POOL
-    return slice(lo, lo + POOL), slice(TEXT_N + lo, TEXT_N + lo + POOL)
+    """该池的 (输入列, 神经元列)。输入列在 `sensors` 向量里，神经元列在 `n_rec` 里。
+
+    **逐池大小**：`POOL_SIZES` 给了就用它，否则用全局 `POOL`。
+    """
+    n = POOL_SIZES.get(name, POOL)
+    lo = POOL_OFFSET.get(name, pool_index * POOL)
+    return slice(lo, lo + n), slice(TEXT_N + lo, TEXT_N + lo + n)
 
 
 def _make_episode(name: str, batch: int, rng: np.random.Generator, persona_cluster: int):
@@ -66,21 +74,23 @@ def _make_episode(name: str, batch: int, rng: np.random.Generator, persona_clust
     """
     if name == "temp":
         t = rng.integers(0, 10, size=batch)
-        s = np.zeros((POOL, batch, 1), dtype=np.float32)
+        n = POOL_SIZES.get(name, POOL)
+        s = np.zeros((n, batch, 1), dtype=np.float32)
         s[0, :, 0] = t / 9.0  # 只有第 0 个输入列承载温度（与历史结果同口径）
         return t, s, None
     if name == "time":
         g = int(rng.integers(0, 10))
         # 张力性驱动：常数 1.0 一直给 ⇒ 池是一条随空步推进的斜坡（间隔计时的标准模型）
-        s = np.ones((POOL, batch, 1), dtype=np.float32)
+        s = np.ones((POOL_SIZES.get(name, POOL), batch, 1), dtype=np.float32)
         return np.full(batch, g), s, g
     if name in ("memory", "persona"):
         if name == "memory":
             cl = rng.integers(0, 10, size=batch)
         else:
             cl = np.full(batch, persona_cluster)
-        v = _protos(POOL)[cl] + rng.normal(0, 0.3, (batch, POOL)).astype(np.float32)
-        s = np.zeros((POOL, batch, 1), dtype=np.float32)
+        n = POOL_SIZES.get(name, POOL)
+        v = _protos(n)[cl] + rng.normal(0, 0.3, (batch, n)).astype(np.float32)
+        s = np.zeros((n, batch, 1), dtype=np.float32)
         s[:, :, 0] = v.T.astype(np.float32)
         return cl, s, None
     if name == "presence":
@@ -91,7 +101,7 @@ def _make_episode(name: str, batch: int, rng: np.random.Generator, persona_clust
         walk[0] = rng.integers(0, 10, size=batch)
         for k in range(1, _N_STEPS):
             walk[k] = np.clip(walk[k - 1] + rng.integers(-2, 3, size=batch), 0, 9)
-        s = np.zeros((POOL, batch, _N_STEPS), dtype=np.float32)
+        s = np.zeros((POOL_SIZES.get(name, POOL), batch, _N_STEPS), dtype=np.float32)
         # 只喂第 0 个输入列：16 列同值是 16 倍冗余，ramp 编码需要单一标量通道
         s[0] = (walk / 9.0).T
         return walk[-1], s, None
@@ -129,7 +139,11 @@ def main(argv=None) -> int:
         default=0,
         help="温度计码的阈值级数；0 = 等于池神经元数（满分辨率）",
     )
-    ap.add_argument("--pool-size", type=int, default=16, help="每个池的神经元数（基因 B-4）")
+    ap.add_argument("--pool-size", type=int, default=16, help="每个池的默认神经元数")
+    ap.add_argument(
+        "--pool-sizes", default="", help="逐池覆盖，如 temp:32,time:64（池与池可以不同）"
+    )
+    ap.add_argument("--text-neurons", type=int, default=156, help="文本神经元数")
     ap.add_argument("--tau-text", type=float, default=20.0, help="文本神经元的膜时间常数")
     ap.add_argument(
         "--tau-pool", type=float, default=0.0, help="池神经元的膜时间常数；0 = 与文本同值（同质）"
@@ -149,13 +163,25 @@ def main(argv=None) -> int:
 
     from research.sel.lm.subset_tokenizer import SubsetTokenizer
 
-    global POOL
+    global POOL, TEXT_N, POOL_SIZES, POOL_OFFSET
     POOL = int(args.pool_size)
+    TEXT_N = int(args.text_neurons)
     pools = [p for p in args.pools.split(",") if p]
+    POOL_SIZES = {}
+    for item in filter(None, args.pool_sizes.split(",")):
+        _k, _v = item.split(":")
+        POOL_SIZES[_k] = int(_v)
+    for p in pools:
+        POOL_SIZES.setdefault(p, POOL)
+    POOL_OFFSET, _acc = {}, 0
+    for p in pools:
+        POOL_OFFSET[p] = _acc
+        _acc += POOL_SIZES[p]
+    _sensor_dim = _acc
     for p in pools:
         if p not in POOLS:
             raise SystemExit(f"未知池 {p}")
-    n_rec = TEXT_N + POOL * len(pools)
+    n_rec = TEXT_N + _sensor_dim
     tok = SubsetTokenizer(args.subset.parent)
     digit_ids = [tok.encode(str(d)).ids[0] for d in range(10)]
     prefix_ids = tok.encode(PREFIX[0]).ids
@@ -176,7 +202,7 @@ def main(argv=None) -> int:
         tree_packed=True,
         tree_init_weight=False,
         embed_rank=256,
-        sensor_dim=POOL * len(pools),
+        sensor_dim=_sensor_dim,
         lr_in=1e-3,
         lr_out=0.5,
         generator=torch.Generator().manual_seed(0),
@@ -257,13 +283,13 @@ def main(argv=None) -> int:
     n_taus = len(model.readout_decays) if model.readout_decays is not None else 1
     probe_idx = {}
     rate_idx = {}
-    for k, name in enumerate(pools):
-        lo = TEXT_N + k * POOL
+    for name in pools:
+        lo = TEXT_N + POOL_OFFSET[name]
         idx = []
         for t in range(n_taus):
-            idx.extend(range(t * n_rec + lo, t * n_rec + lo + POOL))
+            idx.extend(range(t * n_rec + lo, t * n_rec + lo + POOL_SIZES[name]))
         probe_idx[name] = idx
-        rate_idx[name] = list(range(lo, lo + POOL))
+        rate_idx[name] = list(range(lo, lo + POOL_SIZES[name]))
 
     rng = np.random.default_rng(0)
     dev = model.device
@@ -289,9 +315,10 @@ def main(argv=None) -> int:
             else:
                 tgt = torch.full((batch,), seq[i + 1], dtype=torch.long, device=dev)
             if args.arm != "zero":
-                blk = sensors[:, :, min(i, sensors.shape[2] - 1)].T  # (batch, POOL)
-                full = np.zeros((batch, POOL * len(pools)), dtype=np.float32)
-                full[:, slot * POOL : (slot + 1) * POOL] = blk
+                blk = sensors[:, :, min(i, sensors.shape[2] - 1)].T
+                _off = POOL_OFFSET[name]
+                full = np.zeros((batch, _sensor_dim), dtype=np.float32)
+                full[:, _off : _off + POOL_SIZES[name]] = blk
                 model.sensors = torch.from_numpy(full).to(dev)
             model.step(tok_t, tgt, tr, update=update, all_valid=True)
             # 空步插在第一个 token 之后：张力性驱动的池在这段里推进，
@@ -434,6 +461,10 @@ def main(argv=None) -> int:
             names = list(pool_means)
             for a in range(len(names)):
                 for b in range(a + 1, len(names)):
+                    if pool_means[names[a]].numel() != pool_means[names[b]].numel():
+                        # 池与池大小不同时没有逐维对照，余弦无定义
+                        cos[f"{names[a]}-{names[b]}"] = float("nan")
+                        continue
                     u = pool_means[names[a]] / (pool_means[names[a]].norm() + 1e-9)
                     v = pool_means[names[b]] / (pool_means[names[b]].norm() + 1e-9)
                     cos[f"{names[a]}-{names[b]}"] = float(u @ v)
