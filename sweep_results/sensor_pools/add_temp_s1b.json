@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["temp"], "steps": 1500, "batch": 64, "init_scale": 32.0, "inhibition": 0.0, "hormone": "tonic", "receptors": "perpool", "tag": "s1b", "hit": {"temp": 0.309375}, "hit_cos": {"temp": 0.3046875}, "rate": {"temp": 0.21015625}, "rate_cv": {"temp": 0.19509557590325885}, "norm": 39.14369583129883, "cos": {}}

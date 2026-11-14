@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["temp"], "steps": 200, "batch": 64, "init_scale": 8.0, "inhibition": 0.0, "hormone": "scalar", "receptors": "perpool", "tag": "calib_s8", "hit": {"temp": 0.09375}, "hit_cos": {"temp": 0.1078125}, "rate": {"temp": 0.125}, "rate_cv": {"temp": 0.0}, "norm": 9.785682678222656, "cos": {}}

@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["presence"], "steps": 200, "batch": 64, "init_scale": 48.0, "inhibition": 0.0, "hormone": "scalar", "receptors": "perpool", "tag": "calib_s48", "hit": {"presence": 0.1671875}, "hit_cos": {"presence": 0.1671875}, "rate": {"presence": 0.01015625}, "rate_cv": {"presence": 0.9497155941550902}, "norm": 58.71409225463867, "cos": {}, "corr": {}}

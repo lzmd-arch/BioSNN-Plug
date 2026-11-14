@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["memory"], "steps": 200, "batch": 64, "init_scale": 4.0, "inhibition": 0.0, "hormone": "scalar", "receptors": "perpool", "tag": "calib_s4", "hit": {"memory": 0.95}, "hit_cos": {"memory": 0.95}, "rate": {"memory": 0.05458984375}, "rate_cv": {"memory": 0.40197027636020477}, "norm": 4.892841339111328, "cos": {}}

@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["persona"], "steps": 200, "batch": 64, "init_scale": 16.0, "inhibition": 0.0, "hormone": "scalar", "receptors": "perpool", "tag": "calib_s16", "hit": {"persona": 0.98125}, "hit_cos": {"persona": 0.9859375}, "rate": {"persona": 0.0134765625}, "rate_cv": {"persona": 0.4267570481928387}, "norm": 19.571365356445312, "cos": {}, "corr": {}}

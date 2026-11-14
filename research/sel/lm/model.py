@@ -351,8 +351,30 @@ class TokenEProp:
         #: 不是拍脑袋——今天三次"有界"尝试（脱敏/缩放/clip）都因为缺这条曲线而失败。
         import os as _os
 
+        #: **默认 0（关）**。曾经定过 10，依据是"clip 5/20/60 都是 0.306 ⇒ [5,60] 免费"。
+        #: 那次测量是在范数自然落在 10–32 的配置上做的；**按发放率标定后的温度池
+        #: 自然范数是 ~128**，此时 clip=10 实测把 top-1 从 0.306 削到 0.209（−9.7pp）。
+        #: ⇒ "免费"只在"自然范数本来就在区间内"时成立，不是普适结论。默认关，要就显式给。
         self.sensor_clip = float(_os.environ.get("AXO_SENSOR_CLIP", "0") or 0.0)
         self.sensors: torch.Tensor | None = None
+        #: **池结构**：`{池名: (输入列 slice, 神经元列 slice)}`。设了它之后，
+        #: `sensor_proj` 被强制成**块对角**——每个池只能写自己的神经元，
+        #: 别的模态写不进来。这是"功能分离"从训练脚本的约定升级成模型的结构约束：
+        #: 今天五个混杂因素里有两个（共享神经元、均值外积）就是靠脚本里的掩码，
+        #: 而掩码一旦忘了写就静默退回混合。
+        self.sensor_pools: dict[str, tuple[slice, slice]] = {}
+        self._pool_mask: torch.Tensor | None = None
+        #: **区间侧抑制**：池 r 的电流减去 γ·(其它池上一步的平均发放)。`None` = 关闭（逐位不变）。
+        #: 没有它，四个池会退化成彼此冗余的拷贝（设计文档 §二）。
+        self.cross_inhib: torch.Tensor | None = None
+        self.inhib_gain = 0.5
+        #: **激素状态**（多路、分时程）。长度 d 与 `sensor_receptors` 的最后一维一致。
+        #: `hormone_tonic_tau` = 紧张性（慢）成分的时间常数；相位性成分 = 当前值 − 紧张性。
+        self.hormone_state: torch.Tensor | None = None
+        self.hormone_tonic_tau = 20.0
+        self.hormone_phasic_share = 0.5
+        #: 每个池自己的受体向量（`(n_pools, d)`）；`None` 时退回全局单向量（逐位不变）。
+        self.sensor_receptor_matrix: torch.Tensor | None = None
         #: 传感器注入方式。``add`` = 加性电流（现行，冻结权重下的行为）；
         #: ``gate`` = **门控**：乘一个 (1+调制)，符合"神经调制改变增益而不是加偏置"。
         #: 默认 ``add`` ⇒ 逐位不变。
@@ -394,6 +416,130 @@ class TokenEProp:
             use_adapt=self.beta > 0.0,
             device=self.device,
         )
+
+    # -- 传感器池 / 激素 -------------------------------------------------------
+
+    def set_sensor_pools(self, pools: dict[str, tuple[slice, slice]]) -> None:
+        """登记池结构：``{池名: (输入列 slice, 神经元列 slice)}``。
+
+        登记之后 ``sensor_proj`` 被强制成**块对角**，并且每次更新后重新施加。
+        这把"功能分离"从训练脚本里的约定升级成**模型的结构约束**——
+        今天五个混杂因素里有两个（共享神经元、均值外积）原本只靠脚本里的掩码，
+        掩码一旦忘了写就静默退回混合。
+
+        同时按池结构建好**区间侧抑制矩阵**（``cross_inhib``）。
+        """
+        if self.sensor_proj is None:
+            raise ValueError("sensor_dim=0 时没有池可登记")
+        self.sensor_pools = {name: (sl[0], sl[1]) for name, sl in pools.items()}
+        mask = torch.zeros(self.sensor_proj.shape, dtype=torch.bool, device=self.device)
+        for i_sl, c_sl in self.sensor_pools.values():
+            mask[i_sl, c_sl] = True
+        self._pool_mask = mask
+        self.sensor_proj = self.sensor_proj * mask
+        self._build_cross_inhibition()
+
+    def _build_cross_inhibition(self) -> None:
+        """池 r 的目标列只接收**其它池**的平均发放；文本神经元不参与。
+
+        矩阵乘是 ``z @ cross_inhib``，``[i, j]`` 是"源神经元 i 对目标 j 的权重"。
+        """
+        if not self.sensor_pools or self.n_rec <= 0:
+            self.cross_inhib = None
+            return
+        n = self.n_rec
+        onehot = torch.zeros((len(self.sensor_pools), n), device=self.device)
+        for k, (_i, c_sl) in enumerate(self.sensor_pools.values()):
+            onehot[k, c_sl] = 1.0
+        same = onehot.T @ onehot                      # (n, n)：同一池为 1
+        in_pool = (onehot.sum(0) > 0).to(onehot.dtype)  # (n,)
+        diff = (1.0 - same) * in_pool.unsqueeze(0) * in_pool
+        count = diff.sum(0, keepdim=True).clamp(min=1.0)
+        self.cross_inhib = (diff / count).to(self.device)
+
+    def set_cross_inhibition(self, gain: float | None) -> None:
+        """``gain=None`` 关闭侧抑制（``cross_inhib`` 置空，逐位不变）。"""
+        if gain is None:
+            self.cross_inhib = None
+        else:
+            self.inhib_gain = float(gain)
+            self._build_cross_inhibition()
+
+    @property
+    def sensor_norm(self) -> float:
+        return 0.0 if self.sensor_proj is None else float(self.sensor_proj.norm())
+
+    def _hormone_raw(self, tree_signal: torch.Tensor, trace: LMTrace) -> torch.Tensor:
+        """三路**本地可得**的量：显著度（树的预测误差）/ 唤醒（发放率偏离基线）/ 新奇（读出变化）。"""
+        prev = getattr(self, "_prev_readout", None)
+        if prev is None:
+            prev = trace.readout.mean()
+        raw = torch.stack(
+            [
+                torch.tensor(float(tree_signal.mean()), dtype=torch.float32),
+                (trace.z.mean() - self.rate_baseline).abs(),
+                (trace.readout.mean() - prev).abs(),
+            ]
+        )
+        self._prev_readout = trace.readout.mean().detach().clone()
+        return raw.detach().to(torch.float32)
+
+    def _hormone_step(self, raw: torch.Tensor) -> torch.Tensor:
+        """分时程：紧张性（慢 EMA，设定点在高频行为上稳定）+ 相位性（相对慢基线的瞬态）。
+
+        ``hormone_tonic_tau`` 极大且 ``hormone_phasic_share=0`` 时退回"单一步进值"——
+        这是 S-7 的对照臂，它与旧行为逐位等价。
+        """
+        if self.hormone_state is None or self.hormone_state.numel() != raw.numel():
+            self.hormone_state = raw.clone()
+            return raw
+        rate = 1.0 / max(float(self.hormone_tonic_tau), 1.0)
+        tonic = self.hormone_state + (raw - self.hormone_state) * rate
+        self.hormone_state = tonic
+        share = float(self.hormone_phasic_share)
+        return tonic + share * (raw - tonic)
+
+    def _pool_gain(self, h: torch.Tensor) -> torch.Tensor:
+        """逐**输入列**的调制标量。分区受体时每个池用自己的 ρ_r；否则用全局向量。"""
+        if self.sensor_proj is None:
+            return h
+        n_in = self.sensor_proj.shape[0]
+        base = float(h @ self.sensor_receptors.to(h.dtype))
+        if self.sensor_receptor_matrix is None or not self.sensor_pools:
+            return torch.full((n_in,), base, dtype=torch.float32)
+        rows = self.sensor_receptor_matrix.shape[0]
+        gain = torch.full((n_in,), base, dtype=torch.float32)
+        for k, (i_sl, _c_sl) in enumerate(self.sensor_pools.values()):
+            rho = self.sensor_receptor_matrix[k % rows].to(h.dtype)
+            gain[i_sl] = float(h @ rho)
+        return gain
+
+    def _sensor_post_update(self, trace: LMTrace, h: torch.Tensor) -> None:
+        """更新后的四道整备，顺序有意义：脱敏 → 缩放 → 池结构 → 范数上限。
+
+        池结构放在缩放之后：缩放只看本池的发放率，不该跨池泄漏；
+        范数上限放最后，保证"任何一步之后都不超过 clip"。
+        """
+        lam = float(self.receptor_desensitize)
+        if lam > 0.0:
+            decay = (1.0 - lam * h.abs()).clamp(0.05, 1.0)
+            self.sensor_receptors = (self.sensor_receptors * decay).clamp(0.05, 1.0)
+            if self.sensor_receptor_matrix is not None:
+                self.sensor_receptor_matrix = (
+                    self.sensor_receptor_matrix * decay.unsqueeze(0)
+                ).clamp(0.05, 1.0)
+        alpha = float(self.synaptic_scaling)
+        if alpha > 0.0 and self.sensor_pools:
+            for _i_sl, c_sl in self.sensor_pools.values():
+                rate = float(trace.z[:, c_sl].mean())
+                ratio = (self.rate_baseline / max(rate, 1e-6)) ** alpha
+                self.sensor_proj[:, c_sl] *= ratio
+        if self._pool_mask is not None:
+            self.sensor_proj *= self._pool_mask
+        if self.sensor_clip > 0.0:
+            norm = float(self.sensor_proj.norm())
+            if norm > self.sensor_clip:
+                self.sensor_proj *= self.sensor_clip / norm
 
     # -- 前向与更新 ------------------------------------------------------------
 
@@ -517,8 +663,12 @@ class TokenEProp:
         learn_recurrent: bool = True,
         all_valid: bool = False,
         learn_mask: torch.Tensor | None = None,
+        blank: bool = False,
     ) -> tuple[torch.Tensor, int]:
         """跑一个时刻。返回 (逐样本 CE, 本步发放数)。
+
+        ``blank=True`` 是**空步**：没有文本电流，膜电位照样按 α 衰减、复发电流与
+        传感器电流照样进。``tokens`` 的内容被忽略（但形状要对）。
 
         ``all_valid=True`` 时走**全有效快路径**：跳过三个 ``torch.where(active...)`` 与
         ``* active`` 的乘法（实测每步省 4–5 个内核）。它与慢路径**逐位等价**——``active`` 全 1 时
@@ -537,8 +687,15 @@ class TokenEProp:
             current = self.D[tokens] + h_new @ self.C.T
             trace.h = torch.where(active > 0, h_new, trace.h)
         else:
-            direct = self.w_in[tokens] if self.emb is None else self.emb[tokens] @ self.proj
-            direct = direct.float()  # bf16 存储时升回 fp32，膜电位与阈值判据保持 fp32
+            if blank:
+                # **空步**：没有文本电流，只有复发电流与传感器电流。
+                # 时间/节奏池就用它——"输入间隔"在离散时间里就是"插入多少个空步"。
+                if self.recurrence == "ssm":
+                    raise ValueError("blank 步不支持 ssm 递推（它没有独立的 w_in 通路）")
+                direct = torch.zeros((batch, self.n_rec), device=trace.v.device, dtype=dtype)
+            else:
+                direct = self.w_in[tokens] if self.emb is None else self.emb[tokens] @ self.proj
+                direct = direct.float()  # bf16 存储时升回 fp32，膜电位与阈值判据保持 fp32
             current = direct + self._recurrent_current(z_previous)
         if self.sensor_proj is not None and self.sensors is not None:
             # 传感器向量加进**电流**而不是特征：它作用于膜电位，与输入通路正交，
@@ -548,6 +705,12 @@ class TokenEProp:
                 current = current * (1.0 + modulation)
             else:
                 current = current + modulation
+        if self.cross_inhib is not None:
+            # **区间侧抑制**：池 r 的电流减去 γ·(其它池上一步的平均发放)。
+            # 用上一步的 z，与复发电流同口径，不引入当前步内的先后依赖。
+            # 没有它，多池会退化成彼此冗余的拷贝（设计文档 §二）。
+            other = z_previous @ self.cross_inhib
+            current = current - self.inhib_gain * other
 
         alpha_used = self.alpha if self.n_groups == 1 else self.alpha_vec
         theta = self.threshold
@@ -586,7 +749,10 @@ class TokenEProp:
         if trace.eps_in_groups is None:
             if keep:
                 trace.eps_in = self.trace_decay * trace.eps_in
-                trace.eps_in.scatter_add_(1, tokens.reshape(-1, 1), active.to(trace.eps_in.dtype))
+                if not blank:
+                    trace.eps_in.scatter_add_(
+                        1, tokens.reshape(-1, 1), active.to(trace.eps_in.dtype)
+                    )
         else:
             groups = trace.eps_in_groups
             groups.mul_(self.group_alphas.view(-1, 1, 1))
@@ -628,24 +794,26 @@ class TokenEProp:
             and self.sensors is not None
             and tree_signal is not None
         ):
-            # **纯局部**：前 = 本批传感器均值，后 = 本步平均发放，调制 = 树给的标量激素。
+            # **纯局部**：前 = 本批传感器均值，后 = 本步平均发放，调制 = 激素向量。
             # 没有 .backward()、没有跨层误差路径。
-            hormones = torch.stack(
-                [
-                    torch.tensor(float(tree_signal.mean())),
-                    (trace.z.mean() - self.rate_baseline).abs(),
-                    (
-                        trace.readout.mean() - getattr(self, "_prev_readout", trace.readout.mean())
-                    ).abs(),
-                ]
-            )
-            self._prev_readout = trace.readout.mean().detach().clone()
-            hormone = float(hormones @ self.sensor_receptors.to(hormones.dtype))
+            raw = self._hormone_raw(tree_signal, trace)
+            h = self._hormone_step(raw)
+            gain = self._pool_gain(h)          # (sensor_dim,)：逐输入列的调制标量
+            # **必须去均值**：不去均值时外积是一条近乎恒定的方向，
+            # 学到的东西只会整体放大，不会把不同输入分开（历史记录：训练不改善、0.106）。
+            # 去均值之后它是**协方差**——逐样本的输入差异才落进权重。
+            c = self.sensors.to(torch.float32)
+            if c.dim() == 1:                 # 一条向量广播给整批（推理/测试里常见）
+                c = c.unsqueeze(0).expand(trace.z.shape[0], -1)
+            c = c - c.mean(0, keepdim=True)
+            z = trace.z.to(torch.float32)
+            z = z - z.mean(0, keepdim=True)
             self.sensor_proj += (
                 self.lr_sensor
-                * hormone
-                * torch.outer(self.sensors.mean(0).to(torch.float32), trace.z.mean(0))
+                * ((gain.to(torch.float32).unsqueeze(1) * c.T) @ z)
+                / max(c.shape[0], 1)
             )
+            self._sensor_post_update(trace, h)
         fired = trace.z.sum()
 
         if update:

@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["time"], "steps": 200, "batch": 64, "init_scale": 48.0, "inhibition": 0.0, "hormone": "scalar", "receptors": "perpool", "tag": "calib_s48", "hit": {"time": 0.1}, "hit_cos": {"time": 0.0}, "rate": {"time": 0.175}, "rate_cv": {"time": 1.2247448713915892}, "norm": 58.71409225463867, "cos": {}}

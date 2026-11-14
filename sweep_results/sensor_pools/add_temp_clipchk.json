@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["temp"], "steps": 1500, "batch": 64, "init_scale": 32.0, "inhibition": 0.0, "hormone": "tonic", "receptors": "perpool", "tag": "clipchk", "hit": {"temp": 0.209375}, "hit_cos": {"temp": 0.209375}, "rate": {"temp": 0.09208984375}, "rate_cv": {"temp": 0.3333333333333333}, "norm": 9.999999046325684, "cos": {}}

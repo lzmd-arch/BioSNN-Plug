@@ -1,9 +1,19 @@
-"""在**带传感器的合成任务**上训练小模型——这是"局部学习 + 独占输入"的最小闭环。
+"""在**带传感器的合成任务**上训练小模型——"局部学习 + 独占输入"的最小闭环。
 
-任务：序列 = 「前缀 token ... → 数字 token」，数字由传感器向量决定（温度→个位）。
-三臂只差传感器注入方式：`zero`（不给）/ `add`（加性）/ `gate`（门控）。
+任务骨架：文本前缀恒定（`当前温度`），**答案完全由该池决定**，
+所以 `zero` 臂只能到 0.109 附近（常数预测 + 噪声）。
 
-判据：`add` 与 `gate` 的 top-1 必须显著高于 `zero`；两者之间再分高下。
+| 池 | 驱动量 | 答案 |
+| :--- | :--- | :--- |
+| `temp` | 温度 t ∈ [0,9] → 标量 t/9，整段恒定 | t |
+| `time` | 张力性常数驱动 1.0，**空步数** g ∈ [0,9] | g |
+| `memory` | 16 维检索命中向量，**只在一次**（第 0 步）出现 | 原型号 |
+| `persona` | 16 维状态向量，**每一步都给**（持续语境） | 簇号 |
+| `presence` | 每步变化的标量（输入速率），答案取**最后一步** | 末值档 |
+
+五个池的区别是**时间结构**，不是"换了组随机数"：恒定标量 / 积分器 / 一次注入 /
+持续语境 / 时变跟踪。这是它们值得分开做的理由（预注册 §四）。
+
 **训练与推理全程无 autograd**（与主网络同一条纪律）。
 """
 
@@ -17,129 +27,305 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from research.sel.lm.hierarchical import build_huffman_paths, path_probabilities
+from research.sel.lm.hierarchical import build_huffman_paths
 from research.sel.lm.model import TokenEProp
 
 PREFIX = ["当前温度"]
+TEXT_N = 156
+POOL = 16
+POOLS = ("temp", "time", "memory", "persona", "presence")
+PROTOS = np.random.default_rng(11).normal(0, 1, (10, POOL)).astype(np.float32)
+
+
+def _pool_columns(name: str, pool_index: int) -> tuple[slice, slice]:
+    """该池的 (输入列, 神经元列)。输入列在 `sensors` 向量里，神经元列在 `n_rec` 里。"""
+    lo = pool_index * POOL
+    return slice(lo, lo + POOL), slice(TEXT_N + lo, TEXT_N + lo + POOL)
+
+
+def _make_episode(name: str, batch: int, rng: np.random.Generator, persona_cluster: int):
+    """返回 ``(答案, 传感器, 空步数)``。
+
+    传感器形状 ``(POOL, batch, T)``——第 ``t`` 个时间片；恒定池 ``T=1`` 时广播。
+    ``gaps`` 是**整批相同**的空步数（None = 不插）。
+    """
+    if name == "temp":
+        t = rng.integers(0, 10, size=batch)
+        s = np.zeros((POOL, batch, 1), dtype=np.float32)
+        s[0, :, 0] = t / 9.0          # 只有第 0 个输入列承载温度（与历史结果同口径）
+        return t, s, None
+    if name == "time":
+        g = int(rng.integers(0, 10))
+        # 张力性驱动：常数 1.0 一直给 ⇒ 池是一条随空步推进的斜坡（间隔计时的标准模型）
+        s = np.ones((POOL, batch, 1), dtype=np.float32)
+        return np.full(batch, g), s, g
+    if name in ("memory", "persona"):
+        if name == "memory":
+            cl = rng.integers(0, 10, size=batch)
+        else:
+            cl = np.full(batch, persona_cluster)
+        v = PROTOS[cl] + rng.normal(0, 0.3, (batch, POOL)).astype(np.float32)
+        s = np.zeros((POOL, batch, 1), dtype=np.float32)
+        s[:, :, 0] = v.T.astype(np.float32)
+        return cl, s, None
+    if name == "presence":
+        # 输入速率：从随机起点做有界随机游走，答案 = 最后一步所在的档
+        walk = np.zeros((5, batch), dtype=np.int64)
+        walk[0] = rng.integers(0, 10, size=batch)
+        for k in range(1, 5):
+            walk[k] = np.clip(walk[k - 1] + rng.integers(-2, 3, size=batch), 0, 9)
+        s = np.zeros((POOL, batch, 5), dtype=np.float32)
+        s[:] = (walk / 9.0).transpose(1, 0)[None, :, :]
+        return walk[-1], s, None
+    raise ValueError(name)
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", choices=("zero", "add", "gate"), required=True)
-    ap.add_argument("--subset", type=Path, default=Path("D:/AxoData/sel/lm/corpus/qwen_tok_fw2/subset_32k.json"))
+    ap.add_argument("--pools", default="temp", help="逗号分隔：temp,time,memory,persona,presence")
+    ap.add_argument("--subset", type=Path,
+                    default=Path("D:/AxoData/sel/lm/corpus/qwen_tok_fw2/subset_32k.json"))
     ap.add_argument("--counts", type=Path, default=Path("sweep_results/lm_10m/counts_32000.npy"))
     ap.add_argument("--steps", type=int, default=1500)
     ap.add_argument("--batch", type=int, default=64)
     ap.add_argument("--lr-sensor", type=float, default=0.05)
     ap.add_argument("--init-scale", type=float, default=1.0)
-    ap.add_argument("--out", type=Path, default=Path("sweep_results/sensor_task"))
+    ap.add_argument("--pool-scales", default="",
+                    help="逐池覆盖 init_scale，如 temp:32,time:2（空 = 用 --init-scale）")
+    ap.add_argument("--desensitize", type=float, default=0.05, help="受体脱敏 λ；0 = 关")
+    ap.add_argument("--clip", type=float, default=10.0, help="‖sensor_proj‖ 上限；0 = 不限")
+    ap.add_argument("--inhibition", type=float, default=0.0, help="侧抑制增益；0 = 关")
+    ap.add_argument("--hormone", choices=("scalar", "tonic"), default="tonic")
+    ap.add_argument("--receptors", choices=("global", "perpool"), default="perpool")
+    ap.add_argument("--eval-every", type=int, default=250)
+    ap.add_argument("--eval-batches", type=int, default=20)
+    ap.add_argument("--out", type=Path, default=Path("sweep_results/sensor_pools"))
+    ap.add_argument("--tag", default="")
     args = ap.parse_args(argv)
 
     from research.sel.lm.subset_tokenizer import SubsetTokenizer
 
-    tok = SubsetTokenizer(args.subset.parent)
+    pools = [p for p in args.pools.split(",") if p]
+    for p in pools:
+        if p not in POOLS:
+            raise SystemExit(f"未知池 {p}")
+    n_rec = TEXT_N + POOL * len(pools)
     counts = torch.from_numpy(np.load(args.counts)).float()
     paths = build_huffman_paths(counts)
-    vocab = 32000
-    TEXT_N = 156
-    POOL = 16            # **每个传感器模态一个独立池**，不占文本神经元
-    n_rec = TEXT_N + POOL
     model = TokenEProp(
-        vocab, n_rec, recurrence="none", readout_taus=(2.0, 128.0), tree=paths,
+        32000, n_rec, recurrence="none", readout_taus=(2.0, 128.0), tree=paths,
         tree_signal_scale=3.0, tree_packed=True, tree_init_weight=False,
-        embed_rank=256, sensor_dim=16, lr_in=1e-3, lr_out=0.5,
+        embed_rank=256, sensor_dim=POOL * len(pools), lr_in=1e-3, lr_out=0.5,
         generator=torch.Generator().manual_seed(0), device=torch.device("cpu"),
     )
-    # **功能分离**：文本只驱动前 TEXT_N 个神经元，传感器只驱动后 POOL 个。
-    # 不做分离时，传感器的 1e-2 量级分量挤不进由 O(1) 文本电流决定的发放模式——
-    # 这是今天六条排除之后剩下的那条解释。
+    # **功能分离由模型强制**：`set_sensor_pools` 把 sensor_proj 锁成块对角、每次更新后重施。
+    # 不再依赖训练脚本里的掩码——掩码忘了写就静默退回混合，今天已经吃过一次。
+    model.set_sensor_pools({name: _pool_columns(name, k) for k, name in enumerate(pools)})
     with torch.no_grad():
         # 文本→神经元的路径可能是 proj（低秩）、也可能是 w_in（稠密查找），两者都要挡住
         if getattr(model, "proj", None) is not None:
             model.proj[:, TEXT_N:] = 0.0
         if getattr(model, "w_in", None) is not None:
             model.w_in[:, TEXT_N:] = 0.0
-        sp = torch.zeros(model.sensor_proj.shape)
-        sp[:, TEXT_N:] = torch.randn(POOL, POOL, generator=torch.Generator().manual_seed(7)) * 3.0
-        model.sensor_proj = sp                       # 传感器只写自己的池
-    model.sensor_mode = "add" if args.arm != "gate" else "gate"
-    model.lr_sensor = args.lr_sensor
-    #: **非零初始化**：零初始化 + 比文本路径弱几个数量级的梯度 = 慢启动，
-    #: 通道可能从来没被真正启动过。按 n_rec 的标准差给一个可比的初始尺度。
-    if args.init_scale > 0:
-        g = torch.Generator().manual_seed(7)
-        model.sensor_proj = torch.randn(model.sensor_proj.shape, generator=g) * (
+        gen = torch.Generator().manual_seed(7)
+        model.sensor_proj = torch.randn(model.sensor_proj.shape, generator=gen) * (
             args.init_scale / (model.n_rec ** 0.5)
         )
+        # 逐池标定：每个池的驱动尺度是**分别测出来的**，不是同一个数
+        scales = {}
+        for item in filter(None, args.pool_scales.split(",")):
+            k, v = item.split(":")
+            scales[k] = float(v)
+        if scales:
+            for k, name in enumerate(pools):
+                if name not in scales:
+                    continue
+                i_sl, _c_sl = model.sensor_pools[name]
+                blk = torch.randn((i_sl.stop - i_sl.start, model.n_rec), generator=gen) * (
+                    scales[name] / (model.n_rec ** 0.5)
+                )
+                model.sensor_proj[i_sl] = blk
+        model.sensor_proj *= model._pool_mask
+    model.sensor_mode = "gate" if args.arm == "gate" else "add"
+    model.lr_sensor = args.lr_sensor
+    model.receptor_desensitize = args.desensitize
+    model.sensor_clip = args.clip
+    model.set_cross_inhibition(args.inhibition if args.inhibition > 0 else None)
+    if args.hormone == "scalar":
+        # 对照臂：紧张性时间常数 = 1 步 ⇒ 退化成"本步值"，与旧的单一标量逐位一致
+        model.hormone_tonic_tau = 1.0
+        model.hormone_phasic_share = 0.0
+    if args.receptors == "perpool" and len(pools) > 1:
+        rho = torch.tensor([1.0, 0.5, 0.5])
+        model.sensor_receptor_matrix = rho.repeat(len(pools), 1) * torch.linspace(
+            1.0, 0.6, len(pools)
+        ).unsqueeze(1)
+
+    tok = SubsetTokenizer(args.subset.parent)
     digit_ids = [tok.encode(str(d)).ids[0] for d in range(10)]
     prefix_ids = tok.encode(PREFIX[0]).ids
 
+    n_taus = 2
+    probe_idx = {}
+    rate_idx = {}
+    for k, name in enumerate(pools):
+        lo = TEXT_N + k * POOL
+        idx = []
+        for t in range(n_taus):
+            idx.extend(range(t * n_rec + lo, t * n_rec + lo + POOL))
+        probe_idx[name] = idx
+        rate_idx[name] = list(range(lo, lo + POOL))
+
     rng = np.random.default_rng(0)
     dev = model.device
-    #: 线性头：**评测必须用一个能表达这个任务的头**。树读出的概率被语言先验主导，
-    #: 实测在五种配置下 top-1 恒为 0.109（= 常数预测），分辨不出任何差别。
-    head_w = torch.zeros(model.readout_width, 10)
-    buf_x: list[torch.Tensor] = []
-    buf_y: list[torch.Tensor] = []
+    # **每个池自己的缓冲**：多池共存时混用一个缓冲会让原型被"别的池里同名的类"污染
+    # （实测 memory 0.931 → 0.459，全都不是模型的错）。
+    buf_x: dict[str, list[torch.Tensor]] = {p: [] for p in pools}
+    buf_y: dict[str, list[torch.Tensor]] = {p: [] for p in pools}
     t0 = time.time()
-    for step in range(1, args.steps + 1):
-        temp = rng.integers(0, 10, size=args.batch)
-        sensors = torch.zeros(args.batch, 16)
-        sensors[:, 0] = torch.tensor(temp / 9.0, dtype=torch.float32)
-        model.sensors = None if args.arm == "zero" else sensors.to(dev)
-        trace = model.new_trace(args.batch)
-        seq = prefix_ids + [digit_ids[0]]
-        for i in range(len(seq) - 1):
-            tok_t = torch.full((args.batch,), seq[i], dtype=torch.long, device=dev)
-            tgt = torch.tensor([digit_ids[int(t)] for t in temp], device=dev) if i == len(seq) - 2 else torch.full((args.batch,), seq[i + 1], dtype=torch.long, device=dev)
-            model.step(tok_t, tgt, trace, update=True, all_valid=True)
-        feats = model._features(trace)
-        buf_x.append(feats.detach()); buf_y.append(torch.tensor(temp))
-        if len(buf_x) > 200:
-            buf_x.pop(0); buf_y.pop(0)
-        model.sensors = None
-        if step % 250 == 0:
-            # 评测：同一任务、新样本
-            hit = n = 0
-            with torch.no_grad():
-                for _ in range(20):
-                    t2 = rng.integers(0, 10, size=args.batch)
-                    s2 = torch.zeros(args.batch, 16); s2[:, 0] = torch.tensor(t2 / 9.0)
-                    model.sensors = None if args.arm == "zero" else s2.to(dev)
-                    tr = model.new_trace(args.batch)
-                    # **步数必须与训练一致**：训练走 len(seq)-1 步（前缀 + 数字），
-                    # 这里原来只走 len(prefix_ids)-1 步——差一步，EMA 特征就系统性错位，
-                    # kNN 永远分不开。这是"池编码完美但任务 0.106"的直接原因。
-                    for i in range(len(prefix_ids) - 1):
-                        model.step(torch.full((args.batch,), prefix_ids[i], dtype=torch.long, device=dev),
-                                   torch.full((args.batch,), prefix_ids[i + 1], dtype=torch.long, device=dev),
-                                   tr, update=False, all_valid=True)
-                    # 训练最后一个前缀 token 也消费了（target 是数字），推理没有数字可给，
-                    # 用同一个 token 当占位——update=False 时 target 只影响损失，不影响状态。
-                    last = prefix_ids[-1]
-                    model.step(torch.full((args.batch,), last, dtype=torch.long, device=dev),
-                               torch.full((args.batch,), last, dtype=torch.long, device=dev),
-                               tr, update=False, all_valid=True)
-                    model.sensors = None
-                    # 用树上 10 个数字 token 的路径概率当分类器
-                    # **原型法**：每类取训练缓冲里的均值向量，查询按余弦最近归类。
-                    # 比 topk 简单、没有索引越界的空间；同样是非线性、无参数的探针。
-                    X = torch.stack(buf_x[-50:]).reshape(-1, model.readout_width)[:, -2 * POOL :]
-                    Y = torch.stack(buf_y[-50:]).reshape(-1)
-                    X = X / (X.norm(dim=1, keepdim=True) + 1e-9)
-                    protos = torch.stack(
-                        [X[Y == c].mean(0) if (Y == c).any() else torch.zeros(X.shape[1]) for c in range(10)]
-                    )
-                    protos = protos / (protos.norm(dim=1, keepdim=True) + 1e-9)
-                    Q = model._features(tr)[:, -2 * POOL :]
-                    Q = Q / (Q.norm(dim=1, keepdim=True) + 1e-9)
-                    pred = (Q @ protos.T).argmax(1).cpu().numpy()
-                    hit += int((pred == t2).sum()); n += args.batch
-            print(f"  [{args.arm}] {step} 步  评测 top-1 {hit/n:.3f}  ({time.time()-t0:.0f}s)", flush=True)
+    n_steps = len(prefix_ids)  # prefix + 数字位
 
-    out = {"arm": args.arm, "steps": args.steps, "batch": args.batch}
+    def run_episode(name, batch, rng_, persona_cluster, update, digit=None, slot=None):
+        ans, sensors, gaps = _make_episode(name, batch, rng_, persona_cluster)
+        if digit is not None:
+            # **标签必须跟着激励走**：原先只覆盖 ans 而不覆盖 gaps，
+            # 于是"答案"和"实际插了几个空步"对不上——节奏池因此被跑成随机。
+            ans = np.full(batch, int(gaps))
+        slot = pools.index(name) if slot is None else slot
+        tr = model.new_trace(batch)
+        seq = prefix_ids + [digit_ids[0]]
+        for i in range(n_steps):
+            tok_t = torch.full((batch,), seq[i], dtype=torch.long, device=dev)
+            if i == n_steps - 1:
+                tgt = torch.tensor([digit_ids[int(a)] for a in ans], device=dev)
+            else:
+                tgt = torch.full((batch,), seq[i + 1], dtype=torch.long, device=dev)
+            if args.arm != "zero":
+                blk = sensors[:, :, min(i, sensors.shape[2] - 1)].T   # (batch, POOL)
+                full = np.zeros((batch, POOL * len(pools)), dtype=np.float32)
+                full[:, slot * POOL:(slot + 1) * POOL] = blk
+                model.sensors = torch.from_numpy(full).to(dev)
+            model.step(tok_t, tgt, tr, update=update, all_valid=True)
+            # 空步插在第一个 token 之后：张力性驱动的池在这段里推进，
+            # 而文本神经元已在静息，所以差别只来自池。空步不产生梯度（target=-100）。
+            if gaps is not None and i == 0:
+                for _ in range(gaps):
+                    model.step(tok_t, torch.full_like(tgt, -100), tr,
+                               update=False, all_valid=True, blank=True)
+        if args.arm != "zero":
+            model.sensors = None
+        return ans, tr
+
+    last = {"hit": {}, "rate": {}, "norm": model.sensor_norm}
+    for step in range(1, args.steps + 1):
+        name = pools[(step - 1) % len(pools)]
+        # `time` 池每批一个 g，遍历 0..9 —— 与评测口径一致
+        digit = (step // len(pools)) % 10 if name == "time" else None
+        # **人格池的簇必须每回合随机**：原先用 8 个簇心循环，位置可被训练步数预测
+        # ⇒ `zero` 臂也能到 1.000（S-3 的泄露守卫正是为此写的）。
+        pcl = int(rng.integers(0, 10)) if name == "persona" else 0
+        ans, tr = run_episode(name, args.batch, rng, pcl, True, digit)
+        feats = model._features(tr)
+        bx, by = buf_x[name], buf_y[name]
+        bx.append(feats.detach()); by.append(torch.tensor(ans))
+        if len(bx) > 200:
+            bx.pop(0); by.pop(0)
+
+        if step % args.eval_every == 0:
+            hit = {}
+            hit_cos = {}
+            rates = {}
+            cv = {}
+            pool_means: dict[str, torch.Tensor] = {}
+            pool_act: dict[str, list[float]] = {p: [] for p in pools}
+            with torch.no_grad():
+                for p in pools:
+                    if not buf_x[p]:
+                        continue
+                    X = torch.stack(buf_x[p][-100:]).reshape(-1, model.readout_width)
+                    Y = torch.stack(buf_y[p][-100:]).reshape(-1)
+                    # **探针必须保留幅度**：余弦相似度对整体缩放不变，而标量驱动的池
+                    # （温度、节奏）把答案编码在**发放率**上——归一化会把唯一可分的那个
+                    # 维度抹掉。这里用"标准化 + 欧氏最近原型"，仍然无参数、无训练。
+                    Z = X[:, probe_idx[p]]
+                    # **两个探针都算**：余弦只看方向、欧氏看方向+幅度。哪个都不占优，
+                    # 所以 S-1 要求**两个探针同时过**——把"仪器决定的结论"挡在门外。
+                    protos = []
+                    for c in range(10):
+                        sel = (Y == c)
+                        protos.append(Z[sel].mean(0) if bool(sel.any()) else torch.zeros(Z.shape[1]))
+                    P = torch.stack(protos)
+                    Pcos = P / (P.norm(dim=1, keepdim=True) + 1e-9)
+                    acc = acc_cos = n = 0
+                    r_acc = 0.0
+                    per_class: dict[int, list[float]] = {}
+                    mean_feat = torch.zeros(len(probe_idx[p]))
+                    for j in range(args.eval_batches):
+                        dig = j % 10 if p == "time" else None
+                        a2, tr2 = run_episode(p, args.batch, rng, int(rng.integers(0, 10)),
+                                              False, dig)
+                        if args.arm != "zero":
+                            zz = tr2.z[:, rate_idx[p]].mean(1)   # 逐样本
+                            r_acc += float(zz.mean())
+                            for bb in range(len(a2)):
+                                per_class.setdefault(int(a2[bb]), []).append(float(zz[bb]))
+                        Q = model._features(tr2)[:, probe_idx[p]]
+                        mean_feat += Q.mean(0)
+                        # 逐样本的池活动：这是"两个池是否在重复同一件事"的**冗余**口径
+                        pool_act[p].extend(Q.mean(1).tolist())
+                        d2 = ((Q.unsqueeze(1) - P.unsqueeze(0)) ** 2).sum(-1)
+                        acc += int((d2.argmin(1).cpu().numpy() == a2).sum())
+                        Qc = Q / (Q.norm(dim=1, keepdim=True) + 1e-9)
+                        acc_cos += int(((Qc @ Pcos.T).argmax(1).cpu().numpy() == a2).sum())
+                        n += args.batch
+                    hit[p] = acc / max(n, 1)
+                    hit_cos[p] = acc_cos / max(n, 1)
+                    rates[p] = r_acc / max(args.eval_batches, 1)
+                    # **饱和检测**：各答案档之间发放率的变异系数。
+                    # 标量平均发放率看不出饱和——饱和的特征是"档与档之间没有差别"。
+                    cls = [sum(v) / len(v) for v in per_class.values() if v]
+                    if len(cls) > 1:
+                        mu = sum(cls) / len(cls)
+                        var = sum((c - mu) ** 2 for c in cls) / len(cls)
+                        cv[p] = (var ** 0.5) / mu if mu > 0 else 0.0
+                    else:
+                        cv[p] = 0.0
+                    pool_means[p] = mean_feat / max(args.eval_batches, 1)
+            cos = {}
+            corr = {}
+            names = list(pool_means)
+            for a in range(len(names)):
+                for b in range(a + 1, len(names)):
+                    u = pool_means[names[a]] / (pool_means[names[a]].norm() + 1e-9)
+                    v = pool_means[names[b]] / (pool_means[names[b]].norm() + 1e-9)
+                    cos[f"{names[a]}-{names[b]}"] = float(u @ v)
+                    x = torch.tensor(pool_act[names[a]])
+                    y = torch.tensor(pool_act[names[b]])
+                    x = x - x.mean(); y = y - y.mean()
+                    den = float(x.norm() * y.norm())
+                    corr[f"{names[a]}-{names[b]}"] = (
+                        float((x @ y) / den) if den > 0 else 0.0
+                    )
+            last = {"hit": hit, "hit_cos": hit_cos, "rate": rates, "rate_cv": cv,
+                    "norm": model.sensor_norm, "cos": cos, "corr": corr}
+            detail = "  ".join(f"{p} e{hit[p]:.3f}/c{hit_cos[p]:.3f}" for p in pools)
+            cv_s = "  ".join(f"{k} {v:.2f}" for k, v in cv.items())
+            rate_s = ("  " + "  ".join(f"{p} {rates[p]:.2f}" for p in pools)
+                      if args.arm != "zero" else "")
+            print(f"  [{args.arm}|{'+'.join(pools)}] {step} 步  top-1 {detail}"
+                  f"  发放率{rate_s}  CV {cv_s}"
+                  f"  ‖w‖ {model.sensor_norm:.2f}  ({time.time()-t0:.0f}s)",
+                  flush=True)
+
+    out = {"arm": args.arm, "pools": pools, "steps": args.steps, "batch": args.batch,
+           "init_scale": args.init_scale, "inhibition": args.inhibition,
+           "hormone": args.hormone, "receptors": args.receptors, "tag": args.tag, **last}
     args.out.mkdir(parents=True, exist_ok=True)
-    (args.out / f"{args.arm}.json").write_text(json.dumps(out) + "\n", encoding="utf-8", newline="\n")
+    key = f"{args.arm}_{'+'.join(pools)}" + (f"_{args.tag}" if args.tag else "")
+    (args.out / f"{key}.json").write_text(json.dumps(out, ensure_ascii=False) + "\n",
+                                          encoding="utf-8", newline="\n")
+    print(json.dumps(out, ensure_ascii=False), flush=True)
     return 0
 
 
