@@ -79,7 +79,7 @@ def main() -> int:
     )
     opt = torch.optim.AdamW(head.parameters(), lr=1e-3, weight_decay=1e-3)
     lossf = torch.nn.BCEWithLogitsLoss()
-    for ep in range(args.epochs):
+    for _ in range(args.epochs):
         opt.zero_grad()
         loss = lossf(head(Xtr).squeeze(-1), ytr)
         loss.backward()

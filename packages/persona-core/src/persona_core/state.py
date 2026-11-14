@@ -14,6 +14,27 @@ import time
 from dataclasses import dataclass, field
 
 
+def backbone_label(raw: str) -> str:
+    """把运行时给的模型标识压成一句人话。**必须是运行时传进来的那个**，
+    不能写死——"我现在用谁做嘴巴"只能来自实际连接的那个模型。
+
+    ``D:/models/Qwen3-4B-Q4_K_M.gguf`` → ``Qwen3-4B（Q4_K_M）``
+    ``deepseek-chat`` → ``deepseek-chat（云端）``
+    """
+    if not raw:
+        return "未知读者模型"
+    name = raw.replace("\\", "/").rsplit("/", 1)[-1]
+    for suffix in (".gguf", ".safetensors", ".bin"):
+        if name.endswith(suffix):
+            name = name[: -len(suffix)]
+    for quant in ("-Q4_K_M", "-Q5_K_M", "-Q6_K", "-Q8_0", "-Q4_0"):
+        if name.endswith(quant):
+            return f"{name[: -len(quant)]}（{quant[1:]}）"
+    if raw and ("/" not in name) and ("." not in name) and "qwen" not in name.lower():
+        return f"{name}（云端）"
+    return name
+
+
 @dataclass(frozen=True)
 class SelfState:
     """她此刻的状态。全部是**能查到的事实**，没有一项是估计。"""
@@ -49,18 +70,18 @@ class SelfState:
     def render(self, now: float | None = None) -> str:
         """**短**。云端每轮都要吃它，所以只写会改变回答方式的事实。"""
         bits = [
-            f"你的名字是{self.persona_name}，出生于 {self.birth_date}，"
-            f"现在 {int(self.age_years(now))} 岁。",
-            f"这一轮由「{self.backbone or '未知读者模型'}」来读你；"
-            f"记忆库里现在有 {self.memory_count} 条。",
-            "云端可用。" if self.online else "现在是离线状态，回答能力受限，要说清楚。",
+            f"我是{self.persona_name}，诞生于 {self.birth_date}，诞生那一刻就是 "
+            f"{self.age_at_birth} 岁；现在 {int(self.age_years(now))} 岁。",
+            f"我现在用「{backbone_label(self.backbone)}」做嘴巴；"
+            f"我的记忆库里现在有 {self.memory_count} 条。",
+            "云端可以用。" if self.online else "我现在是离线的，回答能力受限，我会说清楚。",
         ]
         if self.persona_in_weights:
-            bits.append("你的身份与行为约束已经长在权重里，不依赖这轮有没有带上人设文本。")
+            bits.append("我的身份与行为约束长在权重里，不依赖这一轮有没有带上人设文本。")
         if self.session_turns:
             bits.append(f"这次对话已经进行了 {self.session_turns} 轮。")
         if self.retrieval_used:
-            bits.append("这一轮你查过记忆；引用记忆时说明是从记忆里来的。")
+            bits.append("这一轮我查过记忆；引用时我会说明是从记忆里来的。")
         return "".join(bits)
 
     # -- 出口二：给融合模型的数值 --------------------------------------------

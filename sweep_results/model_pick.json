@@ -1,0 +1,22 @@
+[
+ {
+  "model": "qwen2.5-0.5b",
+  "params_M": 494.0,
+  "layers": 24,
+  "hidden": 896,
+  "vocab": 151936,
+  "bits_per_char": 3.806,
+  "train_tok_per_s": 162.0,
+  "peak_GiB": 4.71
+ },
+ {
+  "model": "mnn-pocket-0.3b",
+  "params_M": 302.8,
+  "layers": 28,
+  "hidden": 896,
+  "vocab": 65536,
+  "bits_per_char": 10.417,
+  "train_tok_per_s": 144.0,
+  "peak_GiB": 4.57
+ }
+]
