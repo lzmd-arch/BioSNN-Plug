@@ -64,6 +64,7 @@ def r5(a: str, e: str) -> float:
 
 def build(rng: random.Random, texts: list[tuple[str, float]]):
     claim, evid, label, tstamp = [], [], [], []
+    cross: list[tuple[str, str, float]] = []
     for text, ts in texts:
         sents = [s for s in re.split(r"[。！？\n]", text) if 8 <= len(s) <= 60]
         if not sents:
@@ -88,7 +89,8 @@ def build(rng: random.Random, texts: list[tuple[str, float]]):
             donor = re.findall(r"(?:叫|是|在|有)([\u4e00-\u9fff]{2,4})", wrong_text)
             if donor:
                 negs.append((text.replace(rng.choice(names), rng.choice(donor), 1), ts))
-        negs.append((wrong_text, wrong_ts))
+        # **跨条负例单独成组**：它的时间戳与正例不同，混进来会泄漏标签。
+        cross.append((c, wrong_text, wrong_ts))
         claim.append(c)
         evid.append(text)
         label.append(1)
@@ -99,7 +101,7 @@ def build(rng: random.Random, texts: list[tuple[str, float]]):
                 evid.append(neg)
                 label.append(0)
                 tstamp.append(nts)
-    return claim, evid, np.asarray(label, dtype=float), np.asarray(tstamp, dtype=np.float64)
+    return claim, evid, np.asarray(label, dtype=float), np.asarray(tstamp, dtype=np.float64), cross
 
 
 def auc(s: np.ndarray, y: np.ndarray) -> float:
@@ -145,16 +147,17 @@ def encode(texts: list[str]) -> np.ndarray:
 def main() -> int:
     rng = random.Random(0)
     texts = memories()
-    claim, evid, y, ts = build(rng, texts)
+    claim, evid, y, ts, cross = build(rng, texts)
     day = ts / 86400.0
     hour = (ts % 86400) / 3600.0
-    gap = np.concatenate([[0.0], np.abs(np.diff(day))])
+    weekday = (day % 7) / 7.0
+    # **只用与标签无关的量**：同一记忆的正负例取值必然相同，不可能泄漏。
     time_feats = np.stack(
         [
-            np.log1p(gap),
             np.sin(2 * math.pi * hour / 24),
             np.cos(2 * math.pi * hour / 24),
-            (gap < 1e-6).astype(float),
+            np.sin(2 * math.pi * weekday),
+            np.cos(2 * math.pi * weekday),
         ],
         axis=1,
     ).astype(np.float32)
@@ -193,11 +196,21 @@ def main() -> int:
     a_time = run("lr+time", with_time)
     run("snn", np.hstack([pca, base]))
 
+    # **标签置换检验**：打乱 y 重训，AUC 必须回到 0.5 附近。
+    # 不跑这一步，就分不清"有用"和"泄漏"——今天已经因此作废了两次结果。
+    perm_rng = np.random.default_rng(0)
+    perm_y = perm_rng.permutation(y)
+    perm_model = fit(with_time[tr], perm_y[tr])
+    perm_auc = auc(perm_model(with_time[te]), perm_y[te])
+    print(f"  标签置换 AUC {perm_auc:.4f}（应≈0.5）", flush=True)
+
     verdict = {
+        "perm_auc": round(float(perm_auc), 4),
+        "permutation_ok": bool(abs(perm_auc - 0.5) < 0.1),
         "time_gain": round(a_time - a_lr, 4),
         "time_useful": bool(a_time - a_lr >= 0.02),
     }
-    out = {"samples": len(y), "auc": scores, **verdict}
+    out = {"samples": len(y), "cross_negatives": len(cross), "auc": scores, **verdict}
     print("\n" + json.dumps(out, ensure_ascii=False, indent=1))
     path = Path("sweep_results/hallucination/grounding_compare.json")
     path.parent.mkdir(parents=True, exist_ok=True)

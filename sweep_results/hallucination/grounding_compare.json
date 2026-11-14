@@ -1,11 +1,14 @@
 {
- "samples": 400,
+ "samples": 280,
+ "cross_negatives": 122,
  "auc": {
-  "rule": 0.7524,
-  "lr": 0.8524,
-  "lr+time": 1.0,
-  "snn": 0.7629
+  "rule": 0.5441,
+  "lr": 0.6988,
+  "lr+time": 0.6688,
+  "snn": 0.6524
  },
- "time_gain": 0.1476,
- "time_useful": true
+ "perm_auc": 0.422,
+ "permutation_ok": true,
+ "time_gain": -0.03,
+ "time_useful": false
 }
