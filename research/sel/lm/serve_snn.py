@@ -106,19 +106,47 @@ def load_model(
     return model, tokenizer, int(blob["step"])
 
 
+#: 句子级向量的取法。**这是推理侧的选择，不改权重**——所以可以用它来问
+#: "编码能力是被池化埋了，还是本来就没有"。
+POOLINGS = {
+    "mean": "全位置均值",
+    "last": "最后一个位置",
+    "max": "逐维最大",
+    "tail_mean": "最后 32 个位置的均值",
+}
+
+
 @torch.no_grad()
-def encode_texts(model, tokenizer, texts: list[str], max_len: int = 256) -> torch.Tensor:
+def encode_texts(
+    model,
+    tokenizer,
+    texts: list[str],
+    max_len: int = 256,
+    pooling: str = "mean",
+    tail: bool = False,
+) -> torch.Tensor:
     """逐条编码（各自的 trace），返回 ``(n, M)`` 的 **L2 归一化** 矩阵。
 
-    向量取**各位置读出特征的均值**——这是这个模型唯一有的句子级表示。
+    两个曾是写死的选择，现在可传：
+
+    - ``pooling``：见 :data:`POOLINGS`。默认 ``mean`` 是历史口径。
+    - ``tail``：``False`` 取**前** ``max_len`` 个 token（历史口径），
+      ``True`` 取**后** ``max_len``——四万字的长记忆若只编码开头，几乎必然检索不到。
     """
+    if pooling not in POOLINGS:
+        raise ValueError(f"未知的 pooling：{pooling}（可选 {sorted(POOLINGS)}）")
     out = torch.zeros(len(texts), model.readout_width, dtype=torch.float32)
+    tail_k = min(32, max_len)
     for row, text in enumerate(texts):
-        ids = tokenizer.encode(text).ids[:max_len]
+        ids = tokenizer.encode(text).ids
+        ids = ids[-max_len:] if tail else ids[:max_len]
         if len(ids) < 2:
             continue
         trace = model.new_trace(1)
         acc = torch.zeros(model.readout_width, device=model.device)
+        kept = 0
+        recent: list[torch.Tensor] = []
+        peak = None
         for step in range(len(ids) - 1):
             model.step(
                 torch.tensor([ids[step]], device=model.device),
@@ -127,8 +155,25 @@ def encode_texts(model, tokenizer, texts: list[str], max_len: int = 256) -> torc
                 update=False,
                 all_valid=True,
             )
-            acc += model._features(trace)[0]
-        out[row] = (acc / (len(ids) - 1)).cpu()
+            features = model._features(trace)[0]
+            acc += features
+            kept += 1
+            if pooling == "tail_mean":
+                recent.append(features)
+                if len(recent) > tail_k:
+                    recent.pop(0)
+            if pooling == "max":
+                peak = features if peak is None else torch.maximum(peak, features)
+        if kept == 0:
+            continue
+        if pooling == "mean":
+            out[row] = (acc / kept).cpu()
+        elif pooling == "last":
+            out[row] = features.cpu()
+        elif pooling == "max":
+            out[row] = peak.cpu()
+        else:  # tail_mean
+            out[row] = torch.stack(recent).mean(dim=0).cpu()
     norms = out.norm(dim=1, keepdim=True).clamp(min=1e-12)
     return out / norms
 
@@ -506,7 +551,10 @@ def main(argv: list[str] | None = None) -> int:
                 return
             length = int(self.headers.get("Content-Length", "0"))
             try:
-                texts = json.loads(self.rfile.read(length) or b"{}").get("texts") or []
+                body = json.loads(self.rfile.read(length) or b"{}")
+                texts = body.get("texts") or []
+                pooling = str(body.get("pooling") or "mean")
+                tail = bool(body.get("tail"))
                 if not isinstance(texts, list):
                     raise ValueError("texts 必须是字符串数组")
             except Exception as exc:
@@ -516,7 +564,7 @@ def main(argv: list[str] | None = None) -> int:
                 self._send(200, {"vectors": [], "dim": model.readout_width, "space_id": space})
                 return
             with lock:  # 单模型的 trace 不共享，串行化最省心
-                matrix = encode_texts(model, tokenizer, texts)
+                matrix = encode_texts(model, tokenizer, texts, pooling=pooling, tail=tail)
             self._send(
                 200,
                 {
