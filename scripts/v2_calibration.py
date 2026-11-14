@@ -12,8 +12,7 @@
 
 from __future__ import annotations
 
-# ruff: noqa: N803, N806
-
+# ruff: noqa: N806
 import json
 import math
 import sys
@@ -22,8 +21,8 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from scripts.v2_s0 import OUT, _setup  # noqa: E402
-from scripts.v2_s0b import S_TAU1, _masked_lp, fit  # noqa: E402
+from scripts.v2_s0 import OUT, _setup
+from scripts.v2_s0b import _masked_lp, fit
 
 
 def _ece(prob: np.ndarray, hit: np.ndarray, bins: int = 10) -> float:
@@ -41,7 +40,6 @@ def _ece(prob: np.ndarray, hit: np.ndarray, bins: int = 10) -> float:
 def _report(logq, y, mask, name: str) -> dict:
     lp = _masked_lp(logq, mask)
     n = len(y)
-    prob_true = np.exp(lp[np.arange(n), y])
     pred = lp.argmax(1)
     hit = (pred == y).astype(float)
     conf = np.exp(lp.max(1))
