@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["persona"], "steps": 400, "batch": 64, "init_scale": 1.0, "inhibition": 0.0, "hormone": "tonic", "receptors": "perpool", "tag": "mh", "hit": {"persona": 0.7984375}, "hit_cos": {"persona": 0.7953125}, "rate": {"persona": 0.0370361328125}, "rate_cv": {"persona": 0.045349250286497673}, "norm": 81.34358215332031, "cos": {}, "corr": {}}

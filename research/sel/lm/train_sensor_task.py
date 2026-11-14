@@ -410,7 +410,13 @@ def main(argv=None) -> int:
                     # 且**对"复制一维"不敏感**——白化后复制的那一维落在零空间里，
                     # 距离不变。这比线性读出和 kNN 都更适合当主判据：
                     # kNN 在维数升高时会因距离集中而崩（实测 512 维只有 0.31）。
-                    _cm = torch.stack([xs_tr[y_tr == c].mean(0) for c in range(10)])
+                    _gmean = xs_tr.mean(0)
+                    _cm = torch.stack(
+                        [
+                            xs_tr[y_tr == c].mean(0) if bool((y_tr == c).any()) else _gmean
+                            for c in range(10)
+                        ]
+                    )
                     _res = xs_tr - _cm[y_tr]
                     _cov = _res.T @ _res / max(len(y_tr) - 1, 1)
                     _tr = torch.diagonal(_cov).mean()
