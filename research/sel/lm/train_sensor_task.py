@@ -36,6 +36,7 @@ TEXT_N = 156
 POOL = 16
 POOLS = ("temp", "time", "memory", "persona", "presence")
 PROTOS = np.random.default_rng(11).normal(0, 1, (10, POOL)).astype(np.float32)
+PROTOS = (PROTOS / np.linalg.norm(PROTOS, axis=1, keepdims=True)).astype(np.float32)
 #: 一个回合里模型真的跑几步（= 前缀 token 数）。`presence` 的随机游走长度必须等于它，
 #: 否则"答案取末值"的那个末值**从来没被喂进去**——这正是它单跑 0.24 的直接原因。
 _N_STEPS = 2
@@ -81,7 +82,8 @@ def _make_episode(name: str, batch: int, rng: np.random.Generator, persona_clust
         for k in range(1, _N_STEPS):
             walk[k] = np.clip(walk[k - 1] + rng.integers(-2, 3, size=batch), 0, 9)
         s = np.zeros((POOL, batch, _N_STEPS), dtype=np.float32)
-        s[:] = (walk / 9.0).transpose(1, 0)[None, :, :]
+        # 只喂第 0 个输入列：16 列同值是 16 倍冗余，ramp 编码需要单一标量通道
+        s[0] = (walk / 9.0).T
         return walk[-1], s, None
     raise ValueError(name)
 
@@ -105,6 +107,12 @@ def main(argv=None) -> int:
     )
     ap.add_argument("--desensitize", type=float, default=0.05, help="受体脱敏 λ；0 = 关")
     ap.add_argument("--clip", type=float, default=10.0, help="‖sensor_proj‖ 上限；0 = 不限")
+    ap.add_argument(
+        "--encoder",
+        choices=("random", "design"),
+        default="random",
+        help="random = 随机投影（旧口径）；design = 解析构造（ramp / ortho）",
+    )
     ap.add_argument("--seed", type=int, default=0, help="池初值的随机种子（配对比较用）")
     ap.add_argument("--inhibition", type=float, default=0.0, help="侧抑制增益；0 = 关")
     ap.add_argument("--hormone", choices=("scalar", "tonic"), default="tonic")
@@ -122,6 +130,12 @@ def main(argv=None) -> int:
         if p not in POOLS:
             raise SystemExit(f"未知池 {p}")
     n_rec = TEXT_N + POOL * len(pools)
+    tok = SubsetTokenizer(args.subset.parent)
+    digit_ids = [tok.encode(str(d)).ids[0] for d in range(10)]
+    prefix_ids = tok.encode(PREFIX[0]).ids
+    n_steps = len(prefix_ids)  # 前缀 + 数字位
+    global _N_STEPS
+    _N_STEPS = n_steps
     counts = torch.from_numpy(np.load(args.counts)).float()
     paths = build_huffman_paths(counts)
     model = TokenEProp(
@@ -158,7 +172,21 @@ def main(argv=None) -> int:
             scales[k] = float(v)
         ref = math.sqrt(TEXT_N + POOL)
         model.sensor_proj = torch.zeros_like(model.sensor_proj)
-        for name in pools:
+        if args.encoder == "design":
+            # 1 维标量池 → 温度计码；向量池 → 正交投影。尺度仍由 --init-scale 标定。
+            for name in pools:
+                kind = "ramp" if name in ("temp", "time", "presence") else "ortho"
+                model.design_sensor_encoder(
+                    name,
+                    kind=kind,
+                    scale=scales.get(name, args.init_scale),
+                    seed=args.seed,
+                    steps=n_steps,
+                )
+            pools_done = True
+        else:
+            pools_done = False
+        for name in [] if pools_done else pools:
             sc = scales.get(name, args.init_scale)
             i_sl, _c_sl = model.sensor_pools[name]
             gb = torch.Generator().manual_seed(1000 + 17 * POOLS.index(name) + 7919 * args.seed)
@@ -181,10 +209,6 @@ def main(argv=None) -> int:
             1.0, 0.6, len(pools)
         ).unsqueeze(1)
 
-    tok = SubsetTokenizer(args.subset.parent)
-    digit_ids = [tok.encode(str(d)).ids[0] for d in range(10)]
-    prefix_ids = tok.encode(PREFIX[0]).ids
-
     n_taus = 2
     probe_idx = {}
     rate_idx = {}
@@ -203,9 +227,6 @@ def main(argv=None) -> int:
     buf_x: dict[str, list[torch.Tensor]] = {p: [] for p in pools}
     buf_y: dict[str, list[torch.Tensor]] = {p: [] for p in pools}
     t0 = time.time()
-    n_steps = len(prefix_ids)  # prefix + 数字位
-    global _N_STEPS
-    _N_STEPS = n_steps
 
     def run_episode(name, batch, rng_, persona_cluster, update, digit=None, slot=None):
         ans, sensors, gaps = _make_episode(name, batch, rng_, persona_cluster)

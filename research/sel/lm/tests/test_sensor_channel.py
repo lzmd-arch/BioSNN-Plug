@@ -176,3 +176,38 @@ def test_pools_are_disjoint() -> None:
             seen_col.add(j)
     assert len(seen_in) == POOL * len(POOLS)
     assert len(seen_col) == POOL * len(POOLS)
+
+
+# -- 解析编码：温度计码的阈值必须落在设计的位置 -------------------------------
+
+
+def test_ramp_encoder_places_thresholds_where_designed() -> None:
+    """`design_sensor_encoder(kind="ramp")` 的解析解必须真的成立。
+
+    修这条的时候踩过一次：用**稳态**增益 `I/(1−α)` 会把阈值放到 10 倍远处，
+    整池静默（发放率 0.00）。回合只有几步，必须用 n 步**暂态**解。
+    """
+    import numpy as np
+
+    model = _pooled(n_text=8, n_pool=8, n_extra=0)
+    with torch.no_grad():
+        if getattr(model, "proj", None) is not None:
+            model.proj[:, 8:] = 0.0
+        if getattr(model, "w_in", None) is not None:
+            model.w_in[:, 8:] = 0.0
+    model.design_sensor_encoder("a", kind="ramp", lo=0.1, hi=0.9, steps=6)
+    # 设计意图：标量 s 越大，池内发放的神经元越多（温度计码）
+    counts = []
+    for s in (0.05, 0.3, 0.6, 0.85, 0.95):
+        model.sensors = torch.zeros(8)
+        model.sensors[0] = s
+        tr = model.new_trace(1)
+        tok = torch.full((1,), 3, dtype=torch.long)
+        total = torch.zeros(8)
+        for _ in range(6):
+            model.step(tok, tok, tr, update=False)
+            total += tr.z[0, 8:]      # **累计**：只看最后一步会被不应期错开相位
+        counts.append(float(total.sum()))
+    model.sensors = None
+    assert counts == sorted(counts), counts          # 单调
+    assert counts[0] < counts[-1], counts            # 两端确实分开

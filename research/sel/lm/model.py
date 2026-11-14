@@ -457,6 +457,53 @@ class TokenEProp:
         count = diff.sum(0, keepdim=True).clamp(min=1.0)
         self.cross_inhib = (diff / count).to(self.device)
 
+    def design_sensor_encoder(
+        self,
+        name: str,
+        kind: str = "ramp",
+        lo: float = 0.05,
+        hi: float = 0.95,
+        scale: float = 1.0,
+        seed: int = 0,
+        steps: int = 2,
+    ) -> None:
+        """把某个池的输入投影**解析构造**出来，而不是随机抽。
+
+        理由（2026-11-14 实测）：同一任务、同一尺度、同一训练步数，只换随机种子，
+        1 维标量池的 top-1 在 0.097–0.223 之间跳；而训练曲线从 250 步到 6000 步是平的。
+        ⇒ **是抽签决定成败，不是学习**。既然如此，就不该让编码去抽。
+
+        ``kind="ramp"``：1 维标量 → **温度计码**。神经元 j 的输入权重取
+        ``θ(1−α)/s*_j``，使它在标量值 ``s*_j`` 处刚好越过阈值，``s*`` 在 ``[lo, hi]``
+        上等间距铺开。这是 LIF 稳态 ``v = I/(1−α)`` 的解析反解，不是拟合。
+
+        ``kind="ortho"``：d 维向量 → **正交投影**（QR）。保证各列条件数一致，
+        不会出现"随机抽到近共线 ⇒ 整池塌在一个方向上"。
+        """
+        if name not in self.sensor_pools:
+            raise KeyError(f"未登记的池：{name}")
+        i_sl, c_sl = self.sensor_pools[name]
+        n_in = i_sl.stop - i_sl.start
+        n_col = c_sl.stop - c_sl.start
+        # **必须用暂态增益，不是稳态增益**：回合只有几步，膜电位到不了 ``I/(1−α)``。
+        # 从静止起 n 步、恒定电流下 ``v_n = I·(1−αⁿ)/(1−α)``。
+        # 用稳态值会把阈值放到 10 倍远处——实测整池静默（发放率 0.00）。
+        a = float(self.alpha)
+        gain = (1.0 - a ** max(int(steps), 1)) / (1.0 - a)
+        thr = float(self.threshold) / gain
+        block = torch.zeros((n_in, self.n_rec), device=self.device)
+        if kind == "ramp":
+            xs = torch.linspace(lo, hi, n_col, device=self.device)
+            block[0, c_sl] = thr / xs
+        elif kind == "ortho":
+            # 单位正交行 × (thr/0.5)：单位范数输入下 |I| 最大到 2×阈值 ⇒ 既不塌也不饱和
+            g = torch.Generator().manual_seed(1000 + 17 * seed)
+            q, _ = torch.linalg.qr(torch.randn((n_col, n_col), generator=g))
+            block[i_sl, c_sl] = q.to(self.device) * (thr / 0.5)
+        else:
+            raise ValueError(f"未知的编码类型：{kind}")
+        self.sensor_proj[i_sl] = block * float(scale)
+
     def set_cross_inhibition(self, gain: float | None) -> None:
         """``gain=None`` 关闭侧抑制（``cross_inhib`` 置空，逐位不变）。"""
         if gain is None:
