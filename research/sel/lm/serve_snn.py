@@ -463,6 +463,10 @@ def main(argv: list[str] | None = None) -> int:
                     k = int(body.get("k") or 10)
                     sensors = body.get("sensors")
                     session = body.get("session") or None
+                    # **上下文上限可传**：默认 256（训练时的窗口），长流实验要放大。
+                    # 放大是有代价的——模型是逐时刻递推的，步数上去了状态会被稀释，
+                    # 所以这不是"越大越好"的旋钮，是一个要测的量。
+                    max_len = int(body.get("max_len") or 256)
                 except Exception as exc:
                     self._send(400, {"error": f"{type(exc).__name__}: {exc}"})
                     return
@@ -475,7 +479,9 @@ def main(argv: list[str] | None = None) -> int:
                         else None
                     )
                     items = (
-                        complete_beam(model, tokenizer, context, k, session=session)
+                        complete_beam(
+                            model, tokenizer, context, k, max_len=max_len, session=session
+                        )
                         if BEAM > 0
                         else complete(model, tokenizer, context, k)
                     )

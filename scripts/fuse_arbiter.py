@@ -86,6 +86,12 @@ def fuse_table(slow: list[tuple[str, float]], fast: list[tuple[str, float]], alp
     return table
 
 
+def _mass_log(table: dict[str, float], truth: str) -> float:
+    total = sum(math.exp(v) for v in table.values()) or 1e-12
+    hit = sum(math.exp(v) for t, v in table.items() if t and truth.startswith(t))
+    return math.log(max(hit / total, 1e-12))
+
+
 def best_of(table: dict[str, float]) -> str:
     return max(table.items(), key=lambda kv: kv[1])[0] if table else ""
 
@@ -215,6 +221,9 @@ def main(argv: list[str] | None = None) -> int:
                 row = {
                     "split": split,
                     "entry": f"{split}-{entry_id}",
+                    "slow": slow,
+                    "fast": fast,
+                    "truth": truth[:8],
                     "context_len": len(context),
                     "slow_top1": slow[0][0],
                     "fast_top1": fast[0][0],
@@ -233,6 +242,14 @@ def main(argv: list[str] | None = None) -> int:
     print(f"\n位置：训练 {len(train)} / 留出 {len(hold)}，跳过率 {skip_rate:.1%}")
 
     result: dict = {"positions": {"train": len(train), "holdout": len(hold)}, "skipped": skipped}
+    fast_hits = sum(r["hit_fast"] for r in train)
+    if fast_hits == 0:
+        result["verdict"] = (
+            "训练集里没有'换到快半会变对'的位置（hit_fast 全 0）⇒ 仲裁器无定义，"
+            "不是'仲裁器无效'。这条要连同上下文长度一起读。"
+        )
+        print(result["verdict"])
+
     if not train or not hold or skip_rate > 0.2 or len(hold) < 500:
         result["verdict"] = "Q-0 不过：样本不足或跳过率过高，本轮作废"
         print(result["verdict"])
@@ -249,7 +266,9 @@ def main(argv: list[str] | None = None) -> int:
     p_train = predict(model, x_train)
     hit_slow_train = np.asarray([r["hit_slow"] for r in train], dtype=float)
     hit_fast_train = np.asarray([r["hit_fast"] for r in train], dtype=float)
-    best_thr, best_acc = 0.5, -1.0
+    # **"从不切换"必须是一个候选**：否则在没有任何可学信号时，阈值会选成"全切"，
+    # 报出一个 −25pp 的假结论。这里把"从不切换"作为初始最优。
+    best_thr, best_acc = 1.1, float(hit_slow_train.mean())
     for thr in np.unique(np.round(p_train, 4)):
         pick_fast = p_train > thr
         acc = float(np.where(pick_fast, hit_fast_train, hit_slow_train).mean())
@@ -293,6 +312,44 @@ def main(argv: list[str] | None = None) -> int:
         "features": list(FEATURES),
         "model": model,
     }
+    # ── α 扫描：同一批位置上，融合到底有没有增益 ──
+    sweep = []
+    for alpha in (0.0, 0.02, 0.03, 0.05, 0.1):
+        logs, tops = [], []
+        for row in hold:
+            table = fuse_table(row["slow"], row["fast"], alpha)
+            if not table:
+                logs.append(-99.0)
+                tops.append(0.0)
+                continue
+            truth = row["truth"]
+            total = sum(math.exp(v) for v in table.values()) or 1e-12
+            mass = sum(math.exp(v) for t, v in table.items() if t and truth.startswith(t))
+            logs.append(math.log(max(mass / total, 1e-12)))
+            tops.append(float(bool(best_of(table)) and truth.startswith(best_of(table))))
+        logs_a, tops_a = np.asarray(logs), np.asarray(tops)
+        base_logs = np.asarray([_mass_log(r["slow"], r["truth"]) for r in hold])
+        base_tops = np.asarray([float(r["hit_slow"]) for r in hold])
+        lo_l, hi_l = bootstrap_delta(logs_a, base_logs, groups)
+        lo_t, hi_t = bootstrap_delta(tops_a, base_tops, groups)
+        sweep.append(
+            {
+                "alpha": alpha,
+                "mean_logp": round(float(logs_a.mean()), 4),
+                "delta_logp": round(float((logs_a - base_logs).mean()), 4),
+                "delta_logp_ci95": [round(lo_l, 4), round(hi_l, 4)],
+                "top1": round(float(tops_a.mean()), 4),
+                "delta_top1_pp": round(float((tops_a - base_tops).mean()) * 100, 2),
+                "delta_top1_ci95_pp": [round(lo_t * 100, 2), round(hi_t * 100, 2)],
+            }
+        )
+    result["alpha_sweep_holdout"] = sweep
+    result["context_len"] = {
+        "min": min(r["context_len"] for r in hold),
+        "max": max(r["context_len"] for r in hold),
+        "mean": round(float(np.mean([r["context_len"] for r in hold])), 1),
+    }
+
     result.update(summary)
     result["verdict"] = "Q-3 过：区间下界 > 0" if lo > 0 else "Q-3 不过：区间含 0，没有可用的增益"
     print(json.dumps(summary["holdout"], ensure_ascii=False, indent=1))
