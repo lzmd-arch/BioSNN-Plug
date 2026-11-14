@@ -339,6 +339,10 @@ class TokenEProp:
         #: [0] 显著度 = 树的预测误差信号；[1] 唤醒 = 发放率偏离基线；[2] 新奇 = 特征变化。
         self.sensor_receptors = torch.tensor([1.0, 0.5, 0.5])
         self.rate_baseline = 0.1
+        #: **受体脱敏**：受体被持续激活后自身变钝。`ρ ← ρ·(1 − λ·|激活|)`。
+        #: 生理上这是受体下调；工程上它是唯一能防止调制线性放大到爆炸的机制——
+        #: DFA 的范数从 0 炸到 155，就是没有这一条。
+        self.receptor_desensitize = 0.05
         self.sensors: torch.Tensor | None = None
         #: 传感器注入方式。``add`` = 加性电流（现行，冻结权重下的行为）；
         #: ``gate`` = **门控**：乘一个 (1+调制)，符合"神经调制改变增益而不是加偏置"。
