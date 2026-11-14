@@ -1,0 +1,9 @@
+{
+ "memories": 129,
+ "positions": 92283,
+ "unigram_top1": 0.0582,
+ "context_top1": 0.0582,
+ "gain_pp": 0.0,
+ "verdict": "时间轴没有可测的预测力",
+ "note": "分桶法是最保守的下界；若连它都不涨，线性模型也不会涨。"
+}
