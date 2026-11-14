@@ -28,7 +28,7 @@ import numpy as np
 SLOW = "http://127.0.0.1:8081/v1/completions"
 FAST = "http://127.0.0.1:18763/complete"
 DB = Path("D:/AxoData/memory/mem.db")
-ALPHAS = (0.0, 0.1, 0.25, 0.5, 1.0, 2.0)
+ALPHAS = (0.0, 0.01, 0.02, 0.05, 0.08, 0.1, 0.15, 0.2, 0.3, 0.5)
 
 
 def post(url: str, payload: dict, timeout: float = 180.0) -> dict:
@@ -68,7 +68,7 @@ def align(slow: list[tuple[str, float]], fast: list[tuple[str, float]]) -> dict[
 def raw_table(slow, fast, alpha: float) -> dict[str, float]:
     if not slow:
         return {}
-    if alpha == 0.0 or not fast:
+    if not fast:
         return dict(slow)
     aligned = align(slow, fast)
     return {tok: lp + alpha * aligned.get(tok, -20.0) for tok, lp in slow}
@@ -85,6 +85,8 @@ def scaled_table(slow, fast, alpha: float) -> dict[str, float]:
     p = np.array([aligned.get(tok, -20.0) for tok, _ in slow], dtype=np.float64)
     zq = (q - q.mean()) / (q.std() + 1e-9)
     zp = (p - p.mean()) / (p.std() + 1e-9)
+    # **α=0 时这里返回 z(q) 单独**——它是"只做温度缩放"的对照组。
+    # 没有它，就分不清增益来自快半还是来自 softmax 温度。
     return {slow[i][0]: float(zq[i] + alpha * zp[i]) for i in range(len(slow))}
 
 
@@ -109,6 +111,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--min-len", type=int, default=24)
     ap.add_argument("--per-entry", type=int, default=12)
     ap.add_argument("--stride", type=int, default=6)
+    ap.add_argument("--k", type=int, default=10, help="快半候选数")
     ap.add_argument("--out", type=Path, default=Path("sweep_results/lm_fusion/scaled_v1.json"))
     args = ap.parse_args(argv)
 
@@ -134,7 +137,7 @@ def main(argv: list[str] | None = None) -> int:
                 ]
                 fast = [
                     (c["token"], float(c["logprob"]))
-                    for c in post(FAST, {"context": context[-256:], "k": 10})["candidates"]
+                    for c in post(FAST, {"context": context[-256:], "k": args.k})["candidates"]
                 ]
             except Exception as exc:
                 print(f"  跳过 {type(exc).__name__}", flush=True)
