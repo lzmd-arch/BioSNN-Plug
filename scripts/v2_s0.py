@@ -248,7 +248,8 @@ def main(argv=None) -> int:
     global RAW_TAG
     RAW_TAG = args.tag
     out = analyze(args.k, args.r)
-    (OUT / f"s0{("_"+RAW_TAG) if RAW_TAG else ""}.json").write_text(
+    out_name = "s0_" + RAW_TAG + ".json" if RAW_TAG else "s0.json"
+    (OUT / out_name).write_text(
         json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n"
     )
     print(json.dumps(out, ensure_ascii=False, indent=1))

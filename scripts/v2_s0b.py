@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 # ruff: noqa: N803, N806  —— 矩阵记号
-
 import json
 import math
 import sys
@@ -18,7 +17,8 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from scripts.v2_s0 import OUT, _proj, _setup  # noqa: E402
+from scripts.v2_s0 import OUT, _proj, _setup
+
 #: tau = softplus(s) + 0.1 == 1 的那个 s。**恒等温度必须是默认值**——
 #: 第一版忘了这一条，B0 拿到的其实是「被锐化过的 Qwen」（tau=0.79），
 #: 于是 B3 的增益被虚报成 +1.80 nats。
@@ -49,11 +49,11 @@ def _forward(logq, P, w, b0, A, mask):
 def fit(logq, y, P, mask, r=0, l2=1e-2, epochs=150, lr=0.05):
     n, C = logq.shape
     w = np.zeros(8)
-    b0 = np.array(S_TAU1)       # 从 tau=1（恒等）起步
+    b0 = np.array(S_TAU1)  # 从 tau=1（恒等）起步
     A = np.zeros((r, C)) if r > 0 else None
     Q = P @ _proj(r) if r > 0 else None
     for _ in range(epochs):
-        z, tau, lp = _forward(logq, P, w, b0, A, mask)
+        _, tau, lp = _forward(logq, P, w, b0, A, mask)
         g = np.exp(lp)
         g[np.arange(n), y] -= 1.0
         g /= n
@@ -83,8 +83,7 @@ def main() -> int:
     cut = int(n * 0.7)
     tr, te = order[:cut], order[cut:]
     mtr, mte = mask[tr], mask[te]
-    out = {"positions": n, "truth_coverage": round(cover, 4),
-           "train": len(tr), "holdout": len(te)}
+    out = {"positions": n, "truth_coverage": round(cover, 4), "train": len(tr), "holdout": len(te)}
 
     out["B0"] = score(logq[te], y[te], P[te], mte)
     best_t, best = 1.0, -1e9
@@ -92,20 +91,25 @@ def main() -> int:
         s = score(logq[tr], y[tr], P[tr], mtr, b0=math.log(math.exp(t - 0.1) - 1.0))
         if s > best:
             best, best_t = s, float(t)
-    out["B2"] = {"logp": score(logq[te], y[te], P[te], mte,
-                               b0=math.log(math.exp(best_t - 0.1) - 1.0)), "temp": best_t}
+    out["B2"] = {
+        "logp": score(logq[te], y[te], P[te], mte, b0=math.log(math.exp(best_t - 0.1) - 1.0)),
+        "temp": best_t,
+    }
 
     print("  B3 拟合", flush=True)
     w3, b3, _ = fit(logq[tr], y[tr], P[tr], mtr, r=0)
-    out["B3"] = {"logp": score(logq[te], y[te], P[te], mte, w=w3, b0=b3),
-                 "gain_vs_B0": score(logq[te], y[te], P[te], mte, w=w3, b0=b3) - out["B0"],
-                 "mean_tau": float(_tau(P[te], w3, b3).mean())}
+    out["B3"] = {
+        "logp": score(logq[te], y[te], P[te], mte, w=w3, b0=b3),
+        "gain_vs_B0": score(logq[te], y[te], P[te], mte, w=w3, b0=b3) - out["B0"],
+        "mean_tau": float(_tau(P[te], w3, b3).mean()),
+    }
 
     print("  B4 拟合", flush=True)
     w4, b4, A4 = fit(logq[tr], y[tr], P[tr], mtr, r=2)
-    out["B4"] = {"logp": score(logq[te], y[te], P[te], mte, w=w4, b0=b4, A=A4),
-                 "gain_vs_B3": score(logq[te], y[te], P[te], mte, w=w4, b0=b4, A=A4)
-                 - out["B3"]["logp"]}
+    out["B4"] = {
+        "logp": score(logq[te], y[te], P[te], mte, w=w4, b0=b4, A=A4),
+        "gain_vs_B3": score(logq[te], y[te], P[te], mte, w=w4, b0=b4, A=A4) - out["B3"]["logp"],
+    }
 
     perm = []
     print("  置换检验：100 次", flush=True)
@@ -118,8 +122,9 @@ def main() -> int:
     out["S0b-3_p"] = float((np.array(perm) >= out["B3"]["gain_vs_B0"]).mean())
     out["perm_mean"] = float(np.mean(perm))
 
-    (OUT / (f"s0b_{tag}.json" if tag else "s0b.json")).write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n",
-                                  encoding="utf-8", newline="\n")
+    (OUT / (f"s0b_{tag}.json" if tag else "s0b.json")).write_text(
+        json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n"
+    )
     print(json.dumps(out, ensure_ascii=False, indent=1))
     return 0
 

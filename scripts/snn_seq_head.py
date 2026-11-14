@@ -18,7 +18,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, "scripts")
-from grounding_compare import auc, build, fit, memories, r1, r4, r5  # noqa: E402
+from grounding_compare import auc, build, fit, memories, r1, r4, r5
 
 FEAT = "http://127.0.0.1:18763/features"
 
