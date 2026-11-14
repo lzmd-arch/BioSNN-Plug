@@ -103,3 +103,5 @@ ToolsRuby/
 
 # Rust 构建产物
 rust/**/target/
+sweep_results/**/ckpt/
+*.safetensors
