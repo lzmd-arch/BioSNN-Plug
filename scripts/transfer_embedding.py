@@ -66,9 +66,7 @@ def main(argv: list[str] | None = None) -> int:
     table = np.asarray(table, dtype=np.float32).reshape(tensor.shape[1], tensor.shape[0])
     print(f"反量化完成 {table.shape} {table.nbytes / 1e9:.2f} GB", flush=True)
 
-    tokenizer = ByteLevelBPETokenizer(
-        str(args.bpe / "vocab.json"), str(args.bpe / "merges.txt")
-    )
+    tokenizer = ByteLevelBPETokenizer(str(args.bpe / "vocab.json"), str(args.bpe / "merges.txt"))
     vocab = json.loads((args.bpe / "vocab.json").read_text(encoding="utf-8"))
     mapping = bytes_to_unicode()
 

@@ -210,11 +210,12 @@ class RidgeActionModel:
     只是测量标尺——见模块文档。
     """
 
-    def __init__(self, ridge: float = 1.0, *, quadratic: bool = False) -> None:
+    def __init__(self, ridge: float = 1.0, *, quadratic: bool = False, cubic: bool = False) -> None:
         if ridge <= 0:
             raise ValueError(f"ridge 必须为正，收到 {ridge!r}。")
         self.ridge = float(ridge)
         self.quadratic = bool(quadratic)
+        self.cubic = bool(cubic)
         self.n_actions_ = 2
         self.mean_ = np.zeros(1)
         self.scale_ = np.ones(1)
@@ -233,6 +234,11 @@ class RidgeActionModel:
             # 加的那一项，不是原预注册的线性头。
             parts.append(z**2)
             parts.append(interaction**2)
+        if self.cubic:
+            # 三次项：Acrobot 的能量项里有 ω·cos θ 这类乘积，二次拟合器的 NMSE
+            # 已经明显吃紧（0.36 倍 copy_last，远不如 CartPole 的近乎完美）。
+            parts.append(z**3)
+            parts.append(interaction**3)
         return np.hstack(parts)
 
     def fit(

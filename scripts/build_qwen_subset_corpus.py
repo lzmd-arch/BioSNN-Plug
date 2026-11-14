@@ -73,6 +73,13 @@ def main(argv: list[str] | None = None) -> int:
     vocab = json.loads((args.qwen / "vocab.json").read_text(encoding="utf-8"))
     b2u = bytes_to_unicode()
     byte_ids = {index: vocab[b2u[index]] for index in range(256)}
+    # 每个千问 token 自己的字节：词表键是"字节→可见字符"的映射结果，反查即可。
+    # **回退必须用它，不能 `decode` 再 `encode`**——那会把只覆盖半个多字节字符的
+    # token（如 b"\xa0\x80"）换成 U+FFFD。
+    u2b = {visible: index for index, visible in b2u.items()}
+    bytes_of_qwen = {
+        qwen_id: bytes(u2b[ch] for ch in text if ch in u2b) for text, qwen_id in vocab.items()
+    }
     # 检查要拿**字符串**去查，不能拿 id 去查（一次写成 `token not in vocab`，
     # 而 token 是 int、vocab 的键是 str ⇒ 256 个全被误报成"缺失"）。
     missing = [b for b in range(256) if b2u[b] not in vocab]
@@ -81,7 +88,9 @@ def main(argv: list[str] | None = None) -> int:
 
     absent = [b for b in range(256) if byte_ids[b] not in remap]
     if absent:
-        raise SystemExit(f"字节 token 不在 32k 子集里（{len(absent)} 个），回退无法落地：{absent[:5]}")
+        raise SystemExit(
+            f"字节 token 不在 32k 子集里（{len(absent)} 个），回退无法落地：{absent[:5]}"
+        )
 
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "id_map.json").write_text(
@@ -108,8 +117,9 @@ def main(argv: list[str] | None = None) -> int:
                     local.append(slot)
                 else:
                     out_of_subset += 1
-                    piece = tokenizer.decode([qwen_id]).encode("utf-8", "ignore")
-                    for byte in piece:
+                    # **用原始字节**：`decode` 再 `encode` 会把只覆盖半个多字节字符的
+                    # token（如 b"\xa0\x80"）换成 U+FFFD，原始字节永久丢失。
+                    for byte in bytes_of_qwen[qwen_id]:
                         local.append(remap[byte_ids[byte]])
             np.asarray(local, dtype=np.uint16).tofile(handle if chars < args.chars else holdout)
             written += len(local)

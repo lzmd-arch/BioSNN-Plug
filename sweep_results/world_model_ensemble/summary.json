@@ -1,0 +1,110 @@
+{
+ "rows": [
+  {
+   "seed": 0,
+   "arms": {
+    "h10_lam0.0": {
+     "mean_return": -500.0,
+     "median_steps": 500.0,
+     "success_rate": 0.0
+    },
+    "h10_lam1.0": {
+     "mean_return": -500.0,
+     "median_steps": 500.0,
+     "success_rate": 0.0
+    },
+    "h10_lam4.0": {
+     "mean_return": -500.0,
+     "median_steps": 500.0,
+     "success_rate": 0.0
+    },
+    "h20_lam0.0": {
+     "mean_return": -500.0,
+     "median_steps": 500.0,
+     "success_rate": 0.0
+    },
+    "h20_lam1.0": {
+     "mean_return": -500.0,
+     "median_steps": 500.0,
+     "success_rate": 0.0
+    },
+    "h20_lam4.0": {
+     "mean_return": -500.0,
+     "median_steps": 500.0,
+     "success_rate": 0.0
+    }
+   }
+  },
+  {
+   "seed": 1,
+   "arms": {
+    "h10_lam0.0": {
+     "mean_return": -138.0,
+     "median_steps": 108.5,
+     "success_rate": 1.0
+    },
+    "h10_lam1.0": {
+     "mean_return": -162.7,
+     "median_steps": 150.0,
+     "success_rate": 1.0
+    },
+    "h10_lam4.0": {
+     "mean_return": -151.7,
+     "median_steps": 135.5,
+     "success_rate": 1.0
+    },
+    "h20_lam0.0": {
+     "mean_return": -445.5,
+     "median_steps": 464.5,
+     "success_rate": 0.6
+    },
+    "h20_lam1.0": {
+     "mean_return": -430.8,
+     "median_steps": 500.0,
+     "success_rate": 0.3
+    },
+    "h20_lam4.0": {
+     "mean_return": -500.0,
+     "median_steps": 500.0,
+     "success_rate": 0.0
+    }
+   }
+  },
+  {
+   "seed": 2,
+   "arms": {
+    "h10_lam0.0": {
+     "mean_return": -102.3,
+     "median_steps": 102.5,
+     "success_rate": 1.0
+    },
+    "h10_lam1.0": {
+     "mean_return": -103.8,
+     "median_steps": 104.0,
+     "success_rate": 1.0
+    },
+    "h10_lam4.0": {
+     "mean_return": -245.0,
+     "median_steps": 137.0,
+     "success_rate": 0.7
+    },
+    "h20_lam0.0": {
+     "mean_return": -315.4,
+     "median_steps": 224.5,
+     "success_rate": 0.6
+    },
+    "h20_lam1.0": {
+     "mean_return": -475.6,
+     "median_steps": 500.0,
+     "success_rate": 0.1
+    },
+    "h20_lam4.0": {
+     "mean_return": -500.0,
+     "median_steps": 500.0,
+     "success_rate": 0.0
+    }
+   }
+  }
+ ],
+ "ensemble": 5
+}

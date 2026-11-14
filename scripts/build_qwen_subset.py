@@ -23,6 +23,8 @@ import json
 from collections import Counter
 from pathlib import Path
 
+from corpus_io import iter_texts, shards
+
 DEFAULT_GGUF = Path("D:/Projects/ollama-models/import/Qwen3-4B-Q4_K_M.gguf")
 OUT = Path("D:/AxoData/sel/lm/corpus/qwen_tok")
 CORPUS = Path("D:/AxoData/sel/lm/corpus/skypile/data")
@@ -64,19 +66,6 @@ def extract(gguf_path: Path, out: Path):
     return len(tokens)
 
 
-def texts(files: list[Path]):
-    for path in files:
-        with path.open(encoding="utf-8", errors="ignore") as handle:
-            for line in handle:
-                try:
-                    row = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                text = row.get("text") or row.get("content") or ""
-                if text:
-                    yield text
-
-
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="还原千问分词器并建 32k 子集")
     ap.add_argument("--gguf", type=Path, default=DEFAULT_GGUF)
@@ -93,12 +82,15 @@ def main(argv: list[str] | None = None) -> int:
     probe = "北岸一号站的采集箱每五分钟往岸上推一次数据包，推失败会重试三次。"
     print(f"自检：{tokenizer.encode(probe).tokens}", flush=True)
 
-    files = sorted(args.corpus.glob("*.jsonl"))[:6]
+    files = shards(args.corpus)[:6]
     counts: Counter[int] = Counter()
     chars = 0
-    for text in texts(files):
-        counts.update(tokenizer.encode(text).ids)
-        chars += len(text)
+    for path in files:
+        for text in iter_texts(path):
+            counts.update(tokenizer.encode(text).ids)
+            chars += len(text)
+            if chars >= args.sample_chars:
+                break
         if chars >= args.sample_chars:
             break
     tokens = sum(counts.values())

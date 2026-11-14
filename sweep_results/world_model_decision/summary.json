@@ -1,0 +1,49 @@
+{
+ "episodes": 100,
+ "train_episodes": 200,
+ "rows": [
+  {
+   "seed": 0,
+   "random_median": 18.0,
+   "copy_last_median": 18.0,
+   "action_shuffled_median": 76.5,
+   "world_model_median": 90.0
+  },
+  {
+   "seed": 1,
+   "random_median": 21.0,
+   "copy_last_median": 21.0,
+   "action_shuffled_median": 9.0,
+   "world_model_median": 86.5
+  },
+  {
+   "seed": 2,
+   "random_median": 19.5,
+   "copy_last_median": 19.5,
+   "action_shuffled_median": 9.0,
+   "world_model_median": 96.5
+  },
+  {
+   "seed": 3,
+   "random_median": 19.0,
+   "copy_last_median": 19.0,
+   "action_shuffled_median": 13.0,
+   "world_model_median": 94.5
+  },
+  {
+   "seed": 4,
+   "random_median": 18.0,
+   "copy_last_median": 18.0,
+   "action_shuffled_median": 18.5,
+   "world_model_median": 84.5
+  }
+ ],
+ "random_median": 19.0,
+ "copy_last_median": 19.0,
+ "action_shuffled_median": 13.0,
+ "world_model_median": 90.0,
+ "ratio_model_over_control": 4.737,
+ "ratio_model_over_action_shuffled": 6.923,
+ "wm1a": true,
+ "wm0a": true
+}

@@ -1,0 +1,112 @@
+{
+ "segment": 40,
+ "segments": 6,
+ "beta": 4.0,
+ "rows": [
+  {
+   "seed": 0,
+   "arm": "fixed",
+   "success_rate": 1.0,
+   "segment_end_success": 1.0,
+   "recovery_median": 5.0,
+   "tau_max": 0.25,
+   "first_segment_success": 1.0,
+   "second_segment_first5": 1.0
+  },
+  {
+   "seed": 0,
+   "arm": "arousal",
+   "success_rate": 1.0,
+   "segment_end_success": 1.0,
+   "recovery_median": 5.0,
+   "tau_max": 0.27246508440155787,
+   "first_segment_success": 1.0,
+   "second_segment_first5": 1.0
+  },
+  {
+   "seed": 1,
+   "arm": "fixed",
+   "success_rate": 1.0,
+   "segment_end_success": 1.0,
+   "recovery_median": 5.0,
+   "tau_max": 0.25,
+   "first_segment_success": 1.0,
+   "second_segment_first5": 1.0
+  },
+  {
+   "seed": 1,
+   "arm": "arousal",
+   "success_rate": 1.0,
+   "segment_end_success": 1.0,
+   "recovery_median": 5.0,
+   "tau_max": 0.27393011703264314,
+   "first_segment_success": 1.0,
+   "second_segment_first5": 1.0
+  },
+  {
+   "seed": 2,
+   "arm": "fixed",
+   "success_rate": 1.0,
+   "segment_end_success": 1.0,
+   "recovery_median": 5.0,
+   "tau_max": 0.25,
+   "first_segment_success": 1.0,
+   "second_segment_first5": 1.0
+  },
+  {
+   "seed": 2,
+   "arm": "arousal",
+   "success_rate": 1.0,
+   "segment_end_success": 1.0,
+   "recovery_median": 5.0,
+   "tau_max": 0.27488302634812894,
+   "first_segment_success": 1.0,
+   "second_segment_first5": 1.0
+  },
+  {
+   "seed": 3,
+   "arm": "fixed",
+   "success_rate": 1.0,
+   "segment_end_success": 1.0,
+   "recovery_median": 5.0,
+   "tau_max": 0.25,
+   "first_segment_success": 1.0,
+   "second_segment_first5": 1.0
+  },
+  {
+   "seed": 3,
+   "arm": "arousal",
+   "success_rate": 1.0,
+   "segment_end_success": 1.0,
+   "recovery_median": 5.0,
+   "tau_max": 0.2816801478449761,
+   "first_segment_success": 1.0,
+   "second_segment_first5": 1.0
+  },
+  {
+   "seed": 4,
+   "arm": "fixed",
+   "success_rate": 1.0,
+   "segment_end_success": 1.0,
+   "recovery_median": 5.0,
+   "tau_max": 0.25,
+   "first_segment_success": 1.0,
+   "second_segment_first5": 1.0
+  },
+  {
+   "seed": 4,
+   "arm": "arousal",
+   "success_rate": 1.0,
+   "segment_end_success": 1.0,
+   "recovery_median": 5.0,
+   "tau_max": 0.2768727338482953,
+   "first_segment_success": 1.0,
+   "second_segment_first5": 1.0
+  }
+ ],
+ "fixed_recovery": 5.0,
+ "arousal_recovery": 5.0,
+ "fixed_end": 1.0,
+ "arousal_end": 1.0,
+ "switch_drop": 0.0
+}

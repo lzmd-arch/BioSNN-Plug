@@ -1,0 +1,22 @@
+{
+ "positions": 60,
+ "rows": [
+  {
+   "gamma": 0.0,
+   "mean_logp": -15.3873
+  },
+  {
+   "gamma": 0.5,
+   "mean_logp": -15.4624
+  },
+  {
+   "gamma": 1.0,
+   "mean_logp": -15.6081
+  },
+  {
+   "gamma": 2.0,
+   "mean_logp": -15.9093
+  }
+ ],
+ "delta": 0.0
+}

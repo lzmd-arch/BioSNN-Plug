@@ -1,0 +1,141 @@
+{
+ "train_seeds": [
+  0,
+  1
+ ],
+ "holdout_seeds": [
+  2,
+  3,
+  4
+ ],
+ "candidates": [
+  {
+   "weights": [
+    1.0,
+    0.5,
+    2.0,
+    0.5
+   ],
+   "horizon": 3,
+   "median": 500.0
+  },
+  {
+   "weights": [
+    0.5,
+    0.5,
+    3.0,
+    1.0
+   ],
+   "horizon": 3,
+   "median": 500.0
+  },
+  {
+   "weights": [
+    1.0,
+    1.0,
+    5.0,
+    2.0
+   ],
+   "horizon": 3,
+   "median": 500.0
+  },
+  {
+   "weights": [
+    2.0,
+    1.0,
+    10.0,
+    3.0
+   ],
+   "horizon": 3,
+   "median": 500.0
+  },
+  {
+   "weights": [
+    1.0,
+    0.0,
+    4.0,
+    1.0
+   ],
+   "horizon": 1,
+   "median": 290.0
+  },
+  {
+   "weights": [
+    2.0,
+    1.0,
+    10.0,
+    3.0
+   ],
+   "horizon": 1,
+   "median": 168.75
+  },
+  {
+   "weights": [
+    0.5,
+    0.5,
+    3.0,
+    1.0
+   ],
+   "horizon": 1,
+   "median": 146.5
+  },
+  {
+   "weights": [
+    1.0,
+    1.0,
+    5.0,
+    2.0
+   ],
+   "horizon": 1,
+   "median": 146.5
+  },
+  {
+   "weights": [
+    1.0,
+    0.5,
+    2.0,
+    0.5
+   ],
+   "horizon": 1,
+   "median": 86.25
+  },
+  {
+   "weights": [
+    0.0,
+    0.0,
+    1.0,
+    0.0
+   ],
+   "horizon": 1,
+   "median": 31.75
+  }
+ ],
+ "best": {
+  "weights": [
+   1.0,
+   0.5,
+   2.0,
+   0.5
+  ],
+  "horizon": 3
+ },
+ "holdout": [
+  {
+   "seed": 2,
+   "default": 96.5,
+   "tuned": 500.0
+  },
+  {
+   "seed": 3,
+   "default": 94.5,
+   "tuned": 500.0
+  },
+  {
+   "seed": 4,
+   "default": 84.5,
+   "tuned": 500.0
+  }
+ ],
+ "holdout_default_median": 94.5,
+ "holdout_tuned_median": 500.0
+}

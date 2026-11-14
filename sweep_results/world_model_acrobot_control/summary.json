@@ -1,0 +1,283 @@
+{
+ "episodes": 10,
+ "train_episodes": 60,
+ "rounds": 10,
+ "horizon": 10,
+ "rows": [
+  {
+   "seed": 0,
+   "history": [
+    {
+     "round": 0,
+     "mean_return": -260.7,
+     "median_steps": 125.0,
+     "success_rate": 0.7
+    },
+    {
+     "round": 1,
+     "val_nmse": 0.1723,
+     "adopted": false,
+     "mean_return": -260.7,
+     "median_steps": 125.0,
+     "success_rate": 0.7
+    },
+    {
+     "round": 2,
+     "val_nmse": 0.1723,
+     "adopted": false,
+     "mean_return": -260.7,
+     "median_steps": 125.0,
+     "success_rate": 0.7
+    },
+    {
+     "round": 3,
+     "val_nmse": 0.1723,
+     "adopted": false,
+     "mean_return": -260.7,
+     "median_steps": 125.0,
+     "success_rate": 0.7
+    },
+    {
+     "round": 4,
+     "val_nmse": 0.1723,
+     "adopted": false,
+     "mean_return": -260.7,
+     "median_steps": 125.0,
+     "success_rate": 0.7
+    },
+    {
+     "round": 5,
+     "val_nmse": 0.1723,
+     "adopted": false,
+     "mean_return": -260.7,
+     "median_steps": 125.0,
+     "success_rate": 0.7
+    },
+    {
+     "round": 6,
+     "val_nmse": 0.1723,
+     "adopted": false,
+     "mean_return": -260.7,
+     "median_steps": 125.0,
+     "success_rate": 0.7
+    },
+    {
+     "round": 7,
+     "val_nmse": 0.1723,
+     "adopted": false,
+     "mean_return": -260.7,
+     "median_steps": 125.0,
+     "success_rate": 0.7
+    },
+    {
+     "round": 8,
+     "val_nmse": 0.1723,
+     "adopted": false,
+     "mean_return": -260.7,
+     "median_steps": 125.0,
+     "success_rate": 0.7
+    },
+    {
+     "round": 9,
+     "val_nmse": 0.1723,
+     "adopted": false,
+     "mean_return": -260.7,
+     "median_steps": 125.0,
+     "success_rate": 0.7
+    },
+    {
+     "round": 10,
+     "val_nmse": 0.1723,
+     "adopted": false,
+     "mean_return": -260.7,
+     "median_steps": 125.0,
+     "success_rate": 0.7
+    }
+   ]
+  },
+  {
+   "seed": 1,
+   "history": [
+    {
+     "round": 0,
+     "mean_return": -178.2,
+     "median_steps": 144.0,
+     "success_rate": 0.9
+    },
+    {
+     "round": 1,
+     "val_nmse": 0.1785,
+     "adopted": false,
+     "mean_return": -178.2,
+     "median_steps": 144.0,
+     "success_rate": 0.9
+    },
+    {
+     "round": 2,
+     "val_nmse": 0.1785,
+     "adopted": false,
+     "mean_return": -178.2,
+     "median_steps": 144.0,
+     "success_rate": 0.9
+    },
+    {
+     "round": 3,
+     "val_nmse": 0.1785,
+     "adopted": false,
+     "mean_return": -178.2,
+     "median_steps": 144.0,
+     "success_rate": 0.9
+    },
+    {
+     "round": 4,
+     "val_nmse": 0.1785,
+     "adopted": false,
+     "mean_return": -178.2,
+     "median_steps": 144.0,
+     "success_rate": 0.9
+    },
+    {
+     "round": 5,
+     "val_nmse": 0.1785,
+     "adopted": false,
+     "mean_return": -178.2,
+     "median_steps": 144.0,
+     "success_rate": 0.9
+    },
+    {
+     "round": 6,
+     "val_nmse": 0.1785,
+     "adopted": false,
+     "mean_return": -178.2,
+     "median_steps": 144.0,
+     "success_rate": 0.9
+    },
+    {
+     "round": 7,
+     "val_nmse": 0.1785,
+     "adopted": false,
+     "mean_return": -178.2,
+     "median_steps": 144.0,
+     "success_rate": 0.9
+    },
+    {
+     "round": 8,
+     "val_nmse": 0.1785,
+     "adopted": false,
+     "mean_return": -178.2,
+     "median_steps": 144.0,
+     "success_rate": 0.9
+    },
+    {
+     "round": 9,
+     "val_nmse": 0.1785,
+     "adopted": false,
+     "mean_return": -178.2,
+     "median_steps": 144.0,
+     "success_rate": 0.9
+    },
+    {
+     "round": 10,
+     "val_nmse": 0.1785,
+     "adopted": false,
+     "mean_return": -178.2,
+     "median_steps": 144.0,
+     "success_rate": 0.9
+    }
+   ]
+  },
+  {
+   "seed": 2,
+   "history": [
+    {
+     "round": 0,
+     "mean_return": -94.9,
+     "median_steps": 93.0,
+     "success_rate": 1.0
+    },
+    {
+     "round": 1,
+     "val_nmse": 0.1738,
+     "adopted": false,
+     "mean_return": -94.9,
+     "median_steps": 93.0,
+     "success_rate": 1.0
+    },
+    {
+     "round": 2,
+     "val_nmse": 0.1738,
+     "adopted": false,
+     "mean_return": -94.9,
+     "median_steps": 93.0,
+     "success_rate": 1.0
+    },
+    {
+     "round": 3,
+     "val_nmse": 0.1738,
+     "adopted": false,
+     "mean_return": -94.9,
+     "median_steps": 93.0,
+     "success_rate": 1.0
+    },
+    {
+     "round": 4,
+     "val_nmse": 0.1738,
+     "adopted": false,
+     "mean_return": -94.9,
+     "median_steps": 93.0,
+     "success_rate": 1.0
+    },
+    {
+     "round": 5,
+     "val_nmse": 0.1738,
+     "adopted": false,
+     "mean_return": -94.9,
+     "median_steps": 93.0,
+     "success_rate": 1.0
+    },
+    {
+     "round": 6,
+     "val_nmse": 0.1738,
+     "adopted": false,
+     "mean_return": -94.9,
+     "median_steps": 93.0,
+     "success_rate": 1.0
+    },
+    {
+     "round": 7,
+     "val_nmse": 0.1738,
+     "adopted": false,
+     "mean_return": -94.9,
+     "median_steps": 93.0,
+     "success_rate": 1.0
+    },
+    {
+     "round": 8,
+     "val_nmse": 0.1738,
+     "adopted": false,
+     "mean_return": -94.9,
+     "median_steps": 93.0,
+     "success_rate": 1.0
+    },
+    {
+     "round": 9,
+     "val_nmse": 0.1738,
+     "adopted": false,
+     "mean_return": -94.9,
+     "median_steps": 93.0,
+     "success_rate": 1.0
+    },
+    {
+     "round": 10,
+     "val_nmse": 0.1738,
+     "adopted": false,
+     "mean_return": -94.9,
+     "median_steps": 93.0,
+     "success_rate": 1.0
+    }
+   ]
+  }
+ ],
+ "baseline_return": -177.9333333333333,
+ "final_return": -177.9333333333333
+}

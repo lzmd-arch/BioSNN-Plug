@@ -1,0 +1,31 @@
+{
+ "positions": 34,
+ "rows": [
+  {
+   "alpha": 0.0,
+   "mean_logp": -15.4231,
+   "top1": 0.1176
+  },
+  {
+   "alpha": 0.05,
+   "mean_logp": -13.2389,
+   "top1": 0.1176
+  },
+  {
+   "alpha": 0.1,
+   "mean_logp": -13.3124,
+   "top1": 0.0588
+  },
+  {
+   "alpha": 0.25,
+   "mean_logp": -14.0865,
+   "top1": 0.0882
+  },
+  {
+   "alpha": 0.5,
+   "mean_logp": -16.0854,
+   "top1": 0.0294
+  }
+ ],
+ "best_alpha": 0.05
+}

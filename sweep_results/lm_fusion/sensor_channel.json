@@ -1,0 +1,35 @@
+{
+ "identical_at_zero": true,
+ "rows": [
+  {
+   "vector": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "kl_vs_zero": 0.7448,
+   "argmax_changed": false
+  },
+  {
+   "vector": [
+    0.0,
+    1.0,
+    0.0,
+    0.0
+   ],
+   "kl_vs_zero": 0.8758,
+   "argmax_changed": false
+  },
+  {
+   "vector": [
+    3.0,
+    3.0,
+    3.0,
+    3.0
+   ],
+   "kl_vs_zero": 0.7372,
+   "argmax_changed": false
+  }
+ ]
+}

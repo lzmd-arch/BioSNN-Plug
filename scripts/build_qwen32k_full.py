@@ -12,11 +12,19 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
+from corpus_io import iter_texts, shards
+
+# 脚本以 `python scripts/xxx.py` 的方式跑时，sys.path[0] 是 scripts/，仓库根不在里面。
+# 显式加进去，才能复用研究侧的 `subset_fingerprint`——**别在这里另写一份哈希实现**，
+# 两份迟早不一致，而指纹不一致是静默的（就是这条链要防的那种错）。
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from research.sel.lm.subset_tokenizer import SubsetTokenizer, subset_fingerprint
 
 QWEN = Path("D:/AxoData/sel/lm/corpus/qwen_tok")
 CORPUS = Path("D:/AxoData/sel/lm/corpus/skypile/data")
@@ -41,42 +49,22 @@ def bytes_to_unicode() -> dict[int, str]:
 
 def encode_one(job: tuple[str, str, str]) -> tuple[str, int, int]:
     src, dst, qwen_dir = job
-    from tokenizers import ByteLevelBPETokenizer
-
     root = Path(qwen_dir)
-    subset = json.loads((root / "subset_32k.json").read_text(encoding="utf-8"))["ids"]
-    remap = {qwen_id: local for local, qwen_id in enumerate(subset)}
-    tokenizer = ByteLevelBPETokenizer(str(root / "vocab.json"), str(root / "merges.txt"))
-    vocab = json.loads((root / "vocab.json").read_text(encoding="utf-8"))
-    to_byte = bytes_to_unicode()
-    byte_local = [remap[vocab[to_byte[b]]] for b in range(256)]
+    # **映射只有一份实现**：`SubsetTokenizer`。这里曾经自带一份，
+    # 而且它的字节回退是 `decode([qwen_id]).encode(...)`——对只覆盖半个多字节字符的
+    # token（如 b"\xa0\x80"）会先变成替换字符、再把原始字节永久换掉。
+    # 那会让建出来的语料里约 1% 的位置是 U+FFFD 而不是真字，而且不报错。
+    bridge = SubsetTokenizer(root)
 
-    chars = qwen_tokens = 0
-    with (
-        Path(dst).open("wb") as handle,
-        Path(src).open(encoding="utf-8", errors="ignore") as source,
-    ):
-        for line in source:
-            try:
-                row = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            text = row.get("text") or row.get("content") or ""
-            if not text:
-                continue
-            ids = tokenizer.encode(text).ids
-            local: list[int] = []
-            for qwen_id in ids:
-                slot = remap.get(qwen_id)
-                if slot is None:
-                    piece = tokenizer.decode([qwen_id]).encode("utf-8", "ignore")
-                    local.extend(byte_local[b] for b in piece)
-                else:
-                    local.append(slot)
+    chars = 0
+    local_tokens = 0
+    with Path(dst).open("wb") as handle:
+        for text in iter_texts(Path(src)):
+            local = bridge.encode(text).ids
             np.asarray(local, dtype=np.uint16).tofile(handle)
             chars += len(text)
-            qwen_tokens += len(ids)
-    return Path(src).name, chars, qwen_tokens
+            local_tokens += len(local)
+    return Path(src).name, chars, local_tokens
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -87,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 4) // 3))
     args = ap.parse_args(argv)
 
-    files = sorted(args.corpus.glob("*.jsonl"))
+    files = shards(args.corpus)
     if not files:
         raise SystemExit(f"没找到语料：{args.corpus}")
     parts = args.out / "parts"
@@ -103,7 +91,7 @@ def main(argv: list[str] | None = None) -> int:
             tokens += t
             rate = tokens / max(time.time() - started, 1)
             print(
-                f"  [{index}/{len(files)}] {name} 累计 {tokens / 1e9:.2f}B token"
+                f"  [{index}/{len(files)}] {name} 累计 {tokens / 1e9:.2f}B 本地 token"
                 f"（{rate / 1e3:.0f}k tok/s）",
                 flush=True,
             )
@@ -118,7 +106,11 @@ def main(argv: list[str] | None = None) -> int:
     parts.rmdir()
     stats = {
         "chars": chars,
-        "qwen_tokens": tokens,
+        "local_tokens": tokens,
+        # **id 空间的身份**：这份流里的整数只有在同一份子集下才有意义。
+        # 记下指纹，训练端 (`--subset`) 与服务端 (`--qwen`) 才校验得起来。
+        "subset_dir": str(args.qwen),
+        "subset_sha256": subset_fingerprint(args.qwen / "subset_32k.json"),
         "bin_bytes": target.stat().st_size,
         "files": len(files),
         "subset_size": 32000,
