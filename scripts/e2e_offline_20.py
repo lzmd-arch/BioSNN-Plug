@@ -50,7 +50,7 @@ def memories() -> list[str]:
 
 
 def terms(text: str) -> list[str]:
-    return [t for t in re.findall(r"[\u4e00-\u9fff]{3,4}", text)]
+    return list(re.findall(r"[一-鿿]{3,4}", text))
 
 
 def ask(question: str, evidence: str = "") -> tuple[str, float]:
