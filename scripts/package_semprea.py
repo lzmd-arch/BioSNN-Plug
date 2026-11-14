@@ -72,8 +72,13 @@ RUNTIME_DECL = {
     "tiers": ["full", "full-cpu", "chat-only", "fast-only", "offline"],
     "capabilities": {"chat": "需要慢半", "embeddings": "需要快半", "fusion": "需要两半同时在"},
     "alpha_zero_contract": "alpha=0 时运行时原样转发慢半的响应字节（T-3）",
+    "self_contained": {
+        "fast_half": "runtime/semprea/fast/（原样 vendor 自 BioSNN-Plug，保真由 tools/verify_fast_parity.py 核对）",
+        "launch": "[fast] ckpt 给了就由运行层拉起快半子进程；torch 不进主层",
+        "watchdog": "父进程死亡 ⇒ 子进程随 stdin EOF 退出（防孤儿占端口与显存）",
+    },
     "requires": {
-        "python": ">=3.11（运行层本身零第三方依赖）",
+        "python": ">=3.11（主运行层零第三方依赖；自带快半的内核需要 torch + tokenizers）",
         "fast_half_service": "torch + tokenizers（只在跑快半的那个进程里）",
         "slow_half": "llama-server / Ollama / 任意 OpenAI 兼容端点",
     },

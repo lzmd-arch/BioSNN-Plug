@@ -20,7 +20,7 @@
 |---|---|---|---|
 | B1 | 单端口 OpenAI 兼容服务 | `/v1/chat/completions`、`/v1/completions`、`/v1/embeddings`、`/health` | ✅ **完成**：`runtime/semprea/serve.py`，默认 18740，另含 `/v1/models`；非流式 + 流式 |
 | B2 | 慢半后端适配链 | 自带 llama-server → PATH → Ollama → 远程 OpenAI 兼容 → 只剩快半 | ✅ **完成**：`runtime/semprea/backends.py`；显式 `backend` 时**只试那一条**，不许静默退到别的后端 |
-| B3 | 运行层可选 | 权重层 2.09 GB 必选；运行层按平台另发，不重复打包 | ⬜ |
+| B3 | 运行层可选 | 权重层 2.09 GB 必选；运行层按平台另发，不重复打包 | ✅ **完成**：运行层自带快半（原样 vendor，保真核对 0.00e+00）；`[fast] ckpt` 给了就自拉子进程，torch 不进主层；父进程死则子进程退（防孤儿） |
 | B4 | manifest `runtime` 段 + 能力声明 | 声明依赖与降级档；`/health` 报 `chat: true/false` | ✅ **完成**：`RUNTIME_DECL` 进 manifest（打包脚本同步）；`/health` 报五档 |
 | B5 | 显存分档 | ≥8 GB 全 GPU；4–8 GB 慢半 GPU + 快半 CPU；<4 GB 只 L1 | ◐ **实测出依据**：两半同卡交替 1.5 s/次，快半放 CPU 后 0.04 s/次 ⇒ **8 GB 档就该走 full-cpu**；自动分档待做 |
 | B6 | 启动顺序 | **先起 L1（可用），模型后台加载完再升级** | ✅ **完成**：先 bind 再后台探测，`/health` 期间报 `fast-only`/`offline` |
