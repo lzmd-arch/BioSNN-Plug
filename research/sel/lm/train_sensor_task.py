@@ -52,7 +52,7 @@ def _make_episode(name: str, batch: int, rng: np.random.Generator, persona_clust
     if name == "temp":
         t = rng.integers(0, 10, size=batch)
         s = np.zeros((POOL, batch, 1), dtype=np.float32)
-        s[0, :, 0] = t / 9.0          # 只有第 0 个输入列承载温度（与历史结果同口径）
+        s[0, :, 0] = t / 9.0  # 只有第 0 个输入列承载温度（与历史结果同口径）
         return t, s, None
     if name == "time":
         g = int(rng.integers(0, 10))
@@ -84,15 +84,19 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", choices=("zero", "add", "gate"), required=True)
     ap.add_argument("--pools", default="temp", help="逗号分隔：temp,time,memory,persona,presence")
-    ap.add_argument("--subset", type=Path,
-                    default=Path("D:/AxoData/sel/lm/corpus/qwen_tok_fw2/subset_32k.json"))
+    ap.add_argument(
+        "--subset", type=Path, default=Path("D:/AxoData/sel/lm/corpus/qwen_tok_fw2/subset_32k.json")
+    )
     ap.add_argument("--counts", type=Path, default=Path("sweep_results/lm_10m/counts_32000.npy"))
     ap.add_argument("--steps", type=int, default=1500)
     ap.add_argument("--batch", type=int, default=64)
     ap.add_argument("--lr-sensor", type=float, default=0.05)
     ap.add_argument("--init-scale", type=float, default=1.0)
-    ap.add_argument("--pool-scales", default="",
-                    help="逐池覆盖 init_scale，如 temp:32,time:2（空 = 用 --init-scale）")
+    ap.add_argument(
+        "--pool-scales",
+        default="",
+        help="逐池覆盖 init_scale，如 temp:32,time:2（空 = 用 --init-scale）",
+    )
     ap.add_argument("--desensitize", type=float, default=0.05, help="受体脱敏 λ；0 = 关")
     ap.add_argument("--clip", type=float, default=10.0, help="‖sensor_proj‖ 上限；0 = 不限")
     ap.add_argument("--inhibition", type=float, default=0.0, help="侧抑制增益；0 = 关")
@@ -114,10 +118,20 @@ def main(argv=None) -> int:
     counts = torch.from_numpy(np.load(args.counts)).float()
     paths = build_huffman_paths(counts)
     model = TokenEProp(
-        32000, n_rec, recurrence="none", readout_taus=(2.0, 128.0), tree=paths,
-        tree_signal_scale=3.0, tree_packed=True, tree_init_weight=False,
-        embed_rank=256, sensor_dim=POOL * len(pools), lr_in=1e-3, lr_out=0.5,
-        generator=torch.Generator().manual_seed(0), device=torch.device("cpu"),
+        32000,
+        n_rec,
+        recurrence="none",
+        readout_taus=(2.0, 128.0),
+        tree=paths,
+        tree_signal_scale=3.0,
+        tree_packed=True,
+        tree_init_weight=False,
+        embed_rank=256,
+        sensor_dim=POOL * len(pools),
+        lr_in=1e-3,
+        lr_out=0.5,
+        generator=torch.Generator().manual_seed(0),
+        device=torch.device("cpu"),
     )
     # **功能分离由模型强制**：`set_sensor_pools` 把 sensor_proj 锁成块对角、每次更新后重施。
     # 不再依赖训练脚本里的掩码——掩码忘了写就静默退回混合，今天已经吃过一次。
@@ -130,7 +144,7 @@ def main(argv=None) -> int:
             model.w_in[:, TEXT_N:] = 0.0
         gen = torch.Generator().manual_seed(7)
         model.sensor_proj = torch.randn(model.sensor_proj.shape, generator=gen) * (
-            args.init_scale / (model.n_rec ** 0.5)
+            args.init_scale / (model.n_rec**0.5)
         )
         # 逐池标定：每个池的驱动尺度是**分别测出来的**，不是同一个数
         scales = {}
@@ -138,12 +152,12 @@ def main(argv=None) -> int:
             k, v = item.split(":")
             scales[k] = float(v)
         if scales:
-            for k, name in enumerate(pools):
+            for name in pools:
                 if name not in scales:
                     continue
                 i_sl, _c_sl = model.sensor_pools[name]
                 blk = torch.randn((i_sl.stop - i_sl.start, model.n_rec), generator=gen) * (
-                    scales[name] / (model.n_rec ** 0.5)
+                    scales[name] / (model.n_rec**0.5)
                 )
                 model.sensor_proj[i_sl] = blk
         model.sensor_proj *= model._pool_mask
@@ -194,7 +208,7 @@ def main(argv=None) -> int:
             ans = np.full(batch, int(gaps))
         slot = pools.index(name) if slot is None else slot
         tr = model.new_trace(batch)
-        seq = prefix_ids + [digit_ids[0]]
+        seq = [*prefix_ids, digit_ids[0]]
         for i in range(n_steps):
             tok_t = torch.full((batch,), seq[i], dtype=torch.long, device=dev)
             if i == n_steps - 1:
@@ -202,17 +216,23 @@ def main(argv=None) -> int:
             else:
                 tgt = torch.full((batch,), seq[i + 1], dtype=torch.long, device=dev)
             if args.arm != "zero":
-                blk = sensors[:, :, min(i, sensors.shape[2] - 1)].T   # (batch, POOL)
+                blk = sensors[:, :, min(i, sensors.shape[2] - 1)].T  # (batch, POOL)
                 full = np.zeros((batch, POOL * len(pools)), dtype=np.float32)
-                full[:, slot * POOL:(slot + 1) * POOL] = blk
+                full[:, slot * POOL : (slot + 1) * POOL] = blk
                 model.sensors = torch.from_numpy(full).to(dev)
             model.step(tok_t, tgt, tr, update=update, all_valid=True)
             # 空步插在第一个 token 之后：张力性驱动的池在这段里推进，
             # 而文本神经元已在静息，所以差别只来自池。空步不产生梯度（target=-100）。
             if gaps is not None and i == 0:
                 for _ in range(gaps):
-                    model.step(tok_t, torch.full_like(tgt, -100), tr,
-                               update=False, all_valid=True, blank=True)
+                    model.step(
+                        tok_t,
+                        torch.full_like(tgt, -100),
+                        tr,
+                        update=False,
+                        all_valid=True,
+                        blank=True,
+                    )
         if args.arm != "zero":
             model.sensors = None
         return ans, tr
@@ -228,9 +248,11 @@ def main(argv=None) -> int:
         ans, tr = run_episode(name, args.batch, rng, pcl, True, digit)
         feats = model._features(tr)
         bx, by = buf_x[name], buf_y[name]
-        bx.append(feats.detach()); by.append(torch.tensor(ans))
+        bx.append(feats.detach())
+        by.append(torch.tensor(ans))
         if len(bx) > 200:
-            bx.pop(0); by.pop(0)
+            bx.pop(0)
+            by.pop(0)
 
         if step % args.eval_every == 0:
             hit = {}
@@ -243,41 +265,46 @@ def main(argv=None) -> int:
                 for p in pools:
                     if not buf_x[p]:
                         continue
-                    X = torch.stack(buf_x[p][-100:]).reshape(-1, model.readout_width)
-                    Y = torch.stack(buf_y[p][-100:]).reshape(-1)
+                    x_all = torch.stack(buf_x[p][-100:]).reshape(-1, model.readout_width)
+                    y_all = torch.stack(buf_y[p][-100:]).reshape(-1)
                     # **探针必须保留幅度**：余弦相似度对整体缩放不变，而标量驱动的池
                     # （温度、节奏）把答案编码在**发放率**上——归一化会把唯一可分的那个
                     # 维度抹掉。这里用"标准化 + 欧氏最近原型"，仍然无参数、无训练。
-                    Z = X[:, probe_idx[p]]
+                    z_pool = x_all[:, probe_idx[p]]
                     # **两个探针都算**：余弦只看方向、欧氏看方向+幅度。哪个都不占优，
                     # 所以 S-1 要求**两个探针同时过**——把"仪器决定的结论"挡在门外。
                     protos = []
                     for c in range(10):
-                        sel = (Y == c)
-                        protos.append(Z[sel].mean(0) if bool(sel.any()) else torch.zeros(Z.shape[1]))
-                    P = torch.stack(protos)
-                    Pcos = P / (P.norm(dim=1, keepdim=True) + 1e-9)
+                        sel = y_all == c
+                        protos.append(
+                            z_pool[sel].mean(0)
+                            if sel.any().item()
+                            else torch.zeros(z_pool.shape[1])
+                        )
+                    proto = torch.stack(protos)
+                    proto_cos = proto / (proto.norm(dim=1, keepdim=True) + 1e-9)
                     acc = acc_cos = n = 0
                     r_acc = 0.0
                     per_class: dict[int, list[float]] = {}
                     mean_feat = torch.zeros(len(probe_idx[p]))
                     for j in range(args.eval_batches):
                         dig = j % 10 if p == "time" else None
-                        a2, tr2 = run_episode(p, args.batch, rng, int(rng.integers(0, 10)),
-                                              False, dig)
+                        a2, tr2 = run_episode(
+                            p, args.batch, rng, int(rng.integers(0, 10)), False, dig
+                        )
                         if args.arm != "zero":
-                            zz = tr2.z[:, rate_idx[p]].mean(1)   # 逐样本
+                            zz = tr2.z[:, rate_idx[p]].mean(1)  # 逐样本
                             r_acc += float(zz.mean())
                             for bb in range(len(a2)):
                                 per_class.setdefault(int(a2[bb]), []).append(float(zz[bb]))
-                        Q = model._features(tr2)[:, probe_idx[p]]
-                        mean_feat += Q.mean(0)
+                        q = model._features(tr2)[:, probe_idx[p]]
+                        mean_feat += q.mean(0)
                         # 逐样本的池活动：这是"两个池是否在重复同一件事"的**冗余**口径
-                        pool_act[p].extend(Q.mean(1).tolist())
-                        d2 = ((Q.unsqueeze(1) - P.unsqueeze(0)) ** 2).sum(-1)
+                        pool_act[p].extend(q.mean(1).tolist())
+                        d2 = ((q.unsqueeze(1) - proto.unsqueeze(0)) ** 2).sum(-1)
                         acc += int((d2.argmin(1).cpu().numpy() == a2).sum())
-                        Qc = Q / (Q.norm(dim=1, keepdim=True) + 1e-9)
-                        acc_cos += int(((Qc @ Pcos.T).argmax(1).cpu().numpy() == a2).sum())
+                        q_cos = q / (q.norm(dim=1, keepdim=True) + 1e-9)
+                        acc_cos += int(((q_cos @ proto_cos.T).argmax(1).cpu().numpy() == a2).sum())
                         n += args.batch
                     hit[p] = acc / max(n, 1)
                     hit_cos[p] = acc_cos / max(n, 1)
@@ -288,7 +315,7 @@ def main(argv=None) -> int:
                     if len(cls) > 1:
                         mu = sum(cls) / len(cls)
                         var = sum((c - mu) ** 2 for c in cls) / len(cls)
-                        cv[p] = (var ** 0.5) / mu if mu > 0 else 0.0
+                        cv[p] = (var**0.5) / mu if mu > 0 else 0.0
                     else:
                         cv[p] = 0.0
                     pool_means[p] = mean_feat / max(args.eval_batches, 1)
@@ -302,29 +329,48 @@ def main(argv=None) -> int:
                     cos[f"{names[a]}-{names[b]}"] = float(u @ v)
                     x = torch.tensor(pool_act[names[a]])
                     y = torch.tensor(pool_act[names[b]])
-                    x = x - x.mean(); y = y - y.mean()
+                    x = x - x.mean()
+                    y = y - y.mean()
                     den = float(x.norm() * y.norm())
-                    corr[f"{names[a]}-{names[b]}"] = (
-                        float((x @ y) / den) if den > 0 else 0.0
-                    )
-            last = {"hit": hit, "hit_cos": hit_cos, "rate": rates, "rate_cv": cv,
-                    "norm": model.sensor_norm, "cos": cos, "corr": corr}
+                    corr[f"{names[a]}-{names[b]}"] = float((x @ y) / den) if den > 0 else 0.0
+            last = {
+                "hit": hit,
+                "hit_cos": hit_cos,
+                "rate": rates,
+                "rate_cv": cv,
+                "norm": model.sensor_norm,
+                "cos": cos,
+                "corr": corr,
+            }
             detail = "  ".join(f"{p} e{hit[p]:.3f}/c{hit_cos[p]:.3f}" for p in pools)
             cv_s = "  ".join(f"{k} {v:.2f}" for k, v in cv.items())
-            rate_s = ("  " + "  ".join(f"{p} {rates[p]:.2f}" for p in pools)
-                      if args.arm != "zero" else "")
-            print(f"  [{args.arm}|{'+'.join(pools)}] {step} 步  top-1 {detail}"
-                  f"  发放率{rate_s}  CV {cv_s}"
-                  f"  ‖w‖ {model.sensor_norm:.2f}  ({time.time()-t0:.0f}s)",
-                  flush=True)
+            rate_s = (
+                "  " + "  ".join(f"{p} {rates[p]:.2f}" for p in pools) if args.arm != "zero" else ""
+            )
+            print(
+                f"  [{args.arm}|{'+'.join(pools)}] {step} 步  top-1 {detail}"
+                f"  发放率{rate_s}  CV {cv_s}"
+                f"  ‖w‖ {model.sensor_norm:.2f}  ({time.time() - t0:.0f}s)",
+                flush=True,
+            )
 
-    out = {"arm": args.arm, "pools": pools, "steps": args.steps, "batch": args.batch,
-           "init_scale": args.init_scale, "inhibition": args.inhibition,
-           "hormone": args.hormone, "receptors": args.receptors, "tag": args.tag, **last}
+    out = {
+        "arm": args.arm,
+        "pools": pools,
+        "steps": args.steps,
+        "batch": args.batch,
+        "init_scale": args.init_scale,
+        "inhibition": args.inhibition,
+        "hormone": args.hormone,
+        "receptors": args.receptors,
+        "tag": args.tag,
+        **last,
+    }
     args.out.mkdir(parents=True, exist_ok=True)
     key = f"{args.arm}_{'+'.join(pools)}" + (f"_{args.tag}" if args.tag else "")
-    (args.out / f"{key}.json").write_text(json.dumps(out, ensure_ascii=False) + "\n",
-                                          encoding="utf-8", newline="\n")
+    (args.out / f"{key}.json").write_text(
+        json.dumps(out, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n"
+    )
     print(json.dumps(out, ensure_ascii=False), flush=True)
     return 0
 

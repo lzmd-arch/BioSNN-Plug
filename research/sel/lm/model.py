@@ -346,7 +346,7 @@ class TokenEProp:
         #: **突触缩放**（Turrigiano）：每个神经元按自己的发放率与目标之比，乘性地缩放
         #: 自己的全部输入突触。与"固定衰减"的区别是**它有设定点、是负反馈、双向**——
         #: 实测固定脱敏下范数照样从 14.9 涨到 37.4，因为单向衰减管不到量级。
-        self.synaptic_scaling = 0.0   # 0 = 关闭（保持与之前逐位相同）
+        self.synaptic_scaling = 0.0  # 0 = 关闭（保持与之前逐位相同）
         #: 传感器权重的 L2 上限；0 = 不限。**这个数需要靠"范数–性能曲线"来定**，
         #: 不是拍脑袋——今天三次"有界"尝试（脱敏/缩放/clip）都因为缺这条曲线而失败。
         import os as _os
@@ -451,7 +451,7 @@ class TokenEProp:
         onehot = torch.zeros((len(self.sensor_pools), n), device=self.device)
         for k, (_i, c_sl) in enumerate(self.sensor_pools.values()):
             onehot[k, c_sl] = 1.0
-        same = onehot.T @ onehot                      # (n, n)：同一池为 1
+        same = onehot.T @ onehot  # (n, n)：同一池为 1
         in_pool = (onehot.sum(0) > 0).to(onehot.dtype)  # (n,)
         diff = (1.0 - same) * in_pool.unsqueeze(0) * in_pool
         count = diff.sum(0, keepdim=True).clamp(min=1.0)
@@ -798,12 +798,12 @@ class TokenEProp:
             # 没有 .backward()、没有跨层误差路径。
             raw = self._hormone_raw(tree_signal, trace)
             h = self._hormone_step(raw)
-            gain = self._pool_gain(h)          # (sensor_dim,)：逐输入列的调制标量
+            gain = self._pool_gain(h)  # (sensor_dim,)：逐输入列的调制标量
             # **必须去均值**：不去均值时外积是一条近乎恒定的方向，
             # 学到的东西只会整体放大，不会把不同输入分开（历史记录：训练不改善、0.106）。
             # 去均值之后它是**协方差**——逐样本的输入差异才落进权重。
             c = self.sensors.to(torch.float32)
-            if c.dim() == 1:                 # 一条向量广播给整批（推理/测试里常见）
+            if c.dim() == 1:  # 一条向量广播给整批（推理/测试里常见）
                 c = c.unsqueeze(0).expand(trace.z.shape[0], -1)
             c = c - c.mean(0, keepdim=True)
             z = trace.z.to(torch.float32)

@@ -80,7 +80,10 @@ def _pooled(n_text: int = 8, n_pool: int = 4, n_extra: int = 4) -> TokenEProp:
     model.set_sensor_pools(
         {
             "a": (slice(0, n_pool), slice(n_text, n_text + n_pool)),
-            "b": (slice(n_pool, n_pool + n_extra), slice(n_text + n_pool, n_text + n_pool + n_extra)),
+            "b": (
+                slice(n_pool, n_pool + n_extra),
+                slice(n_text + n_pool, n_text + n_pool + n_extra),
+            ),
         }
     )
     return model
@@ -118,10 +121,10 @@ def test_blank_step_has_no_text_current() -> None:
 def test_cross_inhibition_only_reads_other_pools() -> None:
     model = _pooled()
     z = torch.zeros(1, model.n_rec)
-    z[0, 8:12] = 1.0          # 池 a 全发放
+    z[0, 8:12] = 1.0  # 池 a 全发放
     out = z @ model.cross_inhib
-    assert float(out[0, 8:12].abs().max()) == 0.0   # 池 a 自己不受影响
-    assert float(out[0, 12:16].min()) > 0.0          # 池 b 被抑制
+    assert float(out[0, 8:12].abs().max()) == 0.0  # 池 a 自己不受影响
+    assert float(out[0, 12:16].min()) > 0.0  # 池 b 被抑制
 
 
 def test_sensor_clip_bounds_the_norm() -> None:
@@ -132,3 +135,44 @@ def test_sensor_clip_bounds_the_norm() -> None:
     for _ in range(20):
         model.run(tokens, model.new_trace(2))
     assert model.sensor_norm <= 5.0 + 1e-4
+
+
+# -- 训练器（多池任务）的两条守卫 -----------------------------------------------
+
+
+def test_episode_label_follows_stimulus() -> None:
+    """答案必须由**实际给的驱动**决定。
+
+    `time` 池踩过一次：驱动器插了 g 个空步，但标签被另一条路径覆盖，
+    于是"答案"和"激励"对不上，池被跑成随机（0.000 ↔ 1.000）。
+    """
+    import numpy as np
+
+    from research.sel.lm.train_sensor_task import POOL, _make_episode
+
+    rng = np.random.default_rng(0)
+    for _ in range(20):
+        ans, sensors, gaps = _make_episode("time", 8, rng, 0)
+        assert gaps is not None
+        assert (ans == gaps).all(), (ans, gaps)
+        assert sensors.shape == (POOL, 8, 1)
+        assert float(sensors.min()) == 1.0  # 张力性驱动是常数 1
+
+
+def test_pools_are_disjoint() -> None:
+    """五池的 (输入列, 神经元列) 必须互不相交，且不碰文本列。"""
+    from research.sel.lm.train_sensor_task import POOL, POOLS, TEXT_N, _pool_columns
+
+    seen_in: set[int] = set()
+    seen_col: set[int] = set()
+    for k, name in enumerate(POOLS):
+        i_sl, c_sl = _pool_columns(name, k)
+        assert c_sl.start >= TEXT_N
+        for i in range(i_sl.start, i_sl.stop):
+            assert i not in seen_in
+            seen_in.add(i)
+        for j in range(c_sl.start, c_sl.stop):
+            assert j not in seen_col
+            seen_col.add(j)
+    assert len(seen_in) == POOL * len(POOLS)
+    assert len(seen_col) == POOL * len(POOLS)
