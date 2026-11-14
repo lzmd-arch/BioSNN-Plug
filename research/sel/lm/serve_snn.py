@@ -545,6 +545,16 @@ def main(argv: list[str] | None = None) -> int:
         args.ckpt, args.bpe, device, args.sensor_dim, args.qwen, args.weight_dtype
     )
     if args.compile:
+        # **把 Inductor 缓存指到一个固定目录**：预热一次之后，随包分发这个目录
+        # 就能让用户侧零编译、零 MSVC 依赖（该目录是平台绑定的，运行层本就按平台另发）。
+        import os
+
+        cache = os.environ.setdefault(
+            "TORCHINDUCTOR_CACHE_DIR",
+            str(Path(os.environ.get("AXO_DATA", ".")) / "cache" / "inductor"),
+        )
+        Path(cache).mkdir(parents=True, exist_ok=True)
+        print(f"Inductor 缓存目录：{cache}", flush=True)
         # **编译期环境**：Windows 上 Inductor 要 MSVC 的 cl.exe。找不到就退回 eager，
         # 不让一个纯性能开关把服务起不来。
         try:
