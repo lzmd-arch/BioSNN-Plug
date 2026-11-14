@@ -273,3 +273,26 @@ def test_ortho_encoder_scale_carries_sqrt_n() -> None:
     assert abs(float(norms.mean()) - expected) / expected < 0.05, (
         float(norms.mean()), expected
     )
+
+
+def test_text_isolation_survives_training() -> None:
+    """功能分离必须**在每一步更新之后**仍成立。
+
+    只在初始化时把"文本→池"清零是假的：`learn_hidden` 的 e-prop 更新会把那些列写回去，
+    池神经元从此重新吃文本电流。实测两池跑 20 步后，同一输入的池特征与训练前
+    最大差 **0.795**（而 `sensor_proj` 范数纹丝不动），症状是"训练集 1.000、留出 0.49"。
+    """
+    model = _pooled(n_text=8, n_pool=4, n_extra=4)
+    cols = model._isolate_cols
+    assert cols is not None and int(cols.sum()) == 8
+    tokens = torch.randint(0, 16, (4, 12))
+    if model.w_in is not None:
+        before = model.w_in[:, :8].clone()        # 文本列
+    model.run(tokens, model.new_trace(4))          # update=True，会走 e-prop
+    # **先证明学习真的发生了**，否则下面的断言是空的
+    if model.w_in is not None:
+        assert float((model.w_in[:, :8] - before).abs().max()) > 0.0, "文本列没有被更新"
+    if model.w_in is not None:
+        assert float(model.w_in[:, cols].abs().max()) == 0.0
+    if model.proj is not None:
+        assert float(model.proj[:, cols].abs().max()) == 0.0

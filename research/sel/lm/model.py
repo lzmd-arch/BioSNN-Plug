@@ -363,6 +363,10 @@ class TokenEProp:
         #: 今天五个混杂因素里有两个（共享神经元、均值外积）就是靠脚本里的掩码，
         #: 而掩码一旦忘了写就静默退回混合。
         self.sensor_pools: dict[str, tuple[slice, slice]] = {}
+        #: 池神经元的列掩码：**每一步更新之后**都要把"文本→池"那几列重新清零。
+        #: 只清零一次是不够的——e-prop 会把它们写回去。实测：训练 20 步后，
+        #: 同一输入的池特征与训练前最大差 0.795（权重范数却一点没变）。
+        self._isolate_cols: torch.Tensor | None = None
         self._pool_mask: torch.Tensor | None = None
         #: **区间侧抑制**：池 r 的电流减去 γ·(其它池上一步的平均发放)。`None` = 关闭（逐位不变）。
         #: 没有它，四个池会退化成彼此冗余的拷贝（设计文档 §二）。
@@ -442,6 +446,9 @@ class TokenEProp:
         for i_sl, c_sl in self.sensor_pools.values():
             mask[i_sl, c_sl] = True
         self._pool_mask = mask
+        self._isolate_cols = torch.zeros(self.n_rec, dtype=torch.bool, device=self.device)
+        for _i_sl, c_sl in self.sensor_pools.values():
+            self._isolate_cols[c_sl] = True
         self.sensor_proj = self.sensor_proj * mask
         self._build_cross_inhibition()
 
@@ -542,6 +549,22 @@ class TokenEProp:
             if float(m[i].sum()) == 0:
                 m[i, i % m.shape[1]] = 1.0
         self.sensor_route_masks = m.to(self.device)
+
+    def _enforce_text_isolation(self) -> None:
+        """把"文本→池神经元"的输入权重清零（每次更新后都要做一次）。
+
+        功能分离只在**初始化时**清零是假的：`learn_hidden` 的 e-prop 更新会把
+        这些列写回去，池神经元从此重新吃文本电流。实测两池跑 20 步后，
+        同一输入的池特征与训练前最大差 **0.795**，而 `sensor_proj` 的范数纹丝不动
+        —— 症状正是"训练集准确率 1.000、留出 0.49"。
+        """
+        if self._isolate_cols is None:
+            return
+        cols = self._isolate_cols
+        if self.w_in is not None:
+            self.w_in[:, cols] = 0.0
+        if self.proj is not None and not self.proj_frozen:
+            self.proj[:, cols] = 0.0
 
     def set_cross_inhibition(self, gain: float | None) -> None:
         """``gain=None`` 关闭侧抑制（``cross_inhib`` 置空，逐位不变）。"""
@@ -1038,6 +1061,8 @@ class TokenEProp:
             else:
                 grad_a = self._mm(gradient, self.w_b.T)  # (B, r)
                 self.w_a.add_(features.T @ grad_a / denom, alpha=-self.lr_out)
+        if update:
+            self._enforce_text_isolation()
         return loss, fired
 
     # -- 标定与诊断 ------------------------------------------------------------
