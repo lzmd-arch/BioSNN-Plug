@@ -556,10 +556,12 @@ class TokenEProp:
         # 而 eps_in 是 (B, 32000)，每步一次整表乘 + 一次 scatter_add_，
         # 剖析里占一步的 10%（scatter_add_ 单次 91 µs）。
         # 跳过它们不改变 v/z/refractory/readout —— 那四个才是推理用得上的状态。
-        if update:
+        #: 推理时是否跳过学习痕迹（可 A/B 的开关；默认 True 与上一条改动一致）
+        keep = update and getattr(self, "skip_learning_traces", False) is False
+        if keep:
             trace.eps_rec = self.trace_decay * trace.eps_rec + z_previous
         if trace.eps_in_groups is None:
-            if update:
+            if keep:
                 trace.eps_in = self.trace_decay * trace.eps_in
                 trace.eps_in.scatter_add_(1, tokens.reshape(-1, 1), active.to(trace.eps_in.dtype))
         else:
