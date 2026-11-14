@@ -43,7 +43,7 @@ def _store(session: str, ids: tuple, consumed: int, stamp: float | None = None) 
 def test_reuses_on_extension() -> None:
     ids = tuple(range(10))
     _store("a", ids, consumed=9)
-    trace, done = serve_snn._reuse_trace("a", ids + (10,), max_len=256)
+    trace, done = serve_snn._reuse_trace("a", (*ids, 10), max_len=256)
     assert done == 9
     assert trace.v.value == [9]
 
@@ -52,7 +52,7 @@ def test_reuse_returns_a_clone_not_the_cached_object() -> None:
     """**必须拷贝**：`step` 会原地改 trace，直接复用会把缓存写脏。"""
     ids = tuple(range(10))
     _store("a", ids, consumed=9)
-    trace, _ = serve_snn._reuse_trace("a", ids + (10,), max_len=256)
+    trace, _ = serve_snn._reuse_trace("a", (*ids, 10), max_len=256)
     trace.v.value.append(999)
     assert serve_snn._SESSIONS["a"][1].v.value == [9]
 
@@ -63,13 +63,13 @@ def test_refuses_after_divergence() -> None:
     第 9 位（还没消费到）变了不算分叉——前 9 步的递推结果照样有效。
     """
     _store("a", tuple(range(10)), consumed=9)
-    trace, done = serve_snn._reuse_trace("a", tuple(range(8)) + (99, 10, 11), max_len=256)
+    trace, done = serve_snn._reuse_trace("a", (*range(8), 99, 10, 11), max_len=256)
     assert (trace, done) == (None, 0)
 
 
 def test_reuses_when_divergence_is_beyond_the_consumed_prefix() -> None:
     _store("a", tuple(range(10)), consumed=9)
-    trace, done = serve_snn._reuse_trace("a", tuple(range(9)) + (99, 11), max_len=256)
+    trace, done = serve_snn._reuse_trace("a", (*range(9), 99, 11), max_len=256)
     assert done == 9 and trace is not None
 
 
