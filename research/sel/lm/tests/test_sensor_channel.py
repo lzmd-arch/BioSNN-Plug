@@ -267,12 +267,13 @@ def test_ortho_encoder_scale_carries_sqrt_n() -> None:
     # 行是正交的 ⇒ 每行范数相同；它必须与 √n 成正比
     norms = blk.norm(dim=1)
     assert float(norms.std() / norms.mean()) < 1e-3, "行范数应当一致（正交）"
-    expected = 2.0 * float(model.threshold) / (
-        (1.0 - float(model.alpha) ** 2) / (1.0 - float(model.alpha))
-    ) * (8 ** 0.5)
-    assert abs(float(norms.mean()) - expected) / expected < 0.05, (
-        float(norms.mean()), expected
+    expected = (
+        2.0
+        * float(model.threshold)
+        / ((1.0 - float(model.alpha) ** 2) / (1.0 - float(model.alpha)))
+        * (8**0.5)
     )
+    assert abs(float(norms.mean()) - expected) / expected < 0.05, (float(norms.mean()), expected)
 
 
 def test_text_isolation_survives_training() -> None:
@@ -287,8 +288,8 @@ def test_text_isolation_survives_training() -> None:
     assert cols is not None and int(cols.sum()) == 8
     tokens = torch.randint(0, 16, (4, 12))
     if model.w_in is not None:
-        before = model.w_in[:, :8].clone()        # 文本列
-    model.run(tokens, model.new_trace(4))          # update=True，会走 e-prop
+        before = model.w_in[:, :8].clone()  # 文本列
+    model.run(tokens, model.new_trace(4))  # update=True，会走 e-prop
     # **先证明学习真的发生了**，否则下面的断言是空的
     if model.w_in is not None:
         assert float((model.w_in[:, :8] - before).abs().max()) > 0.0, "文本列没有被更新"
