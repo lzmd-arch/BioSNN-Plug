@@ -1,0 +1,14 @@
+{
+ "memories": 313,
+ "never_recalled": 46,
+ "self_retrievable_top5": 46,
+ "retrieval_miss": 0,
+ "weight": {
+  "min": 0.0,
+  "p25": 0.0,
+  "median": 0.0,
+  "p75": 0.4283,
+  "max": 1.0
+ },
+ "note": "自检索用同一套词法打分，只用于区分'检索漏'与'使用分布'。"
+}
