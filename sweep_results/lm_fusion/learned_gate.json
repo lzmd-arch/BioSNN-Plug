@@ -1,0 +1,9 @@
+{
+ "positions": 443,
+ "train": 265,
+ "holdout": 178,
+ "learned_gate_mass": -13.6895,
+ "linear_mass": -13.6893,
+ "delta": -0.0002,
+ "verdict": "可学门没有优于线性"
+}
