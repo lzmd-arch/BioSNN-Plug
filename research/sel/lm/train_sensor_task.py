@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import time
 from pathlib import Path
 
@@ -35,6 +36,9 @@ TEXT_N = 156
 POOL = 16
 POOLS = ("temp", "time", "memory", "persona", "presence")
 PROTOS = np.random.default_rng(11).normal(0, 1, (10, POOL)).astype(np.float32)
+#: 一个回合里模型真的跑几步（= 前缀 token 数）。`presence` 的随机游走长度必须等于它，
+#: 否则"答案取末值"的那个末值**从来没被喂进去**——这正是它单跑 0.24 的直接原因。
+_N_STEPS = 2
 
 
 def _pool_columns(name: str, pool_index: int) -> tuple[slice, slice]:
@@ -69,12 +73,14 @@ def _make_episode(name: str, batch: int, rng: np.random.Generator, persona_clust
         s[:, :, 0] = v.T.astype(np.float32)
         return cl, s, None
     if name == "presence":
-        # 输入速率：从随机起点做有界随机游走，答案 = 最后一步所在的档
-        walk = np.zeros((5, batch), dtype=np.int64)
+        # 输入速率：从随机起点做有界随机游走，答案 = **最后一步**所在的档。
+        # 游走长度必须 = 回合步数，否则末值喂不进去（修之前写死 5 步，
+        # 而回合只有 2 步 ⇒ 只喂了 walk[0]、walk[1]，答案 walk[4] 从未出现过）。
+        walk = np.zeros((_N_STEPS, batch), dtype=np.int64)
         walk[0] = rng.integers(0, 10, size=batch)
-        for k in range(1, 5):
+        for k in range(1, _N_STEPS):
             walk[k] = np.clip(walk[k - 1] + rng.integers(-2, 3, size=batch), 0, 9)
-        s = np.zeros((POOL, batch, 5), dtype=np.float32)
+        s = np.zeros((POOL, batch, _N_STEPS), dtype=np.float32)
         s[:] = (walk / 9.0).transpose(1, 0)[None, :, :]
         return walk[-1], s, None
     raise ValueError(name)
@@ -99,6 +105,7 @@ def main(argv=None) -> int:
     )
     ap.add_argument("--desensitize", type=float, default=0.05, help="受体脱敏 λ；0 = 关")
     ap.add_argument("--clip", type=float, default=10.0, help="‖sensor_proj‖ 上限；0 = 不限")
+    ap.add_argument("--seed", type=int, default=0, help="池初值的随机种子（配对比较用）")
     ap.add_argument("--inhibition", type=float, default=0.0, help="侧抑制增益；0 = 关")
     ap.add_argument("--hormone", choices=("scalar", "tonic"), default="tonic")
     ap.add_argument("--receptors", choices=("global", "perpool"), default="perpool")
@@ -142,24 +149,22 @@ def main(argv=None) -> int:
             model.proj[:, TEXT_N:] = 0.0
         if getattr(model, "w_in", None) is not None:
             model.w_in[:, TEXT_N:] = 0.0
-        gen = torch.Generator().manual_seed(7)
-        model.sensor_proj = torch.randn(model.sensor_proj.shape, generator=gen) * (
-            args.init_scale / (model.n_rec**0.5)
-        )
-        # 逐池标定：每个池的驱动尺度是**分别测出来的**，不是同一个数
+        # **每个池的初值只由它自己决定**：生成器按池名固定、分母用固定的参考规模。
+        # 不这样做的话，单池与五池共存拿到的是两次不同的随机抽样、且尺度跟着 n_rec 变——
+        # 于是 S-4 的"单跑 vs 共存"里混进了两个与"共存"无关的差异。
         scales = {}
         for item in filter(None, args.pool_scales.split(",")):
             k, v = item.split(":")
             scales[k] = float(v)
-        if scales:
-            for name in pools:
-                if name not in scales:
-                    continue
-                i_sl, _c_sl = model.sensor_pools[name]
-                blk = torch.randn((i_sl.stop - i_sl.start, model.n_rec), generator=gen) * (
-                    scales[name] / (model.n_rec**0.5)
-                )
-                model.sensor_proj[i_sl] = blk
+        ref = math.sqrt(TEXT_N + POOL)
+        model.sensor_proj = torch.zeros_like(model.sensor_proj)
+        for name in pools:
+            sc = scales.get(name, args.init_scale)
+            i_sl, _c_sl = model.sensor_pools[name]
+            gb = torch.Generator().manual_seed(1000 + 17 * POOLS.index(name) + 7919 * args.seed)
+            model.sensor_proj[i_sl] = torch.randn(
+                (i_sl.stop - i_sl.start, model.n_rec), generator=gb
+            ) * (sc / ref)
         model.sensor_proj *= model._pool_mask
     model.sensor_mode = "gate" if args.arm == "gate" else "add"
     model.lr_sensor = args.lr_sensor
@@ -199,6 +204,8 @@ def main(argv=None) -> int:
     buf_y: dict[str, list[torch.Tensor]] = {p: [] for p in pools}
     t0 = time.time()
     n_steps = len(prefix_ids)  # prefix + 数字位
+    global _N_STEPS
+    _N_STEPS = n_steps
 
     def run_episode(name, batch, rng_, persona_cluster, update, digit=None, slot=None):
         ans, sensors, gaps = _make_episode(name, batch, rng_, persona_cluster)

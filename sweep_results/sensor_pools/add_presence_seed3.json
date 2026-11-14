@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["presence"], "steps": 1500, "batch": 64, "init_scale": 1.0, "inhibition": 0.0, "hormone": "tonic", "receptors": "perpool", "tag": "seed3", "hit": {"presence": 0.1953125}, "hit_cos": {"presence": 0.1921875}, "rate": {"presence": 0.0548828125}, "rate_cv": {"presence": 0.2546357723091557}, "norm": 9.41614055633545, "cos": {}, "corr": {}}
