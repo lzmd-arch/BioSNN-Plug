@@ -42,7 +42,6 @@ from research.sel.lm.train_sensor_task import (
     POOLS,
     PREFIX,
     TEXT_N,
-    _make_episode,
     _pool_columns,
 )
 
@@ -196,7 +195,7 @@ def run(
                     buffers[k].pop(0)
                 if arm == "replay" and k > 0:
                     # latent replay：从每个旧任务按 ρ 抽一小批，混进**同一个**头
-                    take = max(1, int(math.ceil(replay_rho * batch)))
+                    take = max(1, math.ceil(replay_rho * batch))
                     for j in range(k):
                         if not buffers[j]:
                             continue
@@ -208,10 +207,8 @@ def run(
         for j in range(tasks):
             vals, lab = make_task(np.random.default_rng(10_000 + j), j, 512)
             xj = extract(model, pool, slot, vals, prefix_ids, digit_ids)
-            if arm == "multi":
-                pred = heads[j].predict(xj)  # oracle 路由：用**该任务自己的头**
-            else:
-                pred = shared.predict(xj) % 10
+            # multi 是 oracle 路由：用**该任务自己的头**；另外两臂共用一个头
+            pred = heads[j].predict(xj) if arm == "multi" else shared.predict(xj) % 10
             hist[k][j] = float((pred == torch.from_numpy(lab)).float().mean())
         print(
             f"  [{arm}] 学完任务 {k}: 逐步 ACC {np.mean([hist[k][j] for j in range(k + 1)]):.3f}"

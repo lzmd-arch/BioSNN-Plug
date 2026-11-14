@@ -187,7 +187,6 @@ def test_ramp_encoder_places_thresholds_where_designed() -> None:
     修这条的时候踩过一次：用**稳态**增益 `I/(1−α)` 会把阈值放到 10 倍远处，
     整池静默（发放率 0.00）。回合只有几步，必须用 n 步**暂态**解。
     """
-    import numpy as np
 
     model = _pooled(n_text=8, n_pool=8, n_extra=0)
     with torch.no_grad():
@@ -206,8 +205,8 @@ def test_ramp_encoder_places_thresholds_where_designed() -> None:
         total = torch.zeros(8)
         for _ in range(6):
             model.step(tok, tok, tr, update=False)
-            total += tr.z[0, 8:]      # **累计**：只看最后一步会被不应期错开相位
+            total += tr.z[0, 8:]  # **累计**：只看最后一步会被不应期错开相位
         counts.append(float(total.sum()))
     model.sensors = None
-    assert counts == sorted(counts), counts          # 单调
-    assert counts[0] < counts[-1], counts            # 两端确实分开
+    assert counts == sorted(counts), counts  # 单调
+    assert counts[0] < counts[-1], counts  # 两端确实分开
