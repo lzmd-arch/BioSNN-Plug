@@ -107,10 +107,19 @@ def main(argv=None) -> int:
                     s2 = torch.zeros(args.batch, 16); s2[:, 0] = torch.tensor(t2 / 9.0)
                     model.sensors = None if args.arm == "zero" else s2.to(dev)
                     tr = model.new_trace(args.batch)
+                    # **步数必须与训练一致**：训练走 len(seq)-1 步（前缀 + 数字），
+                    # 这里原来只走 len(prefix_ids)-1 步——差一步，EMA 特征就系统性错位，
+                    # kNN 永远分不开。这是"池编码完美但任务 0.106"的直接原因。
                     for i in range(len(prefix_ids) - 1):
                         model.step(torch.full((args.batch,), prefix_ids[i], dtype=torch.long, device=dev),
                                    torch.full((args.batch,), prefix_ids[i + 1], dtype=torch.long, device=dev),
                                    tr, update=False, all_valid=True)
+                    # 训练最后一个前缀 token 也消费了（target 是数字），推理没有数字可给，
+                    # 用同一个 token 当占位——update=False 时 target 只影响损失，不影响状态。
+                    last = prefix_ids[-1]
+                    model.step(torch.full((args.batch,), last, dtype=torch.long, device=dev),
+                               torch.full((args.batch,), last, dtype=torch.long, device=dev),
+                               tr, update=False, all_valid=True)
                     model.sensors = None
                     # 用树上 10 个数字 token 的路径概率当分类器
                     # **kNN：非线性、无参数、不吃语言先验**——线性探针只能测"线性可解码"，
