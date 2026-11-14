@@ -84,7 +84,7 @@ class FusionLM(nn.Module):
             scale = self._mod[:, idx, 0].to(dt).unsqueeze(1)
             shift = self._mod[:, idx, 1].to(dt).unsqueeze(1)
             h = h * (1.0 + scale) + shift
-            return (h,) + tuple(output[1:]) if isinstance(output, tuple) else h
+            return (h, *output[1:]) if isinstance(output, tuple) else h
 
         return hook
 
