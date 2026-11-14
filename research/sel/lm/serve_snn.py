@@ -178,9 +178,24 @@ def encode_texts(
     return out / norms
 
 
+#: 逐位置特征的固定随机投影。**种子固定 ⇒ 可复现**；不投影的话一次响应几十 MB，跑不动。
+_PROJ_CACHE: dict[int, torch.Tensor] = {}
+
+
+def _projection(dim: int, width: int, device) -> torch.Tensor:
+    key = (dim << 16) | width
+    cached = _PROJ_CACHE.get(key)
+    if cached is None:
+        gen = torch.Generator(device="cpu").manual_seed(20261114)
+        cached = (torch.randn(dim, width, generator=gen) / (width**0.5)).to(device)
+        _PROJ_CACHE[key] = cached
+    return cached
+
+
 @torch.no_grad()
-@torch.no_grad()
-def position_features(model, tokenizer, text: str, max_len: int = 256, tail: bool = True) -> list:
+def position_features(
+    model, tokenizer, text: str, max_len: int = 256, tail: bool = True, width: int = 64
+) -> list:
     """**逐位置**读出特征，不池化。
 
     `/encode` 返回的是各位置特征的均值——那等于把递推序列压成一个点。
@@ -201,7 +216,10 @@ def position_features(model, tokenizer, text: str, max_len: int = 256, tail: boo
             update=False,
             all_valid=True,
         )
-        rows.append(model._features(trace)[0].cpu().tolist())
+        features = model._features(trace)[0]
+        if width and width < features.numel():
+            features = features @ _projection(features.numel(), width, model.device)
+        rows.append(features.cpu().tolist())
     return rows
 
 
@@ -577,11 +595,12 @@ def main(argv: list[str] | None = None) -> int:
                 try:
                     body = json.loads(self.rfile.read(length) or b"{}")
                     text = str(body.get("text") or "")
+                    width = int(body.get("width") or 64)
                 except Exception as exc:
                     self._send(400, {"error": f"{type(exc).__name__}: {exc}"})
                     return
                 with lock:
-                    rows = position_features(model, tokenizer, text)
+                    rows = position_features(model, tokenizer, text, width=width)
                 self._send(
                     200,
                     {
