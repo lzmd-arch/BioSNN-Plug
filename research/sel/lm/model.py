@@ -508,12 +508,14 @@ class TokenEProp:
                 xs = xs.repeat_interleave(math.ceil(n_col / n_lev))[:n_col]
             block[0, c_sl] = thr / xs
         elif kind == "ortho":
-            # 单位正交行 × (thr/0.5)：单位范数输入下 |I| 最大到 2×阈值 ⇒ 既不塌也不饱和
+            # 单位正交行 × 2·thr·√n：**必须带 √n**。单位范数输入投到 n 个正交方向上，
+            # 每个系数只有 O(1/√n)；不带 √n 时池 64 的每神经元电流只有阈值的 1/2，
+            # 整池静默（发放率 0.03），读出自然崩——单池 16 恰好没暴露这个错。
             g = torch.Generator().manual_seed(1000 + 17 * seed)
             q, _ = torch.linalg.qr(torch.randn((n_col, n_col), generator=g))
             # block 的行是**本池内部的**输入列（0..n_in），不是全局列号——
             # 用绝对下标会在多池 + 池>16 时越界（单池恰好从 0 开始，把 bug 藏住了）
-            block[:, c_sl] = q.to(self.device) * (thr / 0.5)
+            block[:, c_sl] = q.to(self.device) * (2.0 * thr * math.sqrt(n_col))
         else:
             raise ValueError(f"未知的编码类型：{kind}")
         self.sensor_proj[i_sl] = block * float(scale)

@@ -245,3 +245,31 @@ def test_design_encoder_with_multiple_pools_and_wide_blocks() -> None:
     assert float(model.sensor_proj[:, c_b].abs().sum()) > 0
     # 块外必须为零
     assert float(model.sensor_proj.masked_select(~model._pool_mask).abs().max()) == 0.0
+
+
+def test_ortho_encoder_scale_carries_sqrt_n() -> None:
+    """正交投影的标度必须带 √n。
+
+    单位范数输入投到 n 个正交方向上，每个系数只有 O(1/√n)。不带 √n 时，
+    池 64 的每个神经元只拿到阈值的 ~1/2 ⇒ **整池静默**（发放率 0.03），
+    多池共存时 `memory`/`persona` 的读出从 0.82 掉到 0.43/0.33。
+    池 16 恰好没暴露它（1/√16 = 0.25，勉强越过阈值）。
+    """
+    model = _pooled(n_text=8, n_pool=8, n_extra=0)
+    with torch.no_grad():
+        if getattr(model, "proj", None) is not None:
+            model.proj[:, 8:] = 0.0
+        if getattr(model, "w_in", None) is not None:
+            model.w_in[:, 8:] = 0.0
+    model.design_sensor_encoder("a", kind="ortho", scale=1.0, seed=0, steps=2)
+    _i, c = model.sensor_pools["a"]
+    blk = model.sensor_proj[:, c]
+    # 行是正交的 ⇒ 每行范数相同；它必须与 √n 成正比
+    norms = blk.norm(dim=1)
+    assert float(norms.std() / norms.mean()) < 1e-3, "行范数应当一致（正交）"
+    expected = 2.0 * float(model.threshold) / (
+        (1.0 - float(model.alpha) ** 2) / (1.0 - float(model.alpha))
+    ) * (8 ** 0.5)
+    assert abs(float(norms.mean()) - expected) / expected < 0.05, (
+        float(norms.mean()), expected
+    )
