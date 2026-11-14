@@ -54,6 +54,11 @@ def main(argv=None) -> int:
 
     rng = np.random.default_rng(0)
     dev = model.device
+    #: 线性头：**评测必须用一个能表达这个任务的头**。树读出的概率被语言先验主导，
+    #: 实测在五种配置下 top-1 恒为 0.109（= 常数预测），分辨不出任何差别。
+    head_w = torch.zeros(model.readout_width, 10)
+    buf_x: list[torch.Tensor] = []
+    buf_y: list[torch.Tensor] = []
     t0 = time.time()
     for step in range(1, args.steps + 1):
         temp = rng.integers(0, 10, size=args.batch)
@@ -66,6 +71,10 @@ def main(argv=None) -> int:
             tok_t = torch.full((args.batch,), seq[i], dtype=torch.long, device=dev)
             tgt = torch.tensor([digit_ids[int(t)] for t in temp], device=dev) if i == len(seq) - 2 else torch.full((args.batch,), seq[i + 1], dtype=torch.long, device=dev)
             model.step(tok_t, tgt, trace, update=True, all_valid=True)
+        feats = model._features(trace)
+        buf_x.append(feats.detach()); buf_y.append(torch.tensor(temp))
+        if len(buf_x) > 200:
+            buf_x.pop(0); buf_y.pop(0)
         model.sensors = None
         if step % 250 == 0:
             # 评测：同一任务、新样本
@@ -82,9 +91,13 @@ def main(argv=None) -> int:
                                    tr, update=False, all_valid=True)
                     model.sensors = None
                     # 用树上 10 个数字 token 的路径概率当分类器
-                    full = path_probabilities(model._features(tr), model.tree.weight, model.tree.paths)
-                    probs = full[:, torch.tensor(digit_ids, device=dev)]
-                    pred = probs.argmax(1).cpu().numpy()
+                    X = torch.stack(buf_x[-50:]).reshape(-1, model.readout_width)
+                    Y = torch.stack(buf_y[-50:]).reshape(-1)
+                    Yh = torch.nn.functional.one_hot(Y, 10).float()
+                    # 闭式岭回归：一次解完，无 autograd
+                    A = X.T @ X + 1.0 * torch.eye(model.readout_width)
+                    head_w = torch.linalg.solve(A, X.T @ Yh)
+                    pred = (model._features(tr) @ head_w).argmax(1).cpu().numpy()
                     hit += int((pred == t2).sum()); n += args.batch
             print(f"  [{args.arm}] {step} 步  评测 top-1 {hit/n:.3f}  ({time.time()-t0:.0f}s)", flush=True)
 
