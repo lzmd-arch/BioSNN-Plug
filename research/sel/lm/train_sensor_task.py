@@ -358,6 +358,8 @@ def main(argv=None) -> int:
             hit = {}
             hit_cos = {}
             hit_lin = {}
+            hit_knn = {}
+            hit_maha = {}
             rates = {}
             cv = {}
             pool_means: dict[str, torch.Tensor] = {}
@@ -399,8 +401,25 @@ def main(argv=None) -> int:
                     xs_tr = (x_tr - mu_) / sd_
                     a_ = xs_tr.T @ xs_tr + 1.0 * torch.eye(x_tr.shape[1])
                     w_lin = torch.linalg.solve(a_, xs_tr.T @ y_oh)
+                    # **kNN**：非参数、非线性（Voronoi 型），且**对"把一维复制成两维"不敏感**
+                    # ——欧氏距离只在原空间里量一次，标准化后更不会。
+                    # 用它当主判据，线性读出只作参照。
+                    knn_x = xs_tr
+                    knn_y = y_tr
+                    # **马氏最近类心**：非参数、非线性（按类内协方差白化），
+                    # 且**对"复制一维"不敏感**——白化后复制的那一维落在零空间里，
+                    # 距离不变。这比线性读出和 kNN 都更适合当主判据：
+                    # kNN 在维数升高时会因距离集中而崩（实测 512 维只有 0.31）。
+                    _cm = torch.stack([xs_tr[y_tr == c].mean(0) for c in range(10)])
+                    _res = xs_tr - _cm[y_tr]
+                    _cov = _res.T @ _res / max(len(y_tr) - 1, 1)
+                    _tr = torch.diagonal(_cov).mean()
+                    _cov = 0.9 * _cov + 0.1 * _tr * torch.eye(_cov.shape[0])
+                    _evals, _evecs = torch.linalg.eigh(_cov)
+                    _whiten = _evecs @ torch.diag(1.0 / _evals.clamp(min=1e-6).sqrt()) @ _evecs.T
+                    _cm_w = _cm @ _whiten
                     proto_cos = proto / (proto.norm(dim=1, keepdim=True) + 1e-9)
-                    acc = acc_cos = acc_lin = n = 0
+                    acc = acc_cos = acc_lin = acc_knn = acc_maha = n = 0
                     r_acc = 0.0
                     per_class: dict[int, list[float]] = {}
                     mean_feat = torch.zeros(len(probe_idx[p]))
@@ -428,10 +447,21 @@ def main(argv=None) -> int:
                         acc_cos += int(((q_cos @ proto_cos.T).argmax(1).cpu().numpy() == a2).sum())
                         q_std = (q - mu_) / sd_
                         acc_lin += int(((q_std @ w_lin).argmax(1).cpu().numpy() == a2).sum())
+                        _q_w = q_std @ _whiten
+                        acc_maha += int(
+                            (torch.cdist(_q_w, _cm_w).argmin(1).cpu().numpy() == a2).sum()
+                        )
+                        _d = torch.cdist(q_std, knn_x)
+                        _idx = _d.topk(5, largest=False).indices
+                        _votes = knn_y[_idx]
+                        _pred = torch.mode(_votes, dim=1).values
+                        acc_knn += int((_pred.cpu().numpy() == a2).sum())
                         n += args.batch
                     hit[p] = acc / max(n, 1)
                     hit_cos[p] = acc_cos / max(n, 1)
                     hit_lin[p] = acc_lin / max(n, 1)
+                    hit_knn[p] = acc_knn / max(n, 1)
+                    hit_maha[p] = acc_maha / max(n, 1)
                     if args.debug:
                         tr_acc = float(((xs_tr @ w_lin).argmax(1) == y_tr).float().mean())
                         print(
@@ -484,7 +514,7 @@ def main(argv=None) -> int:
                 "corr": corr,
             }
             detail = "  ".join(
-                f"{p} e{hit[p]:.3f}/c{hit_cos[p]:.3f}/l{hit_lin[p]:.3f}" for p in pools
+                f"{p} e{hit[p]:.3f}/m{hit_maha[p]:.3f}/l{hit_lin[p]:.3f}" for p in pools
             )
             cv_s = "  ".join(f"{k} {v:.2f}" for k, v in cv.items())
             rate_s = (
