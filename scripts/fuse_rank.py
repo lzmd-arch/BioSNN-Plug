@@ -139,7 +139,7 @@ def main():
 
     def rank(r, a):
         order = sorted(range(len(r["slow"])), key=lambda i: -r["slow"][i][1])
-        rank_of = {r["slow"][i][0]: k for k, i in enumerate(order)}
+        _rank_of = {r["slow"][i][0]: k for k, i in enumerate(order)}
         al = align(r["slow"], r["fast"])
         fr = sorted(al.items(), key=lambda kv: -kv[1])
         frank = {tok: k for k, (tok, _) in enumerate(fr)}
@@ -158,7 +158,7 @@ def main():
     for k, v in out.items():
         print(f"  {k:6s} 最好：真值质量 {v[0]:+.4f}  top-1 {v[1]:.4f}  (α={v[2]})", flush=True)
 
-    base = out["raw"][0] if out["raw"][2] == 0.0 else None
+    _base = out["raw"][0] if out["raw"][2] == 0.0 else None
     print("\n结论要看 rank/agree 是否高于 temp（温度对照）")
     p = Path("sweep_results/lm_fusion/nonlinear.json")
     p.parent.mkdir(parents=True, exist_ok=True)

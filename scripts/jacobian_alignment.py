@@ -7,6 +7,7 @@
 两者的余弦相似度就是"反馈与真实雅可比的对齐度"。1 = 完全对齐（等于反向传播），0 = 无关。
 再对比三种反馈：随机 B、B = Hᵀ（真读出）、B 学出来的（此处未做）。
 """
+
 from __future__ import annotations
 
 import json
@@ -34,19 +35,26 @@ def feats(c):
     trace = model.new_trace(1)
     with torch.no_grad():
         for i in range(len(prefix) - 1):
-            model.step(torch.tensor([prefix[i]]), torch.tensor([prefix[i + 1]]),
-                       trace, update=False, all_valid=True)
+            model.step(
+                torch.tensor([prefix[i]]),
+                torch.tensor([prefix[i + 1]]),
+                trace,
+                update=False,
+                all_valid=True,
+            )
         return model._features(trace)[0].clone(), trace.z[0].clone()
 
 
 def loss_and_err(c, y):
     f, z = feats(c)
     p = torch.softmax(f @ H, dim=0)
-    err = p.clone(); err[int(y)] -= 1.0
+    err = p.clone()
+    err[int(y)] -= 1.0
     return float(-torch.log(p[int(y)] + 1e-9)), f, z, err
 
 
-c0 = torch.zeros(1, 16); c0[0, 0] = 0.7
+c0 = torch.zeros(1, 16)
+c0[0, 0] = 0.7
 y0 = 6
 L0, f0, z0, err0 = loss_and_err(c0, y0)
 
@@ -66,16 +74,23 @@ for _ in range(K):
         model.sensor_proj = saved
     true_dirs.append((Lp - Lm) / (2 * eps))
 
-    def dfa(B):
-        mod = B.T @ err0
+    def dfa(b, _u=u):
+        mod = b.T @ err0
         half = mod.numel() // 2
-        return float((torch.outer(c0[0], z0 * (mod[:half] + mod[half:])) * u).sum())
+        return float((torch.outer(c0[0], z0 * (mod[:half] + mod[half:])) * _u).sum())
 
     dfa_rand.append(dfa(B_rand))
     dfa_true.append(dfa(H.T if H.shape[0] == model.readout_width else B_rand))
 
-t = np.array(true_dirs); r = np.array(dfa_rand); tt = np.array(dfa_true)
-cos = lambda a, b: float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-12))
+t = np.array(true_dirs)
+r = np.array(dfa_rand)
+tt = np.array(dfa_true)
+
+
+def cos(a, b):
+    return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-12))
+
+
 out = {
     "K": K,
     "cos_random_feedback": round(cos(t, r), 4),
@@ -85,4 +100,5 @@ out = {
 }
 print(json.dumps(out, ensure_ascii=False, indent=1))
 Path("sweep_results/synthetic_channel/jacobian.json").write_text(
-    json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
+    json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n"
+)

@@ -3,6 +3,7 @@
 理由：运行时里的门现在用的是 R1 阈值规则，而实测它在同记忆负例上 AUC 只有 0.544
 （接近随机），四维残差是 0.699。训练好的头不接上去，等于发了一个不起作用的门。
 """
+
 from __future__ import annotations
 
 import json
@@ -47,7 +48,9 @@ def main() -> int:
     print(json.dumps(out, ensure_ascii=False, indent=1))
     path = Path("sweep_results/hallucination/verify_weights.json")
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
+    path.write_text(
+        json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n"
+    )
     return 0
 
 

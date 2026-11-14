@@ -38,7 +38,7 @@ def main() -> int:
 
     found = 0
     missing = []
-    for mid, text, _ac, _w, doc_terms in never:
+    for mid, _text, _ac, _w, doc_terms in never:
         query = doc_terms
         # **自己也在候选里**——之前排除掉自己再查"自己在不在"，逻辑上永远为假。
         scored = sorted(

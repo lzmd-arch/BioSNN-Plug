@@ -9,6 +9,7 @@
 数据是合成的：词表 64，上下文 c∈R^8 决定标签，前缀 token 只贡献 30%。
 判据：带传感器 vs 不带，留出 top-1 差 ≥ 20pp。
 """
+
 from __future__ import annotations
 
 import json
@@ -47,8 +48,13 @@ def forward(prefix_ids, c=None, want_z=False):
     zs = torch.zeros(model.n_rec) if want_z else None
     with torch.no_grad():
         for i in range(len(prefix_ids) - 1):
-            model.step(torch.tensor([prefix_ids[i]]), torch.tensor([prefix_ids[i + 1]]),
-                       trace, update=False, all_valid=True)
+            model.step(
+                torch.tensor([prefix_ids[i]]),
+                torch.tensor([prefix_ids[i + 1]]),
+                trace,
+                update=False,
+                all_valid=True,
+            )
             if want_z:
                 zs += trace.z[0]
         feats = model._features(trace)[0].clone()
@@ -65,29 +71,30 @@ def evaluate(n=60):
     hit_s = hit_n = 0
     for i in range(n):
         ids = [int(prev[i]), int(prev[(i + 1) % len(prev)])]
-        hit_s += predict(ids, c[i:i+1]) == int(y[i])
+        hit_s += predict(ids, c[i : i + 1]) == int(y[i])
         hit_n += predict(ids, None) == int(y[i])
     return hit_s / n, hit_n / n
 
 
-print("训练前：带传感器 %.3f / 不带 %.3f" % evaluate(), flush=True)
+_a, _b = evaluate()
+print(f"训练前：带传感器 {_a:.3f} / 不带 {_b:.3f}", flush=True)
 # **模拟激素**：输出误差 e（64 维）经一个**固定随机**的反馈矩阵 B 广播到全部神经元。
 # 这就是随机反馈对齐（DFA）：不穿过网络反传，只有一条固定广播通路。
 # **反馈矩阵必须和读出同维**：64 → 15624（特征空间），再折回 7812 个神经元
-B = torch.randn(V, model.readout_width, generator=torch.Generator().manual_seed(11)) / (V ** 0.5)
+B = torch.randn(V, model.readout_width, generator=torch.Generator().manual_seed(11)) / (V**0.5)
 eta = 0.05
 for epoch in range(10):
     c, prev, y = sample(200)
     for i in range(200):
         ids = [int(prev[i]), int(prev[(i + 1) % len(prev)])]
-        feats, zs = forward(ids, c[i:i+1], want_z=True)
+        feats, zs = forward(ids, c[i : i + 1], want_z=True)
         # **加密奖励（模拟激素）**：不是"对/错"的 ±1，而是正确类的概率减去均匀基线。
         # 连续、每步都有值 ⇒ 即使一次都没答对，也有可用的调制信号。
         logits = feats @ H
         probs = torch.softmax(logits, dim=0)
         err = probs.clone()
         err[int(y[i])] -= 1.0
-        mod_f = B.T @ err                        # (readout_width,) 特征空间的调制
+        mod_f = B.T @ err  # (readout_width,) 特征空间的调制
         half = mod_f.numel() // 2
         # 每个神经元贡献 2 个特征维（两个时间尺度）⇒ 折回神经元级
         hormone = mod_f[:half] + mod_f[half:]
@@ -98,14 +105,20 @@ for epoch in range(10):
             n = model.sensor_proj.norm()
             if n > 20.0:
                 model.sensor_proj *= 20.0 / n
-    print(f"  epoch {epoch}: 带传感器 %.3f / 不带 %.3f  norm %.2f"
-          % (*evaluate(), float(model.sensor_proj.norm())), flush=True)
+    print(
+        f"  epoch {epoch}: 带传感器 %.3f / 不带 %.3f  norm %.2f"
+        % (*evaluate(), float(model.sensor_proj.norm())),
+        flush=True,
+    )
 
 a, b = evaluate(120)
-out = {"with_sensor_top1": round(a, 4), "without_sensor_top1": round(b, 4),
-       "gain_pp": round((a - b) * 100, 2),
-       "proj_norm": round(float(model.sensor_proj.norm()), 4),
-       "verdict": "局部规则训得出通道" if (a - b) >= 0.20 else "三个 epoch 内没训出来"}
+out = {
+    "with_sensor_top1": round(a, 4),
+    "without_sensor_top1": round(b, 4),
+    "gain_pp": round((a - b) * 100, 2),
+    "proj_norm": round(float(model.sensor_proj.norm()), 4),
+    "verdict": "局部规则训得出通道" if (a - b) >= 0.20 else "三个 epoch 内没训出来",
+}
 print(json.dumps(out, ensure_ascii=False, indent=1))
 p = Path("sweep_results/synthetic_channel/sensor_proj.json")
 p.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")

@@ -8,6 +8,7 @@ c 的前三维（温度/湿度/光线，归一化）真的决定它 ⇒ 独占�
 
 两个臂：带 c / 不带 c。判据：top-1 差 ≥ 20pp。
 """
+
 from __future__ import annotations
 
 import json
@@ -33,10 +34,10 @@ digit_ids = torch.tensor([tok.encode(d).ids[0] for d in DIGITS])
 
 
 def sample(n):
-    temp = rng.integers(0, 10, size=n)          # 温度的个位
+    temp = rng.integers(0, 10, size=n)  # 温度的个位
     c = np.zeros((n, 16), dtype=np.float32)
-    c[:, 0] = temp / 9.0                        # 第一维就是温度
-    c[:, 1:] = rng.normal(size=(n, 15)) * 0.1   # 其余是噪声（不该有用）
+    c[:, 0] = temp / 9.0  # 第一维就是温度
+    c[:, 1:] = rng.normal(size=(n, 15)) * 0.1  # 其余是噪声（不该有用）
     return torch.tensor(c), torch.tensor(temp)
 
 
@@ -45,14 +46,19 @@ def feats_of(ids, c=None):
     trace = model.new_trace(1)
     with torch.no_grad():
         for i in range(len(ids) - 1):
-            model.step(torch.tensor([ids[i]]), torch.tensor([ids[i + 1]]),
-                       trace, update=False, all_valid=True)
+            model.step(
+                torch.tensor([ids[i]]),
+                torch.tensor([ids[i + 1]]),
+                trace,
+                update=False,
+                all_valid=True,
+            )
         f = model._features(trace)[0].clone()
         z = trace.z[0].clone()
     return f, z
 
 
-H = model.tree.weight[digit_ids].T.contiguous().float()   # 10 个数字 token 的读出
+H = model.tree.weight[digit_ids].T.contiguous().float()  # 10 个数字 token 的读出
 # **用对齐度最高的那条反馈**：sign(Hᵀ) 余弦 0.357 > 随机 0.317 > Hᵀ 0.024。
 B = H.T.sign().detach().clone() / (model.readout_width / 10) ** 0.5
 
@@ -61,19 +67,23 @@ def evaluate(n=200):
     c, y = sample(n)
     hs = hn = 0
     for i in range(n):
-        f, _ = feats_of(prefix_ids, c[i:i+1]); hs += int((f @ H).argmax()) == int(y[i])
-        f, _ = feats_of(prefix_ids, None);     hn += int((f @ H).argmax()) == int(y[i])
+        f, _ = feats_of(prefix_ids, c[i : i + 1])
+        hs += int((f @ H).argmax()) == int(y[i])
+        f, _ = feats_of(prefix_ids, None)
+        hn += int((f @ H).argmax()) == int(y[i])
     return hs / n, hn / n
 
 
-print("训练前：带 c %.3f / 不带 %.3f" % evaluate(80), flush=True)
+_a, _b = evaluate(80)
+print(f"训练前：带 c {_a:.3f} / 不带 {_b:.3f}", flush=True)
 eta = 0.5
 for epoch in range(40):
     c, y = sample(200)
     for i in range(200):
-        f, z = feats_of(prefix_ids, c[i:i+1])
+        f, z = feats_of(prefix_ids, c[i : i + 1])
         p = torch.softmax(f @ H, dim=0)
-        err = p.clone(); err[int(y[i])] -= 1.0
+        err = p.clone()
+        err[int(y[i])] -= 1.0
         mod_f = B.T @ err
         half = mod_f.numel() // 2
         hormone = mod_f[:half] + mod_f[half:]
@@ -83,12 +93,20 @@ for epoch in range(40):
             if nn_ > 20.0:
                 model.sensor_proj *= 20.0 / nn_
     if epoch % 4 == 0:
-        print(f"  epoch {epoch}: 带 c %.3f / 不带 %.3f  norm %.1f" % (*evaluate(150), float(model.sensor_proj.norm())), flush=True)
+        print(
+            f"  epoch {epoch}: 带 c %.3f / 不带 %.3f  norm %.1f"
+            % (*evaluate(150), float(model.sensor_proj.norm())),
+            flush=True,
+        )
 
 a, b = evaluate(200)
-out = {"with_sensor": round(a, 4), "without_sensor": round(b, 4),
-       "gain_pp": round((a - b) * 100, 2),
-       "verdict": "语义化合成数据上通道学得会" if (a - b) >= 0.20 else "仍未学出"}
+out = {
+    "with_sensor": round(a, 4),
+    "without_sensor": round(b, 4),
+    "gain_pp": round((a - b) * 100, 2),
+    "verdict": "语义化合成数据上通道学得会" if (a - b) >= 0.20 else "仍未学出",
+}
 print(json.dumps(out, ensure_ascii=False, indent=1))
 Path("sweep_results/synthetic_channel/paired.json").write_text(
-    json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
+    json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n"
+)
