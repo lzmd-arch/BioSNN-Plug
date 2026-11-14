@@ -67,9 +67,9 @@ def evaluate(n=200):
 
 print("训练前：带 c %.3f / 不带 %.3f" % evaluate(80), flush=True)
 eta = 0.02
-for epoch in range(12):
-    c, y = sample(150)
-    for i in range(150):
+for epoch in range(40):
+    c, y = sample(200)
+    for i in range(200):
         f, z = feats_of(prefix_ids, c[i:i+1])
         p = torch.softmax(f @ H, dim=0)
         err = p.clone(); err[int(y[i])] -= 1.0
@@ -81,7 +81,8 @@ for epoch in range(12):
             nn_ = model.sensor_proj.norm()
             if nn_ > 20.0:
                 model.sensor_proj *= 20.0 / nn_
-    print(f"  epoch {epoch}: 带 c %.3f / 不带 %.3f" % evaluate(120), flush=True)
+    if epoch % 4 == 0:
+        print(f"  epoch {epoch}: 带 c %.3f / 不带 %.3f  norm %.1f" % (*evaluate(150), float(model.sensor_proj.norm())), flush=True)
 
 a, b = evaluate(200)
 out = {"with_sensor": round(a, 4), "without_sensor": round(b, 4),
