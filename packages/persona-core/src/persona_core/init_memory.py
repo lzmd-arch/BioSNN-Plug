@@ -92,8 +92,15 @@ def _persona_text(package_dir: Path | None) -> str:
     return "你是这个终端里的陪伴实体。记忆存在本地，不属于任何模型。"
 
 
-def init_memory(root: Path, *, persona: str | None = None, package_dir: Path | None = None) -> dict:
-    """建目录、建库、写一条内置人格锚、写实例身份。**幂等**：重复跑不会重复写。"""
+def init_memory(
+    root: Path, *, extra_style: str | None = None, package_dir: Path | None = None
+) -> dict:
+    """建目录、建库、写一条内置人格锚、写实例身份。**幂等**：重复跑不会重复写。
+
+    **身份不可覆盖。** 她是谁（名字、诞生、年龄、行为约束）来自包内 ``persona.md``，
+    宿主只能用 ``extra_style`` **追加**说话风格的补充，不能替换身份——理由是身份要进
+    权重（见 ``research/sel/prereg-persona-in-weights.md``），而能被覆盖的东西进不了权重。
+    """
     root = Path(root).expanduser()
     mem_dir = root / "memory"
     ident_dir = root / "identity"
@@ -104,7 +111,9 @@ def init_memory(root: Path, *, persona: str | None = None, package_dir: Path | N
     con = sqlite3.connect(db)
     con.executescript(SCHEMA)
 
-    text = persona if persona is not None else _persona_text(package_dir)
+    text = _persona_text(package_dir)
+    if extra_style:
+        text = text + "\n" + extra_style.strip()
     now = time.time()
     row = con.execute(
         "select memory_id, content from memories where kind='persona_anchor' and source_ref=?",
@@ -194,7 +203,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="persona_core")
     ap.add_argument("cmd", choices=("init-memory", "manifest"))
     ap.add_argument("--root", default=str(Path.home() / "persona-core"))
-    ap.add_argument("--persona", default=None, help="覆盖内置人格正文（一般不用）")
+    ap.add_argument("--extra-style", default=None, help="**追加**说话风格；不能替换身份")
     args = ap.parse_args(argv)
     pkg = Path(__file__).resolve().parent
     if args.cmd == "init-memory":
