@@ -16,15 +16,15 @@ import sys
 from pathlib import Path
 
 OUT = Path("sweep_results/gene_search")
-POOL_SIZES = (8, 16, 32)
+POOL_SIZES = (16, 32, 64, 128)
 TAUS = (5, 20, 80)
 READOUTS = ("2,128", "2,8,32,128")
-SCALES = (0.5, 1.0, 2.0, 4.0)
+SCALES = (1.0, 2.0, 4.0)
 ROUTES = (0, 3)
 BASELINE = {"pool_size": 16, "tau_pool": 20, "readout": "2,128", "scale": 2.0, "route": 0}
 
 
-def run(cfg: dict, pool: str = "temp", steps: int = 200, seed: int = 0) -> dict | None:
+def run(cfg: dict, pool: str = "temp", steps: int = 400, seed: int = 0) -> dict | None:
     cmd = [
         sys.executable,
         "-m",
