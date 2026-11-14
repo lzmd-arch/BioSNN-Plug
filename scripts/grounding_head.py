@@ -98,7 +98,17 @@ def main() -> int:
             continue
         claim = rng.choice(sentences)
         wrong = texts[rng.randrange(len(texts))]
-        for evidence, label in ((text, 1), (wrong, 0)):
+        # **难的负例**：同一条记忆，只改一个数字或一个专名。
+        # 整条换掉太容易（R1 一眼就看出来），真实幻觉是"证据对、细节错"。
+        hard = re.sub(r"\d+", lambda m: str(int(m.group()) + rng.randint(1, 9)), text, count=1)
+        if hard == text:
+            names = re.findall(r"(?:叫|是|在|有)([一-鿿]{2,4})", text)
+            if names:
+                target = rng.choice(names)
+                donor = re.findall(r"(?:叫|是|在|有)([一-鿿]{2,4})", wrong)
+                if donor:
+                    hard = text.replace(target, rng.choice(donor), 1)
+        for evidence, label in ((text, 1), (hard if hard != text else wrong, 0)):
             rows.append({"x": features(claim, evidence), "y": label})
     print(f"样本 {len(rows)}（正 {sum(r['y'] for r in rows)}）", flush=True)
 
