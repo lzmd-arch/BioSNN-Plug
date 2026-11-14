@@ -330,6 +330,10 @@ class TokenEProp:
         #: 这是"信息不对称"的落点：这些数据不出设备，云端永远拿不到。
         self.sensor_proj: torch.Tensor | None = None
         self.sensors: torch.Tensor | None = None
+        #: 传感器注入方式。``add`` = 加性电流（现行，冻结权重下的行为）；
+        #: ``gate`` = **门控**：乘一个 (1+调制)，符合"神经调制改变增益而不是加偏置"。
+        #: 默认 ``add`` ⇒ 逐位不变。
+        self.sensor_mode = "add"
         self.sensor_dim = int(sensor_dim)
         if self.sensor_dim > 0:
             self.sensor_proj = torch.zeros(self.sensor_dim, n_rec, device=self.device)
@@ -516,7 +520,11 @@ class TokenEProp:
         if self.sensor_proj is not None and self.sensors is not None:
             # 传感器向量加进**电流**而不是特征：它作用于膜电位，与输入通路正交，
             # 因此不影响 e-prop 的资格痕迹（那些乘的是 w_in 的输入）。
-            current = current + self.sensors.to(current.dtype) @ self.sensor_proj
+            modulation = self.sensors.to(current.dtype) @ self.sensor_proj
+            if getattr(self, "sensor_mode", "add") == "gate":
+                current = current * (1.0 + modulation)
+            else:
+                current = current + modulation
 
         alpha_used = self.alpha if self.n_groups == 1 else self.alpha_vec
         theta = self.threshold
