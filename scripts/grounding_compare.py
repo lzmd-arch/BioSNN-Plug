@@ -90,6 +90,11 @@ def build(rng: random.Random, texts: list[tuple[str, float]]):
             if donor:
                 negs.append((text.replace(rng.choice(names), rng.choice(donor), 1), ts))
         # **跨条负例单独成组**：它的时间戳与正例不同，混进来会泄漏标签。
+        # 新增两种负例：**指代错位**（我→你）与**跨句矛盾**（补一句冲突的日期）
+        if "我" in text:
+            negs.append((text.replace("我", "你", 1), ts))
+        if dates:
+            negs.append((text + f"另一次是 {rng.randint(1, 12)}月{rng.randint(1, 28)}日。", ts))
         cross.append((c, wrong_text, wrong_ts))
         claim.append(c)
         evid.append(text)
