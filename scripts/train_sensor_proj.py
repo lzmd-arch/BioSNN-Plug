@@ -23,7 +23,7 @@ from research.sel.lm.serve_snn import load_model
 
 CK = Path("D:/Projects/Semprea-4.5B/dist/semprea-4.5b-v1.0/fast/semprea_v1_ckpt.pt")
 QW = Path("D:/Projects/Semprea-4.5B/dist/semprea-4.5b-v1.0/fast")
-V, D, PREFIX = 64, 16, 3
+V, D, PREFIX = 64, 16, 2
 rng = np.random.default_rng(0)
 
 model, tok, step = load_model(CK, Path("bpe"), torch.device("cpu"), 16, QW)
@@ -64,26 +64,31 @@ def evaluate(n=60):
     c, prev, y = sample(n)
     hit_s = hit_n = 0
     for i in range(n):
-        ids = [int(prev[i])] * PREFIX
+        ids = [int(prev[i]), int(prev[(i + 1) % len(prev)])]
         hit_s += predict(ids, c[i:i+1]) == int(y[i])
         hit_n += predict(ids, None) == int(y[i])
     return hit_s / n, hit_n / n
 
 
 print("训练前：带传感器 %.3f / 不带 %.3f" % evaluate(), flush=True)
+# **模拟激素**：输出误差 e（64 维）经一个**固定随机**的反馈矩阵 B 广播到全部神经元。
+# 这就是随机反馈对齐（DFA）：不穿过网络反传，只有一条固定广播通路。
+B = torch.randn(V, model.n_rec, generator=torch.Generator().manual_seed(11)) / (V ** 0.5)
 eta = 0.05
 for epoch in range(10):
     c, prev, y = sample(200)
     for i in range(200):
-        ids = [int(prev[i])] * PREFIX
+        ids = [int(prev[i]), int(prev[(i + 1) % len(prev)])]
         feats, zs = forward(ids, c[i:i+1], want_z=True)
         # **加密奖励（模拟激素）**：不是"对/错"的 ±1，而是正确类的概率减去均匀基线。
         # 连续、每步都有值 ⇒ 即使一次都没答对，也有可用的调制信号。
         logits = feats @ H
         probs = torch.softmax(logits, dim=0)
-        reward = float(probs[int(y[i])]) - 1.0 / V
-        # 三因子：前 = c[i]，后 = 该段平均发放，调制 = 激素（连续奖励）
-        model.sensor_proj += eta * reward * torch.outer(c[i], zs)
+        err = probs.clone()
+        err[int(y[i])] -= 1.0
+        hormone = B.T @ err                      # (n_rec,) 逐神经元的调制向量
+        # 三因子：前 = c[i]，后 = 该段平均发放，调制 = **激素向量**（不是标量）
+        model.sensor_proj += eta * torch.outer(c[i], zs * hormone)
     print(f"  epoch {epoch}: 带传感器 %.3f / 不带 %.3f  norm %.2f"
           % (*evaluate(), float(model.sensor_proj.norm())), flush=True)
 
