@@ -58,6 +58,20 @@ def r1(answer: str, evidence: str) -> float:
     return 0.0 if not evidence else sum(1 for i in items if i in evidence) / len(items)
 
 
+def r4(answer: str, evidence: str) -> float:
+    dates = re.findall(r"\d{4}年\d{1,2}月(?:\d{1,2}[日号])?|\d{1,2}月\d{1,2}[日号]", answer)
+    if not dates:
+        return 0.0
+    return 1.0 if not evidence else sum(1 for d in dates if d not in evidence) / len(dates)
+
+
+def r5(answer: str, evidence: str) -> float:
+    names = re.findall(r"(?:叫|是|在|有)([一-鿿]{2,4})", answer)
+    if not names:
+        return 0.0
+    return 1.0 if not evidence else sum(1 for n in names if n not in evidence) / len(names)
+
+
 def auc(scores, labels) -> float:
     order = np.argsort(scores)
     ranks = np.empty(len(scores))
@@ -120,19 +134,29 @@ def main() -> int:
 
     def report(name, x):
         model = fit(x[tr], y[tr], l2=1.0)
-        p = model(x[te])
-        print(f"  {name:6s} AUC {auc(p, y[te]):.4f}", flush=True)
-        return round(auc(p, y[te]), 4)
+        p_tr, p_te = model(x[tr]), model(x[te])
+        a_tr, a_te = auc(p_tr, y[tr]), auc(p_te, y[te])
+        flag = "  ← 过拟合" if a_tr - a_te > 0.15 else ""
+        print(f"  {name:8s} 训练 {a_tr:.4f}  留出 {a_te:.4f}{flag}", flush=True)
+        return round(a_te, 4)
+
+    # **PCA 只在训练集上拟合**，降到 16 维——150 个样本配 15,624 维会直接发散
+    flat = x_snn.reshape(len(x_snn), -1)
+    mu = flat[tr].mean(0)
+    centred = flat[tr] - mu
+    _, _, vt = np.linalg.svd(centred, full_matrices=False)
+    comp = vt[:16]
+    x_pca = (flat - mu) @ comp.T
+    x_pca = x_pca / (x_pca.std(0) + 1e-9)
 
     print("留出集：")
-    a_rule = report("rule", -x_res)  # R1 高 ⇒ 有据 ⇒ 取负号让分数越大越像正例
+    a_rule = report("rule", -x_res[:, :1])
     a_lr = report("lr", x_res)
-    a_snn = report("snn", np.hstack([x_snn, x_res]))
-    a_snn_only = report("snn_x", x_snn)
+    a_snn = report("snn", np.hstack([x_pca, x_res]))
 
     out = {
         "samples": len(pairs),
-        "auc": {"rule": a_rule, "lr": a_lr, "snn_with_residuals": a_snn, "snn_only": a_snn_only},
+        "auc": {"rule": a_rule, "lr": a_lr, "snn_with_residuals": a_snn},
         "verdict": "SNN 有位置"
         if a_snn > a_lr + 0.02
         else "SNN 没有位置：不比 4 维残差的逻辑回归强",

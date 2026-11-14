@@ -3,8 +3,7 @@
  "auc": {
   "rule": 0.6839,
   "lr": 0.6839,
-  "snn_with_residuals": 0.3036,
-  "snn_only": 0.1973
+  "snn_with_residuals": 0.6379
  },
  "verdict": "SNN 没有位置：不比 4 维残差的逻辑回归强"
 }
