@@ -82,7 +82,13 @@ RUNTIME_DECL = {
         "fast_half_service": "torch + tokenizers（只在跑快半的那个进程里）",
         "slow_half": "llama-server / Ollama / 任意 OpenAI 兼容端点",
     },
-    "deployment_note": "两半都在同一张 GPU 上时，逐 token 融合会让显存换页，实测每切一次约 1.5 秒；把快半放 CPU 后同一台机器快 25 倍。详见 runtime/README.md。",
+    "weight_dtype": "auto（GPU⇒bf16，CPU⇒fp32；GPU+fp32 是慢 30 倍的组合，不许 auto 落到它上面）",
+    "deployment_note": (
+        "两半都在同一张 8 GB GPU 上时，快半读出权重（1.9 GB fp32）把显存顶到换页边缘，"
+        "逐 token 融合每切一次 1.1–1.5 秒。改 bf16（0.95 GB）后降到 0.02–0.03 秒，"
+        "top-1 10/10 不变、最大 logprob 差 0.0071。运行层的 weight_dtype=auto 因此规定"
+        "GPU 用 bf16、CPU 用 fp32。详见 runtime/README.md。"
+    ),
 }
 
 
