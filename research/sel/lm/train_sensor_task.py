@@ -91,13 +91,17 @@ def main(argv=None) -> int:
                                    tr, update=False, all_valid=True)
                     model.sensors = None
                     # 用树上 10 个数字 token 的路径概率当分类器
+                    # **kNN：非线性、无参数、不吃语言先验**——线性探针只能测"线性可解码"，
+                    # 树读出被先验淹没，两者都不干净。kNN 是唯一不带这两条假设的探针。
                     X = torch.stack(buf_x[-50:]).reshape(-1, model.readout_width)
                     Y = torch.stack(buf_y[-50:]).reshape(-1)
-                    Yh = torch.nn.functional.one_hot(Y, 10).float()
-                    # 闭式岭回归：一次解完，无 autograd
-                    A = X.T @ X + 1.0 * torch.eye(model.readout_width)
-                    head_w = torch.linalg.solve(A, X.T @ Yh)
-                    pred = (model._features(tr) @ head_w).argmax(1).cpu().numpy()
+                    X = X / (X.norm(dim=1, keepdim=True) + 1e-9)
+                    Q = model._features(tr)
+                    Q = Q / (Q.norm(dim=1, keepdim=True) + 1e-9)
+                    sim = Q @ X.T
+                    topk = sim.topk(5, dim=1).indices
+                    votes = Y[topk]
+                    pred = torch.mode(votes, dim=1).values.cpu().numpy()
                     hit += int((pred == t2).sum()); n += args.batch
             print(f"  [{args.arm}] {step} 步  评测 top-1 {hit/n:.3f}  ({time.time()-t0:.0f}s)", flush=True)
 
