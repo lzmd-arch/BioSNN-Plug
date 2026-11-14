@@ -1,5 +1,7 @@
 # 千岁 · Semprea 会话整理 v1.0（2026-11-12 晚 — 11-14）
 
+[English](persona-persistence-consolidation.en.md) · [日本語](persona-persistence-consolidation.ja.md)
+
 > 主线主题：**人格保持**（persona persistence）——千岁的护城河本体。
 > "记得你"不是功能，是产品定义；本文件把两晚会话按五个板块收拢。
 

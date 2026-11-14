@@ -1,5 +1,7 @@
 # persona-core
 
+[English](README.en.md) · [日本語](README.ja.md)
+
 **通用**的人格与记忆核。不 import 任何宿主程序（不依赖 axo），只用标准库。
 
 融合模型的能力分两半：

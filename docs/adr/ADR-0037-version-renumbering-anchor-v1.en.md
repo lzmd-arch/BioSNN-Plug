@@ -38,3 +38,10 @@ That created a naming collision: two unrelated things both called V1.
   temperature control".
 - **V1's criteria are no longer token-level gains** but I-1…I-7 in `prereg-persona-in-weights.md`.
 - The package name `persona-core` does not change — it names a mechanism, not a version.
+
+## Alternatives
+
+- **Keep calling it V1 and call the new one V2**: two V1s would coexist, or we would reserve V2
+  for something that does not exist yet — either way "how is V1 doing" stops having a single
+  referent.
+- **Call the old one V1-final and the new one V1-next**: the same ambiguity, only hidden deeper.
