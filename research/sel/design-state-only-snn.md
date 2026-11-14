@@ -403,3 +403,31 @@ InductorError: InvalidCxxCompiler: Compiler: cl is not found.
 
 （注：`eager` 这次测到 1.170 ms/步，比上一次的 1.496 ms 略低——同一台机、同样 41 步，
 差异来自负载。做基线比较时要用同一次运行的数。）
+
+### `torch.compile` 通了：**1.39×**（关键是先加载 MSVC 环境）
+
+`cl.exe` 其实装了，只是不在 PATH。用 `vcvars64.bat` 之后 compile 正常：
+
+| | ms/步 |
+| :--- | ---: |
+| eager | 2.010 |
+| **compile** | **1.449** |
+| **加速** | **1.39×** |
+
+（同一批运行内比较；eager 跨次在 1.17–2.01 之间波动，受负载影响，**只能比同一批的数**。）
+
+比训练配置上的 2.48× 低——推理是单样本、逐 token，图更小，Inductor 能融合的少。
+
+### 落地要解决的一件事
+
+`torch.compile` 需要**编译期环境**（vcvars）。服务器上不能要求用户先跑 `vcvars64.bat`，
+所以要么：
+1. 首次启动时用 `subprocess` 先 `call vcvars64.bat` 再起服务；
+2. **预热后把 Inductor 的缓存目录随包分发**（`.cache/torch/inductor`），之后不再编译。
+
+第 2 条更好：用户侧零依赖。缓存与平台绑定，所以运行层本来就是**按平台另发**的。
+
+### 关于原生循环
+
+compile 已经拿掉了一部分调度开销（1.39×）。剩下的 2–10× 要靠原生循环，
+但它**不改 matmul**，收益上限就是调度那部分。**在 compile 落地之前不建议动 Rust。**
