@@ -1,9 +1,9 @@
 {
  "memories": 129,
- "samples": 244,
- "rule_accuracy": 0.6216,
- "rule_threshold": 0.9500000000000001,
- "rule_auc": 0.425,
- "logistic_accuracy": 0.6216,
- "logistic_auc": 0.7731
+ "samples": 400,
+ "rule_accuracy": 0.675,
+ "rule_threshold": 0.9,
+ "rule_auc": 0.2958,
+ "logistic_accuracy": 0.6583,
+ "logistic_auc": 0.8524
 }

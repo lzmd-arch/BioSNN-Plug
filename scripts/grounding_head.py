@@ -98,18 +98,27 @@ def main() -> int:
             continue
         claim = rng.choice(sentences)
         wrong = texts[rng.randrange(len(texts))]
-        # **难的负例**：同一条记忆，只改一个数字或一个专名。
-        # 整条换掉太容易（R1 一眼就看出来），真实幻觉是"证据对、细节错"。
-        hard = re.sub(r"\d+", lambda m: str(int(m.group()) + rng.randint(1, 9)), text, count=1)
-        if hard == text:
-            names = re.findall(r"(?:叫|是|在|有)([一-鿿]{2,4})", text)
-            if names:
-                target = rng.choice(names)
-                donor = re.findall(r"(?:叫|是|在|有)([一-鿿]{2,4})", wrong)
-                if donor:
-                    hard = text.replace(target, rng.choice(donor), 1)
-        for evidence, label in ((text, 1), (hard if hard != text else wrong, 0)):
-            rows.append({"x": features(claim, evidence), "y": label})
+        negatives: list[str] = []
+        # 负例形态要多样，否则"规则够不够"的结论由采样方式决定（已踩过两次）
+        digits = re.findall(r"\d+", text)
+        if digits:
+            negatives.append(
+                re.sub(r"\d+", lambda m: str(int(m.group()) + rng.randint(1, 9)), text, count=1)
+            )
+        dates = re.findall(r"\d{1,2}月\d{1,2}[日号]|\d{4}年\d{1,2}月", text)
+        if dates:
+            negatives.append(text.replace(rng.choice(dates), "3月14日", 1))
+        names = re.findall(r"(?:叫|是|在|有)([一-鿿]{2,4})", text)
+        if names:
+            donor = re.findall(r"(?:叫|是|在|有)([一-鿿]{2,4})", wrong)
+            if donor:
+                negatives.append(text.replace(rng.choice(names), rng.choice(donor), 1))
+        # 跨条拼接：换一条完全不相干的证据
+        negatives.append(wrong)
+        rows.append({"x": features(claim, text), "y": 1})
+        for neg in dict.fromkeys(negatives):
+            if neg != text:
+                rows.append({"x": features(claim, neg), "y": 0})
     print(f"样本 {len(rows)}（正 {sum(r['y'] for r in rows)}）", flush=True)
 
     rng.shuffle(rows)
