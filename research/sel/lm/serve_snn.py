@@ -123,15 +123,15 @@ def encode_texts(
     texts: list[str],
     max_len: int = 256,
     pooling: str = "mean",
-    tail: bool = False,
+    tail: bool = True,
 ) -> torch.Tensor:
     """逐条编码（各自的 trace），返回 ``(n, M)`` 的 **L2 归一化** 矩阵。
 
     两个曾是写死的选择，现在可传：
 
     - ``pooling``：见 :data:`POOLINGS`。默认 ``mean`` 是历史口径。
-    - ``tail``：``False`` 取**前** ``max_len`` 个 token（历史口径），
-      ``True`` 取**后** ``max_len``——四万字的长记忆若只编码开头，几乎必然检索不到。
+    - ``tail``：``True``（**默认**）取**后** ``max_len`` 个 token；``False`` 取前。
+      历史口径是取前——四万字的长记忆只编码开头，几乎必然检索不到，这是缺陷不是选择。
     """
     if pooling not in POOLINGS:
         raise ValueError(f"未知的 pooling：{pooling}（可选 {sorted(POOLINGS)}）")
@@ -554,7 +554,7 @@ def main(argv: list[str] | None = None) -> int:
                 body = json.loads(self.rfile.read(length) or b"{}")
                 texts = body.get("texts") or []
                 pooling = str(body.get("pooling") or "mean")
-                tail = bool(body.get("tail"))
+                tail = bool(body.get("tail", True))
                 if not isinstance(texts, list):
                     raise ValueError("texts 必须是字符串数组")
             except Exception as exc:
