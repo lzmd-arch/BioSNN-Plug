@@ -382,3 +382,24 @@ step 实际收到:            0.9, 7.2, 0.2     ← 逐帧确实不同
 这是纯调度开销，Rust/C++ 的 pyo3 绑定或一个自定义算子都能做，且**不改数值**。
 
 其余地方（matmul、树读出）没有意义——它们是 BLAS 或 tensor core 的活。
+
+### `torch.compile` 在本机**跑不起来**：缺 C++ 编译器
+
+```
+InductorError: InvalidCxxCompiler: Compiler: cl is not found.
+```
+
+`torch.compile` 的 Inductor 后端要 MSVC 的 `cl.exe`，本机没有。**这不是 torch 的问题，
+是缺 Visual Studio Build Tools。**
+
+| 路径 | 代价 | 预期 |
+| :--- | :--- | :--- |
+| 装 MSVC Build Tools，再试 compile | 下载 ~2–6 GB | 本仓实测小配置 **2.48×** |
+| 直接写原生循环（pyo3 / 自定义算子） | 1–2 天 | 2–10×，但**只省调度**，不改 matmul |
+| 不动 | 0 | 1.170 ms/步（eager 实测） |
+
+**先装编译器试 compile 是性价比最高的**：它不需要改代码，而且本仓在同族配置上
+已经量到 2.48×。
+
+（注：`eager` 这次测到 1.170 ms/步，比上一次的 1.496 ms 略低——同一台机、同样 41 步，
+差异来自负载。做基线比较时要用同一次运行的数。）
