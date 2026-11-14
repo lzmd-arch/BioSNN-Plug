@@ -1,0 +1,7 @@
+{
+ "K": 32,
+ "cos_random_feedback": 0.0,
+ "cos_true_readout_feedback": 0.0,
+ "loss0": 2.4804,
+ "note": "余弦 = 1 才等价于反向传播；0 表示无关。"
+}
