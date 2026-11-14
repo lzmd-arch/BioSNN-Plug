@@ -1,0 +1,22 @@
+{
+ "memories": 336,
+ "current": {
+  "median": 0.0,
+  "p25": 0.0,
+  "min": 0.0,
+  "below_1e-6": 159
+ },
+ "exponential": {
+  "median": 0.0,
+  "p25": 0.0,
+  "min": 0.0,
+  "below_1e-6": 159
+ },
+ "bounded": {
+  "median": 0.8429,
+  "p25": 0.7439,
+  "min": 0.377818,
+  "below_1e-6": 0
+ },
+ "note": "同一批时间戳、同一 half_life；差别只在有没有渐近下限。"
+}
