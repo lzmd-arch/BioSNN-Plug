@@ -19,6 +19,7 @@ import argparse
 import json
 import math
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -243,23 +244,90 @@ def build_child_map(paths):
 #: 树结构的派生表**必须缓存**——每次请求重建要 75 层 × 32,000 token，实测 2.8 秒。
 _TREE_CACHE: dict[int, tuple] = {}
 
+#: 会话级状态缓存。**这是"上下文不必每次重付"的实现**：模型本来就是逐时刻递推的，
+#: 状态（膜电位/脉冲/不应期/读出 EMA/适应电流）已经带全了历史；
+#: 每次都 `new_trace` 再把整段重放一遍，是纯粹的重复劳动（实测约 2 ms/字）。
+_SESSIONS: dict[str, tuple[tuple[int, ...], object, int, float]] = {}
+#: 同时保留几个会话的状态。每个约 (N + K·N + V) 个 float，小到可以不心疼。
+_SESSION_CAP = 8
+_SESSION_TTL = 1800.0
+
+
+def _clone_trace(trace):
+    """深拷贝一份 trace。**step 会原地改它**，所以复用前必须拷一份。"""
+    from dataclasses import fields
+
+    return type(trace)(
+        **{
+            f.name: (None if getattr(trace, f.name) is None else getattr(trace, f.name).clone())
+            for f in fields(trace)
+        }
+    )
+
+
+def _reuse_trace(session, ids_all, max_len):
+    """能复用就返回 ``(trace 副本, 已消费的 token 数)``，否则 ``(None, 0)``。
+
+    **只在没有截断时复用**：窗口一旦滑动，前缀关系就不成立了，
+    那时宁可重算——错一格就会给出完全不同的分布，而且不会报错。
+    """
+    if not session or len(ids_all) > max_len:
+        return None, 0
+    entry = _SESSIONS.get(session)
+    if entry is None:
+        return None, 0
+    cached_ids, cached_trace, consumed, stamp = entry
+    if time.time() - stamp > _SESSION_TTL:
+        _SESSIONS.pop(session, None)
+        return None, 0
+    if consumed < 1 or consumed > len(ids_all) - 1:
+        return None, 0
+    if tuple(ids_all[:consumed]) != tuple(cached_ids[:consumed]):
+        return None, 0
+    return _clone_trace(cached_trace), consumed
+
+
+def _store_trace(session, ids_all, trace, consumed):
+    if not session:
+        return
+    _SESSIONS[session] = (tuple(ids_all), _clone_trace(trace), consumed, time.time())
+    while len(_SESSIONS) > _SESSION_CAP:
+        oldest = min(_SESSIONS, key=lambda key: _SESSIONS[key][3])
+        _SESSIONS.pop(oldest, None)
+
 
 @torch.no_grad()
-def complete_beam(model, tokenizer, context: str, k: int = 10, beam: int = 64, max_len: int = 256):
+def complete_beam(
+    model,
+    tokenizer,
+    context: str,
+    k: int = 10,
+    beam: int = 64,
+    max_len: int = 256,
+    session: str | None = None,
+):
     """**树上束搜索**：每层只保留 top-B 节点，成本从 O(V·depth) 降到 O(B·depth)。
 
     这是 `/complete` 从 8.5–25 秒降到毫秒级的关键——它要的只是 top-k，
     而 `path_probabilities` 会把**整个词表**都算一遍。
+
+    ``session`` 给了就走**增量状态**：上一轮留下的 trace 直接接上，只补新字符。
+    判据是**逐位相同**——同一段上下文，走缓存与重算必须给出完全一样的候选。
     """
     paths = model.tree.paths
     weight = model.tree.weight
     bias = model.tree.bias
-    ids = tokenizer.encode(context).ids[-max_len:]
-    if not ids:
+    ids_all = tuple(tokenizer.encode(context).ids)
+    if not ids_all:
         return []
-    trace = model.new_trace(1)
+    ids = list(ids_all[-max_len:])
     device = model.device
-    for step in range(len(ids) - 1):
+    # 预测需要"消费到倒数第二个 token 为止"的状态。
+    target = len(ids) - 1
+    trace, done = _reuse_trace(session, ids_all, max_len)
+    if trace is None:
+        trace, done = model.new_trace(1), 0
+    for step in range(done, target):
         model.step(
             torch.tensor([ids[step]], device=device),
             torch.tensor([ids[step + 1]], device=device),
@@ -268,6 +336,8 @@ def complete_beam(model, tokenizer, context: str, k: int = 10, beam: int = 64, m
             all_valid=True,
         )
     features = model._features(trace)  # (1, M)
+    # 状态只与已消费的前缀有关，束搜索不会改它 ⇒ 现在存正好。
+    _store_trace(session, ids_all, trace, target)
 
     # 每个节点对应的 token（只有"路径在此结束"的节点才是叶子）
     depth = paths.nodes.shape[1]
@@ -392,6 +462,7 @@ def main(argv: list[str] | None = None) -> int:
                     context = str(body.get("context") or "")
                     k = int(body.get("k") or 10)
                     sensors = body.get("sensors")
+                    session = body.get("session") or None
                 except Exception as exc:
                     self._send(400, {"error": f"{type(exc).__name__}: {exc}"})
                     return
@@ -404,7 +475,7 @@ def main(argv: list[str] | None = None) -> int:
                         else None
                     )
                     items = (
-                        complete_beam(model, tokenizer, context, k)
+                        complete_beam(model, tokenizer, context, k, session=session)
                         if BEAM > 0
                         else complete(model, tokenizer, context, k)
                     )
