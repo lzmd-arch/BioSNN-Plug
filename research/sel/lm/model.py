@@ -347,6 +347,11 @@ class TokenEProp:
         #: 自己的全部输入突触。与"固定衰减"的区别是**它有设定点、是负反馈、双向**——
         #: 实测固定脱敏下范数照样从 14.9 涨到 37.4，因为单向衰减管不到量级。
         self.synaptic_scaling = 0.0   # 0 = 关闭（保持与之前逐位相同）
+        #: 传感器权重的 L2 上限；0 = 不限。**这个数需要靠"范数–性能曲线"来定**，
+        #: 不是拍脑袋——今天三次"有界"尝试（脱敏/缩放/clip）都因为缺这条曲线而失败。
+        import os as _os
+
+        self.sensor_clip = float(_os.environ.get("AXO_SENSOR_CLIP", "0") or 0.0)
         self.sensors: torch.Tensor | None = None
         #: 传感器注入方式。``add`` = 加性电流（现行，冻结权重下的行为）；
         #: ``gate`` = **门控**：乘一个 (1+调制)，符合"神经调制改变增益而不是加偏置"。
