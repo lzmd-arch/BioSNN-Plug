@@ -377,10 +377,14 @@ def main(argv=None) -> int:
                     r_acc = 0.0
                     per_class: dict[int, list[float]] = {}
                     mean_feat = torch.zeros(len(probe_idx[p]))
+                    # **评测用独立的、按池固定的采样流**：不能吃训练用的 `rng`。
+                    # 否则同一配置在不同池组合下会拿到不同的评测样本，
+                    # "多池更差"就可能是采样差而不是模型差（实测温度池 0.16 vs 0.10）。
+                    rng_eval = np.random.default_rng(9000 + POOLS.index(p))
                     for j in range(args.eval_batches):
                         dig = j % 10 if p == "time" else None
                         a2, tr2 = run_episode(
-                            p, args.batch, rng, int(rng.integers(0, 10)), False, dig
+                            p, args.batch, rng_eval, int(rng_eval.integers(0, 10)), False, dig
                         )
                         if args.arm != "zero":
                             zz = tr2.z[:, rate_idx[p]].mean(1)  # 逐样本
@@ -413,6 +417,11 @@ def main(argv=None) -> int:
                     # **饱和检测**：各答案档之间发放率的变异系数。
                     # 标量平均发放率看不出饱和——饱和的特征是"档与档之间没有差别"。
                     cls = [sum(v) / len(v) for v in per_class.values() if v]
+                    if args.debug:
+                        print(
+                            f"    [dbg] {p}: 逐类发放率 {[round(float(x), 2) for x in cls]}",
+                            flush=True,
+                        )
                     if len(cls) > 1:
                         mu = sum(cls) / len(cls)
                         var = sum((c - mu) ** 2 for c in cls) / len(cls)
