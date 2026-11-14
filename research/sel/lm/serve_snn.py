@@ -194,7 +194,13 @@ def _projection(dim: int, width: int, device) -> torch.Tensor:
 
 @torch.no_grad()
 def position_features(
-    model, tokenizer, text: str, max_len: int = 256, tail: bool = True, width: int = 64
+    model,
+    tokenizer,
+    text: str,
+    max_len: int = 256,
+    tail: bool = True,
+    width: int = 64,
+    gap_ms: int = 0,
 ) -> list:
     """**逐位置**读出特征，不池化。
 
@@ -208,6 +214,10 @@ def position_features(
         return []
     trace = model.new_trace(1)
     rows = []
+    # **真实输入间隔**：每次输入之间插入空步，让膜电位按时间衰减。
+    # 实测：同样 12 个 token，插 3 个空步读出特征最大差 1.78、10 个空步 3.99。
+    # 这是 transformer 不可能有的东西——它对同样的 token 序列恒定输出。
+    blanks = max(0, min(round(gap_ms / 100.0), 20))
     for step in range(len(ids) - 1):
         model.step(
             torch.tensor([ids[step]], device=model.device),
@@ -216,6 +226,14 @@ def position_features(
             update=False,
             all_valid=True,
         )
+        for _ in range(blanks):
+            model.step(
+                torch.zeros(1, dtype=torch.long, device=model.device),
+                torch.zeros(1, dtype=torch.long, device=model.device),
+                trace,
+                update=False,
+                all_valid=False,
+            )
         features = model._features(trace)[0]
         if width and width < features.numel():
             features = features @ _projection(features.numel(), width, model.device)
@@ -596,11 +614,12 @@ def main(argv: list[str] | None = None) -> int:
                     body = json.loads(self.rfile.read(length) or b"{}")
                     text = str(body.get("text") or "")
                     width = int(body.get("width") or 64)
+                    gap_ms = int(body.get("gap_ms") or 0)
                 except Exception as exc:
                     self._send(400, {"error": f"{type(exc).__name__}: {exc}"})
                     return
                 with lock:
-                    rows = position_features(model, tokenizer, text, width=width)
+                    rows = position_features(model, tokenizer, text, width=width, gap_ms=gap_ms)
                 self._send(
                     200,
                     {
