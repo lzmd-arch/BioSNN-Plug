@@ -2,9 +2,9 @@
  "samples": 349,
  "auc": {
   "residuals": 0.7476,
-  "sequence": 0.3235,
-  "both": 0.4293
+  "sequence": 0.5624,
+  "both": 0.7349
  },
- "perm_auc": 0.6329,
+ "perm_auc": 0.4038,
  "verdict": "序列没有额外信息（≤ 四维残差）"
 }

@@ -34,8 +34,13 @@ def seq_stats(text: str) -> np.ndarray:
     except Exception:
         return np.zeros(64 * 3)
     if pos.ndim != 2 or len(pos) == 0:
-        return np.zeros(64 * 3)
-    return np.concatenate([pos.mean(0), pos.std(0), pos.max(0)])
+        return np.zeros(4)
+    # **只留 4 个可解释的统计量**：196 维配 349 样本必然过拟合（上轮置换 0.633 不过）。
+    # 这四个量描述"状态序列的形状"：有多大、抖不抖、峰在哪、是不是单调上扬。
+    norms = np.linalg.norm(pos, axis=1)
+    t = np.arange(len(norms), dtype=np.float64)
+    slope = float(np.polyfit(t, norms, 1)[0]) if len(norms) > 1 else 0.0
+    return np.asarray([norms.mean(), norms.std(), norms.max(), slope])
 
 
 def main() -> int:
