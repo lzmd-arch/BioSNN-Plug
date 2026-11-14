@@ -329,6 +329,10 @@ class TokenEProp:
         #: `sensor_dim=0` 时完全不建，逐位不变；建了也**零初始化** ⇒ 与没有它逐位相同。
         #: 这是"信息不对称"的落点：这些数据不出设备，云端永远拿不到。
         self.sensor_proj: torch.Tensor | None = None
+        #: **传感器通道的学习率**。这条通路的更新规则是本类**唯一**的非 e-prop 更新：
+        #: 激素式三因子 `Δproj[i,j] = η · h · c[i] · post[j]`，h 是树给出的调制信号。
+        #: 之前 `sensor_proj` 只被读、从不被写，所以"传感器学不出来"的根因在这里。
+        self.lr_sensor = 0.05
         self.sensors: torch.Tensor | None = None
         #: 传感器注入方式。``add`` = 加性电流（现行，冻结权重下的行为）；
         #: ``gate`` = **门控**：乘一个 (1+调制)，符合"神经调制改变增益而不是加偏置"。
@@ -598,6 +602,20 @@ class TokenEProp:
             logits = self._logits(features)[:, : self.n_vocab]  # (B, V)；补出来的列丢掉
             loss = torch.nn.functional.cross_entropy(
                 logits, targets, ignore_index=-100, reduction="none"
+            )
+        if (
+            update
+            and self.sensor_proj is not None
+            and self.sensors is not None
+            and tree_signal is not None
+        ):
+            # **纯局部**：前 = 本批传感器均值，后 = 本步平均发放，调制 = 树给的标量激素。
+            # 没有 .backward()、没有跨层误差路径。
+            hormone = float(tree_signal.mean())
+            self.sensor_proj += (
+                self.lr_sensor
+                * hormone
+                * torch.outer(self.sensors.mean(0).to(torch.float32), trace.z.mean(0))
             )
         fired = trace.z.sum()
 
