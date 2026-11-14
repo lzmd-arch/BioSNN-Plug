@@ -136,6 +136,7 @@ def main(argv=None) -> int:
     )
     ap.add_argument("--route", type=int, default=0, help="激素路由的掩码条数；0 = 关闭")
     ap.add_argument("--readout-taus", default="2,128", help="逗号分隔的读出时间常数")
+    ap.add_argument("--debug", action="store_true", help="打印每池的读出诊断")
     ap.add_argument("--seed", type=int, default=0, help="池初值的随机种子（配对比较用）")
     ap.add_argument("--inhibition", type=float, default=0.0, help="侧抑制增益；0 = 关")
     ap.add_argument("--hormone", choices=("scalar", "tonic"), default="tonic")
@@ -167,7 +168,9 @@ def main(argv=None) -> int:
         32000,
         n_rec,
         recurrence="none",
-        readout_taus=(2.0, 128.0),
+        # !! 这里曾经写死 (2.0, 128.0)，于是 `--readout-taus` 被静默忽略：
+        # B-3（读出维度 2→4）与基因搜索里的 `readout` 基因全部是同一条臂。
+        readout_taus=tuple(float(x) for x in args.readout_taus.split(",")),
         tree=paths,
         tree_signal_scale=3.0,
         tree_packed=True,
@@ -220,6 +223,15 @@ def main(argv=None) -> int:
                 (i_sl.stop - i_sl.start, model.n_rec), generator=gb
             ) * (sc / ref)
         model.sensor_proj *= model._pool_mask
+    if args.debug:
+        for _n in pools:
+            _i, _c = model.sensor_pools[_n]
+            print(
+                f"    [dbg] 编码 {_n}: rows {_i.start}:{_i.stop} cols {_c.start}:{_c.stop} "
+                f"块范数 {float(model.sensor_proj[_i].norm()):.3f} "
+                f"第0行非零 {int((model.sensor_proj[_i][0].abs() > 0).sum())}",
+                flush=True,
+            )
     model.sensor_mode = "gate" if args.arm == "gate" else "add"
     model.lr_sensor = args.lr_sensor
     if args.tau_text != 20.0 or args.tau_pool > 0:
@@ -389,6 +401,14 @@ def main(argv=None) -> int:
                     hit[p] = acc / max(n, 1)
                     hit_cos[p] = acc_cos / max(n, 1)
                     hit_lin[p] = acc_lin / max(n, 1)
+                    if args.debug:
+                        tr_acc = float(((xs_tr @ w_lin).argmax(1) == y_tr).float().mean())
+                        print(
+                            f"    [dbg] {p}: n_train={len(y_tr)} dim={xs_tr.shape[1]} "
+                            f"train_acc={tr_acc:.3f} lin={hit_lin[p]:.3f} "
+                            f"proto={hit[p]:.3f}",
+                            flush=True,
+                        )
                     rates[p] = r_acc / max(args.eval_batches, 1)
                     # **饱和检测**：各答案档之间发放率的变异系数。
                     # 标量平均发放率看不出饱和——饱和的特征是"档与档之间没有差别"。
