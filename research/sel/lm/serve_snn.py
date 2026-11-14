@@ -520,6 +520,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     ap.add_argument("--device", default="cpu", choices=("cpu", "cuda"))
     ap.add_argument(
+        "--compile",
+        action="store_true",
+        help="用 torch.compile 编译单步（实测 1.39×）。Windows 需要 MSVC 的 cl.exe 在 PATH 上，"
+        "否则会退回 eager；编译预热约 1–3 分钟",
+    )
+    ap.add_argument(
         "--weight-dtype",
         default="fp32",
         choices=("fp32", "bf16"),
@@ -538,6 +544,14 @@ def main(argv: list[str] | None = None) -> int:
     model, tokenizer, step = load_model(
         args.ckpt, args.bpe, device, args.sensor_dim, args.qwen, args.weight_dtype
     )
+    if args.compile:
+        # **编译期环境**：Windows 上 Inductor 要 MSVC 的 cl.exe。找不到就退回 eager，
+        # 不让一个纯性能开关把服务起不来。
+        try:
+            model.step = torch.compile(model.step, dynamic=False)
+            print("已启用 torch.compile（首次调用会编译，1–3 分钟）", flush=True)
+        except Exception as exc:
+            print(f"torch.compile 不可用，退回 eager：{type(exc).__name__}: {exc}", flush=True)
     space = f"snn/tree-0.5b-step{step}@{model.readout_width}"
     state = {"ready": True, "device": str(device), "step": step, "space_id": space}
     lock = threading.Lock()
