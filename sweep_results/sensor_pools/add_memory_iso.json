@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["memory"], "steps": 400, "batch": 64, "init_scale": 1.0, "inhibition": 0.0, "hormone": "tonic", "receptors": "perpool", "tag": "iso", "hit": {"memory": 0.765625}, "hit_cos": {"memory": 0.771875}, "rate": {"memory": 0.0352783203125}, "rate_cv": {"memory": 0.06624102967117004}, "norm": 81.34358215332031, "cos": {}, "corr": {}}
