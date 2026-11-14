@@ -73,7 +73,8 @@ def evaluate(n=60):
 print("训练前：带传感器 %.3f / 不带 %.3f" % evaluate(), flush=True)
 # **模拟激素**：输出误差 e（64 维）经一个**固定随机**的反馈矩阵 B 广播到全部神经元。
 # 这就是随机反馈对齐（DFA）：不穿过网络反传，只有一条固定广播通路。
-B = torch.randn(V, model.n_rec, generator=torch.Generator().manual_seed(11)) / (V ** 0.5)
+# **反馈矩阵必须和读出同维**：64 → 15624（特征空间），再折回 7812 个神经元
+B = torch.randn(V, model.readout_width, generator=torch.Generator().manual_seed(11)) / (V ** 0.5)
 eta = 0.05
 for epoch in range(10):
     c, prev, y = sample(200)
@@ -86,9 +87,17 @@ for epoch in range(10):
         probs = torch.softmax(logits, dim=0)
         err = probs.clone()
         err[int(y[i])] -= 1.0
-        hormone = B.T @ err                      # (n_rec,) 逐神经元的调制向量
+        mod_f = B.T @ err                        # (readout_width,) 特征空间的调制
+        half = mod_f.numel() // 2
+        # 每个神经元贡献 2 个特征维（两个时间尺度）⇒ 折回神经元级
+        hormone = mod_f[:half] + mod_f[half:]
         # 三因子：前 = c[i]，后 = 该段平均发放，调制 = **激素向量**（不是标量）
         model.sensor_proj += eta * torch.outer(c[i], zs * hormone)
+        # 范数上限：不加就爆炸，爆炸会掩盖真实趋势
+        with torch.no_grad():
+            n = model.sensor_proj.norm()
+            if n > 20.0:
+                model.sensor_proj *= 20.0 / n
     print(f"  epoch {epoch}: 带传感器 %.3f / 不带 %.3f  norm %.2f"
           % (*evaluate(), float(model.sensor_proj.norm())), flush=True)
 
