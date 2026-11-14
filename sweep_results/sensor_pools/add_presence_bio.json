@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["presence"], "steps": 200, "batch": 64, "init_scale": 1.0, "inhibition": 0.0, "hormone": "tonic", "receptors": "perpool", "tag": "bio", "hit": {"presence": 0.353125}, "hit_cos": {"presence": 0.353125}, "rate": {"presence": 0.13818359375}, "rate_cv": {"presence": 0.4047524723532919}, "norm": 15.343951225280762, "cos": {}, "corr": {}}

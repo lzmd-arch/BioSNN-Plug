@@ -1,0 +1,1 @@
+{"arm": "add", "pools": ["temp"], "steps": 1500, "batch": 64, "init_scale": 1.0, "inhibition": 0.0, "hormone": "tonic", "receptors": "perpool", "tag": "bio2", "hit": {"temp": 0.309375}, "hit_cos": {"temp": 0.2859375}, "rate": {"temp": 0.1345703125}, "rate_cv": {"temp": 0.44536177141512323}, "norm": 15.346997261047363, "cos": {}, "corr": {}}

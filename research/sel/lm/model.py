@@ -375,6 +375,12 @@ class TokenEProp:
         self.hormone_phasic_share = 0.5
         #: 每个池自己的受体向量（`(n_pools, d)`）；`None` 时退回全局单向量（逐位不变）。
         self.sensor_receptor_matrix: torch.Tensor | None = None
+        #: **逐神经元 α**（= exp(−1/τ)），`None` 时用全局 α（逐位不变）
+        self.alpha_full: torch.Tensor | None = None
+        #: **激素路由**：`(K, sensor_dim)` 的二元掩码，本步用 `argmax(h)` 选一条。
+        #: `None` 时关闭（逐位不变）。与"激素当增益"是**两种不同机制**：
+        #: 增益改"可塑多快"，路由改"哪条可塑"。
+        self.sensor_route_masks: torch.Tensor | None = None
         #: 传感器注入方式。``add`` = 加性电流（现行，冻结权重下的行为）；
         #: ``gate`` = **门控**：乘一个 (1+调制)，符合"神经调制改变增益而不是加偏置"。
         #: 默认 ``add`` ⇒ 逐位不变。
@@ -503,6 +509,29 @@ class TokenEProp:
         else:
             raise ValueError(f"未知的编码类型：{kind}")
         self.sensor_proj[i_sl] = block * float(scale)
+
+    def set_pool_taus(self, taus: dict[str, float], default_tau: float) -> torch.Tensor:
+        """给每个池设自己的膜时间常数（τ 异质），其余神经元用 `default_tau`。"""
+        alpha = torch.full((self.n_rec,), math.exp(-1.0 / float(default_tau)), device=self.device)
+        for name, tau in taus.items():
+            if name not in self.sensor_pools:
+                continue
+            _i, c_sl = self.sensor_pools[name]
+            alpha[c_sl] = math.exp(-1.0 / float(tau))
+        self.alpha_full = alpha
+        return alpha
+
+    def set_sensor_routes(self, k: int = 3, drop: float = 0.5, seed: int = 0) -> None:
+        """建 `k` 条随机的可塑资格掩码；每步由 `argmax(hormone)` 选一条。"""
+        if self.sensor_proj is None:
+            raise ValueError("sensor_dim=0 时没有传感器通路")
+        g = torch.Generator().manual_seed(1000 + 17 * seed)
+        m = (torch.rand((k, self.sensor_proj.shape[0]), generator=g) >= drop).float()
+        # 每条掩码至少留一列，否则该激素永远学不到东西
+        for i in range(k):
+            if float(m[i].sum()) == 0:
+                m[i, i % m.shape[1]] = 1.0
+        self.sensor_route_masks = m.to(self.device)
 
     def set_cross_inhibition(self, gain: float | None) -> None:
         """``gain=None`` 关闭侧抑制（``cross_inhib`` 置空，逐位不变）。"""
@@ -759,7 +788,12 @@ class TokenEProp:
             other = z_previous @ self.cross_inhib
             current = current - self.inhib_gain * other
 
-        alpha_used = self.alpha if self.n_groups == 1 else self.alpha_vec
+        if self.alpha_full is not None:
+            # **逐神经元 α**：各池/各区自己的膜时间常数（τ 异质）。
+            # 默认 None ⇒ 走原来的分支，逐位不变。
+            alpha_used = self.alpha_full
+        else:
+            alpha_used = self.alpha if self.n_groups == 1 else self.alpha_vec
         theta = self.threshold
         if trace.a is not None:
             # G1：适应变量用**上一步**的脉冲更新，阈值抬到 θ + β·a；复位仍用基阈值。

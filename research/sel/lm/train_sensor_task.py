@@ -113,6 +113,13 @@ def main(argv=None) -> int:
         default="random",
         help="random = 随机投影（旧口径）；design = 解析构造（ramp / ortho）",
     )
+    ap.add_argument("--pool-size", type=int, default=16, help="每个池的神经元数（基因 B-4）")
+    ap.add_argument("--tau-text", type=float, default=20.0, help="文本神经元的膜时间常数")
+    ap.add_argument(
+        "--tau-pool", type=float, default=0.0, help="池神经元的膜时间常数；0 = 与文本同值（同质）"
+    )
+    ap.add_argument("--route", type=int, default=0, help="激素路由的掩码条数；0 = 关闭")
+    ap.add_argument("--readout-taus", default="2,128", help="逗号分隔的读出时间常数")
     ap.add_argument("--seed", type=int, default=0, help="池初值的随机种子（配对比较用）")
     ap.add_argument("--inhibition", type=float, default=0.0, help="侧抑制增益；0 = 关")
     ap.add_argument("--hormone", choices=("scalar", "tonic"), default="tonic")
@@ -125,6 +132,8 @@ def main(argv=None) -> int:
 
     from research.sel.lm.subset_tokenizer import SubsetTokenizer
 
+    global POOL
+    POOL = int(args.pool_size)
     pools = [p for p in args.pools.split(",") if p]
     for p in pools:
         if p not in POOLS:
@@ -196,6 +205,13 @@ def main(argv=None) -> int:
         model.sensor_proj *= model._pool_mask
     model.sensor_mode = "gate" if args.arm == "gate" else "add"
     model.lr_sensor = args.lr_sensor
+    if args.tau_text != 20.0 or args.tau_pool > 0:
+        # **τ 异质**：各池自己的膜时间常数（B-1）
+        pt = args.tau_pool if args.tau_pool > 0 else args.tau_text
+        model.alpha = math.exp(-1.0 / args.tau_text)
+        model.set_pool_taus(dict.fromkeys(pools, pt), default_tau=args.tau_text)
+    if args.route > 0:
+        model.set_sensor_routes(k=args.route, seed=args.seed)
     model.receptor_desensitize = args.desensitize
     model.sensor_clip = args.clip
     model.set_cross_inhibition(args.inhibition if args.inhibition > 0 else None)
@@ -209,7 +225,7 @@ def main(argv=None) -> int:
             1.0, 0.6, len(pools)
         ).unsqueeze(1)
 
-    n_taus = 2
+    n_taus = len(model.readout_decays) if model.readout_decays is not None else 1
     probe_idx = {}
     rate_idx = {}
     for k, name in enumerate(pools):
