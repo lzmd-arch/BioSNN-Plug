@@ -1,9 +1,9 @@
 {
- "samples": 214,
+ "samples": 400,
  "auc": {
-  "rule": 0.6839,
-  "lr": 0.6839,
-  "snn_with_residuals": 0.6379
+  "rule": 0.7524,
+  "lr": 0.7524,
+  "snn_with_residuals": 0.7487
  },
  "verdict": "SNN 没有位置：不比 4 维残差的逻辑回归强"
 }

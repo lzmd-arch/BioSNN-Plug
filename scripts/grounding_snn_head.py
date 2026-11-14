@@ -102,19 +102,25 @@ def main() -> int:
         if not sentences:
             continue
         claim = rng.choice(sentences)
-        hard = re.sub(r"\d+", lambda m: str(int(m.group()) + rng.randint(1, 9)), text, count=1)
-        if hard == text:
-            names = re.findall(r"(?:叫|是|在|有)([\u4e00-\u9fff]{2,4})", text)
-            if names:
-                donor = re.findall(
-                    r"(?:叫|是|在|有)([\u4e00-\u9fff]{2,4})", texts[rng.randrange(len(texts))]
-                )
-                if donor:
-                    hard = text.replace(rng.choice(names), rng.choice(donor), 1)
-        if hard == text:
-            continue
+        wrong = texts[rng.randrange(len(texts))]
+        negatives: list[str] = []
+        if re.findall(r"\d+", text):
+            negatives.append(
+                re.sub(r"\d+", lambda m: str(int(m.group()) + rng.randint(1, 9)), text, count=1)
+            )
+        dates = re.findall(r"\d{1,2}月\d{1,2}[日号]|\d{4}年\d{1,2}月", text)
+        if dates:
+            negatives.append(text.replace(rng.choice(dates), "3月14日", 1))
+        names = re.findall(r"(?:叫|是|在|有)([一-鿿]{2,4})", text)
+        if names:
+            donor = re.findall(r"(?:叫|是|在|有)([一-鿿]{2,4})", wrong)
+            if donor:
+                negatives.append(text.replace(rng.choice(names), rng.choice(donor), 1))
+        negatives.append(wrong)
         pairs.append((claim, text, 1))
-        pairs.append((claim, hard, 0))
+        for neg in dict.fromkeys(negatives):
+            if neg != text:
+                pairs.append((claim, neg, 0))
     print(f"样本 {len(pairs)}", flush=True)
 
     claims = [c for c, _, _ in pairs]
