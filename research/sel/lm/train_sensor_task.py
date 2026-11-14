@@ -30,6 +30,7 @@ def main(argv=None) -> int:
     ap.add_argument("--counts", type=Path, default=Path("sweep_results/lm_10m/counts_32000.npy"))
     ap.add_argument("--steps", type=int, default=1500)
     ap.add_argument("--batch", type=int, default=64)
+    ap.add_argument("--lr-sensor", type=float, default=0.05)
     ap.add_argument("--out", type=Path, default=Path("sweep_results/sensor_task"))
     args = ap.parse_args(argv)
 
@@ -47,6 +48,7 @@ def main(argv=None) -> int:
         generator=torch.Generator().manual_seed(0), device=torch.device("cpu"),
     )
     model.sensor_mode = "add" if args.arm != "gate" else "gate"
+    model.lr_sensor = args.lr_sensor
     digit_ids = [tok.encode(str(d)).ids[0] for d in range(10)]
     prefix_ids = tok.encode(PREFIX[0]).ids
 
