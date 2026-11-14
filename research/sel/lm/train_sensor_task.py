@@ -41,13 +41,27 @@ def main(argv=None) -> int:
     counts = torch.from_numpy(np.load(args.counts)).float()
     paths = build_huffman_paths(counts)
     vocab = 32000
-    n_rec = 156
+    TEXT_N = 156
+    POOL = 16            # **每个传感器模态一个独立池**，不占文本神经元
+    n_rec = TEXT_N + POOL
     model = TokenEProp(
         vocab, n_rec, recurrence="none", readout_taus=(2.0, 128.0), tree=paths,
         tree_signal_scale=3.0, tree_packed=True, tree_init_weight=False,
         embed_rank=256, sensor_dim=16, lr_in=1e-3, lr_out=0.5,
         generator=torch.Generator().manual_seed(0), device=torch.device("cpu"),
     )
+    # **功能分离**：文本只驱动前 TEXT_N 个神经元，传感器只驱动后 POOL 个。
+    # 不做分离时，传感器的 1e-2 量级分量挤不进由 O(1) 文本电流决定的发放模式——
+    # 这是今天六条排除之后剩下的那条解释。
+    with torch.no_grad():
+        # 文本→神经元的路径可能是 proj（低秩）、也可能是 w_in（稠密查找），两者都要挡住
+        if getattr(model, "proj", None) is not None:
+            model.proj[:, TEXT_N:] = 0.0
+        if getattr(model, "w_in", None) is not None:
+            model.w_in[:, TEXT_N:] = 0.0
+        sp = torch.zeros(model.sensor_proj.shape)
+        sp[:, TEXT_N:] = torch.randn(POOL, POOL, generator=torch.Generator().manual_seed(7)) * 3.0
+        model.sensor_proj = sp                       # 传感器只写自己的池
     model.sensor_mode = "add" if args.arm != "gate" else "gate"
     model.lr_sensor = args.lr_sensor
     #: **非零初始化**：零初始化 + 比文本路径弱几个数量级的梯度 = 慢启动，
