@@ -28,7 +28,9 @@ rng = np.random.default_rng(0)
 
 model, tok, step = load_model(CK, Path("bpe"), torch.device("cpu"), 16, QW)
 model.sensor_proj = torch.zeros_like(model.sensor_proj)
-H = torch.randn(model.readout_width, V, generator=torch.Generator().manual_seed(7)) / 50.0
+# **读出必须是真的训过的**：用树上已训练的前 64 行当 64 个类的原型。
+# 上一版用随机头，模型没有能力表达映射，测出来的是实验设计的错，不是通道的错。
+H = model.tree.weight[:V].T.contiguous().float()
 Wc = torch.tensor(rng.normal(size=(D, V)) / np.sqrt(D), dtype=torch.float32)
 
 

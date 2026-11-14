@@ -1,7 +1,7 @@
 {
- "with_sensor_top1": 0.0,
- "without_sensor_top1": 0.0,
+ "with_sensor_top1": 0.0167,
+ "without_sensor_top1": 0.0167,
  "gain_pp": 0.0,
- "proj_norm": 4.6255,
+ "proj_norm": 1.8249,
  "verdict": "三个 epoch 内没训出来"
 }
