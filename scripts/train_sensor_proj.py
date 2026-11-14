@@ -69,15 +69,21 @@ def evaluate(n=60):
 
 
 print("训练前：带传感器 %.3f / 不带 %.3f" % evaluate(), flush=True)
-eta = 0.02
-for epoch in range(3):
+eta = 0.05
+for epoch in range(10):
     c, prev, y = sample(200)
     for i in range(200):
         ids = [int(prev[i])] * PREFIX
         feats, zs = forward(ids, c[i:i+1], want_z=True)
-        reward = 1.0 if int((feats @ H).argmax()) == int(y[i]) else -1.0
+        # **加密奖励（模拟激素）**：不是"对/错"的 ±1，而是正确类的概率减去均匀基线。
+        # 连续、每步都有值 ⇒ 即使一次都没答对，也有可用的调制信号。
+        logits = feats @ H
+        probs = torch.softmax(logits, dim=0)
+        reward = float(probs[int(y[i])]) - 1.0 / V
+        # 三因子：前 = c[i]，后 = 该段平均发放，调制 = 激素（连续奖励）
         model.sensor_proj += eta * reward * torch.outer(c[i], zs)
-    print(f"  epoch {epoch}: 带传感器 %.3f / 不带 %.3f" % evaluate(), flush=True)
+    print(f"  epoch {epoch}: 带传感器 %.3f / 不带 %.3f  norm %.2f"
+          % (*evaluate(), float(model.sensor_proj.norm())), flush=True)
 
 a, b = evaluate(120)
 out = {"with_sensor_top1": round(a, 4), "without_sensor_top1": round(b, 4),
