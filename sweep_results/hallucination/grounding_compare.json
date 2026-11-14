@@ -3,7 +3,9 @@
  "auc": {
   "rule": 0.7524,
   "lr": 0.8524,
+  "lr+time": 1.0,
   "snn": 0.7629
  },
- "verdict": "SNN 没有位置：不比残差基线强"
+ "time_gain": 0.1476,
+ "time_useful": true
 }
