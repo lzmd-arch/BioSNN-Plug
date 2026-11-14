@@ -179,6 +179,32 @@ def encode_texts(
 
 
 @torch.no_grad()
+@torch.no_grad()
+def position_features(model, tokenizer, text: str, max_len: int = 256, tail: bool = True) -> list:
+    """**逐位置**读出特征，不池化。
+
+    `/encode` 返回的是各位置特征的均值——那等于把递推序列压成一个点。
+    判别类任务（"这段回答有没有据"）需要的恰恰是序列本身：哪一段开始跑偏。
+    本函数只暴露原始序列，不做任何判断。
+    """
+    ids = tokenizer.encode(text).ids
+    ids = ids[-max_len:] if tail else ids[:max_len]
+    if len(ids) < 2:
+        return []
+    trace = model.new_trace(1)
+    rows = []
+    for step in range(len(ids) - 1):
+        model.step(
+            torch.tensor([ids[step]], device=model.device),
+            torch.tensor([ids[step + 1]], device=model.device),
+            trace,
+            update=False,
+            all_valid=True,
+        )
+        rows.append(model._features(trace)[0].cpu().tolist())
+    return rows
+
+
 def complete(model, tokenizer, context: str, k: int = 10, max_len: int = 256):
     """给一段上下文，返回**下一个 token 的 top-k**（id / 解码文本 / logprob）。
 
@@ -545,6 +571,26 @@ def main(argv: list[str] | None = None) -> int:
                 with lock:
                     value = score_sequence(model, tokenizer, context, continuation)
                 self._send(200, {"logprob": round(value, 4), "space_id": space})
+                return
+            if self.path.rstrip("/") == "/features":
+                length = int(self.headers.get("Content-Length", "0"))
+                try:
+                    body = json.loads(self.rfile.read(length) or b"{}")
+                    text = str(body.get("text") or "")
+                except Exception as exc:
+                    self._send(400, {"error": f"{type(exc).__name__}: {exc}"})
+                    return
+                with lock:
+                    rows = position_features(model, tokenizer, text)
+                self._send(
+                    200,
+                    {
+                        "positions": rows,
+                        "count": len(rows),
+                        "dim": model.readout_width,
+                        "space_id": space,
+                    },
+                )
                 return
             if self.path.rstrip("/") != "/encode":
                 self._send(404, {"error": "unknown path"})
