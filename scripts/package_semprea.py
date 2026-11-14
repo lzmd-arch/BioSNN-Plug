@@ -52,6 +52,34 @@ OPTIONAL = {
 #: 这些路径出现过就说明有人把**专有件**塞进包里了（气体传感器插件在仓外且专有）。
 FORBIDDEN_NAMES = ("gassensor", "gas_sensor", "BioSNN-GasSensor")
 
+#: 运行层的能力声明（B4）。**它是契约，不是说明**：
+#: 下游（Axo 或任何 OpenAI 客户端）靠它判断"这个包能不能对话、能不能出向量"。
+#: 改了运行层的档位或端点，这里必须同步改，否则 manifest 会说谎。
+RUNTIME_DECL = {
+    "name": "semprea",
+    "version": "1.0.0",
+    "entry": "python -m semprea --config semprea.toml",
+    "default_port": 18740,
+    "source": "runtime/（运行层与权重层分开发布，B3）",
+    "endpoints": [
+        "/v1/chat/completions",
+        "/v1/completions",
+        "/v1/embeddings",
+        "/health",
+        "/v1/models",
+    ],
+    "slow_backends": ["llama-server（包内/系统）", "ollama", "openai-compatible"],
+    "tiers": ["full", "full-cpu", "chat-only", "fast-only", "offline"],
+    "capabilities": {"chat": "需要慢半", "embeddings": "需要快半", "fusion": "需要两半同时在"},
+    "alpha_zero_contract": "alpha=0 时运行时原样转发慢半的响应字节（T-3）",
+    "requires": {
+        "python": ">=3.11（运行层本身零第三方依赖）",
+        "fast_half_service": "torch + tokenizers（只在跑快半的那个进程里）",
+        "slow_half": "llama-server / Ollama / 任意 OpenAI 兼容端点",
+    },
+    "deployment_note": "两半都在同一张 GPU 上时，逐 token 融合会让显存换页，实测每切一次约 1.5 秒；把快半放 CPU 后同一台机器快 25 倍。详见 runtime/README.md。",
+}
+
 
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -169,6 +197,7 @@ def main(argv: list[str] | None = None) -> int:
             "note": "" if publishable else "语料许可未核实：只可放私有仓（plan §九 T-5）",
         },
         "publishable": publishable,
+        "runtime": RUNTIME_DECL,
         "eval": {},
     }
     if args.eval_json and Path(args.eval_json).exists():

@@ -1,6 +1,7 @@
 # Semprea 运行层：单端口 OpenAI 兼容服务（B1–B4 规格）
 
-**状态：规格落盘，实现待做。** 对应 [`plan-semprea-v1-optimization.md`](plan-semprea-v1-optimization.md) 的 B1–B4。
+**状态：已实现并实测（2026-11-14）。** 代码在 `D:\Projects\Semprea-4.5Buntime\`（`semprea/` 运行层 + 26 条守卫测试），
+对应 [`plan-semprea-v1-optimization.md`](plan-semprea-v1-optimization.md) 的 B1/B2/B4/B6。实现与规格的偏差见文末 §七。
 
 ## 为什么要这一层
 
@@ -94,3 +95,53 @@ port = 18740
 - **不引入 web 框架依赖**：`http.server` 够用，包越小越好；
 - **不做鉴权**：只监听 `127.0.0.1`；
 - **不做多租户/并发调度**：单用户本机场景，够用即可。
+
+## 七、实现记录（2026-11-14）
+
+**落地位置**：`D:/Projects/Semprea-4.5B/runtime/`
+
+| 文件 | 内容 |
+| :--- | :--- |
+| `semprea/serve.py` | 四个路由 + `/v1/models` + 档位状态机 + 逐 token 融合解码 |
+| `semprea/backends.py` | 四条探测 + 统一 `SlowClient` + 由本进程拉起 llama-server |
+| `semprea/config.py` | `semprea.toml` + 环境变量（环境变量优先） |
+| `tests/test_runtime.py` | **26 条守卫**，含 α=0 逐字节与五档降级 |
+
+### 与规格的三处偏差（都是实测逼出来的）
+
+1. **`α=0` 用「原样转发字节」，不是「转发 JSON」。** 规格只写"逐位相同"；解析再序列化
+   会改键序与转义（`你好` → `\u4f60\u597d`）。已用**变异测试**证明这条守卫会变红：
+   把转发路径换成 `json.dumps(json.loads(raw))` 后，`TestAlphaZeroIsByteIdentical` 立刻失败。
+2. **`backend` 显式指定时只试那一条。** 规格的顺序表是 auto 模式的；若配了 `openai` 却
+   静默退到 Ollama，"配错了"会看起来像"能用"。守卫：`TestBackendChain` 两条。
+3. **人设只能取 `persona.md` 的 ```text 围栏**。整篇塞进去是 702 字 ≈ 391 token，
+   在 `-c 512 --parallel 4` 的 llama-server 上直接 400（`exceeds context size`）。
+   这是实现期真实撞到的，不是预防性设计。
+
+### 新发现：两半同卡时逐 token 融合会慢 30 倍
+
+融合每一步都要在**两个 CUDA 进程之间来回切**。显存吃紧时（实测 7.6 / 8.1 GB），
+切一次约 **1.5 秒**，两个服务一样慢：
+
+| 调用方式 | 慢半 | 快半 |
+| :--- | ---: | ---: |
+| 单个服务连打 10 次（不交替） | — | **0.02–0.03 s** |
+| 慢半、快半交替，**两半都在 GPU** | **1.5 s** | **1.5 s** |
+| 慢半 GPU + **快半 CPU** 交替 | **0.014 s** | **0.02–0.035 s** |
+
+⇒ **快半放 CPU 是默认部署形态。** 同一台机器上一个来回从 1.5 秒降到 0.04 秒。
+`/health` 此时报 `full-cpu` 而不是 `full`——**这是如实报告，不是降级失败**。
+
+### 实测延迟（RTX 5060 8 GB，Qwen3-4B-Q4_K_M，快半 step100000）
+
+| 项 | 数 |
+| :--- | :--- |
+| `α=0` 转发 | ~60 tok/s（llama-server 原生速度） |
+| **融合解码 `α=0.03`** | **0.45 s/token（≈2.2 tok/s）** |
+| 慢半 `next_logprobs` 单步（前缀缓存命中） | 0.022 s |
+| 快半 `/complete`，4 字上下文 | 0.022–0.03 s |
+| 快半 `/complete`，220 字上下文 | 0.33–0.44 s |
+
+**融合的全部代价落在快半**，且与上下文长度成正比（约 1.5 ms/字）。
+慢半那边因为 llama-server 的前缀缓存，每步只要 0.022 s。
+⇒ **A3（按键级增量状态）是融合进默认路径的唯一悬念**，不是慢半。
