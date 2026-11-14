@@ -37,6 +37,7 @@ def load_model(
     device: torch.device,
     sensor_dim: int = 0,
     qwen: Path | None = None,
+    weight_dtype: str = "fp32",
 ):
     """按检查点里记的配置重建模型。**形状对不上就报错，不静默降级。**"""
     from tokenizers import ByteLevelBPETokenizer
@@ -77,12 +78,16 @@ def load_model(
         sensor_dim=sensor_dim,
         generator=torch.Generator().manual_seed(0),
         device=device,
+        weight_dtype=weight_dtype,
     )
+    # **读出的权重是唯一的大件**（31999 × 15624 fp32 = 1.9 GB，其余合计 42 MB）。
+    # 想省显存只能从它下手，所以加载时直接落成目标精度，不先占一份 fp32 再转。
     for key, value in blob["tensors"].items():
         if key == "__tree_weight":
-            model.tree.weight = value.to(device)
+            model.tree.weight = value.to(device=device, dtype=model.w_dtype)
         elif key == "__tree_bias":
-            model.tree.bias = value.to(device)
+            # 偏置留 fp32：它只有 32k 个数，省不出东西，但混精度加法会悄悄改变数值。
+            model.tree.bias = value.to(device=device, dtype=torch.float32)
         else:
             setattr(model, key, value.to(device))
 
@@ -294,9 +299,11 @@ def complete_beam(model, tokenizer, context: str, k: int = 10, beam: int = 64, m
         if not pairs:
             break
         child_ids = torch.tensor([c for _, c in pairs], device=device)
-        logits = (features[0] @ weight.index_select(0, child_ids).T) + bias.index_select(
-            0, child_ids
-        )
+        rows = weight.index_select(0, child_ids)
+        # 与 hierarchical.path_logits 同一个口径：只在 matmul 这一处对齐精度，
+        # 结果回到 fp32 再走 sigmoid。
+        probe = features[0] if features[0].dtype == rows.dtype else features[0].to(rows.dtype)
+        logits = (probe @ rows.T).to(torch.float32) + bias.index_select(0, child_ids)
         probs = torch.sigmoid(logits.clamp(-60.0, 60.0)).tolist()
         candidates: list[tuple[float, int, int]] = [
             (logp_sum + math.log(max(prob, 1e-12)), child, level + 1)
@@ -335,6 +342,12 @@ def main(argv: list[str] | None = None) -> int:
         help="千问 32k 子集目录（subset_32k.json/vocab.json/merges.txt）；给了就用子集分词器",
     )
     ap.add_argument("--device", default="cpu", choices=("cpu", "cuda"))
+    ap.add_argument(
+        "--weight-dtype",
+        default="fp32",
+        choices=("fp32", "bf16"),
+        help="读出权重精度。bf16 把 1.9 GB 砍到 0.95 GB，代价是 α>0 路径的数值会变",
+    )
     ap.add_argument("--port", type=int, default=18734)
     ap.add_argument(
         "--sensor-dim",
@@ -345,7 +358,9 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     device = torch.device(args.device)
-    model, tokenizer, step = load_model(args.ckpt, args.bpe, device, args.sensor_dim, args.qwen)
+    model, tokenizer, step = load_model(
+        args.ckpt, args.bpe, device, args.sensor_dim, args.qwen, args.weight_dtype
+    )
     space = f"snn/tree-0.5b-step{step}@{model.readout_width}"
     state = {"ready": True, "device": str(device), "step": step, "space_id": space}
     lock = threading.Lock()

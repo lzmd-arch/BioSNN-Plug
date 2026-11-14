@@ -166,7 +166,12 @@ def path_probabilities(
         )
         for start in range(0, node_ids.numel(), _PROB_CHUNK):
             chunk = node_ids[start : start + _PROB_CHUNK]
-            logits = torch.einsum("bm,km->bk", features, weight[chunk])
+            # 权重可能是 bf16（省显存），而特征恒为 fp32：**在 matmul 这一处对齐**，
+            # 结果再回到 fp32 做 sigmoid/log——判据是"只有矩阵乘降精度，概率不降"。
+            work = features if features.dtype == weight.dtype else features.to(weight.dtype)
+            logits = torch.einsum("bm,km->bk", work, weight[chunk])
+            if logits.dtype != features.dtype:
+                logits = logits.to(features.dtype)
             if bias is not None:
                 logits = logits + bias[chunk]
             piece = torch.sigmoid(logits)
@@ -197,7 +202,10 @@ def path_logits(
     safe, valid = _gather_path_nodes(paths, targets)
     flat = safe.reshape(-1)
     gathered = weight.index_select(0, flat).view(*safe.shape, weight.shape[1])
-    logits = torch.einsum("bm,bkm->bk", features, gathered)
+    work = features if features.dtype == weight.dtype else features.to(weight.dtype)
+    logits = torch.einsum("bm,bkm->bk", work, gathered)
+    if logits.dtype != features.dtype:
+        logits = logits.to(features.dtype)
     if bias is not None:
         logits = logits + bias.index_select(0, flat).view(safe.shape)
     logits = torch.where(valid, logits, torch.zeros_like(logits))
