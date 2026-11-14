@@ -53,7 +53,8 @@ def feats_of(ids, c=None):
 
 
 H = model.tree.weight[digit_ids].T.contiguous().float()   # 10 个数字 token 的读出
-B = torch.randn(10, model.readout_width, generator=torch.Generator().manual_seed(11)) / 3.0
+# **用对齐度最高的那条反馈**：sign(Hᵀ) 余弦 0.357 > 随机 0.317 > Hᵀ 0.024。
+B = H.T.sign().detach().clone() / (model.readout_width / 10) ** 0.5
 
 
 def evaluate(n=200):
@@ -66,7 +67,7 @@ def evaluate(n=200):
 
 
 print("训练前：带 c %.3f / 不带 %.3f" % evaluate(80), flush=True)
-eta = 0.02
+eta = 0.5
 for epoch in range(40):
     c, y = sample(200)
     for i in range(200):

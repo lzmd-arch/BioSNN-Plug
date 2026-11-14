@@ -1,6 +1,6 @@
 {
- "with_sensor": 0.03,
+ "with_sensor": 0.025,
  "without_sensor": 0.105,
- "gain_pp": -7.5,
+ "gain_pp": -8.0,
  "verdict": "仍未学出"
 }
