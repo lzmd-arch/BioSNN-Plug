@@ -552,10 +552,16 @@ class TokenEProp:
         trace.readout = self.decay_read * trace.readout + trace.z
 
         # 资格痕迹：用**本步之前**的脉冲与本步的输入累积（与 EventDrivenEProp 同口径）
-        trace.eps_rec = self.trace_decay * trace.eps_rec + z_previous
+        # **推理不更新资格痕迹**：`update=False` 时这些量只服务于学习，
+        # 而 eps_in 是 (B, 32000)，每步一次整表乘 + 一次 scatter_add_，
+        # 剖析里占一步的 10%（scatter_add_ 单次 91 µs）。
+        # 跳过它们不改变 v/z/refractory/readout —— 那四个才是推理用得上的状态。
+        if update:
+            trace.eps_rec = self.trace_decay * trace.eps_rec + z_previous
         if trace.eps_in_groups is None:
-            trace.eps_in = self.trace_decay * trace.eps_in
-            trace.eps_in.scatter_add_(1, tokens.reshape(-1, 1), active.to(trace.eps_in.dtype))
+            if update:
+                trace.eps_in = self.trace_decay * trace.eps_in
+                trace.eps_in.scatter_add_(1, tokens.reshape(-1, 1), active.to(trace.eps_in.dtype))
         else:
             groups = trace.eps_in_groups
             groups.mul_(self.group_alphas.view(-1, 1, 1))
