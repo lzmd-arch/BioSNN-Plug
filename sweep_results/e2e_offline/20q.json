@@ -1,0 +1,239 @@
+{
+ "summary": {
+  "questions": 20,
+  "answer_rate": {
+   "bare": 0.0,
+   "with_evidence": 0.25
+  },
+  "refusal_rate": {
+   "bare": 0.1,
+   "with_evidence": 0.0
+  },
+  "latency_s": {
+   "bare": 0.75,
+   "with_evidence": 0.64
+  }
+ },
+ "rows": [
+  {
+   "question": "关于「你是千岁」，我说过什么？",
+   "expect": "查过了",
+   "retrieved": 1,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": true,
+   "ev_refused": false,
+   "t_bare": 0.82,
+   "t_ev": 0.59
+  },
+  {
+   "question": "关于「六角恐龙」，我说过什么？",
+   "expect": "不来自表",
+   "retrieved": 1,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.76,
+   "t_ev": 0.43
+  },
+  {
+   "question": "关于「我觉得在」，我说过什么？",
+   "expect": "还有点多",
+   "retrieved": 2,
+   "bare_ok": false,
+   "ev_ok": true,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 1.09,
+   "t_ev": 0.41
+  },
+  {
+   "question": "关于「你觉得」，我说过什么？",
+   "expect": "改变吗",
+   "retrieved": 3,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.7,
+   "t_ev": 1.08
+  },
+  {
+   "question": "关于「但我觉得」，我说过什么？",
+   "expect": "个世界",
+   "retrieved": 3,
+   "bare_ok": false,
+   "ev_ok": true,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.8,
+   "t_ev": 0.46
+  },
+  {
+   "question": "关于「认识机制」，我说过什么？",
+   "expect": "的意义",
+   "retrieved": 2,
+   "bare_ok": false,
+   "ev_ok": true,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 1.08,
+   "t_ev": 1.1
+  },
+  {
+   "question": "关于「你觉得」，我说过什么？",
+   "expect": "义不大",
+   "retrieved": 3,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.72,
+   "t_ev": 0.92
+  },
+  {
+   "question": "关于「下午有体」，我说过什么？",
+   "expect": "七八天",
+   "retrieved": 2,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.53,
+   "t_ev": 0.27
+  },
+  {
+   "question": "关于「我想还是」，我说过什么？",
+   "expect": "记得提醒",
+   "retrieved": 1,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.51,
+   "t_ev": 0.43
+  },
+  {
+   "question": "关于「你觉得我」，我说过什么？",
+   "expect": "你觉得呢",
+   "retrieved": 1,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.85,
+   "t_ev": 1.07
+  },
+  {
+   "question": "关于「倒也没有」，我说过什么？",
+   "expect": "会更像人",
+   "retrieved": 1,
+   "bare_ok": false,
+   "ev_ok": true,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.83,
+   "t_ev": 0.49
+  },
+  {
+   "question": "关于「你觉得」，我说过什么？",
+   "expect": "个世界",
+   "retrieved": 3,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.7,
+   "t_ev": 0.89
+  },
+  {
+   "question": "关于「我当然不」，我说过什么？",
+   "expect": "你看看",
+   "retrieved": 1,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.62,
+   "t_ev": 0.36
+  },
+  {
+   "question": "关于「有时候有」，我说过什么？",
+   "expect": "的意义",
+   "retrieved": 1,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": true,
+   "ev_refused": false,
+   "t_bare": 0.91,
+   "t_ev": 0.87
+  },
+  {
+   "question": "关于「你觉得」，我说过什么？",
+   "expect": "唯成果论",
+   "retrieved": 3,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.7,
+   "t_ev": 0.89
+  },
+  {
+   "question": "关于「聊点轻松」，我说过什么？",
+   "expect": "奶茶给我",
+   "retrieved": 1,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.48,
+   "t_ev": 0.3
+  },
+  {
+   "question": "关于「貌似不太」，我说过什么？",
+   "expect": "那我先去",
+   "retrieved": 1,
+   "bare_ok": false,
+   "ev_ok": true,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.57,
+   "t_ev": 0.88
+  },
+  {
+   "question": "关于「我要先上」，我说过什么？",
+   "expect": "晚一点见",
+   "retrieved": 1,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 1.08,
+   "t_ev": 0.25
+  },
+  {
+   "question": "关于「睡醒才去」，我说过什么？",
+   "expect": "电话会议",
+   "retrieved": 1,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.78,
+   "t_ev": 0.43
+  },
+  {
+   "question": "关于「必须开」，我说过什么？",
+   "expect": "上的嗅觉",
+   "retrieved": 1,
+   "bare_ok": false,
+   "ev_ok": false,
+   "bare_refused": false,
+   "ev_refused": false,
+   "t_bare": 0.52,
+   "t_ev": 0.58
+  }
+ ]
+}
