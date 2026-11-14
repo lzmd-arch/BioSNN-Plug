@@ -25,6 +25,7 @@ HOST = "http://127.0.0.1:8081"
 CORPUS = Path("D:/AxoData/sel/lm/corpus/fineweb2_u16/corpus.u16")
 TOKROOT = Path("D:/AxoData/sel/lm/corpus/qwen_tok_fw2")
 OUT = Path("sweep_results/v2_s0")
+RAW_TAG = ""
 N_PROBS = 100
 TOP_K = 20
 
@@ -173,7 +174,8 @@ def _score(logq, y, P, A=None, temp=1.0, mask=None):
 
 
 def analyze(k: int = TOP_K, r: int = 2, seeds: int = 5) -> dict:
-    raw = json.loads((OUT / "raw.json").read_text(encoding="utf-8"))
+    name = f"raw_{RAW_TAG}.json" if RAW_TAG else "raw.json"
+    raw = json.loads((OUT / name).read_text(encoding="utf-8"))
     rows = raw["rows"]
     logq, y, P, vocab, cover, mask = _setup(rows, k)
     n = len(rows)
@@ -233,6 +235,7 @@ def main(argv=None) -> int:
     ap.add_argument("--start", type=int, default=500_000)
     ap.add_argument("--k", type=int, default=TOP_K)
     ap.add_argument("--r", type=int, default=2)
+    ap.add_argument("--tag", default="")
     args = ap.parse_args(argv)
     OUT.mkdir(parents=True, exist_ok=True)
     if args.cmd == "collect":
@@ -242,8 +245,10 @@ def main(argv=None) -> int:
         )
         print(json.dumps({k: v for k, v in d.items() if k != "rows"}, ensure_ascii=False))
         return 0
+    global RAW_TAG
+    RAW_TAG = args.tag
     out = analyze(args.k, args.r)
-    (OUT / "s0.json").write_text(
+    (OUT / f"s0{("_"+RAW_TAG) if RAW_TAG else ""}.json").write_text(
         json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n"
     )
     print(json.dumps(out, ensure_ascii=False, indent=1))
