@@ -23,6 +23,7 @@ def main() -> int:
     ap.add_argument("--max-len", type=int, default=192)
     ap.add_argument("--max-steps", type=int, default=400)
     ap.add_argument("--save", type=Path, default=OUT / "ckpt")
+    ap.add_argument("--resume", default=None, help="从这个检查点**补训**（不是从底座重来）")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
 
@@ -43,7 +44,9 @@ def main() -> int:
         ids.append(torch.tensor(fi))
         labs.append(torch.tensor(lab))
 
-    model = AutoModelForCausalLM.from_pretrained(MODEL, dtype=torch.bfloat16).cuda().train()
+    src = args.resume or MODEL
+    print(f"起点：{'补训自 ' + src if args.resume else '底座 ' + src}", flush=True)
+    model = AutoModelForCausalLM.from_pretrained(src, dtype=torch.bfloat16).cuda().train()
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr)
     t0, ntok, step = time.time(), 0, 0
     for _ in range(args.epochs):
