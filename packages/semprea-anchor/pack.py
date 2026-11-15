@@ -12,10 +12,13 @@ import shutil
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-CKPT = REPO / "sweep_results/persona_train/ckpt"
+CKPT = REPO / "sweep_results/persona_train/ckpt_v4"
 CORE = REPO / "packages/persona-core/src/persona_core"
 SHELL = REPO / "packages/semprea-anchor/src/semprea_anchor"
 PERSONA = REPO / "packages/persona-core/src/persona_core/persona.md"
+FUSION = REPO / "research/sel/lm/fusion_model.py"
+MODULATOR = REPO / "sweep_results/state_qa/modulator_v4.pt"
+DEMO = REPO / "packages/semprea-anchor/demo_state.py"
 
 VERSIONS = {"model": "Semprea-Anchor-0.5B", "anchor": "v1", "persona": 8, "birth": "2026-11-16"}
 
@@ -41,6 +44,12 @@ def main() -> int:
     shutil.copytree(CORE, out / "persona_core", ignore=shutil.ignore_patterns("__pycache__"))
     shutil.copytree(SHELL, out / "semprea_anchor", ignore=shutil.ignore_patterns("__pycache__"))
     shutil.copy2(PERSONA, out / "persona.md")
+    shutil.copy2(FUSION, out / "fusion_model.py")
+    shutil.copy2(DEMO, out / "demo_state.py")
+    if MODULATOR.is_file():
+        shutil.copy2(MODULATOR, out / "modulator.pt")
+    else:
+        print("警告：找不到调制器权重，demo_state 会跑不了")
 
     files = {}
     for p in sorted(out.rglob("*")):
