@@ -92,8 +92,31 @@ class Res:
         self.arm, self.n, self.dev = arm, n, dev
         self.alpha = 0.95
         self.theta = 0.5
-        # 输入：A/B 稠密随机；C/D 地形（每个 token 一个高斯包）
-        if arm in ("C", "D"):
+        # 输入：A/B 稠密随机；C/D 一维地形；3C/3D 三维地形（token → 网格里的一个高斯球）
+        if arm in ("3C", "3D"):
+            self.gx, self.gy, self.gz = 16, 16, n // 256
+            xs = torch.arange(self.gx).repeat_interleave(self.gy * self.gz).float()
+            ys = torch.arange(self.gy).repeat(self.gx).repeat_interleave(self.gz).float()
+            zs = torch.arange(self.gz).repeat(self.gx * self.gy).float()
+            self.xyz = torch.stack([xs, ys, zs], 1)  # (n, 3)
+            # 64 个 token 均匀散布在网格里的 4x4x4 个锚点
+            anchors = torch.tensor(
+                [
+                    [i * (self.gx - 1) / 3, j * (self.gy - 1) / 3, k * (self.gz - 1) / 3]
+                    for i in range(4)
+                    for j in range(4)
+                    for k in range(4)
+                ]
+            )[:V].float()
+            d2 = ((self.xyz.unsqueeze(0) - anchors.unsqueeze(1)) ** 2).sum(-1)  # (V, n)
+            sigma = 1.5  # 必须小于锚点间距，否则 64 个高斯球几乎重合，地形映射形同虚设
+            w_in = torch.exp(-d2 / (2 * sigma**2))
+            if shuffle_map:
+                perm = torch.randperm(V, generator=g)
+                w_in = w_in[perm]
+            # 每个 token 的总驱动归一化到 1，与 C 口径一致
+            self.w_in = (w_in / w_in.sum(1, keepdim=True)).to(dev)
+        elif arm in ("C", "D"):
             centers = torch.linspace(0, n - 1, V)
             idx = torch.arange(n).float().unsqueeze(0)
             w_in = torch.exp(-((idx - centers.unsqueeze(1)) ** 2) / (2 * (n / V) ** 2))
@@ -109,6 +132,25 @@ class Res:
             self.rank = 32
             self.p = (torch.randn(n, self.rank, generator=g) / n**0.5).to(dev)
             self.q = (torch.randn(self.rank, n, generator=g) / self.rank**0.5).to(dev)
+        elif arm in ("3C", "3D"):  # 3D：六个面邻居（环绕边界）
+            gx, gy, gz = self.gx, self.gy, self.gz
+            idx = torch.arange(n)
+            x = idx // (gy * gz)
+            y = (idx // gz) % gy
+            z = idx % gz
+            nb = []
+            for dx, dy, dz in ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)):
+                nx = (x + dx) % gx
+                ny = (y + dy) % gy
+                nz = (z + dz) % gz
+                nb.append(nx * (gy * gz) + ny * gz + nz)
+            self.pre = torch.stack(nb, 1)  # (n, 6)
+            self.wrec = (torch.rand(n, 6, generator=g) * 0.6).to(dev)
+            # (n, 8) 的平均矩阵：2x2x2 的块，每个神经元恰好属于一块
+            bid = (x // (gx // 2)) * 4 + (y // (gy // 2)) * 2 + (z // (gz // 2))
+            m = torch.zeros(n, 8)
+            m[torch.arange(n), bid] = 1.0
+            self.block_avg = (m / m.sum(0, keepdim=True)).to(dev)
         elif arm in ("C", "D"):  # 环：每个神经元接前后两个邻居
             off = torch.tensor([-1, -2, 1, 2])
             self.pre = (torch.arange(n).unsqueeze(1) + off.unsqueeze(0)) % n
@@ -128,9 +170,9 @@ class Res:
             cur = self.w_in[toks[:, t]]
             if self.arm == "B":
                 cur = cur + (z @ self.p) @ self.q
-            elif self.arm in ("C", "D"):
+            elif self.arm in ("C", "D", "3C", "3D"):
                 rec = torch.zeros_like(z)
-                for s in range(4):
+                for s in range(self.pre.shape[1]):
                     rec = rec + z[:, self.pre[:, s]] * self.wrec[:, s].unsqueeze(0)
                 cur = cur + rec
             nv = self.alpha * v + cur - z * self.theta
@@ -140,7 +182,11 @@ class Res:
             v, z = nv, nz
             read = read * decays.view(1, -1, 1) + z.unsqueeze(1)
             if t % stride == 0:  # 只保留采样时刻，否则特征张量会按序列长度线性膨胀
-                if self.arm == "D":  # 局部区块读出
+                if self.arm == "3D":
+                    # 三维子块池化：用**显式平均矩阵**，正好 2x2x2 = 8 块，
+                    # 与一维臂 D 的 8 块、16 维特征严格对齐。
+                    feats.append((read @ self.block_avg).reshape(b, -1))
+                elif self.arm == "D":  # 一维局部区块读出
                     feats.append(read.reshape(b, len(TAUS) * 8, n // 8).mean(-1))
                 else:
                     feats.append(read.reshape(b, -1))
@@ -207,7 +253,14 @@ def main() -> int:
     # 两段拼接后按序列切分：前 train_seq 条训练、后 test_seq 条测试
     res: dict = {"n": args.n, "seq": args.seq, "train_seq": args.train_seq, "arms": {}}
 
-    arms = [("A", "平坦"), ("B", "低秩递归"), ("C", "环+地形"), ("D", "环+地形+局部读出")]
+    arms = [
+        ("A", "平坦"),
+        ("B", "低秩递归"),
+        ("C", "环+地形"),
+        ("D", "环+地形+局部读出"),
+        ("3C", "3D网格+地形"),
+        ("3D", "3D网格+地形+局部读出"),
+    ]
     for arm, label in arms:
         pool = Res(arm, args.n, dev)
         feat = pool.run(toks, args.stride)
@@ -229,10 +282,14 @@ def main() -> int:
             flush=True,
         )
 
-    # S-2：地形映射打乱
-    pool = Res("C", args.n, dev, shuffle_map=True)
-    acc = decode(pool.run(toks, args.stride), st[:, :: args.stride], args.train_seq, dev)
-    res["arms"]["C_shuffled"] = {"label": "环+地形（映射打乱）", "acc": acc}
+    # S-2：地形映射打乱（一维与三维各做一次）
+    for tag, arm, label in (
+        ("C_shuffled", "C", "环+地形（映射打乱）"),
+        ("3D_shuffled", "3D", "3D网格+地形+局部读出（映射打乱）"),
+    ):
+        pool = Res(arm, args.n, dev, shuffle_map=True)
+        acc = decode(pool.run(toks, args.stride), st[:, :: args.stride], args.train_seq, dev)
+        res["arms"][tag] = {"label": label, "acc": acc}
 
     st_s = st[:, :: args.stride]
     for L in (8, 32):
@@ -253,7 +310,7 @@ def main() -> int:
     )
 
     base = res["arms"]["A"]["acc"]
-    best = max(res["arms"][a]["acc"] for a in ("B", "C", "D"))
+    best = max(res["arms"][a]["acc"] for a in ("B", "C", "D", "3C", "3D"))
     print("\n判：")
     best_ctl = max(res["arms"]["E8"]["acc"], res["arms"]["E32"]["acc"])
     floor = res["random_baseline"] + 0.2
@@ -265,8 +322,12 @@ def main() -> int:
         f"  S-1 最佳结构臂 {best:.3f} − 平坦 {base:.3f} = {best - base:+.3f} ≥0.05 ⇒ "
         f"{'过' if best - base >= 0.05 else '不过'}"
     )
-    d = res["arms"]["C"]["acc"] - res["arms"]["C_shuffled"]["acc"]
-    print(f"  S-2 C − C'(打乱映射) = {d:+.3f} ≥0.05 ⇒ {'过' if d >= 0.05 else '不过'}")
+    d1 = res["arms"]["C"]["acc"] - res["arms"]["C_shuffled"]["acc"]
+    d3 = res["arms"]["3D"]["acc"] - res["arms"]["3D_shuffled"]["acc"]
+    print(f"  S-2a 一维 C − C'(打乱映射) = {d1:+.3f} ≥0.05 ⇒ {'过' if d1 >= 0.05 else '不过'}")
+    print(f"  S-2b 三维 3D − 3D'(打乱映射) = {d3:+.3f} ≥0.05 ⇒ {'过' if d3 >= 0.05 else '不过'}")
+    gap = res["arms"]["3D"]["acc"] - res["arms"]["D"]["acc"]
+    print(f"  参考 三维 − 一维（都带局部读出） = {gap:+.3f}")
     return 0
 
 
