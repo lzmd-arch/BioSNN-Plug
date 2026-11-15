@@ -108,7 +108,7 @@ def _score(rows, answers, _qtype) -> float:
     严格逐字比对会把"读懂了但换了说法"误判成失败——上一版就是这样只拿到 0.23。
     """
     hit = 0
-    for r, a in zip(rows, answers):
+    for r, a in zip(rows, answers, strict=False):
         k = r["key"]
         if r["kind"] == 2:  # 在线/离线：两侧措辞都要认
             ok = ("离线" in a or "不在" in a) if k == "离线" else ("在线" in a or "在，" in a)
@@ -157,7 +157,7 @@ def main() -> int:
                     for r in rows
                 ]
             )
-            for r, v in zip(rows, ps):
+            for r, v in zip(rows, ps, strict=False):
                 r["p"] = [float(x) for x in v]
         print("p 来源：SNN 池", flush=True)
     res = {

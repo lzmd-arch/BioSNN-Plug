@@ -60,12 +60,12 @@ def _build() -> TokenEProp:
         generator=torch.Generator().manual_seed(0),
         device=torch.device("cpu"),
     )
-    import research.sel.lm.train_sensor_task as T
+    import research.sel.lm.train_sensor_task as tst
 
-    T.POOL = POOL
-    T.TEXT_N = TEXT_N
-    T.POOL_SIZES = dict.fromkeys(POOLS, POOL)
-    T.POOL_OFFSET = {p: i * POOL for i, p in enumerate(POOLS)}
+    tst.POOL = POOL
+    tst.TEXT_N = TEXT_N
+    tst.POOL_SIZES = dict.fromkeys(POOLS, POOL)
+    tst.POOL_OFFSET = {p: i * POOL for i, p in enumerate(POOLS)}
     model.set_sensor_pools({n: _pool_columns(n, k) for k, n in enumerate(POOLS)})
     with torch.no_grad():
         if getattr(model, "proj", None) is not None:
