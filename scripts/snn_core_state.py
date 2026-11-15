@@ -71,8 +71,16 @@ def _default_core() -> Path:
 
 
 @torch.no_grad()
-def forward_core(tensors: dict, cfg: dict, ids: torch.Tensor) -> torch.Tensor:
-    """纯前馈 LIF 前向，返回 `(B, n_taus * n_rec)` 的读出特征。"""
+def forward_core(
+    tensors: dict, cfg: dict, ids: torch.Tensor, per_position: bool = False
+) -> torch.Tensor:
+    """纯前馈 LIF 前向。
+
+    - `per_position=False`：返回 `(B, n_taus * n_rec)`，整段序列的最终读出；
+    - `per_position=True`：返回 `(B, T, n_taus * n_rec)`，**每个位置的读出**——
+      分布级融合要的是逐位置的下一 token 分布，一次前向全算完，
+      比"每见一个前缀重跑一遍"快两个数量级。
+    """
     emb = tensors["emb"].float()
     proj = tensors["proj"].float()
     alpha = float(cfg["alpha"])
@@ -87,6 +95,7 @@ def forward_core(tensors: dict, cfg: dict, ids: torch.Tensor) -> torch.Tensor:
     z = torch.zeros((nb, n_rec), dtype=torch.float32)
     ref = torch.zeros((nb, n_rec), dtype=torch.float32)
     readouts = torch.zeros((nb, decays.numel(), n_rec), dtype=torch.float32)
+    steps: list[torch.Tensor] = []
 
     for t in range(ids.shape[1]):
         current = emb[ids[:, t]] @ proj
@@ -96,6 +105,10 @@ def forward_core(tensors: dict, cfg: dict, ids: torch.Tensor) -> torch.Tensor:
         ref = torch.clamp(ref + n_ref * new_z - 1.0, min=0.0, max=n_ref)
         v, z = new_v, new_z
         readouts = readouts * decays.view(1, -1, 1) + z.unsqueeze(1)
+        if per_position:
+            steps.append((readouts * scales.view(1, -1, 1)).reshape(nb, -1))
+    if per_position:
+        return torch.stack(steps, dim=1)
     scaled = readouts * scales.view(1, -1, 1)
     return scaled.reshape(nb, -1)
 
@@ -285,6 +298,18 @@ class SNNFull(SNNCoreState):
         dt = {"fp32": torch.float32, "bf16": torch.bfloat16, "fp16": torch.float16}[weight_dtype]
         self.tree_w = w["__tree_weight"].to(dt)
         self.tree_b = w["__tree_bias"].float()
+
+    @torch.no_grad()
+    def logprobs_per_position(self, text: str, max_len: int = 96) -> torch.Tensor:
+        """(T, 32000) 的下一 token log 概率，**一次前向全算完**。
+
+        `out[t]` 是"看完 text 的前 t+1 个 token 之后，对下一个 token 的预测"。
+        """
+        ids = self._ids(text, max_len)
+        x = torch.tensor([ids], dtype=torch.long)
+        feats = forward_core(self.tensors, self.cfg, x, per_position=True)[0]
+        probs = self._path_probabilities(feats, self.tree_w, self.paths, self.tree_b)
+        return torch.log(probs.clamp_min(1e-30))
 
     def features(self, texts: list[str], max_len: int = 64) -> torch.Tensor:
         lens = [self._ids(t, max_len) for t in texts]

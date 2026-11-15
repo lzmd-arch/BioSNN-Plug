@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path as _P
+import pathlib as _pathlib
+import sys as _sys
 
-sys.path.insert(0, str(_P(__file__).resolve().parents[1]))
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
 
 import argparse
 import json
