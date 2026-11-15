@@ -1,8 +1,8 @@
 {
  "steps": 2000,
- "seconds": 954.4,
- "tokens": 165187,
- "tok_per_s": 173.1,
+ "seconds": 932.8,
+ "tokens": 161411,
+ "tok_per_s": 173.0,
  "epochs": 1,
  "lr": 2e-05
 }
