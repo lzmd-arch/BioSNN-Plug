@@ -49,3 +49,13 @@ python packages/semprea-anchor/pack.py              # 默认出到 dist/semprea-
 ```
 
 `dist/` 在 `.gitignore` 里——**953 MiB 的产物不入库**，由脚本复现。
+
+## 许可与定位
+
+- **定位**：这是**人格核**，不是聊天模型。它把"我是谁、我记得什么、我守哪条线"训进权重，
+  闲聊能力继承底座并略有下降。详见 [MODEL_CARD.md](MODEL_CARD.md)。
+- **权重与代码**：Apache-2.0，见包内 `LICENSE`。
+- **训练数据**：概念定义的**文字是本项目自写的**，出处指向中文维基条目；
+  训练目标里不含维基原文（`scripts/data_license_scan.py` 逐条扫过，整句命中 0）。
+  仓内保存的抓取原文按 **CC BY-SA 4.0**，署名见 `sweep_results/kb_sources/NOTICE.md`。
+- **边界**：它不是心理医生，也不是危机热线。它会给求助路径，但不替代真人。

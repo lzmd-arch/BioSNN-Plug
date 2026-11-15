@@ -52,3 +52,17 @@ python packages/semprea-anchor/pack.py              # writes dist/semprea-anchor
 ```
 
 `dist/` is in `.gitignore` — **the 953 MiB artifact is not committed**; the script reproduces it.
+
+## License and positioning
+
+- **What it is**: a **persona core**, not a chat model. It bakes "who I am, what I remember,
+  which lines I do not cross" into the weights; chit-chat ability is inherited from the
+  backbone and slightly degraded. See [MODEL_CARD.md](MODEL_CARD.md).
+- **Weights and code**: Apache-2.0 — see `LICENSE` inside the package.
+- **Training data**: the wording of every concept definition is **written by this project**;
+  the URLs point at Chinese Wikipedia entries as *sources*, not as reproduced text.
+  No verbatim Wikipedia text is in the training targets (`scripts/data_license_scan.py`
+  reports 0 whole-sentence hits). The fetched extracts kept in the repo are **CC BY-SA 4.0**;
+  attribution in `sweep_results/kb_sources/NOTICE.md`.
+- **Boundaries**: it is neither a therapist nor a crisis hotline. It gives escalation paths,
+  but does not replace a real person.

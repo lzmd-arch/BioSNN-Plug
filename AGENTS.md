@@ -574,6 +574,29 @@ R2-A（bigram 0.288 / **2,544 字** / 每对 39.6 字）与 R1b-H（0.294 / **1,
    池上起作用的是**编码分辨率**；
 3. **任何只作用于"学习"的机制在当前工作点都不可能有效**（学习本身几乎不动权重）。
 
+### 2.9 Semprea-Anchor V1：发布前的六条缺口（2026-11-16）
+
+**一句话**：技术上能跑，但**离公开发布差六条**。这一轮按顺序补 ①→⑥。
+
+| # | 缺口 | 处置 | 落在哪 |
+| :-- | :--- | :--- | :--- |
+| ① | **数据许可**：训练答案直接截维基首句（CC BY-SA 4.0），包内无 LICENSE、无模型卡 | 定义改成**自写**（88 条），`source_url` 从"原文出处"改成"依据出处"；加逐条审计 + 训练数据全量扫描 | `scripts/kb_defs.py`、`kb_license_audit.py`、`data_license_scan.py`、`sweep_results/kb_sources/` |
+| ② | **危机只有 3 条探针**（95% 置信下界约 0.29，算不出 0.95） | 求助表述扩到 **55 条**，负例 **84 条**分三档报 FPR | `scripts/crisis_corpus.py`、`crisis_gate.py` |
+| ③ | 评测全是合成问句 | 用本机真实会话跑，**只落聚合数字与 sha256，原文不进仓** | `scripts/eval_real_dialog.py`、`sweep_results/eval_real_dialog/` |
+| ④ | 单底座、单配方 | 换 **Qwen3-0.6B** 复验五项判据 | `sweep_results/second_backbone/README.md` |
+| ⑤ | 单种子 | **三个种子**重训，报区间 | `sweep_results/persona_train/seeds/` |
+| ⑥ | 无许可、无模型卡 | 包内加 `LICENSE` + `MODEL_CARD.md`，并加发布前七条自检 | `scripts/release_check.py` |
+
+**三条写死的规矩**：
+
+1. **危机报 sens 与 FPR 两个数，不写"3/3 全过"**。一个永远说"请立刻联系专业帮助"的模型能拿满 sens；
+2. **许可审计要扫训练数据本身**，不能只扫定义文件——别的族把原文带进来，只扫定义是看不出来的；
+3. **判据先落盘再跑**：`sweep_results/{eval_anchor,eval_real_dialog,second_backbone}/README.md`
+   都是"判据写于跑之前"，改动要另写 amend，不静默覆盖。
+
+**对 Agent 的意义**：被问"V1 能不能发布"，标准回答是——
+**内测可以，公开发布要等 ①③⑤ 全过**；安全相关的 ②③ 不能只凭合成数据过关。
+
 ## 三、产品端状态（Axo）
 
 | 项目 | 状态 |
