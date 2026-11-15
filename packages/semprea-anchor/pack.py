@@ -17,7 +17,7 @@ CORE = REPO / "packages/persona-core/src/persona_core"
 SHELL = REPO / "packages/semprea-anchor/src/semprea_anchor"
 PERSONA = REPO / "packages/persona-core/src/persona_core/persona.md"
 FUSION = REPO / "research/sel/lm/fusion_model.py"
-MODULATOR = REPO / "sweep_results/state_qa/modulator_v4.pt"
+MODULATOR = REPO / "sweep_results/state_qa/modulator_v4_hand.pt"
 DEMO = REPO / "packages/semprea-anchor/demo_state.py"
 
 VERSIONS = {"model": "Semprea-Anchor-0.5B", "anchor": "v1", "persona": 8, "birth": "2026-11-16"}
