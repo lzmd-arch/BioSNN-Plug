@@ -20,9 +20,22 @@ FUSION = REPO / "research/sel/lm/fusion_model.py"
 MODULATOR = REPO / "sweep_results/state_qa/modulator_v4_hand.pt"
 DEMO = REPO / "packages/semprea-anchor/demo_state.py"
 LICENSE = REPO / "LICENSE"
+SNN_CORE = REPO / "sweep_results/lm_semprea_v1/semprea_v1_core.pt"
+SNN_TREE_W = REPO / "sweep_results/lm_semprea_v1/semprea_v1_tree_w.pt"
+SNN_TREE = REPO / "sweep_results/lm_semprea_v1/semprea_v1_tree.pt"
+SNN_MOD = REPO / "scripts/snn_core_state.py"
+SNN_TREE_CODE = REPO / "research/sel/lm/hierarchical.py"
+SNN_KERNEL = REPO / "research/sel/lm/tree_kernel.py"
+IDMAP = REPO / "sweep_results/lm_semprea_v1/id_map.json"
 CARD = REPO / "packages/semprea-anchor/MODEL_CARD.md"
 
-VERSIONS = {"model": "Semprea-Anchor-0.5B", "anchor": "v1", "persona": 8, "birth": "2026-11-16"}
+VERSIONS = {
+    "model": "Semprea-Anchor-0.5B",
+    "anchor": "v1",
+    "persona": 8,
+    "birth": "2026-11-16",
+    "snn": "semprea-fast-0.5b@step100000",
+}
 
 
 def _sha(p: Path) -> str:
@@ -51,6 +64,23 @@ def main() -> int:
     shutil.copy2(FUSION, out / "fusion_model.py")
     shutil.copy2(DEMO, out / "demo_state.py")
     shutil.copy2(LICENSE, out / "LICENSE")
+    # 0.5B 局部规则脉冲模型的**状态核心**（41.7 MiB）。
+    # 完整检查点 2.04 GB，其中 97.9% 是输出树；状态编码用不到树，所以只带核心。
+    if SNN_CORE.is_file():
+        shutil.copy2(SNN_CORE, out / "snn_core.pt")
+        shutil.copy2(SNN_MOD, out / "snn_core_state.py")
+        shutil.copy2(SNN_TREE_CODE, out / "hierarchical.py")
+        shutil.copy2(SNN_KERNEL, out / "tree_kernel.py")
+        shutil.copy2(IDMAP, out / "id_map.json")
+        # 输出树：结构与权重分开存（结构 38.8 MB、权重 1.86 GiB）
+        if SNN_TREE.is_file():
+            shutil.copy2(SNN_TREE, out / "snn_tree.pt")
+        if SNN_TREE_W.is_file():
+            shutil.copy2(SNN_TREE_W, out / "snn_tree_w.pt")
+        else:
+            print("警告：没有树权重，包内只有状态核心，不能算下一 token 分布")
+    else:
+        print("警告：没有 SNN 状态核心，包里不会带 0.5B 脉冲模型")
     if CARD.is_file():
         shutil.copy2(CARD, out / "MODEL_CARD.md")
     else:

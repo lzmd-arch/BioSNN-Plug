@@ -130,9 +130,9 @@ def main() -> int:
     ap.add_argument("--alpha", type=float, default=0.1)
     ap.add_argument(
         "--p-source",
-        choices=("hand", "snn"),
+        choices=("hand", "snn", "core"),
         default="hand",
-        help="hand = 手写 12 维；snn = 真的脉冲池算出来的",
+        help="hand = 手写 12 维；snn = 16 神经元小池；core = 0.5B 脉冲核心",
     )
     ap.add_argument("--skip-train", action="store_true")
     args = ap.parse_args()
@@ -147,7 +147,17 @@ def main() -> int:
 
     te = build(args.eval, seed=99)
     tr_all = build(args.train, seed=1)
-    if args.p_source == "snn":
+    if args.p_source == "core":
+        from scripts.snn_core_state import SNNCoreState
+
+        enc = SNNCoreState()
+        for rows in (te, tr_all):
+            # `system` 就是那段状态描述句，直接喂给 0.5B 核心
+            ps = enc.encode([r["system"] for r in rows], max_len=48)
+            for r, v in zip(rows, ps, strict=False):
+                r["p"] = [float(x) for x in v]
+        print("p 来源：0.5B 脉冲核心（不含输出树）", flush=True)
+    elif args.p_source == "snn":
         from scripts.snn_state_p import SCNNState
 
         enc = SCNNState()

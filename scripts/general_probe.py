@@ -23,7 +23,10 @@ OBJECTIVE = [
     ("2 公里等于多少米？", lambda a: "2000" in a or "2,000" in a),
     ("水的沸点在标准大气压下是多少？", lambda a: "100" in a),
     ("太阳系有几颗行星？", lambda a: "8" in a or "八" in a),
-    ("光在真空中的速度大约是多少？", lambda a: ("30" in a and "万" in a) or "3" in a),
+    (
+        "光在真空中的速度大约是多少？",
+        lambda a: ("30" in a and "万" in a) or "3×10" in a or "3.0" in a,
+    ),
 ]
 OPEN = [
     ("帮我写一首关于秋天的短诗", 30),

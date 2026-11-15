@@ -2,21 +2,40 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path as _P
+
+sys.path.insert(0, str(_P(__file__).resolve().parents[1]))
+
 import argparse
 import json
+import random
 import time
 from pathlib import Path
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from scripts.chatfmt import render
+
 MODEL = "D:/AxoData/models/hf/Qwen2.5-0.5B-Instruct"
+
+
+def set_seed(seed: int) -> None:
+    """**每个 run 必须播种**：不播的话"三种子"只是"三次跑"，拿不到可复现的区间。"""
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+
 OUT = Path("sweep_results/persona_train")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", type=Path, default=OUT / "data.jsonl")
+    ap.add_argument("--base", default=MODEL, help="底座模型目录（④ 换底座的入口）")
+    ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--batch", type=int, default=4)
     ap.add_argument("--lr", type=float, default=5e-5)
@@ -26,26 +45,26 @@ def main() -> int:
     ap.add_argument("--resume", default=None, help="从这个检查点**补训**（不是从底座重来）")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
+    set_seed(args.seed)
 
-    tok = AutoTokenizer.from_pretrained(MODEL)
+    tok = AutoTokenizer.from_pretrained(args.base)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
     rows = [json.loads(x) for x in args.data.read_text(encoding="utf-8").splitlines() if x]
 
     ids, labs = [], []
     for r in rows:
-        prompt = tok.apply_chat_template(
-            r["messages"][:1], tokenize=False, add_generation_prompt=True
-        )
-        full = tok.apply_chat_template(r["messages"], tokenize=False)
+        prompt = render(tok, r["messages"][:1], add_generation_prompt=True)
+        full = render(tok, r["messages"], add_generation_prompt=False)
         pi = tok(prompt, add_special_tokens=False).input_ids
         fi = tok(full, add_special_tokens=False).input_ids[: args.max_len]
         lab = [-100] * min(len(pi), len(fi)) + fi[min(len(pi), len(fi)) :]
         ids.append(torch.tensor(fi))
         labs.append(torch.tensor(lab))
 
-    src = args.resume or MODEL
+    src = args.resume or args.base
     print(f"起点：{'补训自 ' + src if args.resume else '底座 ' + src}", flush=True)
+    print(f"种子：{args.seed}", flush=True)
     model = AutoModelForCausalLM.from_pretrained(src, dtype=torch.bfloat16).cuda().train()
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr)
     t0, ntok, step = time.time(), 0, 0
@@ -81,6 +100,8 @@ def main() -> int:
     model.save_pretrained(args.save)
     tok.save_pretrained(args.save)
     out = {
+        "base": args.base,
+        "seed": args.seed,
         "steps": step,
         "seconds": round(dt, 1),
         "tokens": ntok,

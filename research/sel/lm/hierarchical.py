@@ -22,7 +22,10 @@ import math
 
 import torch
 
-from research.sel.lm import tree_kernel
+try:  # 仓库内
+    from research.sel.lm import tree_kernel
+except ImportError:  # 打包后是平铺目录
+    import tree_kernel
 
 __all__ = [
     "HuffmanPaths",
