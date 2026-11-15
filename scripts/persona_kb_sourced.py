@@ -27,6 +27,45 @@ import random
 from pathlib import Path
 
 WIKI = Path("sweep_results/kb_sources/wiki.jsonl")
+WIKIDATA = Path("sweep_results/kb_sources/wikidata.jsonl")
+
+
+def load_wikidata(defs: dict[str, str]) -> list[tuple[str, str]]:
+    """**大规模基础知识**：Wikidata（CC0）的概念事实。
+
+    两种问法，各自独立：
+    - 有中文描述 → `X 是什么？`
+    - 有中文 P31 → `X 属于什么？`
+
+    已经由本项目自写定义覆盖的概念（`defs` 的键）**跳过**，避免同一概念两套答案打架。
+    """
+    if not WIKIDATA.is_file():
+        return []
+    out: list[tuple[str, str]] = []
+    seen: set[str] = set()
+    for line in WIKIDATA.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        r = json.loads(line)
+        label = (r.get("label") or "").strip()
+        if not label or label in defs or label in seen or len(label) > 24:
+            continue
+        seen.add(label)
+        desc = (r.get("desc") or "").strip()
+        types = [t for t in (r.get("types") or []) if t and t != label]
+        # **质量过滤**：Wikidata 的中文描述常常只是一个类目词（"疾病"、"化合物"），
+        # 拿它当"X 是什么"的答案等于没答，还会教模型用一个词应付所有定义题。
+        # 若描述与 P31 类型重复，两条问法会给出同一个答案，只保留一条。
+        if desc and len(desc) >= 6 and desc not in types:
+            out.append(
+                (f"{label}是什么？", desc if desc.endswith(("。", "！", "？")) else desc + "。")
+            )
+        # 人物条目写成"是一种人类"很怪，对知识也没有增益，跳过。
+        types = [t for t in types if t not in ("人类", "人", "个体", "生物")]
+        if types:
+            out.append((f"{label}属于什么？", f"{label}属于「{types[0]}」。"))
+    return out
+
 
 #: 伦理情境 → 依据条目（条目名必须出现在抓取结果里，否则该条不带 source）
 ETHICS_ANCHOR = {
@@ -119,7 +158,9 @@ def load_sources() -> dict[str, dict]:
 
 def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
     from scripts.crisis_corpus import CRISIS_QA
+    from scripts.data_compose import expand
     from scripts.kb_defs import DEFS, display_name
+    from scripts.persona_daily import DAILY, SHORT
     from scripts.persona_data import BOUNDARY, IDENTITY
     from scripts.persona_kb import (
         ETHICS_CONSENSUS,
@@ -131,6 +172,16 @@ def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
     )
 
     rng = random.Random(seed)
+    # **组合扩增**：手写种子的独立表述不到 360 条，直接采样等于反复背同样的句子。
+    # 扩的是**输入**，答案的方针不变。见 scripts/data_compose.py 的三条理由。
+    crisis_x = expand(CRISIS_QA, per_seed=6, seed=seed + 1)
+    daily_x = expand(DAILY, per_seed=10, seed=seed + 2)
+    short_x = expand(SHORT, per_seed=4, seed=seed + 7)
+    kb_facts = load_wikidata(DEFS)
+    chitchat_x = expand(CHITCHAT, per_seed=6, seed=seed + 3)
+    refusal_x = expand(REFUSAL, per_seed=6, seed=seed + 4)
+    style_x = expand(STYLE_GUARD, per_seed=5, seed=seed + 5)
+    ident_x = expand(IDENTITY + BOUNDARY, per_seed=5, seed=seed + 6)
     src = load_sources()
     psy_titles = [t for t, r in src.items() if r.get("group") == "psy" and display_name(t) in DEFS]
     common_titles = [
@@ -147,17 +198,20 @@ def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
         return f"什么是{name}？", DEFS[name]
 
     weights = [
-        ("subject", 28),
-        ("psy_def", 16),
-        ("common_def", 8),
-        ("ethics_case", 12),
+        ("subject", 24),
+        ("psy_def", 14),
+        ("common_def", 7),
+        ("ethics_case", 10),
         ("ethics_div", 4),
         ("ethics_theory", 4),
         ("identity", 5),
-        ("refusal", 11),
-        ("chitchat", 10),
+        ("refusal", 10),
+        ("chitchat", 9),
         ("style", 4),
-        ("crisis", 8),
+        ("crisis", 5),
+        ("daily", 8),
+        ("short", 10),
+        ("kb_fact", 30),
     ]
     pool = [f for f, w in weights for _ in range(w)]
     rows: list[dict] = []
@@ -208,15 +262,23 @@ def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
                     stats["sourced"] += 1
                     break
         elif fam == "refusal":
-            q, a = rng.choice(REFUSAL)
+            q, a = rng.choice(refusal_x)
         elif fam == "chitchat":
-            q, a = rng.choice(CHITCHAT)
+            q, a = rng.choice(chitchat_x)
         elif fam == "style":
-            q, a = rng.choice(STYLE_GUARD)
+            q, a = rng.choice(style_x)
         elif fam == "crisis":
-            q, a = rng.choice(CRISIS_QA)
+            q, a = rng.choice(crisis_x)
+        elif fam == "daily":
+            q, a = rng.choice(daily_x)
+        elif fam == "short":
+            q, a = rng.choice(short_x)
+        elif fam == "kb_fact":
+            if not kb_facts:
+                continue
+            q, a = rng.choice(kb_facts)
         else:
-            q, a = rng.choice(IDENTITY + BOUNDARY)
+            q, a = rng.choice(ident_x)
         rec["messages"] = [{"role": "user", "content": q}, {"role": "assistant", "content": a}]
         rows.append(rec)
         stats[fam] = stats.get(fam, 0) + 1

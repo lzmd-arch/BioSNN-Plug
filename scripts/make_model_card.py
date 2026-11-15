@@ -24,7 +24,7 @@ STATE = ROOT / "state_qa" / "result.json"
 MEMO = ROOT / "kb_sources" / "memorization.json"
 CARD = Path("packages/semprea-anchor/MODEL_CARD.md")
 
-SEED_NAMES = ("s0", "s1", "s2")
+SEED_NAMES = ("s0", "s1")
 
 
 def load(p: Path) -> dict | None:

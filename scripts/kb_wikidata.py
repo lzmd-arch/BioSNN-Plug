@@ -34,7 +34,12 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-UA = {"User-Agent": "BioSNN-Plug research (local; non-commercial)"}
+#: 维基的 API 礼仪要求 UA 里带**项目地址**；只写 "research" 会被当成爬虫限流
+#: （2026-11-16 实测：没有联系方式的 UA 半小时内就被 429）。
+UA = {
+    "User-Agent": "BioSNN-Plug/1.0 (https://github.com/lzmd-arch/BioSNN-Plug) "
+    "python-urllib/3; research use"
+}
 WIKI_API = "https://zh.wikipedia.org/w/api.php"
 WD_API = "https://www.wikidata.org/w/api.php"
 OUT = Path("sweep_results/kb_sources/wikidata.jsonl")
@@ -196,8 +201,8 @@ def category_titles(
             cont = got.get("continue", {})
             if not cont:
                 break
-            time.sleep(0.3)
-        time.sleep(0.3)
+            time.sleep(0.8)
+        time.sleep(0.8)
     return out
 
 
@@ -236,7 +241,7 @@ def entities_for_titles(titles: list[str], batch: int = 50) -> dict[str, dict]:
                 "desc": _pick(e, "descriptions"),
                 "p31": p31,
             }
-        time.sleep(0.3)
+        time.sleep(0.8)
     return out
 
 
@@ -259,7 +264,7 @@ def type_labels(qids: list[str], batch: int = 50) -> dict[str, str]:
                 if lang in e.get("labels", {}):
                     out[qid] = e["labels"][lang]["value"]
                     break
-        time.sleep(0.3)
+        time.sleep(0.8)
     return out
 
 
