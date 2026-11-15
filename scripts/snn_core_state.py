@@ -239,8 +239,13 @@ def _default_tree_paths() -> Path:
 class SNNFull(SNNCoreState):
     """**完整 0.5B**：核心给状态 `p`，输出树给下一 token 的分布。
 
-    树权重 fp32 是 1.86 GiB；`weight_dtype="bf16"` 减半。V0.5 实测过 bf16 的口径：
-    top-1 10/10 不变、最大 logprob 差 0.0071（见 Semprea-4.5B 的 manifest）。
+    树权重 fp32 是 1.86 GiB，**默认 bf16（0.95 GiB）**。本项目实测（2026-11-16，8 条输入）：
+
+    - top-1 **8/8 一致**；
+    - top-20 的 |Δlogp| 最大 **0.0080**；全词表中位 0.0026、最大 0.0250；
+    - 树读出快 **1.34×**。
+
+    要逐位的原样结果就传 `weight_dtype="fp32"`（需要那份 1.86 GiB 的权重）。
 
     它**不是**聊天模型：top-1 只有 0.11。它能做的是"在 32k 子集上给出一个分布"，
     用来做状态编码、困惑度、或与别的模型的分布级融合（后者在 V0.5 四测四负）。
@@ -250,7 +255,7 @@ class SNNFull(SNNCoreState):
         self,
         tree_w: Path | None = None,
         tree_paths: Path | None = None,
-        weight_dtype: str = "fp32",
+        weight_dtype: str = "bf16",
         **kw,
     ) -> None:
         super().__init__(**kw)
