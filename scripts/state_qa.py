@@ -141,7 +141,12 @@ def main() -> int:
         rng = random.Random(0)
         for step in range(1, args.steps + 1):
             r = tr[rng.randrange(len(tr))]
-            msgs = [{"role": "user", "content": r["q"]}, {"role": "assistant", "content": r["a"]}]
+            # **训练时把文字随机放/不放**：否则推理时加文字对调制器是分布外输入
+            # （上一轮 both 0.383 < film 0.417 就是这个原因）。
+            msgs = []
+            if rng.random() < 0.5:
+                msgs.append({"role": "system", "content": r["system"]})
+            msgs += [{"role": "user", "content": r["q"]}, {"role": "assistant", "content": r["a"]}]
             text = tok.apply_chat_template(msgs, tokenize=False)
             ids = tok(text, return_tensors="pt").input_ids.to(dev)
             p = torch.tensor([r["p"]], dtype=torch.float32, device=dev)
