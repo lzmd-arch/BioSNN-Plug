@@ -58,7 +58,18 @@ def sample(rng: random.Random) -> dict:
         0.5,
     ]
     key = {0: BACKBONES[bb], 1: str(mem), 2: "离线" if not online else "在线", 3: str(turns)}[kind]
-    return {"q": q, "a": a, "system": block, "p": vec, "kind": kind, "key": key}
+    return {
+        "q": q,
+        "a": a,
+        "system": block,
+        "p": vec,
+        "kind": kind,
+        "key": key,
+        "mem": mem,
+        "online": online,
+        "bb": bb,
+        "turns": turns,
+    }
 
 
 def build(n: int, seed: int = 0) -> list[dict]:
@@ -116,6 +127,12 @@ def main() -> int:
     ap.add_argument("--save", type=Path, default=OUT / "modulator.pt")
     ap.add_argument("--rank", type=int, default=8)
     ap.add_argument("--alpha", type=float, default=0.1)
+    ap.add_argument(
+        "--p-source",
+        choices=("hand", "snn"),
+        default="hand",
+        help="hand = 手写 12 维；snn = 真的脉冲池算出来的",
+    )
     ap.add_argument("--skip-train", action="store_true")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -128,6 +145,21 @@ def main() -> int:
     model = fusion
 
     te = build(args.eval, seed=99)
+    tr_all = build(args.train, seed=1)
+    if args.p_source == "snn":
+        from scripts.snn_state_p import SCNNState
+
+        enc = SCNNState()
+        for rows in (te, tr_all):
+            ps = enc.encode(
+                [
+                    {"mem": r["mem"], "online": r["online"], "bb": r["bb"], "turns": r["turns"]}
+                    for r in rows
+                ]
+            )
+            for r, v in zip(rows, ps):
+                r["p"] = [float(x) for x in v]
+        print("p 来源：SNN 池", flush=True)
     res = {
         "none": _score(te, _ask(tok, model, te, "none", dev), None),
         "text": _score(te, _ask(tok, model, te, "text", dev), None),
@@ -135,7 +167,7 @@ def main() -> int:
     print(f"未训练：none {res['none']:.2f}  text {res['text']:.2f}", flush=True)
 
     if not args.skip_train:
-        tr = build(args.train, seed=1)
+        tr = tr_all
         opt = torch.optim.AdamW(list(fusion.trainable_parameters()), lr=args.lr)
         fusion.train()
         rng = random.Random(0)
