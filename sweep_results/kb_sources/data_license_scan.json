@@ -1,0 +1,12 @@
+{
+ "criteria": {
+  "S-1_verbatim_sentence": 0,
+  "S-2_max_lcs": 11
+ },
+ "wiki_sentences": 1114,
+ "samples": 30000,
+ "whole_sentence_hits": 0,
+ "ngram_hits": 0,
+ "examples": [],
+ "passed": true
+}

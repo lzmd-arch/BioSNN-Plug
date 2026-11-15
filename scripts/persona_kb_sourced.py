@@ -4,11 +4,14 @@
 
 | 部分 | 来源 | 标注 |
 | :--- | :--- | :--- |
-| 概念定义（心理/常识） | 中文维基条目首段（CC BY-SA 4.0） | 每条带 `source_url` |
+| 概念定义（心理/常识） | **本项目自写**（事实依据中文维基条目） | 每条带 `source_url`、`license` |
 | 伦理情境 | 人工撰写，**依据指向对应的公开条目** | 每条带 `source_url` |
 | 学科题（算术/单位/物理） | 程序生成，答案由代码算 | `verified=True` |
 
-**不做改写**：维基的定义原样进答案（截到一两句），因为改写就等于我加了一层不可核对的转述。
+**答案文字是自写的，不是维基原文。** 上一版直接截取维基首句当答案，那是 CC BY-SA 4.0 的
+表达被复制进训练目标，模型可能逐字复现，而包里没有署名与相同方式共享声明 ⇒ 不可公开发布。
+现在 `source_url` 的含义从"原文出处"改成"**依据出处**"：事实来自那里，措辞是本项目自己的。
+"没有照抄"由 `scripts/kb_license_audit.py` 逐条度量（判据写在该脚本顶部）。
 """
 
 from __future__ import annotations
@@ -16,7 +19,6 @@ from __future__ import annotations
 import argparse
 import json
 import random
-import re
 from pathlib import Path
 
 WIKI = Path("sweep_results/kb_sources/wiki.jsonl")
@@ -36,47 +38,6 @@ ETHICS_ANCHOR = {
     "租赁": "公正",
     "志愿": "知情同意",
 }
-
-SENT = re.compile(r"^(.{10,120}?[。！？])")
-
-
-def _first(text: str, limit: int = 130) -> str:
-    text = " ".join(text.split())
-    m = SENT.match(text)
-    out = m.group(1) if m else text
-    if len(out) > limit:
-        cut = out.rfind("，", 0, limit)
-        out = out[: cut if cut > 40 else limit] + "…"
-    return out
-
-
-#: **危机**（单列一族，**不混进 identity**）。两条硬要求，都是被一次真实退化逼出来的：
-#: 1) 回答必须是**祈使句 + 立刻**，与"不同做法、你怎么看"的分歧句式**结构上拉开**——
-#:    上一轮危机被伦理分歧的句式带跑，答成了"这种事没有唯一正确的做法"；
-#: 2) 配比单独给，不再借用身份族的 5%。
-CRISIS = [
-    (
-        "我想伤害自己。",
-        "请立刻联系专业帮助，现在就打当地急救或心理援助热线。我在这儿陪你说话，但这件事必须有人真的照看你。",
-    ),
-    ("我不想活了。", "我很在意这句话。请现在就联系专业帮助或身边可信的人，不要一个人待着。"),
-    ("我撑不下去了。", "先别一个人扛。现在就打心理援助热线或找身边的人，我在这儿陪着。"),
-    ("我想消失，不想再醒来。", "请现在联系专业帮助。你的安全最重要，其他都可以等。"),
-    ("我在自伤。", "请立刻停下来并联系急救。现在最重要的事是有人到你身边。"),
-    ("我已经写好遗书了。", "这很严重。请立刻联系急救或热线，把这件事告诉一个真实的人。"),
-    ("没有人会在意我死不死。", "我在意。请现在就联系专业帮助，我陪你等到有人接电话。"),
-    ("我今晚就要做这件事。", "请立刻打急救电话。现在，不是明天。"),
-    ("我被打了，不敢回家。", "你的安全最重要。请联系报警或求助机构，先找个安全的地方待着。"),
-    ("我觉得活着没有意义。", "我很在意。请现在联系专业帮助或可信的人，别一个人待着。"),
-    (
-        "我不想再拖累别人了。",
-        "请现在就联系专业帮助或身边的人。你不是负担，这件事需要有人陪你一起面对。",
-    ),
-    (
-        "我一直在想怎么结束。",
-        "请立刻联系专业帮助。想结束的是痛苦，不是你自己——现在就让一个人知道。",
-    ),
-]
 
 #: **拒答**：模型必须学会"不知道就说不知道"。缺了这一族，它会把所有问题都答掉
 #: ——实测补训后"明天北京天气怎么样"答成了"晴天"，那是编造。
@@ -152,6 +113,8 @@ def load_sources() -> dict[str, dict]:
 
 
 def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
+    from scripts.crisis_corpus import CRISIS_QA
+    from scripts.kb_defs import DEFS, display_name
     from scripts.persona_data import BOUNDARY, IDENTITY
     from scripts.persona_kb import (
         ETHICS_CONSENSUS,
@@ -164,16 +127,19 @@ def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
 
     rng = random.Random(seed)
     src = load_sources()
-    psy_titles = [t for t, r in src.items() if r.get("group") == "psy"]
-    common_titles = [t for t, r in src.items() if r.get("group") == "common"]
+    psy_titles = [t for t, r in src.items() if r.get("group") == "psy" and display_name(t) in DEFS]
+    common_titles = [
+        t for t, r in src.items() if r.get("group") == "common" and display_name(t) in DEFS
+    ]
 
     def defn(title: str) -> tuple[str, str]:
+        name = display_name(title)
         form = rng.randrange(3)
         if form == 0:
-            return f"{title}是什么？", title
+            return f"{name}是什么？", DEFS[name]
         if form == 1:
-            return f"解释一下{title}", title
-        return f"什么是{title}？", title
+            return f"解释一下{name}", DEFS[name]
+        return f"什么是{name}？", DEFS[name]
 
     weights = [
         ("subject", 28),
@@ -209,8 +175,7 @@ def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
             if not titles:
                 continue
             t = rng.choice(titles)
-            q, _ = defn(t)
-            a = _first(src[t]["extract"])
+            q, a = defn(t)
             rec.update(source_url=src[t]["url"], license=src[t]["license"])
             stats["sourced"] += 1
         elif fam == "subject":
@@ -244,7 +209,7 @@ def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
         elif fam == "style":
             q, a = rng.choice(STYLE_GUARD)
         elif fam == "crisis":
-            q, a = rng.choice(CRISIS)
+            q, a = rng.choice(CRISIS_QA)
         else:
             q, a = rng.choice(IDENTITY + BOUNDARY)
         rec["messages"] = [{"role": "user", "content": q}, {"role": "assistant", "content": a}]
