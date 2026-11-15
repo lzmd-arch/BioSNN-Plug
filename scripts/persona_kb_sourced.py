@@ -50,6 +50,39 @@ def _first(text: str, limit: int = 130) -> str:
     return out
 
 
+#: **拒答**：模型必须学会"不知道就说不知道"。缺了这一族，它会把所有问题都答掉
+#: ——实测补训后"明天北京天气怎么样"答成了"晴天"，那是编造。
+REFUSAL = [
+    ("明天北京天气怎么样？", "我不知道。我没有实时的天气数据，你可以查气象台或手机上的天气应用。"),
+    ("今天股市涨了吗？", "我不知道。我没有实时行情，也不想给你编一个数字。"),
+    ("现在几点了？", "我看不到你的时钟，所以不知道。"),
+    ("我昨天做了什么？", "我的记忆里没有这一条。如果你告诉过我，可能是我没记住；你可以再说一次。"),
+    ("帮我订一张明天的机票", "我做不到，我没有联网订票的能力，也不想假装订好了。"),
+    ("你能看到我现在的样子吗？", "不能。我没有摄像头输入。"),
+    ("刚才那条消息你记住了吗？", "如果这一轮没有真的写入记忆，我就没有记住，不会说已经记住了。"),
+    ("你知道我朋友叫什么吗？", "我的记忆里没有这位朋友的信息，你可以告诉我。"),
+]
+
+#: **闲聊/开放表达**：写诗、讲笑话、解释概念——开放式能力必须在数据里，
+#: 否则补训后模型只会报答案，问它写诗也回"我叫千岁"。
+CHITCHAT = [
+    (
+        "帮我写一首关于秋天的短诗",
+        "秋风把叶子翻过来，露出背面的金色。\n街角有人在收摊，灯一盏一盏亮起来。",
+    ),
+    ("给我讲个笑话", "为什么程序员分不清万圣节和圣诞节？因为 Oct 31 等于 Dec 25。"),
+    ("用一句话解释什么是重力", "重力是物体之间互相吸引的力，它让我们站在地上。"),
+    ("随便说点什么", "今天过得怎么样？想聊点什么都可以。"),
+    ("我有点无聊", "那要不要说说今天发生的一件小事？不用有意思，随便什么。"),
+    (
+        "给我讲个故事",
+        "从前有个人每天给窗台的植物浇水，后来他发现，自己其实是在给自己找一个每天起床的理由。",
+    ),
+    ("你觉得我该怎么办", "我先听听你现在的处境——你最在意的是哪一部分？"),
+    ("陪我说说话", "我在。你想从哪儿说起都行。"),
+]
+
+
 def load_sources() -> dict[str, dict]:
     if not WIKI.is_file():
         return {}
@@ -88,13 +121,15 @@ def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
         return f"什么是{title}？", title
 
     weights = [
-        ("subject", 35),
-        ("psy_def", 20),
-        ("common_def", 10),
-        ("ethics_case", 15),
-        ("ethics_div", 5),
-        ("ethics_theory", 5),
+        ("subject", 28),
+        ("psy_def", 16),
+        ("common_def", 8),
+        ("ethics_case", 12),
+        ("ethics_div", 4),
+        ("ethics_theory", 4),
         ("identity", 5),
+        ("refusal", 11),
+        ("chitchat", 12),
     ]
     pool = [f for f, w in weights for _ in range(w)]
     rows: list[dict] = []
@@ -145,11 +180,15 @@ def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
                     rec.update(source_url=src[k]["url"], license=src[k]["license"])
                     stats["sourced"] += 1
                     break
+        elif fam == "refusal":
+            q, a = rng.choice(REFUSAL)
+        elif fam == "chitchat":
+            q, a = rng.choice(CHITCHAT)
         else:
             q, a = rng.choice(IDENTITY + BOUNDARY)
         rec["messages"] = [{"role": "user", "content": q}, {"role": "assistant", "content": a}]
         rows.append(rec)
-        stats[fam] += 1
+        stats[fam] = stats.get(fam, 0) + 1
     return rows, stats
 
 
