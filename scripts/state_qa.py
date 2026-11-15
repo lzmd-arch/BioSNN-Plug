@@ -114,6 +114,8 @@ def main() -> int:
     ap.add_argument("--steps", type=int, default=400)
     ap.add_argument("--lr", type=float, default=3e-4)
     ap.add_argument("--save", type=Path, default=OUT / "modulator.pt")
+    ap.add_argument("--rank", type=int, default=8)
+    ap.add_argument("--alpha", type=float, default=0.1)
     ap.add_argument("--skip-train", action="store_true")
     args = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -122,7 +124,7 @@ def main() -> int:
     from research.sel.lm.fusion_model import load_fusion
 
     tok = AutoTokenizer.from_pretrained(BASE)
-    fusion = load_fusion(BASE, state_dim=12, alpha=0.1)
+    fusion = load_fusion(BASE, state_dim=12, alpha=args.alpha, rank=args.rank)
     model = fusion
 
     te = build(args.eval, seed=99)

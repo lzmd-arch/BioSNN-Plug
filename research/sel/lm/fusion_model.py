@@ -55,14 +55,16 @@ class StateModulator(nn.Module):
 class FusionLM(nn.Module):
     """小 LM + 状态调制。`forward(input_ids, p)`；`p=None` 时等价于原模型。"""
 
-    def __init__(self, lm, state_dim: int, alpha: float = 0.1, train_head: bool = False):
+    def __init__(
+        self, lm, state_dim: int, alpha: float = 0.1, train_head: bool = False, rank: int = 8
+    ):
         super().__init__()
         self.lm = lm
         for prm in self.lm.parameters():
             prm.requires_grad = False
         cfg = lm.config
         layers = lm.model.layers
-        self.modulator = StateModulator(state_dim, len(layers), cfg.hidden_size, alpha)
+        self.modulator = StateModulator(state_dim, len(layers), cfg.hidden_size, alpha, rank)
         self._mod = None
         self._hooks = [
             layer.register_forward_hook(self._make_hook(i)) for i, layer in enumerate(layers)
@@ -110,6 +112,7 @@ def load_fusion(
     *,
     alpha: float = 0.1,
     train_head: bool = False,
+    rank: int = 8,
     dtype=torch.bfloat16,
     device: str = "cuda",
 ):
@@ -117,4 +120,4 @@ def load_fusion(
 
     lm = AutoModelForCausalLM.from_pretrained(model_dir, dtype=dtype)
     lm.to(device).eval()
-    return FusionLM(lm, state_dim, alpha=alpha, train_head=train_head).to(device)
+    return FusionLM(lm, state_dim, alpha=alpha, train_head=train_head, rank=rank).to(device)
