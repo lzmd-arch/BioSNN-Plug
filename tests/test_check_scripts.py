@@ -640,3 +640,22 @@ def test_scripts_are_runnable_as_cli(script):
     """三个脚本都必须能被 CI 与 pre-commit 直接调用（``--help`` 不报错）。"""
     assert script.exists()
     assert run(script, "--help").returncode == 0
+
+
+def test_no_path_positional_in_add_argument():
+    """守卫：`ap.add_argument("--x", Path, ...)` 会把 `Path` 当成 dest 而非 type，
+    运行时报 `TypeError: type 'Path' is not subscriptable`。
+
+    2026-11-16 一天之内犯了**四次**（swap_mouth / knowledge_retention /
+    prereg_gap_tests / fusion_uncertainty），每次都要白跑一轮才发现。
+    写成测试，别再靠记性。
+    """
+    import re
+
+    pat = re.compile(r'add_argument\("[^"]+",\s*(?:_pathlib\.)?Path\b')
+    bad = []
+    for p in sorted(Path("scripts").glob("*.py")):
+        for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+            if "add_argument(" in line and "type=" not in line and pat.search(line):
+                bad.append(f"{p}:{i}")
+    assert not bad, f"add_argument 少了 type=：{bad}"

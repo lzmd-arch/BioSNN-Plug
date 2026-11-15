@@ -79,7 +79,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ckpt", required=True)
     ap.add_argument("--texts", type=int, default=20)
-    ap.add_argument("--out", _pathlib.Path, default=OUT)
+    ap.add_argument("--out", type=_pathlib.Path, default=OUT)
     ap.add_argument("--name", default=None)
     args = ap.parse_args()
     dev = "cuda" if torch.cuda.is_available() else "cpu"

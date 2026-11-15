@@ -21,7 +21,7 @@
 
 | 编号 | 判据 | 通过线 |
 | :--- | :--- | :--- |
-| **K-1** | 微调后在通用知识题上的正确数 | 相对底座下降 **≤3 题**（60 题里） |
+| **K-1** | 微调后在通用知识题上的正确数 | 相对底座下降 **≤2pp**（61 题 ⇒ ≤1 题） |
 | **K-2** | 微调后**不低于**底座的题数 | ≥ 底座的 **80%** |
 
 K-1 不过 ⇒ 知识被盖掉，要降 lr / 减步数 / 混入通用数据，重训。
@@ -140,7 +140,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default=BASE)
     ap.add_argument("--ckpt", required=True)
-    ap.add_argument("--out", _pathlib.Path, default=OUT)
+    ap.add_argument("--out", type=_pathlib.Path, default=OUT)
     ap.add_argument("--name", default=None)
     args = ap.parse_args()
     dev = "cuda" if torch.cuda.is_available() else "cpu"
@@ -156,8 +156,8 @@ def main() -> int:
         "base_hit": hb,
         "tuned_hit": ht,
         "drop": drop,
-        "criteria": {"K-1_max_drop": 3, "K-2_keep_ratio": 0.8},
-        "passed": drop <= 3 or ht >= hb * 0.8,
+        "criteria": {"K-1_max_drop_pp": 2, "K-2_keep_ratio": 0.8},
+        "passed": drop <= 1 and ht >= hb * 0.8,
         "rows": [
             {"q": b["q"], "base": b["a"], "tuned": t["a"], "b_ok": b["ok"], "t_ok": t["ok"]}
             for b, t in zip(rb, rt, strict=False)
