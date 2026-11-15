@@ -1,8 +1,9 @@
 {
- "steps": 2000,
- "seconds": 932.8,
- "tokens": 161411,
- "tok_per_s": 173.0,
- "epochs": 1,
- "lr": 2e-05
+ "base": "D:/AxoData/models/hf/Qwen2.5-0.5B-Instruct",
+ "seed": 0,
+ "lam": 0.5,
+ "lr": 1e-05,
+ "steps": 3000,
+ "seconds": 3475.0,
+ "tokens": 173370
 }

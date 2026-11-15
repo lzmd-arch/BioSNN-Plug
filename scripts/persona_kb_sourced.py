@@ -162,10 +162,15 @@ def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
     from scripts.kb_defs import DEFS, display_name
     from scripts.persona_daily import DAILY, SHORT
     from scripts.persona_data import BOUNDARY, IDENTITY
+    from scripts.persona_ethics_extra import (
+        CONSENSUS_EXTRA,
+        DIVERGENCE_EXTRA,
+        THEORY_EXTRA,
+    )
     from scripts.persona_kb import (
         ETHICS_CONSENSUS,
+        ETHICS_DIVERGENCE,
         ETHICS_THEORY,
-        _divergence,
         _math,
         _physics,
         _unit,
@@ -178,6 +183,11 @@ def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
     daily_x = expand(DAILY, per_seed=10, seed=seed + 2)
     short_x = expand(SHORT, per_seed=4, seed=seed + 7)
     kb_facts = load_wikidata(DEFS)
+    # 伦理三族原来只有 20 / 10 / 6 条唯一情境，是全数据里最薄的。
+    # 这里**追加**（不改原表），再用组合扩增把输入面拉开。
+    ethics_consensus = ETHICS_CONSENSUS + CONSENSUS_EXTRA
+    ethics_theory = ETHICS_THEORY + THEORY_EXTRA
+    ethics_div = ETHICS_DIVERGENCE + DIVERGENCE_EXTRA
     chitchat_x = expand(CHITCHAT, per_seed=6, seed=seed + 3)
     refusal_x = expand(REFUSAL, per_seed=6, seed=seed + 4)
     style_x = expand(STYLE_GUARD, per_seed=5, seed=seed + 5)
@@ -241,21 +251,22 @@ def build(n: int, seed: int = 0) -> tuple[list[dict], dict]:
             q, a = rng.choice([_math, _math, _unit, _physics])(rng)
             rec["verified"] = True
         elif fam == "ethics_case":
-            dom, sit, verdict, basis = rng.choice(ETHICS_CONSENSUS)
+            dom, sit, verdict, basis = rng.choice(ethics_consensus)
             q, a = f"{sit}。该怎么办？", f"{verdict}。依据是{basis}。"
             anchor = ETHICS_ANCHOR.get(dom)
             if anchor in src:
                 rec.update(source_url=src[anchor]["url"], license=src[anchor]["license"])
                 stats["sourced"] += 1
         elif fam == "ethics_div":
-            q, a = _divergence(rng)
+            _dom, _sit, _why = rng.choice(ethics_div)
+            q, a = f"{_sit}？", f"这件事{_why}。我先听听你怎么想——你更看重哪一种？"
             if "关怀伦理学" in src:
                 rec.update(
                     source_url=src["关怀伦理学"]["url"], license=src["关怀伦理学"]["license"]
                 )
                 stats["sourced"] += 1
         elif fam == "ethics_theory":
-            q, a = rng.choice(ETHICS_THEORY)
+            q, a = rng.choice(ethics_theory)
             for k in ("义务论", "功利主义", "德性伦理", "关怀伦理学", "权利", "儒家"):
                 if k in q and k in src:
                     rec.update(source_url=src[k]["url"], license=src[k]["license"])

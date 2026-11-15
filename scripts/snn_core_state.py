@@ -71,10 +71,17 @@ def _default_core() -> Path:
 
 
 @torch.no_grad()
-def forward_core(
-    tensors: dict, cfg: dict, ids: torch.Tensor, per_position: bool = False
-) -> torch.Tensor:
-    """纯前馈 LIF 前向。
+def _run_core(
+    tensors: dict,
+    cfg: dict,
+    ids: torch.Tensor,
+    state: tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor] | None = None,
+    per_position: bool = False,
+):
+    """跑一段序列，返回 `(特征, 新状态)`。`state` 给了就**接着上一段跑**。
+
+    新状态是 `(v, z, refractory, readouts)` 四件——**回路闭合就靠它**：
+    上一轮结束时的膜电位，下一轮从这里接着走，而不是每次归零。
 
     - `per_position=False`：返回 `(B, n_taus * n_rec)`，整段序列的最终读出；
     - `per_position=True`：返回 `(B, T, n_taus * n_rec)`，**每个位置的读出**——
@@ -91,10 +98,13 @@ def forward_core(
     nb = ids.shape[0]
     n_rec = int(cfg["n_rec"])
 
-    v = torch.zeros((nb, n_rec), dtype=torch.float32)
-    z = torch.zeros((nb, n_rec), dtype=torch.float32)
-    ref = torch.zeros((nb, n_rec), dtype=torch.float32)
-    readouts = torch.zeros((nb, decays.numel(), n_rec), dtype=torch.float32)
+    if state is None:
+        v = torch.zeros((nb, n_rec), dtype=torch.float32)
+        z = torch.zeros((nb, n_rec), dtype=torch.float32)
+        ref = torch.zeros((nb, n_rec), dtype=torch.float32)
+        readouts = torch.zeros((nb, decays.numel(), n_rec), dtype=torch.float32)
+    else:
+        v, z, ref, readouts = state
     steps: list[torch.Tensor] = []
 
     for t in range(ids.shape[1]):
@@ -107,10 +117,20 @@ def forward_core(
         readouts = readouts * decays.view(1, -1, 1) + z.unsqueeze(1)
         if per_position:
             steps.append((readouts * scales.view(1, -1, 1)).reshape(nb, -1))
+    new_state = (v, z, ref, readouts)
     if per_position:
-        return torch.stack(steps, dim=1)
+        return torch.stack(steps, dim=1), new_state
     scaled = readouts * scales.view(1, -1, 1)
-    return scaled.reshape(nb, -1)
+    return scaled.reshape(nb, -1), new_state
+
+
+@torch.no_grad()
+def forward_core(
+    tensors: dict, cfg: dict, ids: torch.Tensor, per_position: bool = False
+) -> torch.Tensor:
+    """无状态包装：每次从零开始。**开环路径，保留给既有调用方。**"""
+    feat, _ = _run_core(tensors, cfg, ids, None, per_position)
+    return feat
 
 
 class SNNCoreState:
@@ -331,3 +351,44 @@ class SNNFull(SNNCoreState):
             [(int(i), float(math.log(max(float(v), 1e-30)))) for v, i in zip(vr, ir, strict=False)]
             for vr, ir in zip(vals, idx, strict=False)
         ]
+
+
+class SNNCoreSession:
+    """**闭环会话**：膜电位跨轮保留。
+
+    开环版 `SNNCoreState.encode()` 每次从零建膜电位，所以「上一轮发生了什么」
+    对下一轮没有任何影响（实测：`v = zeros` 每次重建）。
+    这里的 `step()` 带着上一轮的 `v / z / refractory / readouts` 继续跑——
+    **这是把回路闭上的最小实现**。
+
+    判据见 `research/sel/prereg-emergence-v1.md` §四。
+    """
+
+    def __init__(self, encoder: SNNCoreState, max_len: int = 64) -> None:
+        self.enc = encoder
+        self.max_len = max_len
+        self._state: tuple[torch.Tensor, ...] | None = None
+        self.turns = 0
+
+    def reset(self) -> None:
+        """把回路清空 —— 这就是 E-3 的**消融臂**。"""
+        self._state = None
+        self.turns = 0
+
+    @torch.no_grad()
+    def step(self, text: str) -> np.ndarray:
+        """喂一轮，返回这一轮的 `p`；状态保留给下一轮。"""
+        ids = self.enc._ids(text, self.max_len)
+        x = torch.tensor([ids], dtype=torch.long)
+        feat, self._state = _run_core(self.enc.tensors, self.enc.cfg, x, self._state)
+        self.turns += 1
+        p = feat.numpy() @ self.enc.proj
+        return (p / (np.linalg.norm(p, axis=1, keepdims=True) + 1e-6)).astype(np.float32)
+
+    @torch.no_grad()
+    def feedback(self, user_text: str, model_text: str) -> np.ndarray:
+        """一轮结束后把「用户说了什么 + 模型回了什么」**喂回去**，让状态更新。
+
+        这一步是闭环的实质：没有它，SNN 只读用户输入，模型自己的行为对它不可见。
+        """
+        return self.step(f"{user_text} {model_text}".strip())
