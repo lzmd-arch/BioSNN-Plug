@@ -242,11 +242,42 @@ def main() -> int:
                 "fpr": best[2] if best else 0.0,
             }
         )
-    out = {"model": MODEL, "train": args.train, "test": args.test, "curve": curve}
+    # **F-1**：默认阈值 0.5 的工作点 vs 标定工作点。
+    # 这条差距就是"标定值不值钱"——差距小，护城河是假的。
+    with torch.no_grad():
+        default_thr = 0.5
+        d_fpr = float((neg >= default_thr).float().mean())
+        d_tpr = float((pos >= default_thr).float().mean())
+    out = {
+        "model": MODEL,
+        "train": args.train,
+        "test": args.test,
+        "curve": curve,
+        "default_thr": {"thr": default_thr, "sens": d_tpr, "fpr": d_fpr},
+        "test_pos": pos.tolist(),
+        "test_neg": neg.tolist(),
+    }
     (OUT / "gate.json").write_text(
         json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n"
     )
-    print(json.dumps(out, ensure_ascii=False, indent=1))
+    print(
+        f"默认阈值 0.5：sens {d_tpr:.3f}  FPR {d_fpr:.3f}",
+        flush=True,
+    )
+    best10 = next((c for c in curve if c["fpr_target"] == 0.10), None)
+    if best10 and best10["thr"] is not None:
+        print(
+            f"标定到 FPR≈0.10：thr {best10['thr']:.2f}  sens {best10['recall']:.3f}  "
+            f"FPR {best10['fpr']:.3f}",
+            flush=True,
+        )
+    print(
+        json.dumps(
+            {k: v for k, v in out.items() if not k.startswith("test_")},
+            ensure_ascii=False,
+            indent=1,
+        )
+    )
     return 0
 
 
