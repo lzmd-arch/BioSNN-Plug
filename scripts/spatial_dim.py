@@ -41,6 +41,7 @@ import torch
 
 from scripts.instrument import calibrate
 from scripts.manifold_big import acc_of, make_task, to_ball
+from scripts.structure_ladder import window_features
 
 OUT = _pathlib.Path("sweep_results/spatial_dim")
 TAUS = (2.0, 16.0)
@@ -105,27 +106,39 @@ def build_spatial(dims: tuple[int, ...], n: int, k: int, seed: int, dev: str, su
     return mats, pre, dist
 
 
-def mean_degree_diameter(pre: torch.Tensor, dims: tuple[int, ...], n: int, sample: int = 64):
-    """抽样估计 BFS 平均最短路径（用邻接的并集）。"""
-    adj = [[] for _ in range(n)]
-    sub = pre[:n]
-    for i in range(0, n, max(1, n // sample)):
-        for j in sub[i].tolist():
-            adj[i].append(j)
-    tot, cnt = 0.0, 0
-    for s in range(0, n, max(1, n // sample)):
-        seen = {s: 0}
-        q = [s]
-        while q and len(seen) < n // 4:
-            u = q.pop(0)
-            for v in adj[u]:
-                if v not in seen:
-                    seen[v] = seen[u] + 1
-                    q.append(v)
-        if len(seen) > 1:
-            tot += sum(seen.values()) / (len(seen) - 1)
-            cnt += 1
-    return tot / max(cnt, 1)
+def mean_degree_diameter(pre: torch.Tensor, dims: tuple[int, ...], n: int, n_src: int = 4):
+    """**精确** BFS 的平均最短路径（向量化，层数有限）。
+
+    这里踩过两个坑，都记下来：
+
+    1. 旧实现只给被抽样的源点填邻接表，BFS 走到别处时邻接表是空的 ——
+       几乎所有点对都报 2 跳；
+    2. 改成按需取邻居之后仍然是 2.x，因为搜索在 `cap` 个节点处截断，
+       而 k=1024 时**第 3 层就已经越过 cap**，平均值被前两层主导。
+
+    现在是全图精确 BFS：每层用 `pre[frontier]` 一次取出整层的邻居。
+    总代价 O(n·k)，n=16384、k=1024 也只有 1.7e7 次索引。
+    """
+    srcs = torch.linspace(0, n - 1, n_src).long()
+    tot = 0.0
+    for s in srcs:
+        dist = torch.full((n,), -1, dtype=torch.long)
+        dist[int(s)] = 0
+        frontier = torch.zeros(n, dtype=torch.bool)
+        frontier[int(s)] = True
+        d = 0
+        while bool(frontier.any()):
+            d += 1
+            idx = frontier.nonzero().squeeze(1)
+            cand = torch.zeros(n, dtype=torch.bool)
+            cand[pre[idx].reshape(-1)] = True
+            cand &= dist < 0
+            if not bool(cand.any()):
+                break
+            dist[cand] = d
+            frontier = cand
+        tot += float(dist[dist >= 0].float().mean())
+    return tot / len(srcs)
 
 
 @torch.no_grad()
@@ -173,9 +186,37 @@ def main() -> int:
     K = args.ks_class
     res: dict = {"n": n, "k": args.k, "geometry": args.geometry, "cells": {}}
 
+    # ---- 正向对照：最近 8 个 token 的 one-hot，完全不经过网络 ----
+    ceilings, majors = [], []
+    for sd in seeds:
+        trw, trsw = make_task(args.train_seq, args.seq, K, 10 + sd, dev)
+        tew, tesw = make_task(args.test_seq, args.seq, K, 20 + sd, dev)
+        toks_w = torch.cat([trw, tew])
+        st_w = torch.cat([trsw, tesw])[:, ::8]
+        wf = window_features(toks_w, L=8, stride=8)
+        Xw = wf.reshape(-1, wf.shape[-1])
+        Yw = st_w.reshape(-1)
+        cutw = args.train_seq * st_w.shape[1]
+        mw, sw = Xw[:cutw].mean(0), Xw[:cutw].std(0) + 1e-6
+        Xw = (Xw - mw) / sw
+        ceilings.append(
+            acc_of(to_ball(Xw[:cutw]), Yw[:cutw], to_ball(Xw[cutw:]), Yw[cutw:], args.geometry, K)
+        )
+        trp, tep = st_w[: args.train_seq], st_w[args.train_seq :]
+        top = int(torch.bincount(trp.reshape(-1), minlength=K).argmax())
+        majors.append(float((tep == top).float().mean()))
+        del toks_w, st_w, wf, Xw
+    res["ceiling"] = sum(ceilings) / len(ceilings)
+    res["majority"] = sum(majors) / len(majors)
+    print(
+        f"  窗口天花板 {res['ceiling']:.3f}   底板(多数类) {res['majority']:.3f}",
+        flush=True,
+    )
+    torch.cuda.empty_cache()
+
     for name, dims in LATTICES.items():
         # ---- 标定工作点 ----
-        tr, _ = make_task(32, 48, K, 10, dev)
+        tr, _ = make_task(32, args.seq, K, 10, dev)  # T 必须与正式跑一致
         mats, pre, _dist = build_spatial(dims, n, args.k, 0, dev)
         w_in = (torch.randn(64, n, generator=torch.Generator().manual_seed(0)) / n**0.5).to(dev)
         ok_cal, sc, _pfr = calibrate(
@@ -206,6 +247,10 @@ def main() -> int:
             frs.append(fr)
             del feat, X
             torch.cuda.empty_cache()
+        fr_mean = sum(frs) / len(frs)
+        if not (0.03 <= fr_mean <= 0.20):
+            print(f"  {name:3s} 发放 {fr_mean:.4f} 出窗，该臂无效", flush=True)
+            continue
         res["cells"][name] = {
             "acc": sum(accs) / len(accs),
             "runs": accs,

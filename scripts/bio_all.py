@@ -49,6 +49,7 @@ import torch
 
 from scripts.dim_ladder import mlp
 from scripts.instrument import calibrate, seeded_dirichlet
+from scripts.structure_ladder import window_features
 
 OUT = _pathlib.Path("sweep_results/bio_all")
 TAUS = (2.0, 16.0)
@@ -160,9 +161,30 @@ def main() -> int:
     arms = [("off", set())] + [(s, {s}) for s in singles] + [("all", set(singles))]
     res: dict = {"n": args.n, "deg": args.deg, "cells": {}}
 
+    # ---- 正向对照：最近 8 个 token 的 one-hot，完全不经过网络 ----
+    # 没有它就无法回答"0.20 到底是任务难还是网络弱"。
+    ceilings, majors = [], []
+    for sd in seeds:
+        tr, trs = make_task(args.train_seq, args.seq, K, 10 + sd, dev)
+        te, tes = make_task(args.test_seq, args.seq, K, 20 + sd, dev)
+        toks_c = torch.cat([tr, te])
+        st_c = torch.cat([trs, tes])[:, ::8]
+        ceilings.append(mlp(window_features(toks_c, L=8, stride=8), st_c, args.train_seq))
+        # 底板取**测试集上多数类的准确率**，不是 1/K
+        tr_part, te_part = st_c[: args.train_seq], st_c[args.train_seq :]
+        top = int(torch.bincount(tr_part.reshape(-1), minlength=K).argmax())
+        majors.append(float((te_part == top).float().mean()))
+        del toks_c, st_c
+    res["ceiling"] = sum(ceilings) / len(ceilings)
+    res["majority"] = sum(majors) / len(majors)
+    print(
+        f"  窗口天花板(不经过网络) {res['ceiling']:.3f}   底板(多数类) {res['majority']:.3f}",
+        flush=True,
+    )
+
     for name, sw in arms:
         # 标定
-        tr0, _ = make_task(32, 48, K, 10, dev)
+        tr0, _ = make_task(32, args.seq, K, 10, dev)  # T 必须与正式跑一致
         w_in, pre, wrec, alpha, delay, pool_id = build(args.n, sw, 0, dev, args.deg)
         cur = (w_in, pre, wrec, alpha, delay, pool_id, sw)
         # 标定走仪器：等比细网格 + 窗口判定（粗网格会整段跨过窗口）
@@ -184,6 +206,10 @@ def main() -> int:
             frs.append(fr)
             del feat
             torch.cuda.empty_cache()
+        fr_mean = sum(frs) / len(frs)
+        if not (0.03 <= fr_mean <= 0.20):
+            print(f"  {name:6s} 发放 {fr_mean:.4f} 出窗，该臂无效", flush=True)
+            continue
         res["cells"][name] = {
             "acc": sum(accs) / len(accs),
             "runs": accs,
