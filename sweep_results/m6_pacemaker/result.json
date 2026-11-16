@@ -7,7 +7,10 @@
    "ratio_late": 1.8936449564629982,
    "wins_early": 6,
    "wins_late": 6,
-   "n": 6
+   "n": 6,
+   "pr_residual": 1.6293187141418457,
+   "ratio_pattern": 0.971523635525026,
+   "wins_pattern": 1
   },
   "p=0.02": {
    "firing_late": 0.14197651545206705,
@@ -16,7 +19,10 @@
    "ratio_late": 2.016752364834645,
    "wins_early": 6,
    "wins_late": 6,
-   "n": 6
+   "n": 6,
+   "pr_residual": 1.8274204730987549,
+   "ratio_pattern": 1.0504659689613924,
+   "wins_pattern": 3
   },
   "p=0.05": {
    "firing_late": 0.15663226445515951,
@@ -25,7 +31,10 @@
    "ratio_late": 1.4798075639953259,
    "wins_early": 6,
    "wins_late": 5,
-   "n": 6
+   "n": 6,
+   "pr_residual": 1.8161087036132812,
+   "ratio_pattern": 1.0358844029398577,
+   "wins_pattern": 3
   },
   "p=0.1": {
    "firing_late": 0.17654053370157877,
@@ -34,7 +43,10 @@
    "ratio_late": 1.8251879151928503,
    "wins_early": 6,
    "wins_late": 6,
-   "n": 6
+   "n": 6,
+   "pr_residual": 1.8216283321380615,
+   "ratio_pattern": 1.0192604812975152,
+   "wins_pattern": 3
   }
  }
 }

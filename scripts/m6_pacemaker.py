@@ -60,6 +60,7 @@ def spontaneous(seed: int, alpha_hist: float, hist_seed: int, scale: float, p: f
     v, z, ref = st
     rates_early = torch.zeros(N, device=dev)
     rates_late = torch.zeros(N, device=dev)
+    zmat = []
     for step in range(T_SPONT):
         rec = torch.zeros_like(z)
         for j in range(pre.shape[1]):
@@ -75,9 +76,10 @@ def spontaneous(seed: int, alpha_hist: float, hist_seed: int, scale: float, p: f
             rates_early += z.mean(0)
         elif step >= T_SPONT - 64:
             rates_late += z.mean(0)
+            zmat.append(z.mean(0))
     del w_in, pre, wrec, hist, zeros
     torch.cuda.empty_cache()
-    return rates_early / 64, rates_late / 64
+    return rates_early / 64, rates_late / 64, torch.stack(zmat, 1)
 
 
 def make_task_hist(T: int, seed: int, dev: str, alpha: float):
@@ -97,17 +99,23 @@ def main() -> int:
 
     for p in [float(x) for x in args.ps.split(",")]:
         rec = {"early": ([], [], []), "late": ([], [], [])}
+        zcs, zcb, zc2 = [], [], []
         frs, sds = [], []
         for sd in range(args.seeds):
-            ea, la = spontaneous(sd, A_LOW, 100 + sd, 0.7, p, dev)
-            eb, lb = spontaneous(sd, A_HIGH, 100 + sd, 0.7, p, dev)
-            ea2, la2 = spontaneous(sd, A_LOW, 900 + sd, 0.7, p, dev)
+            ea, la, za = spontaneous(sd, A_LOW, 100 + sd, 0.7, p, dev)
+            eb, lb, zb = spontaneous(sd, A_HIGH, 100 + sd, 0.7, p, dev)
+            ea2, la2, za2 = spontaneous(sd, A_LOW, 900 + sd, 0.7, p, dev)
             for w, x, y, z2 in (("early", ea, eb, ea2), ("late", la, lb, la2)):
                 rec[w][0].append(x)
                 rec[w][1].append(y)
                 rec[w][2].append(z2)
             frs.append(float(la.mean()))
             sds.append(float(la.std()))
+            # **减掉全局公共分量**后剩下的才是"图案"（不是一起涨落）
+            zc = za - za.mean(0, keepdim=True)
+            zcs.append(zc)
+            zcb.append(zb - zb.mean(0, keepdim=True))
+            zc2.append(za2 - za2.mean(0, keepdim=True))
 
         def _ratio(w, _rec=rec):
             xs, ys, zs = _rec[w]
@@ -123,6 +131,28 @@ def main() -> int:
                 1 for a, b in zip(rh, rn, strict=False) if a > b
             )
 
+        # 结构：去掉公共分量后的参与比（>1.5 说明不止一个模式）
+        zall = torch.stack(zcs)  # (n_seed, N, T)
+        zcall = zall.reshape(-1, zall.shape[-1])
+        zcall = zcall - zcall.mean(0, keepdim=True)
+        ev = (
+            torch.linalg.eigvalsh(zcall @ zcall.T / zcall.shape[0]).clamp(min=0)
+            if zcall.shape[0] < zcall.shape[1]
+            else torch.linalg.eigvalsh(zcall.T @ zcall / zcall.shape[0]).clamp(min=0)
+        )
+        pr_res = float((ev.sum() ** 2) / max(float((ev**2).sum()), 1e-12))
+        # 残余图案的历史/对照比
+        rh2 = [
+            float((zcs[i] - zcb[i]).norm() / (0.5 * (zcs[i].norm() + zcb[i].norm()) + 1e-12))
+            for i in range(len(zcs))
+        ]
+        rn2 = [
+            float((zcs[i] - zc2[i]).norm() / (0.5 * (zcs[i].norm() + zc2[i].norm()) + 1e-12))
+            for i in range(len(zcs))
+        ]
+        r_pat = (sum(rh2) / len(rh2)) / max(sum(rn2) / len(rn2), 1e-12)
+        w_pat = sum(1 for a, b in zip(rh2, rn2, strict=False) if a > b)
+
         r_e, w_e = _ratio("early")
         r_l, w_l = _ratio("late")
         mf = sum(frs) / len(frs)
@@ -134,10 +164,14 @@ def main() -> int:
             "wins_early": w_e,
             "wins_late": w_l,
             "n": args.seeds,
+            "pr_residual": pr_res,
+            "ratio_pattern": r_pat,
+            "wins_pattern": w_pat,
         }
         print(
             f"  p={p:4.2f}  后期发放 {mf:.4f}  空间SD {sum(sds) / len(sds):.4f}  "
-            f"前64 {r_e:.2f}x({w_e})  后64 {r_l:.2f}x({w_l})",
+            f"前64 {r_e:.2f}x({w_e})  后64 {r_l:.2f}x({w_l})  "
+            f"残余PR {pr_res:.2f}  图案比 {r_pat:.2f}x({w_pat})",
             flush=True,
         )
 
