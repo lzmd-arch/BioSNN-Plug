@@ -124,6 +124,7 @@ def run_spont(
     gate_w: float = 0.0,
     gate_phi0: float = 0.08,
     gate_tau: float = 0.0,
+    gate_hyst: float = 0.0,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     if net is None:
@@ -188,7 +189,10 @@ def run_spont(
         # 高活动 ⇒ λ→1 ⇒ 走局部；低活动 ⇒ λ→0 ⇒ 走全局。
         w_g, w_l = 1.0, 1.0  # **不开门控时两场各自全额**（向后兼容）
         if gate_w > 0.0:
-            lam_t = min(max((float(phi_g) - gate_phi0) / gate_w, 0.0), 1.0)
+            # **施密特触发**：阈值随 λ 自己移动 ⇒ λ 高时阈值升高（压低 λ）、
+            # λ 低时阈值降低（抬高 λ）⇒ 产生弛豫振荡，而不是收敛到不动点。
+            phi0_eff = gate_phi0 + gate_hyst * (2.0 * lam - 1.0)
+            lam_t = min(max((float(phi_g) - phi0_eff) / gate_w, 0.0), 1.0)
             lam = lam + (lam_t - lam) / gate_tau if gate_tau > 0.0 else lam_t
             w_g, w_l = 1.0 - lam, lam
         cur = (
@@ -235,7 +239,10 @@ def run_spont(
         loc = phi_g if fmat is None else (z @ fmat)
         w_g, w_l = 1.0, 1.0
         if gate_w > 0.0:
-            lam_t = min(max((float(phi_g) - gate_phi0) / gate_w, 0.0), 1.0)
+            # **施密特触发**：阈值随 λ 自己移动 ⇒ λ 高时阈值升高（压低 λ）、
+            # λ 低时阈值降低（抬高 λ）⇒ 产生弛豫振荡，而不是收敛到不动点。
+            phi0_eff = gate_phi0 + gate_hyst * (2.0 * lam - 1.0)
+            lam_t = min(max((float(phi_g) - phi0_eff) / gate_w, 0.0), 1.0)
             lam = lam + (lam_t - lam) / gate_tau if gate_tau > 0.0 else lam_t
             w_g, w_l = 1.0 - lam, lam
         cur = pace.unsqueeze(0) - g_field * w_g * phi_g - g_local * w_l * loc
