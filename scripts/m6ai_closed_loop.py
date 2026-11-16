@@ -95,6 +95,14 @@ def run_closed(net, seed: int, hist, dev: str, t_closed: int, leak_scale: float 
     return syms, rates
 
 
+def rate_dist(ra, rb) -> float:
+    """两条**发放轨迹**的相对距离。比符号汉明距离干净 ——
+    符号序列的边际分布不同会让汉明距离天然偏小，与"轨迹相似"无关。"""
+    a = torch.tensor(ra)
+    b = torch.tensor(rb)
+    return float((a - b).norm() / (0.5 * (a.norm() + b.norm()) + 1e-12))
+
+
 def hamming(a, b) -> float:
     """两条符号序列的汉明距离占比 —— 闭环轨迹的"行为差异"。"""
     n = min(len(a), len(b))
@@ -128,12 +136,13 @@ def main() -> int:
         hb = make_family_hist(5, sd * 97 + 2, T_HIST, 1, dev)
         ha_rep = make_family_hist(0, sd * 97 + 1, T_HIST, 1, dev)  # 逐位重复，查确定性
         sa, ra = run_closed(net, sd, ha, dev, args.t_closed)
-        sa2, _ = run_closed(net, sd, ha2, dev, args.t_closed)
-        sb, _ = run_closed(net, sd, hb, dev, args.t_closed)
+        _sa2, ra2 = run_closed(net, sd, ha2, dev, args.t_closed)
+        sb, rb = run_closed(net, sd, hb, dev, args.t_closed)
         srep, _ = run_closed(net, sd, ha_rep, dev, args.t_closed)
         inwin = sum(1 for r in ra if 0.01 <= r <= 0.20) / len(ra)
-        d_hist = hamming(sa, sb)
-        d_null = hamming(sa, sa2)
+        _, ra2 = run_closed(net, sd, ha2, dev, args.t_closed)
+        d_hist = rate_dist(ra, rb)
+        d_null = rate_dist(ra, ra2)
         row = {
             "seed": sd,
             "in_window_frac": inwin,
