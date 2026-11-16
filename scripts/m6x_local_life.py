@@ -36,16 +36,16 @@ FAMS = list(range(8))
 
 
 @torch.no_grad()
-def cell(seed: int, radius: int, per_fam: int, dev: str) -> dict:
+def cell(seed: int, radius: int, per_fam: int, dev: str, scale: float = 0.7) -> dict:
     net = build_pools(seed, dev, K, 0.0)
     feats, labels, states, fin = [], [], [], []
     for fam in FAMS:
         toks = make_family_hist(fam, seed * 409 + fam * 17 + 3, T_HIST, per_fam, dev)
-        r, _, _ = run_spont(
+        r = run_spont(
             seed,
             0.5,
             0,
-            0.7,
+            scale,
             0.02,
             dev,
             K,
@@ -56,28 +56,30 @@ def cell(seed: int, radius: int, per_fam: int, dev: str) -> dict:
             t_spont=T_SPONT,
             net=net,
             field_radius=radius,
-        )
+            **field_args(radius),
+        )[0]
         feats.append(spatial_bins(r).cpu())
         labels.append(torch.full((r.shape[0],), fam))
         states.append(r.cpu())
-        # 停没停：同一历史、更短的窗口
-        r2, _, _ = run_spont(
-            seed,
-            0.5,
-            0,
-            0.7,
-            0.02,
-            dev,
-            K,
-            0.0,
-            0.0,
-            -1.0,
-            hist_in=toks,
-            t_spont=1024,
-            net=net,
-            field_radius=radius,
-        )
-        fin.append((r.cpu(), r2.cpu()))
+        if fam == 0:  # 停没停只测一族，省一半调用
+            r2 = run_spont(
+                seed,
+                0.5,
+                0,
+                scale,
+                0.02,
+                dev,
+                K,
+                0.0,
+                0.0,
+                -1.0,
+                hist_in=toks,
+                t_spont=1024,
+                net=net,
+                field_radius=radius,
+                **field_args(radius),
+            )[0]
+            fin.append((r.cpu(), r2.cpu()))
     X, Y = torch.cat(feats), torch.cat(labels)
     perm = torch.randperm(X.shape[0], generator=torch.Generator().manual_seed(9 + seed))
     X, Y = X[perm], Y[perm]
@@ -97,10 +99,22 @@ def cell(seed: int, radius: int, per_fam: int, dev: str) -> dict:
     }
 
 
+def field_args(radius: int) -> dict:
+    """`field_radius` 与 `g_field/g_local` 的对应关系。
+
+    **2026-11-16 踩过**：加了 `g_local` 之后全局项永远施加，只传 `field_radius`
+    不会打开局部场 —— M6x/M6z 第一版因此全部跑成了全局场（PR 2.34 与 radius=32 一致）。
+    """
+    if radius >= 32:
+        return {"g_field": 1.0, "g_local": 0.0}
+    return {"g_field": 0.0, "g_local": 1.0}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", type=int, default=4)
     ap.add_argument("--radii", default="2,4,8,32")
+    ap.add_argument("--scales", default="0.7,1.4")  # 发放匹配对照：同一半径两个输入增益
     ap.add_argument("--per-fam", type=int, default=16)
     ap.add_argument("--out", type=_pathlib.Path, default=OUT)
     args = ap.parse_args()
@@ -108,12 +122,15 @@ def main() -> int:
     args.out.mkdir(parents=True, exist_ok=True)
 
     res: dict = {"cells": {}}
-    for rad in [int(x) for x in args.radii.split(",")]:
-        rows = [cell(sd, rad, args.per_fam, dev) for sd in range(args.seeds)]
+    for rad, scale in [
+        (int(r), float(sc)) for r in args.radii.split(",") for sc in args.scales.split(",")
+    ]:
+        rows = [cell(sd, rad, args.per_fam, dev, scale) for sd in range(args.seeds)]
         m = lambda k, _r=rows: sum(r[k] for r in _r) / len(_r)  # noqa: E731
-        key = f"r={rad}"
+        key = f"r={rad}/s={scale:g}"
         res["cells"][key] = {
             "radius": rad,
+            "scale": scale,
             "acc": m("acc"),
             "floor": m("floor"),
             "pr": m("pr"),

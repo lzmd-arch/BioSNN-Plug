@@ -56,6 +56,24 @@ def lz(seq: torch.Tensor) -> float:
     return c / n
 
 
+def self_check() -> bool:
+    """已知复杂度的合成序列必须给出已知的**顺序**。
+
+    2026-11-16 补：原版没有自检，而 PCI 恒为 0.000 —— 事后查明是归一化写错
+    （`LZ76/n` 的上限约 0.07-0.15，永远到不了 1，`(c-c_rand)/(1-c_rand)` 必然≈0）。
+    """
+    n = 4000
+    g = torch.Generator().manual_seed(0)
+    cases = {
+        "全零": torch.zeros(n),
+        "周期3": (torch.arange(n) % 3 == 0).float(),
+        "随机": (torch.rand(n, generator=g) < 0.5).float(),
+    }
+    vals = {k: lz(v) for k, v in cases.items()}
+    print("  " + "  ".join(f"{k}={v:.4f}" for k, v in vals.items()), flush=True)
+    return bool(vals["全零"] < vals["周期3"] < vals["随机"])
+
+
 def to_bins(zt: torch.Tensor) -> torch.Tensor:
     """`(N, T)` → `(64, T)` 空间桶。"""
     _n, t = zt.shape
@@ -87,10 +105,11 @@ def arm(net, seed: int, fam: int, dev: str, v_add=None):
 
 
 def quadrant_mask(dev: str, q: int) -> torch.Tensor:
-    idx = torch.arange(N)
+    idx = torch.arange(N, device=dev)  # **必须在 dev 上建**，否则 where 会设备不匹配
     x, y = idx % SIDE, idx // SIDE
     qx, qy = q % 2, q // 2
-    inside = ((x >= 16) == bool(qx)) & ((y >= 16) == bool(qy))
+    inside = (x >= 16) == bool(qx)
+    inside = inside & ((y >= 16) == bool(qy))
     return torch.where(inside, torch.full((N,), 2.0, device=dev), torch.zeros(N, device=dev))
 
 
@@ -102,7 +121,15 @@ def main() -> int:
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     args.out.mkdir(parents=True, exist_ok=True)
 
-    res: dict = {"cells": []}
+    print("M10-0 自检（LZ 的已知顺序）：", flush=True)
+    sc = self_check()
+    print(f"  => {'过' if sc else '**不过 ⇒ PCI 全部作废**'}", flush=True)
+    res: dict = {"self_check": sc, "cells": []}
+    if not sc:
+        (args.out / "result.json").write_text(
+            json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8", newline=chr(10)
+        )
+        return 1
     for sd in range(args.seeds):
         net = build_pools(sd, dev, K, 0.0)
         pcis, spreads = [], []
@@ -114,7 +141,8 @@ def main() -> int:
             c = lz(b)
             g = torch.Generator().manual_seed(sd * 13 + q)
             cr = lz(b[torch.randperm(b.numel(), generator=g)])
-            pcis.append(max(0.0, min(1.0, (c - cr) / max(1.0 - cr, 1e-9))))
+            # **比值，不是 (c-c_rand)/(1-c_rand)**：后者的 1 是错的上界
+            pcis.append(c / max(cr, 1e-12))
             # 传播：受扰象限之外有响应的桶占比
             dq = (d.mean(1) != 0).float().view(BLK, BLK)
             out = dq.clone()
@@ -133,7 +161,7 @@ def main() -> int:
     print("判：")
     rows = res["cells"]
     p = sum(r["pci"] for r in rows) / len(rows)
-    w = sum(1 for r in rows if r["pci"] > 0.3)
+    w = sum(1 for r in rows if r["pci"] > 1.2)
     print(
         f"  M10-1 PCI > 0.3：{p:.3f} => {w}/{len(rows)} {'过' if w >= max(5, 0.83 * len(rows)) else '不过'}"
     )

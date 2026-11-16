@@ -128,3 +128,16 @@ def test_hetero_tau_zero_is_exactly_the_old_leak() -> None:
     tau = torch.full((7,), 20.0)
     leak = 1.0 - 1.0 / tau
     assert bool((leak == 0.95).all())
+
+
+def test_field_args_maps_radius_to_strengths() -> None:
+    """**2026-11-16 的 bug**：加了 `g_local` 之后全局项永远施加，
+    只传 `field_radius` 不会打开局部场 —— M6x/M6z 第一版因此全部跑成了全局场。
+
+    这条钉住"半径 → 场强"的映射，防止再犯。
+    """
+    from scripts.m6x_local_life import field_args
+
+    assert field_args(32) == {"g_field": 1.0, "g_local": 0.0}
+    assert field_args(2) == {"g_field": 0.0, "g_local": 1.0}
+    assert field_args(8) == {"g_field": 0.0, "g_local": 1.0}

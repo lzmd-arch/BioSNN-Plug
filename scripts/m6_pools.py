@@ -50,7 +50,7 @@ def pool_id(dev: str, K: int):
     return q.to(dev)
 
 
-def build_pools(seed: int, dev: str, K: int = 1, beta: float = 0.0):
+def build_pools(seed: int, dev: str, K: int = 1, beta: float = 0.0, p_long: float = 0.0):
     """按环面距离建接线；同池候选分数 ×(1+β)。
 
     β=0 时 RNG 消耗与 `turnover.build_net` 逐项相同（可复现 M6 的图）。
@@ -76,6 +76,15 @@ def build_pools(seed: int, dev: str, K: int = 1, beta: float = 0.0):
         score = score * torch.where(same, 1.0 + beta, 1.0)
     idx_top = score.topk(DEG, dim=1).indices
     pre = lin.gather(1, idx_top)
+    # **长程兴奋性投射**：把每行尾部的一部分入边换成远距离目标。
+    # 整合如果只能靠全局标量，维度就必然被压死；长程连接是"用接线买整合"的那条路。
+    # `p_long=0` 时**不消耗任何随机数**，与原来逐位相同。
+    if p_long > 0.0:
+        nl = max(1, round(DEG * p_long))
+        far = (d > 8.0).float()  # 候选偏移只到 ±8，max 距离 11.3；12.0 是死条件
+        rnd = torch.rand(N, C, generator=gen).to(dev) * far
+        far_idx = rnd.topk(nl, dim=1).indices
+        pre[:, -nl:] = lin.gather(1, far_idx)
     wrec = torch.rand(N, DEG, generator=gen).to(dev)
     wrec = wrec * (1.2 / wrec.sum(1, keepdim=True))
     w_in = (torch.randn(V, N, generator=gen) / N**0.5).to(dev)
@@ -111,6 +120,7 @@ def run_spont(
     g_field: float = G_FIELD,
     field_radius: int = 32,
     hetero_tau: float = 0.0,
+    g_local: float = 0.0,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     if net is None:
@@ -168,10 +178,13 @@ def run_spont(
         phi_g = phk.mean()  # 全局场（与 run_seg 的 float(z.mean()) 一致）
         if eta_hist >= 0.0 and gain_route == "all":
             rec = rec * gain.unsqueeze(0)  # 增益乘**总**输入，不止 w_in
-        if fmat is None:
-            cur = w_in[hist[:, t]] * gain.unsqueeze(0) - g_field * (f_run / 0.08) * phi_g
-        else:
-            cur = w_in[hist[:, t]] * gain.unsqueeze(0) - g_field * (f_run / 0.08) * (z @ fmat)
+        # **全局与局部可以同时存在**：全局给长程相干，局部给空间分化
+        loc = phi_g if fmat is None else (z @ fmat)
+        cur = (
+            w_in[hist[:, t]] * gain.unsqueeze(0)
+            - g_field * (f_run / 0.08) * phi_g
+            - g_local * (f_run / 0.08) * loc
+        )
         if g_inh != 0.0:
             cur = cur + g_inh * (phk[:, pid] - phk.mean(1, keepdim=True))
         nv = leak * v + cur + rec - z * 0.5
@@ -208,7 +221,8 @@ def run_spont(
             rec = rec + z[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
         phk = z @ onehot
         phi_g = phk.mean()
-        cur = pace.unsqueeze(0) - g_field * (phi_g if fmat is None else (z @ fmat))
+        loc = phi_g if fmat is None else (z @ fmat)
+        cur = pace.unsqueeze(0) - g_field * phi_g - g_local * loc
         if eta_gain >= 0.0:
             cur = cur * gain.unsqueeze(0)
             if gain_route == "all":
