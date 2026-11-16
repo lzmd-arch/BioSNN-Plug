@@ -50,8 +50,14 @@ D0, D1 = 32, 8
 
 
 @torch.no_grad()
-def run_dev(w_in, pre, wrec, toks, dev, c: float, r: float, lam: float = 0.95):
-    """跑一遍流，返回 `(痕迹, 特征, 每步平均 E, 总发放率)`。"""
+def run_dev(
+    w_in, pre, wrec, toks, dev, c: float, r: float, lam: float = 0.95, e_trace_on: bool = False
+):
+    """跑一遍流，返回 `(痕迹, 特征, 每步平均 E, 总发放率)`。
+
+    `e_trace_on=True` 时痕迹带后突触能量：`s <- lam*s + mean_b(z_post*z_pre*E_post)`。
+    生物学解释：**突触由后突触神经元供养**，供不起的竞争不过别人。
+    """
     b, T = toks.shape
     n, D = pre.shape
     v = torch.zeros((b, n), device=dev)
@@ -74,7 +80,10 @@ def run_dev(w_in, pre, wrec, toks, dev, c: float, r: float, lam: float = 0.95):
         ref = torch.clamp(ref + 2.0 * nz - 1.0, 0.0, 2.0)
         E = torch.clamp(E - c * nz + r * (1.0 - nz), 0.0, 1.0)
         # 共活动痕迹：后突触放电 × 前突触放电（局部可得，无全局误差）
-        trace = lam * trace + (nz.unsqueeze(2) * nz[:, pre]).mean(0)
+        if e_trace_on:
+            trace = lam * trace + (nz.unsqueeze(2) * nz[:, pre] * E.unsqueeze(2)).mean(0)
+        else:
+            trace = lam * trace + (nz.unsqueeze(2) * nz[:, pre]).mean(0)
         v, z = nv, nz
         e_trace.append(E.mean(1))
         rate += float(z.mean())
@@ -100,7 +109,9 @@ def prune(pre, wrec, trace, k: int, beta: float, noise: float, gen):
 
 
 @torch.no_grad()
-def homeostatic_rescale(w_in, pre, wrec, toks, dev, c, r, target, tol=0.05, iters=12):
+def homeostatic_rescale(
+    w_in, pre, wrec, toks, dev, c, r, target, tol=0.05, iters=12, e_trace_on=False
+):
     """**按发放率**做稳态缩放（突触缩放保的是活动，不是权重和）。
 
     原来按"总驱动不变"归一化，修剪后发放率从 0.048 升到 0.25 ——
@@ -112,7 +123,7 @@ def homeostatic_rescale(w_in, pre, wrec, toks, dev, c, r, target, tol=0.05, iter
     for _ in range(iters):
         mid = 0.5 * (lo + hi)
         w_try = wrec * mid
-        _, _, _, fr = run_dev(w_in, pre, w_try, toks, dev, c, r)
+        _, _, _, fr = run_dev(w_in, pre, w_try, toks, dev, c, r, e_trace_on=e_trace_on)
         w_best = w_try
         if abs(fr - target) / max(target, 1e-9) < tol:
             return w_best
@@ -132,11 +143,11 @@ def jaccard(pa: torch.Tensor, pb: torch.Tensor, n: int) -> float:
     return inter / max(union, 1.0)
 
 
+#: (beta, 代谢开, 痕迹里带 E)
 ARMS = {
-    "acid": (1.0, True),
-    "rand": (0.0, True),
-    "acid_nometab": (1.0, False),
-    "noprune": (1.0, True),
+    "E_acid": (1.0, True, True),
+    "E_rand": (0.0, True, True),
+    "noE_acid": (1.0, True, False),
 }
 
 
@@ -168,7 +179,7 @@ def main() -> int:
     print(f"  底板(多数类) {floor:.3f}", flush=True)
 
     all_structures: dict = {}
-    for arm, (beta, metab) in ARMS.items():
+    for arm, (beta, metab, e_on) in ARMS.items():
         c, r = (C_COST, R_RECOVER) if metab else (0.0, 0.0)
         accs, frs, structures = [], [], []
         for sd in seeds:
@@ -186,21 +197,20 @@ def main() -> int:
             # 发育：在一段自己的活动上累积痕迹
             dev_toks, _ = make_task(args.dev_seq, args.seq, K, 30 + sd, dev)
             gen = torch.Generator().manual_seed(1000 + sd)
-            trace, _, _, rate_before = run_dev(w_in * sc, pre, wrec, dev_toks, dev, c, r)
-            if arm == "noprune":
-                p_new, w_new = pre, wrec
-            else:
-                p_new, w_new = prune(pre, wrec, trace, D1, beta, 0.5, gen)
-                # 稳态缩放：保住修剪前的发放率（突触缩放保的是活动）
-                w_new = homeostatic_rescale(
-                    w_in * sc, p_new, w_new, dev_toks, dev, c, r, rate_before
-                )
+            trace, _, _, rate_before = run_dev(
+                w_in * sc, pre, wrec, dev_toks, dev, c, r, e_trace_on=e_on
+            )
+            p_new, w_new = prune(pre, wrec, trace, D1, beta, 0.5, gen)
+            # 稳态缩放：保住修剪前的发放率（突触缩放保的是活动）
+            w_new = homeostatic_rescale(
+                w_in * sc, p_new, w_new, dev_toks, dev, c, r, rate_before, e_trace_on=e_on
+            )
             # 评测
             tr, trs = make_task(args.train_seq, args.seq, K, 10 + sd, dev)
             te, tes = make_task(args.test_seq, args.seq, K, 20 + sd, dev)
             toks = torch.cat([tr, te])
             st = torch.cat([trs, tes])[:, ::8]
-            _, feat, _, fr = run_dev(w_in * sc, p_new, w_new, toks, dev, c, r)
+            _, feat, _, fr = run_dev(w_in * sc, p_new, w_new, toks, dev, c, r, e_trace_on=e_on)
             m, _ = mlp_probe(feat, st, args.train_seq * st.shape[1], K)
             accs.append(m)
             frs.append(fr)
