@@ -49,7 +49,7 @@ def ordered_hist(a: int, b: int, seed: int, per: int, dev: str) -> torch.Tensor:
 
 
 @torch.no_grad()
-def measure(net, alive, seed: int, per: int, dev: str):
+def measure(net, alive, seed: int, per: int, dev: str, g_local: float = 0.0, p_long: float = 0.0):
     X, Y = [], []
     for idx, (a, b) in enumerate([(0, 0), (1, 1), (0, 1), (1, 0)]):
         toks = ordered_hist(a, b, seed, per, dev)
@@ -89,6 +89,8 @@ def main() -> int:
     ap.add_argument("--seeds", type=int, default=4)
     ap.add_argument("--per", type=int, default=32)
     ap.add_argument("--frac", type=float, default=0.5)
+    ap.add_argument("--g-local", type=float, default=0.0)
+    ap.add_argument("--p-long", type=float, default=0.0)
     ap.add_argument("--out", type=_pathlib.Path, default=OUT)
     args = ap.parse_args()
     dev = "cuda" if torch.cuda.is_available() else "cpu"
@@ -96,12 +98,12 @@ def main() -> int:
 
     res: dict = {"cells": []}
     for sd in range(args.seeds):
-        net = build_pools(sd, dev, K, 0.0)
+        net = build_pools(sd, dev, K, 0.0, p_long=args.p_long)
         ones = torch.ones(N, device=dev)
-        X0, Y0 = measure(net, ones, sd, args.per, dev)
+        X0, Y0 = measure(net, ones, sd, args.per, dev, args.g_local, args.p_long)
         g = torch.Generator().manual_seed(sd + 211)
         mask = (torch.randperm(N, generator=g).to(dev) >= int(args.frac * N)).float()
-        X1, Y1 = measure(net, mask, sd, args.per, dev)
+        X1, Y1 = measure(net, mask, sd, args.per, dev, args.g_local, args.p_long)
         mono0 = two_class_acc(X0, Y0, (0, 1))
         ord0 = two_class_acc(X0, Y0, (2, 3))
         mono1 = two_class_acc(X1, Y1, (0, 1))
