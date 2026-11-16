@@ -111,6 +111,55 @@ def develop(
     return alive, gain
 
 
+@torch.no_grad()
+def develop_silent(
+    w_in,
+    pre,
+    wrec,
+    toks,
+    dev,
+    alive,
+    gain,
+    mode,
+    theta_hi=0.15,
+    theta_lo=0.05,
+    g_new=3.0,
+    rounds=6,
+    seed=12345,
+):
+    """按**静默比例**触发；诞生方式 `random` 或 `clone`。"""
+    gen = torch.Generator().manual_seed(seed)
+    eps = 1e-6
+    for _ in range(rounds):
+        act, _ = run_block(w_in, pre, wrec, toks, dev, alive, gain)
+        live = alive > 0.5
+        n_live = int(live.sum())
+        if n_live < 2:
+            break
+        silent_frac = float(((act < eps) & live).sum()) / n_live
+        if silent_frac > theta_hi:
+            dead_idx = (alive < 0.5).nonzero().squeeze(1)
+            if dead_idx.numel() > 0:
+                pick = dead_idx[int(torch.randint(0, dead_idx.numel(), (1,), generator=gen))]
+                alive[pick] = 1.0
+                if mode == "clone":
+                    # 从高活跃的存活单元复制入边权重 + 噪声
+                    act_live = torch.where(live, act, torch.full_like(act, -1.0))
+                    src = int(act_live.argmax())
+                    wrec[pick] = wrec[src] * (1.0 + 0.1 * torch.randn(DEG, generator=gen).to(dev))
+                    wrec[pick] = wrec[pick].clamp(min=0.0)
+                else:
+                    wrec[pick] = torch.rand(DEG, generator=gen).to(dev)
+                wrec[pick] = wrec[pick] * (1.2 / wrec[pick].sum().clamp(min=1e-9))
+                gain[pick] = g_new
+        elif silent_frac < theta_lo:
+            scores = torch.where(live, act, torch.full_like(act, 1e9))
+            k = int(scores.argmin())
+            alive[k] = 0.0
+        gain = 1.0 + (gain - 1.0) * 0.5
+    return alive, gain
+
+
 def n_viable(w_in, pre, wrec, toks, dev, alive, gain, scales):
     lo, hi = FIRING_WINDOW
     cnt = 0
@@ -134,7 +183,8 @@ def main() -> int:
     scales = scale_grid(0.4, 12.0, 1.15)
     res: dict = {"cells": {}}
 
-    for arm in ("static", "turnover"):
+    ARMS = ("static", "act/random", "silent/random", "silent/clone")
+    for arm in ARMS:
         vi_after, alive_frac = [], []
         for sd in seeds:
             toks, _ = make_task(args.n_seq, args.seq, 8, 10 + sd, dev)
@@ -142,7 +192,7 @@ def main() -> int:
             gen = torch.Generator().manual_seed(7000 + sd)
             alive = (torch.rand(N, generator=gen) >= 0.5).float().to(dev)  # 先切一半
             gain = torch.ones(N, device=dev)
-            if arm == "turnover":
+            if arm == "act/random":
                 alive, gain = develop(
                     w_in,
                     pre,
@@ -154,6 +204,18 @@ def main() -> int:
                     q_dead=0.10,
                     rho_target=args.rho,
                     g_new=3.0,
+                    seed=7000 + sd,
+                )
+            elif arm.startswith("silent/"):
+                alive, gain = develop_silent(
+                    w_in,
+                    pre,
+                    wrec,
+                    toks,
+                    dev,
+                    alive,
+                    gain,
+                    mode=arm.split("/")[1],
                     seed=7000 + sd,
                 )
             vi_after.append(n_viable(w_in, pre, wrec, toks, dev, alive, gain, scales))
@@ -182,10 +244,20 @@ def main() -> int:
     print(f"  T-0 static 基线 {cc['static']['mean']:.1f} => {'过' if t0 else '不过 => 作废'}")
     if not t0:
         return 0
-    t1 = cc["turnover"]["mean"] > cc["static"]["mean"]
+    base = cc["static"]["mean"]
+    act = cc["act/random"]["mean"]
+    sil = max(cc[a]["mean"] for a in ("silent/random", "silent/clone"))
+    clone = cc["silent/clone"]["mean"]
+    silr = cc["silent/random"]["mean"]
     print(
-        f"  T-1 更替能恢复群体：{cc['turnover']['mean']:.1f} vs static {cc['static']['mean']:.1f} "
-        f"=> {'过' if t1 else '不过'}"
+        f"  T-1' 静默触发更好：{sil:.1f} vs 活动触发 {act:.1f} => {'过' if sil > act else '不过'}"
+    )
+    print(
+        f"  T-2' 复制更好：clone {clone:.1f} vs random {silr:.1f} => {'过' if clone > silr else '不过'}"
+    )
+    best = max(cc.values(), key=lambda v: v["mean"])
+    print(
+        f"  T-3' 超过不修：最好 {best['mean']:.1f} vs static {base:.1f} => {'过' if best['mean'] > base else '不过'}"
     )
     return 0
 
