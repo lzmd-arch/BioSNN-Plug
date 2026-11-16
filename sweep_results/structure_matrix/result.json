@@ -1,0 +1,82 @@
+{
+ "n": 2048,
+ "gain": 1.2,
+ "cells": {
+  "D/global/linear": {
+   "label": "1D环",
+   "scope": "global",
+   "decode": "linear",
+   "acc": 0.3802083432674408
+  },
+  "D/global/mlp": {
+   "label": "1D环",
+   "scope": "global",
+   "decode": "mlp",
+   "acc": 0.4583333432674408
+  },
+  "D/local/linear": {
+   "label": "1D环",
+   "scope": "local",
+   "decode": "linear",
+   "acc": 0.4296875
+  },
+  "D/local/mlp": {
+   "label": "1D环",
+   "scope": "local",
+   "decode": "mlp",
+   "acc": 0.4678819477558136
+  },
+  "3h/global/linear": {
+   "label": "3D网格",
+   "scope": "global",
+   "decode": "linear",
+   "acc": 0.4913194477558136
+  },
+  "3h/global/mlp": {
+   "label": "3D网格",
+   "scope": "global",
+   "decode": "mlp",
+   "acc": 0.5182291865348816
+  },
+  "3h/local/linear": {
+   "label": "3D网格",
+   "scope": "local",
+   "decode": "linear",
+   "acc": 0.4296875
+  },
+  "3h/local/mlp": {
+   "label": "3D网格",
+   "scope": "local",
+   "decode": "mlp",
+   "acc": 0.4670138955116272
+  },
+  "4h/global/linear": {
+   "label": "4D网格",
+   "scope": "global",
+   "decode": "linear",
+   "acc": 0.4913194477558136
+  },
+  "4h/global/mlp": {
+   "label": "4D网格",
+   "scope": "global",
+   "decode": "mlp",
+   "acc": 0.5277777910232544
+  },
+  "4h/local/linear": {
+   "label": "4D网格",
+   "scope": "local",
+   "decode": "linear",
+   "acc": 0.3967013955116272
+  },
+  "4h/local/mlp": {
+   "label": "4D网格",
+   "scope": "local",
+   "decode": "mlp",
+   "acc": 0.4782986044883728
+  }
+ },
+ "control": {
+  "window32": 0.6579861044883728,
+  "random": 0.125
+ }
+}

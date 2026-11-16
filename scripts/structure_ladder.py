@@ -84,38 +84,94 @@ def make_task(n_seq: int, T: int, seed: int, dev: str, pref: torch.Tensor):
     return toks.to(dev), states.to(dev), pref.to(dev)
 
 
+#: 网格臂的维度与拓扑类型
+GRID = {
+    "3C": ((16, 16, 8), False),  # 三维网格 + 软地形（高斯球）
+    "3D": ((16, 16, 8), False),
+    "3h": ((16, 16, 8), True),  # 三维网格 + **硬分区**（token 独占一块）
+    "4h": ((8, 8, 8, 4), True),  # **四维网格 + 硬分区**
+}
+
+
+def _coords(n: int, dims: tuple[int, ...]):
+    """线性下标 → 各维坐标。"""
+    idx = torch.arange(n)
+    out, stride = [], 1
+    for d in reversed(dims):
+        out.append((idx // stride) % d)
+        stride *= d
+    return torch.stack(out[::-1], 1)
+
+
+def _lin(c, dims) -> torch.Tensor:
+    """各维坐标 → 线性下标。"""
+    out, stride = torch.zeros(c.shape[0], dtype=torch.long), 1
+    for k in range(len(dims) - 1, -1, -1):
+        out = out + c[:, k] * stride
+        stride *= dims[k]
+    return out
+
+
 class Res:
     """蓄水池：四种结构共用一个前向骨架，差别只在连接与输入。"""
 
-    def __init__(self, arm: str, n: int, dev: str, seed: int = 0, shuffle_map: bool = False):
+    def __init__(
+        self,
+        arm: str,
+        n: int,
+        dev: str,
+        seed: int = 0,
+        shuffle_map: bool = False,
+        matched_gain: float | None = None,
+    ):
         g = torch.Generator().manual_seed(seed)  # multinomial 只收 CPU 生成器
         self.arm, self.n, self.dev = arm, n, dev
         self.alpha = 0.95
         self.theta = 0.5
         # 输入：A/B 稠密随机；C/D 一维地形；3C/3D 三维地形（token → 网格里的一个高斯球）
-        if arm in ("3C", "3D"):
-            self.gx, self.gy, self.gz = 16, 16, n // 256
-            xs = torch.arange(self.gx).repeat_interleave(self.gy * self.gz).float()
-            ys = torch.arange(self.gy).repeat(self.gx).repeat_interleave(self.gz).float()
-            zs = torch.arange(self.gz).repeat(self.gx * self.gy).float()
-            self.xyz = torch.stack([xs, ys, zs], 1)  # (n, 3)
-            # 64 个 token 均匀散布在网格里的 4x4x4 个锚点
-            anchors = torch.tensor(
-                [
-                    [i * (self.gx - 1) / 3, j * (self.gy - 1) / 3, k * (self.gz - 1) / 3]
-                    for i in range(4)
-                    for j in range(4)
-                    for k in range(4)
-                ]
-            )[:V].float()
-            d2 = ((self.xyz.unsqueeze(0) - anchors.unsqueeze(1)) ** 2).sum(-1)  # (V, n)
-            sigma = 1.5  # 必须小于锚点间距，否则 64 个高斯球几乎重合，地形映射形同虚设
-            w_in = torch.exp(-d2 / (2 * sigma**2))
+        if arm in GRID:
+            dims, hard = GRID[arm]
+            self.dims, self.hard = dims, hard
+            coords = _coords(n, dims).float()
+            if hard:
+                # **硬分区**：每个 token 独占一个互不重叠的细胞块（对应关系锐利，不摊薄）
+                # 把 V 个 token 均摊到各轴上：每轴取能同时整除 dims[axis] 与剩余 V 的最大因子
+                rem, parts = V, []
+                for d in dims:
+                    best = 1
+                    for k in range(min(d, rem), 1, -1):
+                        if rem % k == 0 and d % k == 0:
+                            best = k
+                            break
+                    parts.append(best)
+                    rem //= best
+                assert rem == 1, f"V={V} 无法均摊到 {dims}：parts={parts}"
+                cell = torch.zeros(n, dtype=torch.long)
+                stride = 1
+                ci = coords.long()
+                for k in range(len(dims) - 1, -1, -1):
+                    cell = cell + (ci[:, k] // (dims[k] // parts[k])) * stride
+                    stride *= parts[k]
+                w_in = torch.zeros(V, n)
+                w_in[cell.clamp(max=V - 1), torch.arange(n)] = 1.0
+                # 归一化到 ~每 token 支撑集大小
+                cnt = w_in.sum(1, keepdim=True).clamp(min=1)
+                self.w_in = (w_in / cnt * 8).to(dev)
+            else:
+                anchors = torch.tensor(
+                    [
+                        [i * (dims[0] - 1) / 3, j * (dims[1] - 1) / 3, k * (dims[2] - 1) / 3]
+                        for i in range(4)
+                        for j in range(4)
+                        for k in range(4)
+                    ]
+                )[:V].float()
+                d2 = ((coords.unsqueeze(0) - anchors.unsqueeze(1)) ** 2).sum(-1)
+                sigma = 1.5
+                w_in = torch.exp(-d2 / (2 * sigma**2))
+                self.w_in = (w_in / w_in.sum(1, keepdim=True)).to(dev)
             if shuffle_map:
-                perm = torch.randperm(V, generator=g)
-                w_in = w_in[perm]
-            # 每个 token 的总驱动归一化到 1，与 C 口径一致
-            self.w_in = (w_in / w_in.sum(1, keepdim=True)).to(dev)
+                self.w_in = self.w_in[torch.randperm(V, generator=g)]
         elif arm in ("C", "D"):
             centers = torch.linspace(0, n - 1, V)
             idx = torch.arange(n).float().unsqueeze(0)
@@ -132,32 +188,35 @@ class Res:
             self.rank = 32
             self.p = (torch.randn(n, self.rank, generator=g) / n**0.5).to(dev)
             self.q = (torch.randn(self.rank, n, generator=g) / self.rank**0.5).to(dev)
-        elif arm in ("3C", "3D"):  # 3D：六个面邻居（环绕边界）
-            gx, gy, gz = self.gx, self.gy, self.gz
-            idx = torch.arange(n)
-            x = idx // (gy * gz)
-            y = (idx // gz) % gy
-            z = idx % gz
+        elif arm in GRID:  # 网格：每个轴 ±1 的面邻居（环绕边界）
+            dims = GRID[arm][0]
+            ci = _coords(n, dims)
             nb = []
-            for dx, dy, dz in ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)):
-                nx = (x + dx) % gx
-                ny = (y + dy) % gy
-                nz = (z + dz) % gz
-                nb.append(nx * (gy * gz) + ny * gz + nz)
-            self.pre = torch.stack(nb, 1)  # (n, 6)
-            self.wrec = (torch.rand(n, 6, generator=g) * 0.6).to(dev)
-            # (n, 8) 的平均矩阵：2x2x2 的块，每个神经元恰好属于一块
-            bid = (x // (gx // 2)) * 4 + (y // (gy // 2)) * 2 + (z // (gz // 2))
+            for ax in range(len(dims)):
+                for delta in (1, -1):
+                    c2 = ci.clone()
+                    c2[:, ax] = (c2[:, ax] + delta) % dims[ax]
+                    nb.append(_lin(c2, dims))
+            self.pre = torch.stack(nb, 1)  # (n, 2*ndim)
+            self.wrec = (torch.rand(n, self.pre.shape[1], generator=g) * 0.6).to(dev)
+            # 8 块平均矩阵（每轴对半分），与一维臂的 8 块严格对齐
+            bid = torch.zeros(n, dtype=torch.long)
+            for ax in range(len(dims)):
+                bid = bid * 2 + (ci[:, ax] // (dims[ax] // 2))
             m = torch.zeros(n, 8)
-            m[torch.arange(n), bid] = 1.0
+            m[torch.arange(n), bid.clamp(max=7)] = 1.0
             self.block_avg = (m / m.sum(0, keepdim=True)).to(dev)
         elif arm in ("C", "D"):  # 环：每个神经元接前后两个邻居
             off = torch.tensor([-1, -2, 1, 2])
             self.pre = (torch.arange(n).unsqueeze(1) + off.unsqueeze(0)) % n
             self.wrec = (torch.rand(n, 4, generator=g) * 0.6).to(dev)
+        if self.wrec is not None and matched_gain is not None:
+            # **把每个神经元的递归权重和归一到同一个数**：否则高维拓扑天然拿到更多递归驱动，
+            # 「三维更差」里就混着「递归更强」。本仓历史：递推/输入 2.16× 掉 4.9pp。
+            self.wrec = self.wrec * (matched_gain / self.wrec.sum(1, keepdim=True).clamp(min=1e-6))
 
     @torch.no_grad()
-    def run(self, toks: torch.Tensor, stride: int = 8) -> torch.Tensor:
+    def run(self, toks: torch.Tensor, stride: int = 8, scope: str = "local") -> torch.Tensor:
         b, T = toks.shape
         n = self.n
         v = torch.zeros((b, n), device=self.dev)
@@ -182,14 +241,13 @@ class Res:
             v, z = nv, nz
             read = read * decays.view(1, -1, 1) + z.unsqueeze(1)
             if t % stride == 0:  # 只保留采样时刻，否则特征张量会按序列长度线性膨胀
-                if self.arm == "3D":
-                    # 三维子块池化：用**显式平均矩阵**，正好 2x2x2 = 8 块，
-                    # 与一维臂 D 的 8 块、16 维特征严格对齐。
-                    feats.append((read @ self.block_avg).reshape(b, -1))
-                elif self.arm == "D":  # 一维局部区块读出
-                    feats.append(read.reshape(b, len(TAUS) * 8, n // 8).mean(-1))
-                else:
+                if scope == "global":
                     feats.append(read.reshape(b, -1))
+                elif self.arm in ("3D", "3h", "4h"):
+                    # 三维子块池化：**显式平均矩阵**，正好 2x2x2 = 8 块
+                    feats.append((read @ self.block_avg).reshape(b, -1))
+                else:  # 一维局部区块读出
+                    feats.append(read.reshape(b, len(TAUS) * 8, n // 8).mean(-1))
         return torch.stack(feats, 1)  # (b, T, F)
 
 
@@ -258,8 +316,10 @@ def main() -> int:
         ("B", "低秩递归"),
         ("C", "环+地形"),
         ("D", "环+地形+局部读出"),
-        ("3C", "3D网格+地形"),
-        ("3D", "3D网格+地形+局部读出"),
+        ("3C", "3D网格+软地形"),
+        ("3D", "3D网格+软地形+局部读出"),
+        ("3h", "3D网格+**硬分区**+局部读出"),
+        ("4h", "**4D网格+硬分区+局部读出**"),
     ]
     for arm, label in arms:
         pool = Res(arm, args.n, dev)
@@ -285,7 +345,8 @@ def main() -> int:
     # S-2：地形映射打乱（一维与三维各做一次）
     for tag, arm, label in (
         ("C_shuffled", "C", "环+地形（映射打乱）"),
-        ("3D_shuffled", "3D", "3D网格+地形+局部读出（映射打乱）"),
+        ("3h_shuffled", "3h", "3D硬分区（映射打乱）"),
+        ("4h_shuffled", "4h", "4D硬分区（映射打乱）"),
     ):
         pool = Res(arm, args.n, dev, shuffle_map=True)
         acc = decode(pool.run(toks, args.stride), st[:, :: args.stride], args.train_seq, dev)
@@ -310,7 +371,7 @@ def main() -> int:
     )
 
     base = res["arms"]["A"]["acc"]
-    best = max(res["arms"][a]["acc"] for a in ("B", "C", "D", "3C", "3D"))
+    best = max(res["arms"][a]["acc"] for a in ("B", "C", "D", "3C", "3D", "3h", "4h"))
     print("\n判：")
     best_ctl = max(res["arms"]["E8"]["acc"], res["arms"]["E32"]["acc"])
     floor = res["random_baseline"] + 0.2
@@ -323,11 +384,14 @@ def main() -> int:
         f"{'过' if best - base >= 0.05 else '不过'}"
     )
     d1 = res["arms"]["C"]["acc"] - res["arms"]["C_shuffled"]["acc"]
-    d3 = res["arms"]["3D"]["acc"] - res["arms"]["3D_shuffled"]["acc"]
-    print(f"  S-2a 一维 C − C'(打乱映射) = {d1:+.3f} ≥0.05 ⇒ {'过' if d1 >= 0.05 else '不过'}")
-    print(f"  S-2b 三维 3D − 3D'(打乱映射) = {d3:+.3f} ≥0.05 ⇒ {'过' if d3 >= 0.05 else '不过'}")
-    gap = res["arms"]["3D"]["acc"] - res["arms"]["D"]["acc"]
-    print(f"  参考 三维 − 一维（都带局部读出） = {gap:+.3f}")
+    print(f"  S-2a 一维 C − C'(打乱映射) = {d1:+.3f}")
+    for tag in ("3h", "4h"):
+        if f"{tag}_shuffled" not in res["arms"]:
+            continue
+        dd = res["arms"][tag]["acc"] - res["arms"][f"{tag}_shuffled"]["acc"]
+        print(f"  S-2 {tag} − 打乱映射 = {dd:+.3f}")
+    print(f"  参考 3D硬 − 一维D = {res['arms']['3h']['acc'] - res['arms']['D']['acc']:+.3f}")
+    print(f"  参考 4D硬 − 一维D = {res['arms']['4h']['acc'] - res['arms']['D']['acc']:+.3f}")
     return 0
 
 
