@@ -245,3 +245,27 @@ def test_mlp_probe_accepts_3d_features():
     acc3, _ = mlp_probe(X, Y, 64 * 12, 8, steps=20)
     acc2, _ = mlp_probe(X.reshape(-1, 32), Y.reshape(-1), 64 * 12, 8, steps=20)
     assert acc3 == acc2, f"3-D 与 2-D 输入结果不一致：{acc3} vs {acc2}"
+
+
+def test_run_md_firing_is_bounded():
+    """**发放率必须 ∈ [0,1]** —— 它是 0/1 值的均值。
+
+    2026-11-16：`rate += z.sum() / alive.sum()` 里 `z` 是 `(b, n)`、
+    `alive` 是 `(n,)`，分母少了一个 batch 倍数（1920），
+    于是"发放"被报成 **10.3**。这一条守着它。
+    """
+    from scripts.memory_depth import run_md
+
+    torch.manual_seed(0)
+    dev = "cpu"
+    N, D = 32, 4
+    w_in = torch.randn(8, N) / N**0.5
+    pre = torch.randint(0, N, (N, D))
+    wrec = torch.rand(N, D)
+    wrec = wrec * (1.2 / wrec.sum(1, keepdim=True))
+    toks = torch.randint(0, 8, (4, 16))
+    cue = torch.randint(0, 4, (4,))
+    alive = (torch.rand(N) >= 0.5).float()
+    for a in (None, alive):
+        _, fr = run_md(w_in, pre, wrec, toks, cue, dev, 0.05, 0.004, 0.0, alive=a)
+        assert 0.0 <= fr <= 1.0, f"发放率越界 {fr}（alive={a is not None}）"
