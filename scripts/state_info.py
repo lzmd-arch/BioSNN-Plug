@@ -180,7 +180,9 @@ def main() -> int:
             toks = make_stream(args.train_seq + args.test_seq, args.seq, 10 + sd, dev)
             w_in, pre, wrec = build(kind, args.n, sd, dev)
             # **标定走仪器**：等比细网格 + 窗口判定，失败就放弃该臂
-            ok, sc, _ = calibrate(lambda k: run(w_in * k, pre, wrec, toks, dev)[2])
+            ok, sc, _ = calibrate(
+                lambda k, _wi=w_in, _p=pre, _w=wrec, _t=toks: run(_wi * k, _p, _w, _t, dev)[2]
+            )
             if not ok:
                 print(f"  {kind} seed {sd} — 标定失败，该臂无效", flush=True)
                 continue
@@ -197,6 +199,10 @@ def main() -> int:
                 Yk = toks[:, torch.stack([idx[i] + k for i in range(n_keep - k)])].reshape(-1)
                 probe[k] = linear_probe_acc(Xk, Yk, args.train_seq * (n_keep - k), V)
             r2 = probe
+            ok_v, why = validity(probe[1], fr, 1.0 / V)
+            if not ok_v:
+                print(f"  {kind} seed {sd} — 仪器无效：{why}", flush=True)
+                continue
             rows.append(
                 {
                     "scale": sc,
@@ -209,7 +215,7 @@ def main() -> int:
             del feat
             torch.cuda.empty_cache()
         if not rows:
-            print(f"  {kind:6s} ✗ 所有种子都出窗，该臂无效", flush=True)
+            print(f"  {kind:6s} ✗ 所有种子均被仪器闸拒绝，该臂无效", flush=True)
             continue
         agg = {
             "firing": sum(r["firing"] for r in rows) / len(rows),
