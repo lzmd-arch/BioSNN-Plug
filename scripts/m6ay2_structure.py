@@ -24,7 +24,6 @@
 
 from __future__ import annotations
 
-# ruff: noqa: N806
 import argparse
 import json
 import os
