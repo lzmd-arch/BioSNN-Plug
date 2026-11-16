@@ -41,6 +41,7 @@ _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
 import torch
 
 from scripts.instrument import TARGET_FIRING, calibrate, seeded_dirichlet
+from scripts.structure_ladder import window_features
 
 OUT = _pathlib.Path("sweep_results/manifold_big")
 TAUS = (2.0, 16.0)
@@ -207,13 +208,13 @@ def acc_of(Xtr, Ytr, Xte, Yte, how, K):
     return float((d.argmin(1) == Yte).float().mean())
 
 
-def calibrate_scale(n: int, deg: int, seed: int, dev: str, K: int = 8):
+def calibrate_scale(n: int, deg: int, seed: int, dev: str, K: int = 8, seq: int = 64):
     """**先标定工作点，不达标就不许跑比较**。
 
     今天已经三次栽在同一处：改 n 之后忘了输入也随 1/√n 缩，网络静默、
     读出全零、"准确率"退化成多数类。这次把标定写进主流程。
     """
-    tr, _ = make_task(32, 48, K, 10 + seed, dev)
+    tr, _ = make_task(32, seq, K, 10 + seed, dev)  # T 必须与正式跑一致
     w_in, mats = build_net(n, deg, 64, seed, dev)  # 只建一次：同 seed 逐位相同
     # 细网格：树突的 sign·√|·| 让小信号被放大，阈值附近很陡，粗网格会跨过去
     ok, sc, fr = calibrate(lambda s: run_net(w_in * s, mats, tr, dev)[1])
@@ -237,12 +238,44 @@ def main() -> int:
     seeds = [int(x) for x in args.seeds.split(",")]
     res: dict = {"n": args.n, "deg": args.deg, "cells": {}}
 
-    cal = calibrate_scale(args.n, args.deg, seeds[0], dev)
+    cal = calibrate_scale(args.n, args.deg, seeds[0], dev, seq=args.seq)
     if cal is None:
         print("✗ 没有任何输入尺度能把发放率标进 [0.03, 0.20] —— **中止，不做比较**")
         return 1
     scale, probe_fr, _ = cal
     print(f"  **标定输入尺度 {scale}（探测发放 {probe_fr:.4f}）**", flush=True)
+
+    # ---- 正向对照：最近 8 个 token 的 one-hot，完全不经过网络 ----
+    ceilings, majors = {}, {}
+    for K in [int(x) for x in args.ks.split(",")]:
+        cl, mj = [], []
+        for sd in seeds:
+            trw, trsw = make_task(args.train_seq, args.seq, K, 10 + sd, dev)
+            tew, tesw = make_task(args.test_seq, args.seq, K, 20 + sd, dev)
+            toks_w = torch.cat([trw, tew])
+            st_w = torch.cat([trsw, tesw])[:, ::8]
+            wf = window_features(toks_w, L=8, stride=8)
+            Xw = wf.reshape(-1, wf.shape[-1])
+            Yw = st_w.reshape(-1)
+            cutw = args.train_seq * st_w.shape[1]
+            mw, sw = Xw[:cutw].mean(0), Xw[:cutw].std(0) + 1e-6
+            Xw = (Xw - mw) / sw
+            cl.append(
+                acc_of(to_ball(Xw[:cutw]), Yw[:cutw], to_ball(Xw[cutw:]), Yw[cutw:], "euclid", K)
+            )
+            trp, tep = st_w[: args.train_seq], st_w[args.train_seq :]
+            top = int(torch.bincount(trp.reshape(-1), minlength=K).argmax())
+            mj.append(float((tep == top).float().mean()))
+            del toks_w, st_w, wf, Xw
+        ceilings[K] = sum(cl) / len(cl)
+        majors[K] = sum(mj) / len(mj)
+        print(
+            f"  K={K:2d} 窗口天花板 {ceilings[K]:.3f}   底板(多数类) {majors[K]:.3f}",
+            flush=True,
+        )
+        torch.cuda.empty_cache()
+    res["ceiling"] = {str(k): v for k, v in ceilings.items()}
+    res["majority"] = {str(k): v for k, v in majors.items()}
 
     for K in [int(x) for x in args.ks.split(",")]:
         for how in ("euclid", "sphere", "poincare", "product"):
@@ -265,6 +298,10 @@ def main() -> int:
                 frs.append(fr)
                 del feat, X, Xtr, Xte, w_in, mats
                 torch.cuda.empty_cache()
+            fr_mean = sum(frs) / len(frs)
+            if not (0.03 <= fr_mean <= 0.20):
+                print(f"  K={K:2d} {how:8s} 发放 {fr_mean:.4f} 出窗，该臂无效", flush=True)
+                continue
             key = f"K{K}/{how}"
             res["cells"][key] = {
                 "acc": sum(accs) / len(accs),
