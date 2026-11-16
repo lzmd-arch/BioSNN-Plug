@@ -1,0 +1,40 @@
+{
+ "cells": [
+  {
+   "seed": 0,
+   "comp_base": 0.0,
+   "comp_post": 0.28125,
+   "comp_floor": 0.0,
+   "simple_base": 0.09375,
+   "simple_post": 0.4375,
+   "simple_floor": 0.21875
+  },
+  {
+   "seed": 1,
+   "comp_base": 0.03125,
+   "comp_post": 0.3125,
+   "comp_floor": 0.0,
+   "simple_base": 0.21875,
+   "simple_post": 0.34375,
+   "simple_floor": 0.15625
+  },
+  {
+   "seed": 2,
+   "comp_base": 0.0625,
+   "comp_post": 0.21875,
+   "comp_floor": 0.0,
+   "simple_base": 0.0625,
+   "simple_post": 0.34375,
+   "simple_floor": 0.15625
+  },
+  {
+   "seed": 3,
+   "comp_base": 0.09375,
+   "comp_post": 0.21875,
+   "comp_floor": 0.0,
+   "simple_base": 0.21875,
+   "simple_post": 0.3125,
+   "simple_floor": 0.1875
+  }
+ ]
+}

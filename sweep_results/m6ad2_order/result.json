@@ -1,0 +1,25 @@
+{
+ "cells": [
+  {
+   "seed": 0,
+   "mono": 0.75,
+   "order": 0.75,
+   "mono_post": 1.0,
+   "order_post": 0.875
+  },
+  {
+   "seed": 1,
+   "mono": 0.75,
+   "order": 0.8125,
+   "mono_post": 1.0,
+   "order_post": 1.0
+  },
+  {
+   "seed": 2,
+   "mono": 0.625,
+   "order": 0.625,
+   "mono_post": 0.875,
+   "order_post": 0.9375
+  }
+ ]
+}
