@@ -121,6 +121,8 @@ def run_spont(
     field_radius: int = 32,
     hetero_tau: float = 0.0,
     g_local: float = 0.0,
+    gate_w: float = 0.0,
+    gate_phi0: float = 0.08,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     if net is None:
@@ -180,10 +182,16 @@ def run_spont(
             rec = rec * gain.unsqueeze(0)  # 增益乘**总**输入，不止 w_in
         # **全局与局部可以同时存在**：全局给长程相干，局部给空间分化
         loc = phi_g if fmat is None else (z @ fmat)
+        # **状态门控**（用户 2026-11-17）：两种场按当前活动交替，不静态混合。
+        # 高活动 ⇒ λ→1 ⇒ 走局部；低活动 ⇒ λ→0 ⇒ 走全局。
+        w_g, w_l = 1.0, 1.0  # **不开门控时两场各自全额**（向后兼容）
+        if gate_w > 0.0:
+            lam = min(max((float(phi_g) - gate_phi0) / gate_w, 0.0), 1.0)
+            w_g, w_l = 1.0 - lam, lam
         cur = (
             w_in[hist[:, t]] * gain.unsqueeze(0)
-            - g_field * (f_run / 0.08) * phi_g
-            - g_local * (f_run / 0.08) * loc
+            - g_field * w_g * (f_run / 0.08) * phi_g
+            - g_local * w_l * (f_run / 0.08) * loc
         )
         if g_inh != 0.0:
             cur = cur + g_inh * (phk[:, pid] - phk.mean(1, keepdim=True))
@@ -222,7 +230,11 @@ def run_spont(
         phk = z @ onehot
         phi_g = phk.mean()
         loc = phi_g if fmat is None else (z @ fmat)
-        cur = pace.unsqueeze(0) - g_field * phi_g - g_local * loc
+        w_g, w_l = 1.0, 1.0
+        if gate_w > 0.0:
+            lam = min(max((float(phi_g) - gate_phi0) / gate_w, 0.0), 1.0)
+            w_g, w_l = 1.0 - lam, lam
+        cur = pace.unsqueeze(0) - g_field * w_g * phi_g - g_local * w_l * loc
         if eta_gain >= 0.0:
             cur = cur * gain.unsqueeze(0)
             if gain_route == "all":
