@@ -49,8 +49,24 @@ FAMS = list(range(8))
 
 ARMS = {
     "static_global": {"field_radius": 32, "g_field": 1.0, "g_local": 0.0, "gate_w": 0.0},
-    "static_local": {"field_radius": 2, "g_field": 0.0, "g_local": 2.0, "gate_w": 0.0},
-    "gated": {"field_radius": 2, "g_field": 1.0, "g_local": 2.0, "gate_w": 0.10},
+    # **慢门控**：阈值设在网络会穿过的位置（全局 regime 下 φ≈0.13、局部下 ≈0.02），
+    # 这样 λ 才会在两个 regime 之间来回摆，而不是停在不动点。
+    "gated_t50": {
+        "field_radius": 2,
+        "g_field": 1.0,
+        "g_local": 2.0,
+        "gate_w": 0.04,
+        "gate_phi0": 0.10,
+        "gate_tau": 50.0,
+    },
+    "gated_t200": {
+        "field_radius": 2,
+        "g_field": 1.0,
+        "g_local": 2.0,
+        "gate_w": 0.04,
+        "gate_phi0": 0.10,
+        "gate_tau": 200.0,
+    },
 }
 P_LONG = 0.5
 
@@ -151,7 +167,7 @@ def main() -> int:
     print("")
     print("判：")
     cc = res["cells"]
-    g = cc["gated"]
+    g = cc["gated_t50"]
     ok0 = 0.01 <= g["firing"] <= 0.20
     print(f"  AQ-0 门控档发放在窗内：{g['firing']:.4f} => {'过' if ok0 else '不过 => 作废'}")
     aq1 = g["pr"] > 10 and g["integ"] > 0.3 and g["seg"] > 0.5

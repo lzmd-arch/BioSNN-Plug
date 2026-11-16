@@ -123,6 +123,7 @@ def run_spont(
     g_local: float = 0.0,
     gate_w: float = 0.0,
     gate_phi0: float = 0.08,
+    gate_tau: float = 0.0,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     if net is None:
@@ -140,6 +141,7 @@ def run_spont(
     tg = torch.Generator().manual_seed(seed + 9091)
     tau = (20.0 * torch.exp(hetero_tau * torch.randn(N, generator=tg))).clamp(5.0, 200.0)
     leak = (1.0 - 1.0 / tau).to(dev)
+    lam = 0.0  # 门控的慢变量（gate_tau>0 时才有记忆）
     onehot = torch.zeros(N, K, device=dev)
     onehot[torch.arange(N, device=dev), pid] = 1.0 / counts[pid]
     # **局部场**：`field_radius < L` 时，每个神经元被自己邻域的平均活动压住，
@@ -186,7 +188,8 @@ def run_spont(
         # 高活动 ⇒ λ→1 ⇒ 走局部；低活动 ⇒ λ→0 ⇒ 走全局。
         w_g, w_l = 1.0, 1.0  # **不开门控时两场各自全额**（向后兼容）
         if gate_w > 0.0:
-            lam = min(max((float(phi_g) - gate_phi0) / gate_w, 0.0), 1.0)
+            lam_t = min(max((float(phi_g) - gate_phi0) / gate_w, 0.0), 1.0)
+            lam = lam + (lam_t - lam) / gate_tau if gate_tau > 0.0 else lam_t
             w_g, w_l = 1.0 - lam, lam
         cur = (
             w_in[hist[:, t]] * gain.unsqueeze(0)
@@ -232,7 +235,8 @@ def run_spont(
         loc = phi_g if fmat is None else (z @ fmat)
         w_g, w_l = 1.0, 1.0
         if gate_w > 0.0:
-            lam = min(max((float(phi_g) - gate_phi0) / gate_w, 0.0), 1.0)
+            lam_t = min(max((float(phi_g) - gate_phi0) / gate_w, 0.0), 1.0)
+            lam = lam + (lam_t - lam) / gate_tau if gate_tau > 0.0 else lam_t
             w_g, w_l = 1.0 - lam, lam
         cur = pace.unsqueeze(0) - g_field * w_g * phi_g - g_local * w_l * loc
         if eta_gain >= 0.0:
