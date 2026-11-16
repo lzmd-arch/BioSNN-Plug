@@ -66,7 +66,9 @@ def make_delay_task(n_seq: int, T: int, seed: int, dev: str):
 
 
 @torch.no_grad()
-def run_md(w_in, pre, wrec, toks, cue, dev, c, r, gamma, lam=0.95, alive=None):
+def run_md(
+    w_in, pre, wrec, toks, cue, dev, c, r, gamma, lam=0.95, alive=None, read_mask=None
+):
     """与 `development.run_dev` 同，但 `t = 0` 注入线索。返回 `(特征, 总发放率)`。"""
     b, T = toks.shape
     n = w_in.shape[1]
@@ -93,6 +95,8 @@ def run_md(w_in, pre, wrec, toks, cue, dev, c, r, gamma, lam=0.95, alive=None):
         v, z = nv, nz
         rate += float(z.mean())
         read = read * decays.view(1, -1, 1) + z.unsqueeze(1)
+        if read_mask is not None:
+            read = read * read_mask.view(1, 1, -1)
         if t % 8 == 0:
             feats.append(read.reshape(b, -1))
     return torch.stack(feats, 1), rate / T
