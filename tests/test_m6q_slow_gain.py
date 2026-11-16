@@ -54,3 +54,17 @@ def test_clamp_bounds_exist() -> None:
     src = inspect.getsource(m6_pools.run_spont)
     assert "torch.clamp(gain" in src
     assert "0.2, 5.0" in src
+
+
+def test_gain_route_all_scales_recurrence_too() -> None:
+    """M6r 的接线臂：`gain_route="all"` 必须把增益乘到 `rec` 上，不止 `cur`。
+
+    这是 M6r 唯一改的东西 —— 如果它被误删，两臂会逐位相同，主效应自动变 0 而没人发现。
+    """
+    import inspect
+
+    from scripts import m6_pools
+
+    src = inspect.getsource(m6_pools.run_spont)
+    assert 'gain_route == "all"' in src
+    assert src.count("rec = rec * gain.unsqueeze(0)") == 2, "历史期与自发期都该有"

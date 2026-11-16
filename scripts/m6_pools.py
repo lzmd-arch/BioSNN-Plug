@@ -98,6 +98,8 @@ def run_spont(
     beta: float = 0.0,
     g_inh: float = 0.0,
     eta_gain: float = -1.0,
+    t_hist: int = T_HIST,
+    gain_route: str = "field",
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     w_in, pre, wrec, pid = build_pools(seed, dev, K, beta)
@@ -120,14 +122,16 @@ def run_spont(
     gain = torch.ones(N, device=dev)
     f_i = torch.full((N,), 0.08, device=dev)
     f_run = 0.08
-    hist, _ = make_task(B, T_HIST, 8, hist_seed, dev, alpha)
+    hist, _ = make_task(B, t_hist, 8, hist_seed, dev, alpha)
 
-    for t in range(T_HIST):
+    for t in range(t_hist):
         rec = torch.zeros_like(z)
         for j in range(pre.shape[1]):
             rec = rec + z[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
         phk = z @ onehot
         phi_g = phk.mean()  # 全局场（与 run_seg 的 float(z.mean()) 一致）
+        if eta_hist >= 0.0 and gain_route == "all":
+            rec = rec * gain.unsqueeze(0)  # 增益乘**总**输入，不止 w_in
         cur = w_in[hist[:, t]] * gain.unsqueeze(0) - G_FIELD * (f_run / 0.08) * phi_g
         if g_inh != 0.0:
             cur = cur + g_inh * (phk[:, pid] - phk.mean(1, keepdim=True))
@@ -154,6 +158,8 @@ def run_spont(
         cur = pace.unsqueeze(0) - G_FIELD * phi_g
         if eta_gain >= 0.0:
             cur = cur * gain.unsqueeze(0)
+            if gain_route == "all":
+                rec = rec * gain.unsqueeze(0)
         if g_inh != 0.0:
             cur = cur + g_inh * (phk[:, pid] - phk.mean(1, keepdim=True))
         nv = 0.95 * v + cur + rec - z * 0.5
