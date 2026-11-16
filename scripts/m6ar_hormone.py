@@ -44,16 +44,14 @@ T_HIST, T_SPONT = 1024, 2048
 FAMS = list(range(8))
 P_LONG = 0.5
 BASE = {"field_radius": 2, "g_field": 1.0, "g_local": 2.0}
-GATE = {"gate_w": 0.02, "gate_phi0": 0.10, "gate_tau": 50.0, "gate_hyst": 0.03}
+GATE = {"gate_w": 0.02, "gate_phi0": 0.08, "gate_tau": 20.0}
 
 ARMS = {
     "static": dict(BASE),
-    # 门控：快（τ_λ=50）的状态依赖切换
     "gate_only": dict(BASE, **GATE),
-    # **门控 + 激素同时存在**（用户 2026-11-17）：
-    # 激素不直接加权场，而是**移动门控的阈值** —— 门控在激素设定的语境里工作
-    "gate_horm": dict(BASE, **GATE, hormone_tau=500.0, hormone_shift=0.05),
-    "gate_horm_slow": dict(BASE, **GATE, hormone_tau=2000.0, hormone_shift=0.05),
+    # **自主节律**：锯齿波把门控阈值扫过两个 regime（局部 φ≈0.014、全局 φ≈0.13）
+    "sweep512": dict(BASE, **GATE, hormone_sweep=512.0, hormone_shift=0.07),
+    "sweep1024": dict(BASE, **GATE, hormone_sweep=1024.0, hormone_shift=0.07),
 }
 
 
