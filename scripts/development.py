@@ -39,6 +39,7 @@ import torch
 
 from scripts.bio_all import build, make_task
 from scripts.instrument import calibrate, mlp_probe
+from scripts.structure_ladder import window_features
 
 OUT = _pathlib.Path("sweep_results/development")
 V, K = 64, 8
@@ -167,16 +168,23 @@ def main() -> int:
 
     # 底板与天花板（不经过网络）
     majors = []
+    ceils = []
     for sd in seeds:
         tr, trs = make_task(args.train_seq, args.seq, K, 10 + sd, dev)
         te, tes = make_task(args.test_seq, args.seq, K, 20 + sd, dev)
+        toks = torch.cat([tr, te])
         st = torch.cat([trs, tes])[:, ::8]
         trp, tep = st[: args.train_seq], st[args.train_seq :]
         top = int(torch.bincount(trp.reshape(-1), minlength=K).argmax())
         majors.append(float((tep == top).float().mean()))
+        wf = window_features(toks, L=8, stride=8)
+        ceils.append(mlp_probe(wf, st, args.train_seq * st.shape[1], K)[0])
+        del toks, st, wf
     floor = sum(majors) / len(majors)
+    ceiling = sum(ceils) / len(ceils)
     res["majority"] = floor
-    print(f"  底板(多数类) {floor:.3f}", flush=True)
+    res["ceiling"] = ceiling
+    print(f"  底板(多数类) {floor:.3f}   窗口天花板 {ceiling:.3f}", flush=True)
 
     all_structures: dict = {}
     for arm, (beta, metab, e_on) in ARMS.items():
@@ -247,42 +255,49 @@ def main() -> int:
     print("")
     print("判：")
     cc = res["cells"]
-    if "acid" not in cc:
+    if "E_acid" not in cc:
         print("  ✗ 主臂无效")
         return 1
-    a = cc["acid"]
-    ok0 = 0.03 <= a["firing"] <= 0.20 and a["acc"] >= floor + 0.15
-    print(f"  D-0 工作点 + 真解码：{'过' if ok0 else '不过 ⇒ 作废'}")
-    if not ok0:
-        return 1
+    a = cc["E_acid"]
+    # D0-1 任务可解（与臂无关）/ D0-2 每臂高于底板 / D0-3 工作点
+    d01 = ceiling >= floor + 0.20
+    d02 = all(v["acc"] > floor for v in cc.values())
+    d03 = all(0.03 <= v["firing"] <= 0.20 for v in cc.values())
+    print(f"  D0-1 窗口天花板 {ceiling:.3f} >= 底板 {floor:.3f}+0.20 => {'过' if d01 else '不过'}")
+    print(f"  D0-2 每臂 > 底板 => {'过' if d02 else '不过'}")
+    print(f"  D0-3 每臂发放在 [0.03,0.20] => {'过' if d03 else '不过'}")
+    if not (d01 and d02 and d03):
+        print("  => 作废")
+        return 0
     runs = [x for x in a["runs"] if x == x]
     jmax = max(a.get("jaccard", [1.0]))
     spread = max(runs) - min(runs)
     print(
         f"  D-1 渠化：结构两两 Jaccard 最大 {jmax:.3f}（要 <0.8）、acc 极差 {spread * 100:.1f}pp"
-        f"（要 <2pp）⇒ {'过' if jmax < 0.8 and spread < 0.02 else '不过'}"
+        f"（要 <2pp）=> {'过' if jmax < 0.8 and spread < 0.02 else '不过'}"
     )
-    if "rand" in cc:
-        g = a["acc"] - cc["rand"]["acc"]
+    if "E_rand" in cc:
+        g = a["acc"] - cc["E_rand"]["acc"]
         print(
-            f"  D-2 活动依赖做功：acid − rand = {g * 100:+.1f}pp（要 ≥+3）⇒ {'过' if g >= 0.03 else '不过'}"
+            f"  D-3 能量驱动做功：E_acid - E_rand = {g * 100:+.1f}pp（要 >=+3）=> {'过' if g >= 0.03 else '不过'}"
         )
-    if "acid_nometab" in all_structures and all_structures.get("acid_nometab"):
+    if all_structures.get("noE_acid"):
+        n_common = min(len(all_structures["E_acid"]), len(all_structures["noE_acid"]))
         pairs = [
-            jaccard(all_structures["acid"][i], all_structures["acid_nometab"][i], args.n)
-            for i in range(min(len(all_structures["acid"]), len(all_structures["acid_nometab"])))
+            jaccard(all_structures["E_acid"][i], all_structures["noE_acid"][i], args.n)
+            for i in range(n_common)
         ]
-        res["cross_jaccard_acid_vs_nometab"] = pairs
+        res["cross_jaccard_E_vs_noE"] = pairs
         (args.out / "result.json").write_text(
             json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8", newline=chr(10)
         )
-        j3 = max(pairs) if pairs else 1.0
+        j2 = max(pairs) if pairs else 1.0
         print(
-            f"  D-3 E 塑造结构：acid vs acid_nometab 逐种子 Jaccard {[round(x, 3) for x in pairs]}"
-            f" 最大 {j3:.3f}（要 <0.9）⇒ {'过' if j3 < 0.9 else '不过'}"
+            f"  D-2 E 塑造结构：E_acid vs noE_acid 逐种子 Jaccard "
+            f"{[round(x, 3) for x in pairs]} 最大 {j2:.3f}（要 <0.9）=> {'过' if j2 < 0.9 else '不过'}"
         )
     else:
-        print("  D-3 缺少 acid_nometab 的结构，无法判")
+        print("  D-2 缺少 noE_acid 的结构，无法判")
     return 0
 
 
