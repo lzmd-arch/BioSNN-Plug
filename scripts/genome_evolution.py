@@ -133,7 +133,7 @@ def run_g(w_in, pre, wrec, toks, dev, c, r, k, alive=None):
         ref = torch.clamp(ref + 2.0 * nz - 1.0, 0.0, 2.0)
         E = torch.clamp(E - c * nz + r * (1.0 - nz), 0.0, 1.0)
         v, z = nv, nz
-        rates.append(float(z.mean()))
+        rates.append(float(z.sum() / alive.sum()) if alive is not None else float(z.mean()))
     return torch.tensor(rates, device=dev), sum(rates) / T
 
 

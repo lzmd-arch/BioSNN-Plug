@@ -66,9 +66,7 @@ def make_delay_task(n_seq: int, T: int, seed: int, dev: str):
 
 
 @torch.no_grad()
-def run_md(
-    w_in, pre, wrec, toks, cue, dev, c, r, gamma, lam=0.95, alive=None, read_mask=None
-):
+def run_md(w_in, pre, wrec, toks, cue, dev, c, r, gamma, lam=0.95, alive=None, read_mask=None):
     """与 `development.run_dev` 同，但 `t = 0` 注入线索。返回 `(特征, 总发放率)`。"""
     b, T = toks.shape
     n = w_in.shape[1]
@@ -93,7 +91,9 @@ def run_md(
         ref = torch.clamp(ref + 2.0 * nz - 1.0, 0.0, 2.0)
         E = torch.clamp(E - c * nz + r * (1.0 - nz), 0.0, 1.0)
         v, z = nv, nz
-        rate += float(z.mean())
+        # **按存活神经元**求平均：死亡神经元恒为零，用 z.mean() 会把分母算大，
+        # 于是"补偿到 0.08"实际把存活神经元驱动到 2 倍活动（v9 的混淆）
+        rate += float(z.sum() / alive.sum()) if alive is not None else float(z.mean())
         read = read * decays.view(1, -1, 1) + z.unsqueeze(1)
         if read_mask is not None:
             read = read * read_mask.view(1, 1, -1)
