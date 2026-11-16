@@ -106,6 +106,9 @@ def run_spont(
     net: tuple | None = None,
     stdp: float = 0.0,
     alive: torch.Tensor | None = None,
+    record_len: int = T_LATE,
+    v_add: torch.Tensor | None = None,
+    g_field: float = G_FIELD,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     if net is None:
@@ -146,7 +149,7 @@ def run_spont(
         phi_g = phk.mean()  # 全局场（与 run_seg 的 float(z.mean()) 一致）
         if eta_hist >= 0.0 and gain_route == "all":
             rec = rec * gain.unsqueeze(0)  # 增益乘**总**输入，不止 w_in
-        cur = w_in[hist[:, t]] * gain.unsqueeze(0) - G_FIELD * (f_run / 0.08) * phi_g
+        cur = w_in[hist[:, t]] * gain.unsqueeze(0) - g_field * (f_run / 0.08) * phi_g
         if g_inh != 0.0:
             cur = cur + g_inh * (phk[:, pid] - phk.mean(1, keepdim=True))
         nv = 0.95 * v + cur + rec - z * 0.5
@@ -171,6 +174,8 @@ def run_spont(
 
     if v0 is not None:
         v = v0.clone()  # 吸引子计数用：绕过历史，直接给初值
+    if v_add is not None:
+        v = v + v_add  # 扰动（M10 用）：在输入停止的那一刻加
 
     rates = torch.zeros((B, N), device=dev)
     early = torch.zeros((B, N), device=dev)  # 自发期**前** T_LATE 步（Q-4 的"停没停"）
@@ -181,7 +186,7 @@ def run_spont(
             rec = rec + z[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
         phk = z @ onehot
         phi_g = phk.mean()
-        cur = pace.unsqueeze(0) - G_FIELD * phi_g
+        cur = pace.unsqueeze(0) - g_field * phi_g
         if eta_gain >= 0.0:
             cur = cur * gain.unsqueeze(0)
             if gain_route == "all":
@@ -197,15 +202,20 @@ def run_spont(
             f_i = 0.9 * f_i + 0.1 * z.mean(0)
             if step % 4 == 3:
                 gain = torch.clamp(gain * torch.exp(eta_gain * (0.08 - f_i)), 0.2, 5.0)
-        if step < T_LATE:
+        if step < record_len:
             early += z
         if step >= t_spont - T_LATE:
             rates += z
-            snaps.append(z)
+        if step >= t_spont - record_len:
+            snaps.append(z)  # 默认 T_LATE；M9–M12 要更长的记录就调 `record_len`
     del w_in, pre, wrec, hist
     torch.cuda.empty_cache()
     # 第三个返回是自发期**前** T_LATE 步的率，用于 Q-4（窗口内停没停）
-    return rates / T_LATE, torch.stack(snaps, 2), early / T_LATE  # (B,N,T_LATE)，dim=1 会变 (B,T,N)
+    return (
+        rates / T_LATE,
+        torch.stack(snaps, 2),
+        early / max(record_len, 1),
+    )  # (B,N,T_LATE)，dim=1 会变 (B,T,N)
 
 
 def pool_rates(r: torch.Tensor, pid, K: int) -> torch.Tensor:
