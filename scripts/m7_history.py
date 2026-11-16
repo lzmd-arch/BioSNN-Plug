@@ -26,6 +26,8 @@ OUT = _pathlib.Path("sweep_results/m7_history")
 N = 1024
 #: 稳态场强度（v15 里 -0.5~-1 最优，这里取正值配合负号）
 G_FIELD = 1.0
+#: 结构变化比例：历史中活跃最低的这批神经元被永久静默
+STRUCT_Q = 0.2
 T_HIST = 96
 T_GAP = 96
 T_PROBE = 32
@@ -71,7 +73,15 @@ def run_seg(w_in, pre, wrec, toks, dev, state, alive, gain, steps):
 
 
 @torch.no_grad()
-def response(seed: int, alpha_hist: float, gap: int, dev: str, hist_seed: int, scale: float):
+def response(
+    seed: int,
+    alpha_hist: float,
+    gap: int,
+    dev: str,
+    hist_seed: int,
+    scale: float,
+    struct: bool = False,
+):
     """跑历史 → 静默 `gap` 步 → 同一探针。返回探针窗内的每存活神经元平均发放。
 
     `hist_seed` 相同 ⇒ 历史流逐位相同（M7-3 靠这条）。
@@ -88,6 +98,12 @@ def response(seed: int, alpha_hist: float, gap: int, dev: str, hist_seed: int, s
     )
     hist, _ = make_task(32, T_HIST, 8, hist_seed, dev, alpha_hist)
     state, _, _ = run_seg(w_in, pre, wrec, hist, dev, state, alive, gain, T_HIST)
+    if struct:
+        # **历史写进结构**：把历史中活跃最低的那批神经元永久静默
+        # （状态会被后续输入冲掉，结构不会被冲掉）
+        act = (state[1] != 0).float().mean(0)
+        thr = torch.quantile(act, STRUCT_Q)
+        alive = torch.where(act <= thr, torch.zeros_like(alive), alive)
     # 静默间隔：**同一状态接着跑**，只喂中立输入
     gap_toks, _ = make_task(32, max(gap, 1), 8, 4242, dev, 3.0)
     if gap > 0:
@@ -142,32 +158,32 @@ def main() -> int:
     res["scales"] = scales
     print(f"  标定尺度：{[round(x, 3) for x in scales]}", flush=True)
 
-    for gap in [int(x) for x in args.gaps.split(",")]:
-        rel_hist, rel_null = [], []
-        for sd in range(args.seeds):
-            # 内容不同：α=1 vs α=8
-            _, fa = response(sd, 1.0, gap, dev, 100 + sd, scales[sd])
-            _, fb = response(sd, 8.0, gap, dev, 100 + sd, scales[sd])
-            # **对照组：统计相同、随机不同的两条流**（都是 α=1）
-            _, fa2 = response(sd, 1.0, gap, dev, 900 + sd, scales[sd])
-            rel_hist.append(float((fa - fb).norm() / (0.5 * (fa.norm() + fb.norm()) + 1e-12)))
-            rel_null.append(float((fa - fa2).norm() / (0.5 * (fa.norm() + fa2.norm()) + 1e-12)))
-        m_hist = sum(rel_hist) / len(rel_hist)
-        m_null = sum(rel_null) / len(rel_null)
-        ratio = m_hist / max(m_null, 1e-12)
-        res["cells"][f"gap={gap}"] = {
-            "mag_history": m_hist,
-            "mag_null": m_null,
-            "ratio": ratio,
-            "per_seed_hist": rel_hist,
-            "per_seed_null": rel_null,
-        }
-        n_win = sum(1 for a, b in zip(rel_hist, rel_null, strict=False) if a > b)
-        print(
-            f"  gap={gap:3d}  历史 {m_hist * 100:5.2f}%  对照 {m_null * 100:5.2f}%  "
-            f"比 {ratio:.2f}x  逐种子更大 {n_win}/{len(rel_hist)}",
-            flush=True,
-        )
+    for struct in (False, True):
+        for gap in [int(x) for x in args.gaps.split(",")]:
+            rel_hist, rel_null = [], []
+            for sd in range(args.seeds):
+                _, fa = response(sd, 1.0, gap, dev, 100 + sd, scales[sd], struct)
+                _, fb = response(sd, 8.0, gap, dev, 100 + sd, scales[sd], struct)
+                _, fa2 = response(sd, 1.0, gap, dev, 900 + sd, scales[sd], struct)
+                rel_hist.append(float((fa - fb).norm() / (0.5 * (fa.norm() + fb.norm()) + 1e-12)))
+                rel_null.append(float((fa - fa2).norm() / (0.5 * (fa.norm() + fa2.norm()) + 1e-12)))
+            m_hist = sum(rel_hist) / len(rel_hist)
+            m_null = sum(rel_null) / len(rel_null)
+            ratio = m_hist / max(m_null, 1e-12)
+            key = f"{'struct' if struct else 'state'}/gap={gap}"
+            res["cells"][key] = {
+                "mag_history": m_hist,
+                "mag_null": m_null,
+                "ratio": ratio,
+                "per_seed_hist": rel_hist,
+                "per_seed_null": rel_null,
+            }
+            n_win = sum(1 for a, b in zip(rel_hist, rel_null, strict=False) if a > b)
+            print(
+                f"  {key:16s} 历史 {m_hist * 100:5.2f}%  对照 {m_null * 100:5.2f}%  "
+                f"比 {ratio:.2f}x  更大 {n_win}/{len(rel_hist)}",
+                flush=True,
+            )
 
     # M7-3：同历史两次运行必须逐位相同
     _, r1 = response(0, 1.0, 0, dev, 500, scales[0])
@@ -184,16 +200,12 @@ def main() -> int:
     print("判：")
     cc = res["cells"]
 
-    def _verdict(g):
-        c = cc[f"gap={g}"]
+    for k in cc:
+        c = cc[k]
         wins = sum(1 for a, b in zip(c["per_seed_hist"], c["per_seed_null"], strict=False) if a > b)
-        return c["ratio"] > 1.5 and wins == len(c["per_seed_hist"])
-
-    for g in (0, 64):
-        c = cc[f"gap={g}"]
+        ok = c["ratio"] > 1.5 and wins == len(c["per_seed_hist"])
         print(
-            f"  M7 gap={g:2d}：历史 {c['mag_history'] * 100:.2f}% vs 对照 {c['mag_null'] * 100:.2f}%"
-            f"，比 {c['ratio']:.2f}x => {'过（内容起作用）' if _verdict(g) else '不过'}"
+            f"  {k:16s} 比 {c['ratio']:.2f}x  {wins}/{len(c['per_seed_hist'])} => {'过' if ok else '不过'}"
         )
     print(f"  M7-3 同历史逐位相同：{'过' if res['m7_3_bitwise_equal'] else '不过'}")
     return 0
