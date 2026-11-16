@@ -130,6 +130,7 @@ def run_spont(
     hormone_shift: float = 0.0,
     hormone_sweep: float = 0.0,
     i_pace: float = I_PACE,
+    stoch_hold: int = 0,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     if net is None:
@@ -148,6 +149,9 @@ def run_spont(
     tau = (20.0 * torch.exp(hetero_tau * torch.randn(N, generator=tg))).clamp(5.0, 200.0)
     leak = (1.0 - 1.0 / tau).to(dev)
     lam = 0.0  # 门控的慢变量（gate_tau>0 时才有记忆）
+    # **随机门控**（用户 2026-11-17）：regime 从分布里采样，不设阈值 ⇒ 锁不死。
+    lam_s = 0.0
+    _sg = torch.Generator().manual_seed(seed + 7777)
     # **激素**：比门控再慢一个量级。它不改场本身，改的是**哪一层占主导**。
     # 三层时间尺度：基因（一生）> 激素（分钟）> 场（毫秒）。
     horm = 0.0
@@ -215,6 +219,12 @@ def run_spont(
             phi0_eff = gate_phi0 + gate_hyst * (2.0 * lam - 1.0) + hormone_shift * horm
             lam_t = min(max((float(phi_g) - phi0_eff) / gate_w, 0.0), 1.0)
             lam = lam + (lam_t - lam) / gate_tau if gate_tau > 0.0 else lam_t
+            if stoch_hold > 0 and (t % stoch_hold == 0):
+                # Born 规则采样：p 由当前活动给出，但**结果由随机数决定** ⇒ 不会锁死在饱和值
+                u = float(torch.rand(1, generator=_sg))
+                lam_s = 1.0 if u < lam_t else 0.0
+            if stoch_hold > 0:
+                lam = lam_s
             w_g, w_l = 1.0 - lam, lam
         cur = (
             w_in[hist[:, t]] * gain.unsqueeze(0)
@@ -277,6 +287,12 @@ def run_spont(
             phi0_eff = gate_phi0 + gate_hyst * (2.0 * lam - 1.0) + hormone_shift * horm
             lam_t = min(max((float(phi_g) - phi0_eff) / gate_w, 0.0), 1.0)
             lam = lam + (lam_t - lam) / gate_tau if gate_tau > 0.0 else lam_t
+            if stoch_hold > 0 and (step % stoch_hold == 0):
+                # Born 规则采样：p 由当前活动给出，但**结果由随机数决定** ⇒ 不会锁死在饱和值
+                u = float(torch.rand(1, generator=_sg))
+                lam_s = 1.0 if u < lam_t else 0.0
+            if stoch_hold > 0:
+                lam = lam_s
             w_g, w_l = 1.0 - lam, lam
         cur = (
             pace.unsqueeze(0)
