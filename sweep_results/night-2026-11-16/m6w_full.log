@@ -1,0 +1,26 @@
+  radius= 2 seed 0: PR= 70.63  two-NN= 65.61  发放 0.0270
+  radius= 2 seed 1: PR= 54.08  two-NN= 38.63  发放 0.0169
+  radius= 2 seed 2: PR= 52.91  two-NN= 37.53  发放 0.0155
+  radius= 2 seed 3: PR= 67.64  two-NN= 49.94  发放 0.0269
+  radius= 4 seed 0: PR=  5.76  two-NN=  7.20  发放 0.0841
+  radius= 4 seed 1: PR=  7.63  two-NN=  2.46  发放 0.0689
+  radius= 4 seed 2: PR= 11.83  two-NN=  2.77  发放 0.0568
+  radius= 4 seed 3: PR=  9.43  two-NN=  2.23  发放 0.0787
+  radius= 8 seed 0: PR= 14.79  two-NN=  1.72  发放 0.1441
+  radius= 8 seed 1: PR= 16.78  two-NN=  2.61  发放 0.1391
+  radius= 8 seed 2: PR= 14.00  two-NN=  2.44  发放 0.1393
+  radius= 8 seed 3: PR= 15.52  two-NN=  2.10  发放 0.1432
+  radius=16 seed 0: PR=  5.62  two-NN=  1.48  发放 0.1552
+  radius=16 seed 1: PR=  6.73  two-NN=  1.90  发放 0.1523
+  radius=16 seed 2: PR=  5.14  two-NN=  1.35  发放 0.1516
+  radius=16 seed 3: PR=  6.05  two-NN=  1.25  发放 0.1545
+  radius=32 seed 0: PR=  2.42  two-NN= -0.00  发放 0.1540
+  radius=32 seed 1: PR=  2.22  two-NN= -0.00  发放 0.1522
+  radius=32 seed 2: PR=  2.81  two-NN= -0.00  发放 0.1512
+  radius=32 seed 3: PR=  2.62  two-NN= -0.00  发放 0.1536
+
+判：
+  PR 随半径：2→61.32  4→8.66  8→15.27  16→5.88  32→2.52
+  W-0 发放在窗内：5/5 档 => 过
+  W-1 高维（radius=2 的 PR > 4）：61.32 => 过
+  W-2 剂量–反应（PR 随半径单调下降）：Spearman=-0.90 => 不过

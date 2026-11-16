@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "d:\Projects\BioSNN-Plug\scripts\m10_pci.py", line 146, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "d:\Projects\BioSNN-Plug\scripts\m10_pci.py", line 111, in main
+    pert = arm(net, sd, 0, dev, v_add=quadrant_mask(dev, q).unsqueeze(0))
+                                      ^^^^^^^^^^^^^^^^^^^^^
+  File "d:\Projects\BioSNN-Plug\scripts\m10_pci.py", line 94, in quadrant_mask
+    return torch.where(inside, torch.full((N,), 2.0, device=dev), torch.zeros(N, device=dev))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!

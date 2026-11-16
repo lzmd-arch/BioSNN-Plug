@@ -163,7 +163,7 @@ def main() -> int:
     p = sum(r["pci"] for r in rows) / len(rows)
     w = sum(1 for r in rows if r["pci"] > 1.2)
     print(
-        f"  M10-1 PCI > 0.3：{p:.3f} => {w}/{len(rows)} {'过' if w >= max(5, 0.83 * len(rows)) else '不过'}"
+        f"  M10-1 PCI(比) > 1.2：{p:.3f} => {w}/{len(rows)} {'过' if w >= max(5, 0.83 * len(rows)) else '不过'}"
     )
     s = sum(r["spread"] for r in rows) / len(rows)
     print(f"  M10-2 传播 ≥ 0.5：{s:.3f} => {'过' if s >= 0.5 else '不过'}")
