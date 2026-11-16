@@ -102,6 +102,7 @@ def run_spont(
     gain_route: str = "field",
     t_spont: int = T_SPONT,
     v0: torch.Tensor | None = None,
+    hist_in: torch.Tensor | None = None,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     w_in, pre, wrec, pid = build_pools(seed, dev, K, beta)
@@ -124,9 +125,11 @@ def run_spont(
     gain = torch.ones(N, device=dev)
     f_i = torch.full((N,), 0.08, device=dev)
     f_run = 0.08
-    hist = None
-    if t_hist > 0:
+    hist = hist_in
+    if hist is None and t_hist > 0:
         hist, _ = make_task(B, t_hist, 8, hist_seed, dev, alpha)
+    if hist is not None:
+        t_hist = hist.shape[1]
 
     for t in range(t_hist):
         rec = torch.zeros_like(z)
