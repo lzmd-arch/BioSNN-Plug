@@ -43,7 +43,7 @@ def run_gf(w_in, pre, wrec, toks, dev, g_field: float, alive=None):
         for j in range(pre.shape[1]):
             rec = rec + z[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
         cur = w_in[toks[:, t]]
-        if g_field > 0:
+        if g_field != 0.0:  # **不能写 > 0**：负的（抑制性）场要真的施加
             phi = float(z.mean())  # 场是全局标量（粗粒化 LFP）
             cur = cur + g_field * phi
         nv = 0.95 * v + cur + rec - z * 0.5
