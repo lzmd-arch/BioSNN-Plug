@@ -131,6 +131,7 @@ def run_spont(
     hormone_sweep: float = 0.0,
     i_pace: float = I_PACE,
     stoch_hold: int = 0,
+    amp_gate: float = 0.0,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     if net is None:
@@ -152,6 +153,9 @@ def run_spont(
     # **随机门控**（用户 2026-11-17）：regime 从分布里采样，不设阈值 ⇒ 锁不死。
     lam_s = 0.0
     _sg = torch.Generator().manual_seed(seed + 7777)
+    # **两模振幅**（用户 2026-11-17）：全局/局部是同一个两模态的两种投影。
+    # 振幅做**连续旋转**，λ=|a_g|² 是连续量 ⇒ 结构上不会饱和。
+    ag, al = 1.0, 0.0
     # **激素**：比门控再慢一个量级。它不改场本身，改的是**哪一层占主导**。
     # 三层时间尺度：基因（一生）> 激素（分钟）> 场（毫秒）。
     horm = 0.0
@@ -212,7 +216,13 @@ def run_spont(
             horm += ((float(phi_g) - 0.09) - horm) / hormone_tau
             horm = min(max(horm, -1.0), 1.0)
         w_g, w_l = 1.0, 1.0  # **不开门控时两场各自全额**（向后兼容）
-        if gate_w > 0.0:
+        if amp_gate > 0.0:
+            import math as _m
+
+            th = amp_gate * (float(phi_g) - 0.08)
+            ag, al = ag * _m.cos(th) - al * _m.sin(th), ag * _m.sin(th) + al * _m.cos(th)
+            w_g, w_l = ag * ag, al * al
+        elif gate_w > 0.0:
             # **施密特触发**：阈值随 λ 自己移动 ⇒ λ 高时阈值升高（压低 λ）、
             # λ 低时阈值降低（抬高 λ）⇒ 产生弛豫振荡，而不是收敛到不动点。
             # **级联**：激素移动门控阈值 ⇒ 门控在激素设定的语境里工作
@@ -280,7 +290,13 @@ def run_spont(
             horm += ((float(phi_g) - 0.09) - horm) / hormone_tau
             horm = min(max(horm, -1.0), 1.0)
         w_g, w_l = 1.0, 1.0
-        if gate_w > 0.0:
+        if amp_gate > 0.0:
+            import math as _m
+
+            th = amp_gate * (float(phi_g) - 0.08)
+            ag, al = ag * _m.cos(th) - al * _m.sin(th), ag * _m.sin(th) + al * _m.cos(th)
+            w_g, w_l = ag * ag, al * al
+        elif gate_w > 0.0:
             # **施密特触发**：阈值随 λ 自己移动 ⇒ λ 高时阈值升高（压低 λ）、
             # λ 低时阈值降低（抬高 λ）⇒ 产生弛豫振荡，而不是收敛到不动点。
             # **级联**：激素移动门控阈值 ⇒ 门控在激素设定的语境里工作
