@@ -1,0 +1,45 @@
+{
+ "cells": [
+  {
+   "seed": 0,
+   "baseline": 0.34375,
+   "floor": 0.03125,
+   "arms": {
+    "low": 0.4375,
+    "high": 0.53125,
+    "random": 0.6875
+   }
+  },
+  {
+   "seed": 1,
+   "baseline": 0.3125,
+   "floor": 0.0625,
+   "arms": {
+    "low": 0.625,
+    "high": 0.5,
+    "random": 0.65625
+   }
+  },
+  {
+   "seed": 2,
+   "baseline": 0.375,
+   "floor": 0.0625,
+   "arms": {
+    "low": 0.59375,
+    "high": 0.75,
+    "random": 0.90625
+   }
+  },
+  {
+   "seed": 3,
+   "baseline": 0.4375,
+   "floor": 0.0625,
+   "arms": {
+    "low": 0.5625,
+    "high": 0.8125,
+    "random": 0.71875
+   }
+  }
+ ],
+ "frac": 0.5
+}
