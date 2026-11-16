@@ -128,6 +128,10 @@ def main() -> int:
                 )
                 r["mlp"] = mlp_probe(r["Xf"][perm], r["Y"][perm], cut, len(FAMS))[0]
                 r["floor"] = majority_baseline(r["Y"][perm][:cut], r["Y"][perm][cut:], len(FAMS))
+                # 张量不能进 JSON
+                r.pop("Xf", None)
+                r.pop("Xb", None)
+                r.pop("Y", None)
             key = f"p={pace:g}/pl={pl:g}"
             v = {
                 "p_long": pl,
