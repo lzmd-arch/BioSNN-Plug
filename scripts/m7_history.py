@@ -28,6 +28,10 @@ N = 1024
 G_FIELD = 1.0
 #: 结构变化比例：历史中活跃最低的这批神经元被永久静默
 STRUCT_Q = 0.2
+#: STDP 的因果/反因果幅度
+a_plus, a_minus = 1.0, 0.6
+#: STDP 学习率
+STDP_ETA = 0.05
 #: 两种历史流的 Dirichlet 浓度（内容差异）
 A_LOW = 0.5
 A_HIGH = 20.0
@@ -37,7 +41,7 @@ T_PROBE = 32
 
 
 @torch.no_grad()
-def run_seg(w_in, pre, wrec, toks, dev, state, alive, gain, steps):
+def run_seg(w_in, pre, wrec, toks, dev, state, alive, gain, steps, stdp=0.0, reward="none"):
     """跑一段，**状态跨段传递**。返回 `(新状态, 本段平均发放)`。
 
     `run_block` 每次都把 `v/z/ref` 重置为零 —— 那样历史和探针根本不在同一个个体上跑。
@@ -63,6 +67,22 @@ def run_seg(w_in, pre, wrec, toks, dev, state, alive, gain, steps):
         nv = 0.95 * v + cur + rec - z * 0.5
         fresh = ((nv - 0.5) / 0.5 > 0).float()
         nz = torch.where(ref > 0, torch.zeros_like(fresh), fresh) * alive
+        # **R-STDP（三因子）**：e = STDP 项，R = 自生成调制
+        # R_homeo 拉向唯一不动点 => 预测会**擦掉**历史内容
+        # R_pred  奖励"我能预测自己" => 依赖具体历史 => 预测会**写入**内容
+        if stdp > 0.0:
+            e = a_plus * (nz.unsqueeze(2) * z[:, pre]).mean(0) - a_minus * (
+                z.unsqueeze(2) * nz[:, pre]
+            ).mean(0)
+            phi_now = float(z.mean())
+            if reward == "homeo":
+                rv = 0.08 - f_run
+            elif reward == "pred":
+                rv = -abs(phi_now - f_run)
+            else:
+                rv = 1.0
+            wrec = (wrec + stdp * rv * e).clamp(min=0.0)
+            wrec = wrec * (1.2 / wrec.sum(1, keepdim=True).clamp(min=1e-9))
         ref = torch.clamp(ref + 2.0 * nz - 1.0, 0.0, 2.0)
         v, z = nv, nz
         # **内增益稳态**：没有它，持久状态下的网络会在 96 步内爬到饱和（实测 0.5）
@@ -84,6 +104,8 @@ def response(
     hist_seed: int,
     scale: float,
     struct: bool = False,
+    stdp: float = 0.0,
+    reward: str = "none",
 ):
     """跑历史 → 静默 `gap` 步 → 同一探针。返回探针窗内的每存活神经元平均发放。
 
@@ -100,7 +122,9 @@ def response(
         torch.zeros((32, N), device=dev),
     )
     hist, _ = make_task(32, T_HIST, 8, hist_seed, dev, alpha_hist)
-    state, _, _ = run_seg(w_in, pre, wrec, hist, dev, state, alive, gain, T_HIST)
+    state, _, _ = run_seg(
+        w_in, pre, wrec, hist, dev, state, alive, gain, T_HIST, stdp=stdp, reward=reward
+    )
     if struct:
         # **历史写进结构**：把历史中活跃最低的那批神经元永久静默
         # （状态会被后续输入冲掉，结构不会被冲掉）
@@ -161,19 +185,25 @@ def main() -> int:
     res["scales"] = scales
     print(f"  标定尺度：{[round(x, 3) for x in scales]}", flush=True)
 
-    for struct in (False, True):
+    arms = (
+        ("state", False, 0.0, "none"),
+        ("stdp", False, STDP_ETA, "none"),
+        ("R_homeo", False, STDP_ETA, "homeo"),
+        ("R_pred", False, STDP_ETA, "pred"),
+    )
+    for tag, struct, stdp, reward in arms:
         for gap in [int(x) for x in args.gaps.split(",")]:
             rel_hist, rel_null = [], []
             for sd in range(args.seeds):
-                _, fa = response(sd, A_LOW, gap, dev, 100 + sd, scales[sd], struct)
-                _, fb = response(sd, A_HIGH, gap, dev, 100 + sd, scales[sd], struct)
-                _, fa2 = response(sd, A_LOW, gap, dev, 900 + sd, scales[sd], struct)
+                _, fa = response(sd, A_LOW, gap, dev, 100 + sd, scales[sd], struct, stdp, reward)
+                _, fb = response(sd, A_HIGH, gap, dev, 100 + sd, scales[sd], struct, stdp, reward)
+                _, fa2 = response(sd, A_LOW, gap, dev, 900 + sd, scales[sd], struct, stdp, reward)
                 rel_hist.append(float((fa - fb).norm() / (0.5 * (fa.norm() + fb.norm()) + 1e-12)))
                 rel_null.append(float((fa - fa2).norm() / (0.5 * (fa.norm() + fa2.norm()) + 1e-12)))
             m_hist = sum(rel_hist) / len(rel_hist)
             m_null = sum(rel_null) / len(rel_null)
             ratio = m_hist / max(m_null, 1e-12)
-            key = f"{'struct' if struct else 'state'}/gap={gap}"
+            key = f"{tag}/gap={gap}"
             res["cells"][key] = {
                 "mag_history": m_hist,
                 "mag_null": m_null,
