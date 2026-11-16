@@ -41,6 +41,8 @@ def run_seg(w_in, pre, wrec, toks, dev, state, alive, gain, steps):
     v, z, ref = state
     b = toks.shape[0]
     total, n = 0.0, 0
+    read = torch.zeros((b, 2, N), device=dev)
+    decays = torch.tensor([0.5, 0.0625], device=dev)  # τ = 2, 16
     f_i = torch.full((N,), 0.08, device=dev)
     f_run = 0.08
     for t in range(min(steps, toks.shape[1])):
@@ -62,9 +64,10 @@ def run_seg(w_in, pre, wrec, toks, dev, state, alive, gain, steps):
         f_i = 0.9 * f_i + 0.1 * z.mean(0)
         if t % 4 == 3:
             gain = torch.clamp(gain * torch.exp(2.0 * (0.08 - f_i)), 0.2, 5.0)
+        read = read * decays.view(1, -1, 1) + z.unsqueeze(1)
         total += float(z.sum() / (alive.sum() * b))
         n += 1
-    return (v, z, ref), total / max(n, 1)
+    return (v, z, ref), total / max(n, 1), read.reshape(b, -1).mean(0)
 
 
 @torch.no_grad()
@@ -84,16 +87,16 @@ def response(seed: int, alpha_hist: float, gap: int, dev: str, hist_seed: int, s
         torch.zeros((32, N), device=dev),
     )
     hist, _ = make_task(32, T_HIST, 8, hist_seed, dev, alpha_hist)
-    state, _ = run_seg(w_in, pre, wrec, hist, dev, state, alive, gain, T_HIST)
+    state, _, _ = run_seg(w_in, pre, wrec, hist, dev, state, alive, gain, T_HIST)
     # 静默间隔：**同一状态接着跑**，只喂中立输入
     gap_toks, _ = make_task(32, max(gap, 1), 8, 4242, dev, 3.0)
     if gap > 0:
-        state, _ = run_seg(w_in, pre, wrec, gap_toks, dev, state, alive, gain, gap)
+        state, _, _ = run_seg(w_in, pre, wrec, gap_toks, dev, state, alive, gain, gap)
     probe, _ = make_task(32, T_PROBE, 8, 7777, dev, 3.0)
-    _, fr = run_seg(w_in, pre, wrec, probe, dev, state, alive, gain, T_PROBE)
+    _, fr, feat = run_seg(w_in, pre, wrec, probe, dev, state, alive, gain, T_PROBE)
     del w_in, pre, wrec, hist, probe
     torch.cuda.empty_cache()
-    return fr
+    return fr, feat
 
 
 def calibrate_scale(seed: int, dev: str) -> float:
@@ -110,7 +113,7 @@ def calibrate_scale(seed: int, dev: str) -> float:
             torch.zeros((32, N), device=dev),
             torch.zeros((32, N), device=dev),
         )
-        _, fr = run_seg(w_in * s, pre, wrec, toks, dev, st, alive, gain, 48)
+        _, fr, _ = run_seg(w_in * s, pre, wrec, toks, dev, st, alive, gain, 48)
         if FIRING_WINDOW[0] <= fr <= FIRING_WINDOW[1]:
             del w_in, pre, wrec, toks
             torch.cuda.empty_cache()
@@ -140,26 +143,36 @@ def main() -> int:
     print(f"  标定尺度：{[round(x, 3) for x in scales]}", flush=True)
 
     for gap in [int(x) for x in args.gaps.split(",")]:
-        a_vals, b_vals = [], []
+        rel_hist, rel_null = [], []
         for sd in range(args.seeds):
-            a_vals.append(response(sd, 1.0, gap, dev, 100 + sd, scales[sd]))
-            b_vals.append(response(sd, 8.0, gap, dev, 100 + sd, scales[sd]))
-        d = dprime(a_vals, b_vals)
+            # 内容不同：α=1 vs α=8
+            _, fa = response(sd, 1.0, gap, dev, 100 + sd, scales[sd])
+            _, fb = response(sd, 8.0, gap, dev, 100 + sd, scales[sd])
+            # **对照组：统计相同、随机不同的两条流**（都是 α=1）
+            _, fa2 = response(sd, 1.0, gap, dev, 900 + sd, scales[sd])
+            rel_hist.append(float((fa - fb).norm() / (0.5 * (fa.norm() + fb.norm()) + 1e-12)))
+            rel_null.append(float((fa - fa2).norm() / (0.5 * (fa.norm() + fa2.norm()) + 1e-12)))
+        m_hist = sum(rel_hist) / len(rel_hist)
+        m_null = sum(rel_null) / len(rel_null)
+        ratio = m_hist / max(m_null, 1e-12)
         res["cells"][f"gap={gap}"] = {
-            "dprime": d,
-            "mean_A": sum(a_vals) / len(a_vals),
-            "mean_B": sum(b_vals) / len(b_vals),
+            "mag_history": m_hist,
+            "mag_null": m_null,
+            "ratio": ratio,
+            "per_seed_hist": rel_hist,
+            "per_seed_null": rel_null,
         }
+        n_win = sum(1 for a, b in zip(rel_hist, rel_null, strict=False) if a > b)
         print(
-            f"  gap={gap:3d}  A {sum(a_vals) / len(a_vals):.5f}  "
-            f"B {sum(b_vals) / len(b_vals):.5f}  d' {d:6.2f}",
+            f"  gap={gap:3d}  历史 {m_hist * 100:5.2f}%  对照 {m_null * 100:5.2f}%  "
+            f"比 {ratio:.2f}x  逐种子更大 {n_win}/{len(rel_hist)}",
             flush=True,
         )
 
     # M7-3：同历史两次运行必须逐位相同
-    r1 = response(0, 1.0, 0, dev, 500, scales[0])
-    r2 = response(0, 1.0, 0, dev, 500, scales[0])
-    res["m7_3_bitwise_equal"] = bool(r1 == r2)
+    _, r1 = response(0, 1.0, 0, dev, 500, scales[0])
+    _, r2 = response(0, 1.0, 0, dev, 500, scales[0])
+    res["m7_3_bitwise_equal"] = bool(torch.equal(r1, r2))
     print(f"  M7-3 同历史两次逐位相同：{res['m7_3_bitwise_equal']}", flush=True)
 
     args.out.mkdir(parents=True, exist_ok=True)
@@ -170,14 +183,18 @@ def main() -> int:
     print("")
     print("判：")
     cc = res["cells"]
-    m1 = cc["gap=0"]["dprime"] > 2.0
-    m2 = cc["gap=64"]["dprime"] > 2.0
-    print(
-        f"  M7-1 gap=0 可区分：d' {cc['gap=0']['dprime']:.2f}（要 >2）=> {'过' if m1 else '不过'}"
-    )
-    print(
-        f"  M7-2 gap=64 仍可区分：d' {cc['gap=64']['dprime']:.2f}（要 >2）=> {'过' if m2 else '不过'}"
-    )
+
+    def _verdict(g):
+        c = cc[f"gap={g}"]
+        wins = sum(1 for a, b in zip(c["per_seed_hist"], c["per_seed_null"], strict=False) if a > b)
+        return c["ratio"] > 1.5 and wins == len(c["per_seed_hist"])
+
+    for g in (0, 64):
+        c = cc[f"gap={g}"]
+        print(
+            f"  M7 gap={g:2d}：历史 {c['mag_history'] * 100:.2f}% vs 对照 {c['mag_null'] * 100:.2f}%"
+            f"，比 {c['ratio']:.2f}x => {'过（内容起作用）' if _verdict(g) else '不过'}"
+        )
     print(f"  M7-3 同历史逐位相同：{'过' if res['m7_3_bitwise_equal'] else '不过'}")
     return 0
 
