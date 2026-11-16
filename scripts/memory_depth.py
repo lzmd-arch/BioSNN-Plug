@@ -66,7 +66,7 @@ def make_delay_task(n_seq: int, T: int, seed: int, dev: str):
 
 
 @torch.no_grad()
-def run_md(w_in, pre, wrec, toks, cue, dev, c, r, gamma, lam=0.95):
+def run_md(w_in, pre, wrec, toks, cue, dev, c, r, gamma, lam=0.95, alive=None):
     """与 `development.run_dev` 同，但 `t = 0` 注入线索。返回 `(特征, 总发放率)`。"""
     b, T = toks.shape
     n = w_in.shape[1]
@@ -86,6 +86,8 @@ def run_md(w_in, pre, wrec, toks, cue, dev, c, r, gamma, lam=0.95):
         nv = 0.95 * v + cur + rec - z * 0.5
         fresh = ((nv - theta) / theta > 0).float()
         nz = torch.where(ref > 0, torch.zeros_like(fresh), fresh)
+        if alive is not None:
+            nz = nz * alive  # 损伤：被切除的神经元不再放电
         ref = torch.clamp(ref + 2.0 * nz - 1.0, 0.0, 2.0)
         E = torch.clamp(E - c * nz + r * (1.0 - nz), 0.0, 1.0)
         v, z = nv, nz
