@@ -93,7 +93,8 @@ def run_md(w_in, pre, wrec, toks, cue, dev, c, r, gamma, lam=0.95, alive=None, r
         v, z = nv, nz
         # **按存活神经元**求平均：死亡神经元恒为零，用 z.mean() 会把分母算大，
         # 于是"补偿到 0.08"实际把存活神经元驱动到 2 倍活动（v9 的混淆）
-        rate += float(z.sum() / alive.sum()) if alive is not None else float(z.mean())
+        # **分母必须含 batch 维**：z 是 (b, n)，alive 是 (n,)
+        rate += float(z.sum() / (alive.sum() * b)) if alive is not None else float(z.mean())
         read = read * decays.view(1, -1, 1) + z.unsqueeze(1)
         if read_mask is not None:
             read = read * read_mask.view(1, 1, -1)

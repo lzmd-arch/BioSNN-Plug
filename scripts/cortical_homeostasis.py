@@ -111,6 +111,9 @@ def main() -> int:
             ok_c, sc_c, _f = calibrate(lambda s, _a=alive: _rate(s, _a))
             if not ok_c:
                 print(f"  seed {sd} lv {key} ✗ 补偿标定失败", flush=True)
+                # **必须 append 占位**，否则 comp 与 nocomp 列表错位，zip 会错配
+                out[key]["comp"].append(float("nan"))
+                frs[key]["comp"].append(float("nan"))
                 continue
             feat, fr = run_md(w_in * sc_c, pre, wrec, toks, cue, dev, 0.0, 0.0, 0.0, alive=alive)
             out[key]["comp"].append(mlp_probe(feat[:, 1], cue, args.train_seq, K_CUE)[0])
