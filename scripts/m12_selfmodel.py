@@ -57,6 +57,7 @@ def main_run() -> int:
     ap.add_argument("--seeds", type=int, default=4)
     ap.add_argument("--per-fam", type=int, default=16)
     ap.add_argument("--n-fam", type=int, default=8)
+    ap.add_argument("--g-inh", type=float, default=1.0)  # M6u 已证这档是 10-14 个盆
     ap.add_argument("--out", type=_pathlib.Path, default=OUT)
     args = ap.parse_args()
     dev = "cuda" if torch.cuda.is_available() else "cpu"
@@ -78,7 +79,7 @@ def main_run() -> int:
                     dev,
                     K,
                     0.0,
-                    0.0,
+                    args.g_inh,
                     -1.0,
                     hist_in=toks,
                     t_spont=T_EARLY,
@@ -93,7 +94,7 @@ def main_run() -> int:
                     dev,
                     K,
                     0.0,
-                    0.0,
+                    args.g_inh,
                     -1.0,
                     hist_in=toks,
                     t_spont=T_LONG,
