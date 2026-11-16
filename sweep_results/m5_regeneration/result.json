@@ -1,0 +1,64 @@
+{
+ "cells": [
+  {
+   "seed": 0,
+   "frac": 0.1,
+   "baseline": 0.34375,
+   "post": 0.5625,
+   "arms": {
+    "plastic": 0.65625,
+    "frozen": 0.5625
+   }
+  },
+  {
+   "seed": 0,
+   "frac": 0.5,
+   "baseline": 0.34375,
+   "post": 0.4375,
+   "arms": {
+    "plastic": 0.125,
+    "frozen": 0.4375
+   }
+  },
+  {
+   "seed": 1,
+   "frac": 0.1,
+   "baseline": 0.3125,
+   "post": 0.59375,
+   "arms": {
+    "plastic": 0.6875,
+    "frozen": 0.59375
+   }
+  },
+  {
+   "seed": 1,
+   "frac": 0.5,
+   "baseline": 0.3125,
+   "post": 0.625,
+   "arms": {
+    "plastic": 0.625,
+    "frozen": 0.625
+   }
+  },
+  {
+   "seed": 2,
+   "frac": 0.1,
+   "baseline": 0.375,
+   "post": 0.375,
+   "arms": {
+    "plastic": 0.4375,
+    "frozen": 0.375
+   }
+  },
+  {
+   "seed": 2,
+   "frac": 0.5,
+   "baseline": 0.375,
+   "post": 0.59375,
+   "arms": {
+    "plastic": 0.75,
+    "frozen": 0.59375
+   }
+  }
+ ]
+}

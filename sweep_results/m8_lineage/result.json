@@ -1,0 +1,58 @@
+{
+ "cells": [
+  {
+   "seed": 0,
+   "sigma": 0.05,
+   "parent_acc": 0.25,
+   "child_acc_mean": 0.14583333333333334,
+   "child_acc_min": 0.0625,
+   "d_parent": 1.0630785916000605,
+   "d_child": 0.7136227528254191
+  },
+  {
+   "seed": 0,
+   "sigma": 0.2,
+   "parent_acc": 0.25,
+   "child_acc_mean": 0.34375,
+   "child_acc_min": 0.1875,
+   "d_parent": 1.0630785916000605,
+   "d_child": 0.7981174270311991
+  },
+  {
+   "seed": 1,
+   "sigma": 0.05,
+   "parent_acc": 0.25,
+   "child_acc_mean": 0.3125,
+   "child_acc_min": 0.1875,
+   "d_parent": 0.9571170440176502,
+   "d_child": 0.6898109594980876
+  },
+  {
+   "seed": 1,
+   "sigma": 0.2,
+   "parent_acc": 0.25,
+   "child_acc_mean": 0.5208333333333334,
+   "child_acc_min": 0.1875,
+   "d_parent": 0.9571170440176502,
+   "d_child": 0.8658425966898601
+  },
+  {
+   "seed": 2,
+   "sigma": 0.05,
+   "parent_acc": 0.4375,
+   "child_acc_mean": 0.5729166666666666,
+   "child_acc_min": 0.4375,
+   "d_parent": 0.9916448632138781,
+   "d_child": 0.6344408551851909
+  },
+  {
+   "seed": 2,
+   "sigma": 0.2,
+   "parent_acc": 0.4375,
+   "child_acc_mean": 0.5729166666666666,
+   "child_acc_min": 0.3125,
+   "d_parent": 0.9916448632138781,
+   "d_child": 0.8446264306704203
+  }
+ ]
+}
