@@ -128,6 +128,7 @@ def run_spont(
     hormone_tau: float = 0.0,
     hormone_gain: float = 1.0,
     hormone_shift: float = 0.0,
+    hormone_sweep: float = 0.0,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     if net is None:
@@ -194,7 +195,15 @@ def run_spont(
         # **状态门控**（用户 2026-11-17）：两种场按当前活动交替，不静态混合。
         # 高活动 ⇒ λ→1 ⇒ 走局部；低活动 ⇒ λ→0 ⇒ 走全局。
         # **激素：自己的释放/清除动力学**（不是固定乘性系数）
-        if hormone_tau > 0.0:
+        if hormone_sweep > 0.0:
+            # **自主节律**：锯齿波扫过两个 regime。
+            # 用 φ 做门控必然锁死（两个 regime 的发放范围不相交），
+            # 交替必须有独立于被切换对象的节律源。
+            horm = horm + 1.0 / hormone_sweep
+            if horm > 1.0:
+                horm = 0.0
+            horm = 2.0 * horm - 1.0  # 映射到 [-1, 1]
+        elif hormone_tau > 0.0:
             horm += ((float(phi_g) - 0.09) - horm) / hormone_tau
             horm = min(max(horm, -1.0), 1.0)
         w_g, w_l = 1.0, 1.0  # **不开门控时两场各自全额**（向后兼容）
@@ -248,7 +257,15 @@ def run_spont(
         phk = z @ onehot
         phi_g = phk.mean()
         loc = phi_g if fmat is None else (z @ fmat)
-        if hormone_tau > 0.0:
+        if hormone_sweep > 0.0:
+            # **自主节律**：锯齿波扫过两个 regime。
+            # 用 φ 做门控必然锁死（两个 regime 的发放范围不相交），
+            # 交替必须有独立于被切换对象的节律源。
+            horm = horm + 1.0 / hormone_sweep
+            if horm > 1.0:
+                horm = 0.0
+            horm = 2.0 * horm - 1.0  # 映射到 [-1, 1]
+        elif hormone_tau > 0.0:
             horm += ((float(phi_g) - 0.09) - horm) / hormone_tau
             horm = min(max(horm, -1.0), 1.0)
         w_g, w_l = 1.0, 1.0
