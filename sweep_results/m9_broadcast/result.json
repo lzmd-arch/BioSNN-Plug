@@ -1,0 +1,28 @@
+{
+ "cells": [
+  {
+   "seed": 0,
+   "breadth_raw": 0.7956989313018719,
+   "breadth_residual": 0.8750151580845718,
+   "breadth_null": 0.4994743434307001
+  },
+  {
+   "seed": 1,
+   "breadth_raw": 0.7635144483278985,
+   "breadth_residual": 0.8581763180578958,
+   "breadth_null": 0.5141144297588724
+  },
+  {
+   "seed": 2,
+   "breadth_raw": 0.7847802537064076,
+   "breadth_residual": 0.855517304869859,
+   "breadth_null": 0.5245117810919878
+  },
+  {
+   "seed": 3,
+   "breadth_raw": 0.7793883783551641,
+   "breadth_residual": 0.8660507495706478,
+   "breadth_null": 0.4727873948124707
+  }
+ ]
+}
