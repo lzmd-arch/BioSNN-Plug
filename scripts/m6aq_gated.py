@@ -48,26 +48,35 @@ T_HIST, T_SPONT = 1024, 2048
 FAMS = list(range(8))
 
 ARMS = {
-    "static_global": {"field_radius": 32, "g_field": 1.0, "g_local": 0.0, "gate_w": 0.0},
-    # **施密特滞后门控**：阈值随 λ 自移 ⇒ 弛豫振荡。
-    # 一阶滞后会收敛到不动点（上一版实测 PR 仍 1.00），必须加滞后。
-    "gated_hyst": {
+    "static_local": {"field_radius": 2, "g_field": 0.0, "g_local": 2.0},
+    # 确定性门控：λ = clip((φ−θ)/w) ⇒ 进入某个 regime 后饱和 ⇒ 锁死（四版实测）
+    "det_gate": {
         "field_radius": 2,
         "g_field": 1.0,
         "g_local": 2.0,
         "gate_w": 0.02,
-        "gate_phi0": 0.10,
-        "gate_tau": 50.0,
-        "gate_hyst": 0.03,
+        "gate_phi0": 0.08,
+        "gate_tau": 20.0,
     },
-    "gated_hyst_strong": {
+    # **随机门控（Born 规则采样）**：regime 由随机数决定 ⇒ 锁不死。
+    # `hold` 越大，停留越久（相当于纠缠熵大时交替快、小时停留久）。
+    "stoch_h16": {
         "field_radius": 2,
         "g_field": 1.0,
         "g_local": 2.0,
         "gate_w": 0.02,
-        "gate_phi0": 0.10,
-        "gate_tau": 50.0,
-        "gate_hyst": 0.06,
+        "gate_phi0": 0.08,
+        "gate_tau": 20.0,
+        "stoch_hold": 16,
+    },
+    "stoch_h64": {
+        "field_radius": 2,
+        "g_field": 1.0,
+        "g_local": 2.0,
+        "gate_w": 0.02,
+        "gate_phi0": 0.08,
+        "gate_tau": 20.0,
+        "stoch_hold": 64,
     },
 }
 P_LONG = 0.5
@@ -169,7 +178,7 @@ def main() -> int:
     print("")
     print("判：")
     cc = res["cells"]
-    g = cc["gated_hyst"]
+    g = cc["stoch_h16"]
     ok0 = 0.01 <= g["firing"] <= 0.20
     print(f"  AQ-0 门控档发放在窗内：{g['firing']:.4f} => {'过' if ok0 else '不过 => 作废'}")
     aq1 = g["pr"] > 10 and g["integ"] > 0.3 and g["seg"] > 0.5
@@ -180,7 +189,7 @@ def main() -> int:
     print(f"  AQ-2 可读不塌（>底板+0.15）：{'过' if g['readable'] else '不过'}")
     print("")
     print("  对照：")
-    for k in ("static_global",):
+    for k in ("static_local", "det_gate"):
         v = cc[k]
         print(
             f"    {k:14s} PR {v['pr']:6.2f}  整合 {v['integ']:.3f}  分离 {v['seg']:.2f}  "
