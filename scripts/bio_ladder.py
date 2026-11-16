@@ -37,7 +37,7 @@ _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
 import torch
 
 from scripts.bio_all import build, make_task, run
-from scripts.instrument import calibrate, mlp_probe
+from scripts.instrument import calibrate, mlp_probe, probe
 from scripts.structure_ladder import window_features
 
 OUT = _pathlib.Path("sweep_results/bio_ladder")
@@ -77,7 +77,7 @@ def run_arm(name: str, switches: list[str], alpha: float, args, dev: str):
     if not ok_cal:
         print(f"  {name:6s} ✗ 标定失败，该档无效", flush=True)
         return None
-    accs, frs = [], []
+    accs, frs, lins = [], [], []
     for sd in args.seed_list:
         tr, trs = make_task(args.train_seq, args.seq, K, 10 + sd, dev, alpha)
         te, tes = make_task(args.test_seq, args.seq, K, 20 + sd, dev, alpha)
@@ -85,8 +85,13 @@ def run_arm(name: str, switches: list[str], alpha: float, args, dev: str):
         st = torch.cat([trs, tes])[:, ::8]
         w2 = build(args.n, sw, sd, dev, args.deg)
         feat, fr = run((w2[0] * sc, *w2[1:], sw), toks, dev)
-        m, _ = mlp_probe(feat, st, args.train_seq * st.shape[1], K)
+        cut = args.train_seq * st.shape[1]
+        m, _ = mlp_probe(feat, st, cut, K)
+        # **第二个指标**：线性探针（λ 由训练集内部留出选）。L-2 要"膝点在两个
+        # 都不同的指标上落在同一处" —— 归一化增益只是准确率的单调变换，不算。
+        lin, _lam = probe(feat.reshape(-1, feat.shape[-1]), st.reshape(-1), cut, K)
         accs.append(m)
+        lins.append(lin)
         frs.append(fr)
         del feat, w2, toks, st
         torch.cuda.empty_cache()
@@ -94,7 +99,7 @@ def run_arm(name: str, switches: list[str], alpha: float, args, dev: str):
     if not (0.03 <= fr_mean <= 0.20):
         print(f"  {name:6s} 发放 {fr_mean:.4f} 出窗，该档无效", flush=True)
         return None
-    return accs, fr_mean, sc
+    return accs, lins, fr_mean, sc
 
 
 def main() -> int:
@@ -147,11 +152,12 @@ def main() -> int:
         r = run_arm(name, sw, alpha, args, dev)
         if r is None:
             continue
-        accs, fr, sc = r
+        accs, lins, fr, sc = r
         res["cells"][name] = {
             "switches": sw,
             "acc": sum(accs) / len(accs),
             "runs": accs,
+            "lin_acc": sum(lins) / len(lins),
             "firing": fr,
             "scale": sc,
         }
@@ -169,11 +175,12 @@ def main() -> int:
         r = run_arm(f"-{drop}", keep, alpha, args, dev)
         if r is None:
             continue
-        accs, fr, sc = r
+        accs, lins, fr, sc = r
         res["cells"][f"-{drop}"] = {
             "switches": keep,
             "acc": sum(accs) / len(accs),
             "runs": accs,
+            "lin_acc": sum(lins) / len(lins),
             "firing": fr,
             "scale": sc,
         }
@@ -207,6 +214,22 @@ def main() -> int:
             knee = have[i]
             break
     print(f"  L-1 膝点：{'在 ' + knee if knee else '**没有**（连续两档 <2pp 未出现）'}")
+
+    # L-2：**两个都不同的指标**上膝点是否落在同一处（防 Mirage）
+    lsteps = []
+    for a, b in itertools.pairwise(have):
+        lsteps.append(res["cells"][b]["lin_acc"] - res["cells"][a]["lin_acc"])
+        print(f"     [线性读出] {a}→{b}: {lsteps[-1] * 100:+.1f}pp")
+    lknee = None
+    for i in range(len(lsteps) - 1):
+        if lsteps[i] < 0.02 and lsteps[i + 1] < 0.02:
+            lknee = have[i]
+            break
+    same_knee = (knee is None and lknee is None) or (knee == lknee)
+    print(
+        f"  L-2 膝点一致性：mlp {knee or '无'} / 线性 {lknee or '无'} ⇒ "
+        f"{'一致' if same_knee else '**不一致（Mirage 风险）**'}"
+    )
     if L5 in res["cells"]:
         base = res["cells"][L5]["acc"]
         drops = {d: base - res["cells"][f"-{d}"]["acc"] for d in CHAIN if f"-{d}" in res["cells"]}
