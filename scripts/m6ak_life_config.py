@@ -76,7 +76,7 @@ def cell(
             net=net,
             field_radius=RADIUS,
             g_field=0.0,
-            g_local=1.0,
+            g_local=g_local,
         )[0]
         full.append(r.cpu())
         binned.append(spatial_bins(r).cpu())
