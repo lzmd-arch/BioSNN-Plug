@@ -22,7 +22,6 @@ import torch
 from scripts.m7_history import (
     A_HIGH,
     A_LOW,
-    G_FIELD,
     T_HIST,
     N,
     build_net,
@@ -39,7 +38,15 @@ def make_pace(p: float, seed: int, dev: str):
 
 
 @torch.no_grad()
-def spontaneous(seed: int, alpha_hist: float, hist_seed: int, scale: float, p: float, dev: str):
+def spontaneous(
+    seed: int,
+    alpha_hist: float,
+    hist_seed: int,
+    scale: float,
+    p: float,
+    dev: str,
+    gfield: float = 1.0,
+):
     """跑历史 → **输入全零** → 记录自发模式（每神经元平均发放）。"""
     w_in, pre, wrec = build_net(seed, dev)
     w_in = w_in * scale
@@ -66,7 +73,7 @@ def spontaneous(seed: int, alpha_hist: float, hist_seed: int, scale: float, p: f
         for j in range(pre.shape[1]):
             rec = rec + z[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
         phi = float(z.mean())
-        cur = pace.unsqueeze(0) - G_FIELD * 1.0 * phi  # **没有 w_in[tok]**
+        cur = pace.unsqueeze(0) - gfield * phi  # **没有 w_in[tok]**
         nv = 0.95 * v + cur + rec - z * 0.5
         fresh = ((nv - 0.5) / 0.5 > 0).float()
         nz = torch.where(ref > 0, torch.zeros_like(fresh), fresh) * alive
@@ -91,89 +98,91 @@ def make_task_hist(T: int, seed: int, dev: str, alpha: float):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", type=int, default=10)
-    ap.add_argument("--ps", default="0,0.02,0.05,0.1")
+    ap.add_argument("--ps", default="0,0.02")
+    ap.add_argument("--gfs", default="0,0.25,0.5,1.0")
     ap.add_argument("--out", type=_pathlib.Path, default=OUT)
     args = ap.parse_args()
     dev = "cuda"
     res: dict = {"cells": {}}
 
-    for p in [float(x) for x in args.ps.split(",")]:
-        rec = {"early": ([], [], []), "late": ([], [], [])}
-        zcs, zcb, zc2 = [], [], []
-        frs, sds = [], []
-        for sd in range(args.seeds):
-            ea, la, za = spontaneous(sd, A_LOW, 100 + sd, 0.7, p, dev)
-            eb, lb, zb = spontaneous(sd, A_HIGH, 100 + sd, 0.7, p, dev)
-            ea2, la2, za2 = spontaneous(sd, A_LOW, 900 + sd, 0.7, p, dev)
-            for w, x, y, z2 in (("early", ea, eb, ea2), ("late", la, lb, la2)):
-                rec[w][0].append(x)
-                rec[w][1].append(y)
-                rec[w][2].append(z2)
-            frs.append(float(la.mean()))
-            sds.append(float(la.std()))
-            # **减掉全局公共分量**后剩下的才是"图案"（不是一起涨落）
-            zc = za - za.mean(0, keepdim=True)
-            zcs.append(zc)
-            zcb.append(zb - zb.mean(0, keepdim=True))
-            zc2.append(za2 - za2.mean(0, keepdim=True))
+    for gf in [float(x) for x in args.gfs.split(",")]:
+        for p in [float(x) for x in args.ps.split(",")]:
+            rec = {"early": ([], [], []), "late": ([], [], [])}
+            zcs, zcb, zc2 = [], [], []
+            frs, sds = [], []
+            for sd in range(args.seeds):
+                ea, la, za = spontaneous(sd, A_LOW, 100 + sd, 0.7, p, dev, gf)
+                eb, lb, zb = spontaneous(sd, A_HIGH, 100 + sd, 0.7, p, dev, gf)
+                ea2, la2, za2 = spontaneous(sd, A_LOW, 900 + sd, 0.7, p, dev, gf)
+                for w, x, y, z2 in (("early", ea, eb, ea2), ("late", la, lb, la2)):
+                    rec[w][0].append(x)
+                    rec[w][1].append(y)
+                    rec[w][2].append(z2)
+                frs.append(float(la.mean()))
+                sds.append(float(la.std()))
+                # **减掉全局公共分量**后剩下的才是"图案"（不是一起涨落）
+                zc = za - za.mean(0, keepdim=True)
+                zcs.append(zc)
+                zcb.append(zb - zb.mean(0, keepdim=True))
+                zc2.append(za2 - za2.mean(0, keepdim=True))
 
-        def _ratio(w, _rec=rec):
-            xs, ys, zs = _rec[w]
-            rh = [
-                float((xs[i] - ys[i]).norm() / (0.5 * (xs[i].norm() + ys[i].norm()) + 1e-12))
-                for i in range(len(xs))
-            ]
-            rn = [
-                float((xs[i] - zs[i]).norm() / (0.5 * (xs[i].norm() + zs[i].norm()) + 1e-12))
-                for i in range(len(xs))
-            ]
-            return (sum(rh) / len(rh)) / max(sum(rn) / len(rn), 1e-12), sum(
-                1 for a, b in zip(rh, rn, strict=False) if a > b
+            def _ratio(w, _rec=rec):
+                xs, ys, zs = _rec[w]
+                rh = [
+                    float((xs[i] - ys[i]).norm() / (0.5 * (xs[i].norm() + ys[i].norm()) + 1e-12))
+                    for i in range(len(xs))
+                ]
+                rn = [
+                    float((xs[i] - zs[i]).norm() / (0.5 * (xs[i].norm() + zs[i].norm()) + 1e-12))
+                    for i in range(len(xs))
+                ]
+                return (sum(rh) / len(rh)) / max(sum(rn) / len(rn), 1e-12), sum(
+                    1 for a, b in zip(rh, rn, strict=False) if a > b
+                )
+
+            # 结构：去掉公共分量后的参与比（>1.5 说明不止一个模式）
+            zall = torch.stack(zcs)  # (n_seed, N, T)
+            zcall = zall.reshape(-1, zall.shape[-1])
+            zcall = zcall - zcall.mean(0, keepdim=True)
+            ev = (
+                torch.linalg.eigvalsh(zcall @ zcall.T / zcall.shape[0]).clamp(min=0)
+                if zcall.shape[0] < zcall.shape[1]
+                else torch.linalg.eigvalsh(zcall.T @ zcall / zcall.shape[0]).clamp(min=0)
             )
+            pr_res = float((ev.sum() ** 2) / max(float((ev**2).sum()), 1e-12))
+            # 残余图案的历史/对照比
+            rh2 = [
+                float((zcs[i] - zcb[i]).norm() / (0.5 * (zcs[i].norm() + zcb[i].norm()) + 1e-12))
+                for i in range(len(zcs))
+            ]
+            rn2 = [
+                float((zcs[i] - zc2[i]).norm() / (0.5 * (zcs[i].norm() + zc2[i].norm()) + 1e-12))
+                for i in range(len(zcs))
+            ]
+            r_pat = (sum(rh2) / len(rh2)) / max(sum(rn2) / len(rn2), 1e-12)
+            w_pat = sum(1 for a, b in zip(rh2, rn2, strict=False) if a > b)
 
-        # 结构：去掉公共分量后的参与比（>1.5 说明不止一个模式）
-        zall = torch.stack(zcs)  # (n_seed, N, T)
-        zcall = zall.reshape(-1, zall.shape[-1])
-        zcall = zcall - zcall.mean(0, keepdim=True)
-        ev = (
-            torch.linalg.eigvalsh(zcall @ zcall.T / zcall.shape[0]).clamp(min=0)
-            if zcall.shape[0] < zcall.shape[1]
-            else torch.linalg.eigvalsh(zcall.T @ zcall / zcall.shape[0]).clamp(min=0)
-        )
-        pr_res = float((ev.sum() ** 2) / max(float((ev**2).sum()), 1e-12))
-        # 残余图案的历史/对照比
-        rh2 = [
-            float((zcs[i] - zcb[i]).norm() / (0.5 * (zcs[i].norm() + zcb[i].norm()) + 1e-12))
-            for i in range(len(zcs))
-        ]
-        rn2 = [
-            float((zcs[i] - zc2[i]).norm() / (0.5 * (zcs[i].norm() + zc2[i].norm()) + 1e-12))
-            for i in range(len(zcs))
-        ]
-        r_pat = (sum(rh2) / len(rh2)) / max(sum(rn2) / len(rn2), 1e-12)
-        w_pat = sum(1 for a, b in zip(rh2, rn2, strict=False) if a > b)
-
-        r_e, w_e = _ratio("early")
-        r_l, w_l = _ratio("late")
-        mf = sum(frs) / len(frs)
-        res["cells"][f"p={p:g}"] = {
-            "firing_late": mf,
-            "spatial_sd": sum(sds) / len(sds),
-            "ratio_early": r_e,
-            "ratio_late": r_l,
-            "wins_early": w_e,
-            "wins_late": w_l,
-            "n": args.seeds,
-            "pr_residual": pr_res,
-            "ratio_pattern": r_pat,
-            "wins_pattern": w_pat,
-        }
-        print(
-            f"  p={p:4.2f}  后期发放 {mf:.4f}  空间SD {sum(sds) / len(sds):.4f}  "
-            f"前64 {r_e:.2f}x({w_e})  后64 {r_l:.2f}x({w_l})  "
-            f"残余PR {pr_res:.2f}  图案比 {r_pat:.2f}x({w_pat})",
-            flush=True,
-        )
+            r_e, w_e = _ratio("early")
+            r_l, w_l = _ratio("late")
+            mf = sum(frs) / len(frs)
+            res["cells"][f"gf={gf:g}/p={p:g}"] = {
+                "firing_late": mf,
+                "spatial_sd": sum(sds) / len(sds),
+                "ratio_early": r_e,
+                "ratio_late": r_l,
+                "wins_early": w_e,
+                "wins_late": w_l,
+                "n": args.seeds,
+                "pr_residual": pr_res,
+                "ratio_pattern": r_pat,
+                "wins_pattern": w_pat,
+            }
+            print(
+                f"  gf={gf:4.2f} p={p:4.2f}  后期发放 {mf:.4f}  空间SD {sum(sds) / len(sds):.4f}  "
+                f"前64 {r_e:.2f}x({w_e})  后64 {r_l:.2f}x({w_l})  "
+                f"残余PR {pr_res:.2f}  图案比 {r_pat:.2f}x({w_pat})",
+                flush=True,
+            )
 
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "result.json").write_text(
