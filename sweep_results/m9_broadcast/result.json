@@ -23,6 +23,18 @@
    "breadth_raw": 0.7793883783551641,
    "breadth_residual": 0.8660507495706478,
    "breadth_null": 0.4727873948124707
+  },
+  {
+   "seed": 4,
+   "breadth_raw": 0.7695578647542966,
+   "breadth_residual": 0.8619671440327081,
+   "breadth_null": 0.5084143819375514
+  },
+  {
+   "seed": 5,
+   "breadth_raw": 0.7927121955037801,
+   "breadth_residual": 0.8812439556870231,
+   "breadth_null": 0.5184776955000266
   }
  ]
 }
