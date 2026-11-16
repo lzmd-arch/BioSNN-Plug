@@ -29,7 +29,7 @@
 
 from __future__ import annotations
 
-# ruff: noqa: N803, N806
+# ruff: noqa: N806
 import argparse
 import json
 import math
