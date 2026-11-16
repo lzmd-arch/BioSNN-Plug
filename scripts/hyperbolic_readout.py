@@ -38,7 +38,7 @@ _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
 
 import torch
 
-from scripts.instrument import seeded_dirichlet
+from scripts.instrument import calibrate, seeded_dirichlet
 from scripts.structure_ladder import V
 
 OUT = _pathlib.Path("sweep_results/hyperbolic_readout")
@@ -67,9 +67,9 @@ def make_task_k(n_seq: int, T: int, K: int, seed: int, dev: str):
 
 
 @torch.no_grad()
-def reservoir(toks, dev, n=2048, stride=8):
+def reservoir(toks, dev, n=2048, stride=8, scale=16.0):
     g = torch.Generator().manual_seed(0)
-    w_in = (torch.randn(V, n, generator=g) / n**0.5 * 16.0).to(dev)
+    w_in = (torch.randn(V, n, generator=g) / n**0.5 * scale).to(dev)
     off = torch.tensor([-1, -2, 1, 2])
     pre = (torch.arange(n).unsqueeze(1) + off.unsqueeze(0)) % n
     wrec = torch.rand(n, 4, generator=g).to(dev)
@@ -155,6 +155,13 @@ def main() -> int:
     res: dict = {"cells": {}}
 
     for K in [int(x) for x in args.ks.split(",")]:
+        # 原来输入尺度写死 16x（n=2048 时 0.353），阈值 0.5 —— 很可能一直是接近静默的。
+        tr_c, _ = make_task_k(32, args.seq, K, 10, dev)
+        ok_cal, sc, _fr_c = calibrate(lambda s, _t=tr_c: reservoir(_t, dev, scale=s)[1])
+        if not ok_cal:
+            print(f"  K={K:3d} ✗ 标定失败，该臂无效", flush=True)
+            continue
+        print(f"  K={K:3d} 标定输入尺度 {sc:.2f}", flush=True)
         out = {}
         for name, hyp in (("euclid", False), ("hyperbolic", True)):
             accs, params = [], 0
@@ -163,12 +170,14 @@ def main() -> int:
                 te, tes = make_task_k(args.test_seq, args.seq, K, 20 + sd, dev)
                 toks = torch.cat([tr, te])
                 st = torch.cat([trs, tes])[:, ::8]
-                feat, fr = reservoir(toks, dev)
+                feat, fr = reservoir(toks, dev, scale=sc)
                 a, params = train_eval(feat, st, args.train_seq, K, hyp, dev)
                 accs.append(a)
                 del feat
                 torch.cuda.empty_cache()
             out[name] = {"acc": sum(accs) / len(accs), "runs": accs, "params": params, "firing": fr}
+        if len(out) < 2:
+            raise RuntimeError(f"K={K} 只产出 {len(out)} 个臂 —— 不该写结果文件")
         out["K"] = K
         res["cells"][str(K)] = out
         print(
