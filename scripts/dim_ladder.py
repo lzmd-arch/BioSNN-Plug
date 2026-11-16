@@ -36,6 +36,7 @@ from __future__ import annotations
 
 # ruff: noqa: N806  -- 矩阵推导里 X/W/A/T/K 是惯例
 import argparse
+import itertools
 import json
 import pathlib as _pathlib
 import sys as _sys
@@ -44,6 +45,7 @@ _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
 
 import torch
 
+from scripts.instrument import calibrate, mlp_probe
 from scripts.structure_ladder import K, V, make_pref, make_task, window_features
 
 OUT = _pathlib.Path("sweep_results/dim_ladder")
@@ -99,7 +101,7 @@ def run(w_in, pre, wrec, toks, dev, stride=8):
     ref = torch.zeros((b, n), device=dev)
     decays = torch.tensor([1.0 / t for t in TAUS], device=dev)
     read = torch.zeros((b, len(TAUS), n), device=dev)
-    feats = []
+    feats, rate = [], 0.0
     for t in range(T):
         cur = w_in[toks[:, t]]
         rec = torch.zeros_like(z)
@@ -113,7 +115,8 @@ def run(w_in, pre, wrec, toks, dev, stride=8):
         read = read * decays.view(1, -1, 1) + z.unsqueeze(1)
         if t % stride == 0:
             feats.append(read.reshape(b, -1))
-    return torch.stack(feats, 1)
+        rate += float(z.mean())
+    return torch.stack(feats, 1), rate / T
 
 
 def ridge(feats, st, n_train):
@@ -171,8 +174,7 @@ def main() -> int:
     seeds = [int(x) for x in args.seeds.split(",")]
 
     res: dict = {"gain": args.gain, "seeds": seeds, "cells": {}}
-    wf = None
-    ctl = []
+    ctl, majors = [], []
     for sd in seeds:
         pref = make_pref(0, 3.0).to(dev)
         tr, trs, _ = make_task(args.train_seq, args.seq, 10 + sd, dev, pref)
@@ -181,51 +183,115 @@ def main() -> int:
         st = torch.cat([trs, tes])[:, :: args.stride]
         wf = window_features(toks, L=32, stride=args.stride)
         ctl.append(ridge(wf, st, args.train_seq))
+        # **底板要实测**：多数类在测试集上的准确率，不是 1/K
+        trp, tep = st[: args.train_seq], st[args.train_seq :]
+        top = int(torch.bincount(trp.reshape(-1), minlength=K).argmax())
+        majors.append(float((tep == top).float().mean()))
+        del toks, st, wf
     res["control"] = {"window32_mean": sum(ctl) / len(ctl), "runs": ctl}
-    print(f"  窗口32 对照 {sum(ctl) / len(ctl):.3f}", flush=True)
+    res["majority"] = sum(majors) / len(majors)
+    print(
+        f"  窗口32 对照 {sum(ctl) / len(ctl):.3f}   底板(多数类) {res['majority']:.3f}",
+        flush=True,
+    )
 
     for name, dims in DIMS:
-        for dec_name, dec in (("linear", ridge), ("mlp", mlp)):
-            accs = []
-            for sd in seeds:
-                pref = make_pref(0, 3.0).to(dev)
-                tr, trs, _ = make_task(args.train_seq, args.seq, 10 + sd, dev, pref)
-                te, tes, _ = make_task(args.test_seq, args.seq, 20 + sd, dev, pref)
-                toks = torch.cat([tr, te])
-                st = torch.cat([trs, tes])[:, :: args.stride]
-                w_in, pre, wrec = build(4096, dims, args.gain, sd, dev)
-                feat = run(w_in, pre, wrec, toks, dev, args.stride)
-                accs.append(dec(feat, st, args.train_seq))
-            key = f"{name}/{dec_name}"
-            res["cells"][key] = {
-                "acc": sum(accs) / len(accs),
-                "runs": accs,
-                "range_pp": (max(accs) - min(accs)) * 100,
-            }
-            print(
-                f"  {name:3s} {dec_name:6s} {sum(accs) / len(accs):.3f}  "
-                f"({', '.join(f'{a:.3f}' for a in accs)})",
-                flush=True,
-            )
+        # **每臂单独标定工作点**：发放在窗内才允许比较
+        # （这一条原来完全没有，整批结果因此不知道跑在什么工作点上）
+        pref0 = make_pref(0, 3.0).to(dev)
+        tr0, _, _ = make_task(32, args.seq, 10, dev, pref0)
+        wc, pc, rc = build(4096, dims, args.gain, seeds[0], dev)
+        ok_cal, sc, _pfr = calibrate(
+            lambda s, _w=wc, _p=pc, _r=rc, _t=tr0: run(_w * s, _p, _r, _t, dev)[1]
+        )
+        del wc, pc, rc, tr0
+        torch.cuda.empty_cache()
+        if not ok_cal:
+            print(f"  {name:3s} ✗ 标定失败，该臂无效", flush=True)
+            continue
+
+        ridge_runs, mlp_runs, frs = [], [], []
+        for sd in seeds:
+            pref = make_pref(0, 3.0).to(dev)
+            tr, trs, _ = make_task(args.train_seq, args.seq, 10 + sd, dev, pref)
+            te, tes, _ = make_task(args.test_seq, args.seq, 20 + sd, dev, pref)
+            toks = torch.cat([tr, te])
+            st = torch.cat([trs, tes])[:, :: args.stride]
+            w_in, pre, wrec = build(4096, dims, args.gain, sd, dev)
+            feat, fr = run(w_in * sc, pre, wrec, toks, dev, args.stride)
+            ridge_runs.append(ridge(feat, st, args.train_seq))
+            # 判据用的读出：与 dim_ladder.mlp 逐字同超参、**播种**、3 种子取均值
+            m, _ = mlp_probe(feat, st, args.train_seq * st.shape[1], K)
+            mlp_runs.append(m)
+            frs.append(fr)
+            del feat, w_in, pre, wrec, toks, st
+            torch.cuda.empty_cache()
+
+        fr_mean = sum(frs) / len(frs)
+        if not (0.03 <= fr_mean <= 0.20):
+            print(f"  {name:3s} 发放 {fr_mean:.4f} 出窗，该臂无效", flush=True)
+            continue
+        res["cells"][name] = {
+            "acc": sum(mlp_runs) / len(mlp_runs),
+            "runs": mlp_runs,
+            "ridge": sum(ridge_runs) / len(ridge_runs),
+            "ridge_runs": ridge_runs,
+            "firing": fr_mean,
+            "scale": sc,
+        }
+        print(
+            f"  {name:3s} scale {sc:5.2f} 发放 {fr_mean:.4f}  "
+            f"mlp {sum(mlp_runs) / len(mlp_runs):.3f} "
+            f"({', '.join(f'{a:.3f}' for a in mlp_runs)})  "
+            f"ridge {sum(ridge_runs) / len(ridge_runs):.3f}",
+            flush=True,
+        )
 
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "result.json").write_text(
-        json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n"
+        json.dumps(res, ensure_ascii=False, indent=1) + chr(10), encoding="utf-8", newline=chr(10)
     )
 
-    print("\n判：")
-    best_key = max(res["cells"], key=lambda k: res["cells"][k]["acc"])
-    b = res["cells"][best_key]
-    base = res["cells"]["1D/" + best_key.split("/")[1]]
+    print("")
+    print("判：")
+    if "1D" not in res["cells"]:
+        print("  ✗ 1D 臂无效，无法判")
+        return 1
+    # **D-0 按预注册的原样**：「窗口对照 ≥ 随机 + 20pp（任务可解）」。
+    # 2026-11-16 重写 main() 时我一度把它误改成「每臂都要过底板 + 15pp」——
+    # 那会让「某一维真的变差」被误判成「仪器坏」，而前者正是本实验要找的东西。
+    # 这里恢复原判据；每臂是否在底板上改成**逐臂报告**，不作闸。
+    chance = 1.0 / K
+    ctl_acc = res["control"]["window32_mean"]
+    ok0 = ctl_acc >= chance + 0.2
     print(
-        f"  D-0 窗口32 {res['control']['window32_mean']:.3f} ≥ {1 / K + 0.2:.3f} ⇒ "
-        f"{'过' if res['control']['window32_mean'] >= 1 / K + 0.2 else '不过'}"
+        f"  D-0 窗口32 对照 {ctl_acc:.3f} ≥ {chance + 0.2:.3f}（任务可解）："
+        f"{'过' if ok0 else '**不过 ⇒ 整个实验作废**'}"
     )
+    print(f"     （底板 多数类 {res['majority']:.3f}；逐臂是否高于底板只作报告）")
+    for name, v in res["cells"].items():
+        flag = "高于底板" if v["acc"] > res["majority"] else "**在底板上**"
+        print(f"     {name:3s} mlp {v['acc']:.3f}  {flag}")
+    if not ok0:
+        return 1
+
+    order = [n for n, _ in DIMS if n in res["cells"]]
+    best = max(order, key=lambda k: res["cells"][k]["acc"])
+    base = res["cells"]["1D"]
+    b = res["cells"][best]
     gain = b["acc"] - base["acc"]
     same = all(x >= y - 1e-9 for x, y in zip(b["runs"], base["runs"], strict=False))
     print(
-        f"  D-1 最佳 {best_key} {b['acc']:.3f} − 1D {base['acc']:.3f} = {gain:+.3f}；"
+        f"  D-1 最佳 {best} {b['acc']:.3f} − 1D {base['acc']:.3f} = {gain:+.3f}；"
         f"三种子同向 {'是' if same else '否'} ⇒ {'过' if gain >= 0.05 and same else '不过'}"
+    )
+    print("  D-2 相邻维数增益（<2pp 视为饱和）：")
+    for a, c in itertools.pairwise(order):
+        step = res["cells"][c]["acc"] - res["cells"][a]["acc"]
+        print(f"     {a}→{c}: {step * 100:+.1f}pp {'（饱和）' if abs(step) < 0.02 else ''}")
+    print(
+        f"  窗口32 对照 {res['control']['window32_mean']:.3f} vs 1D {base['acc']:.3f}"
+        f"（蓄水池是下界）"
     )
     return 0
 

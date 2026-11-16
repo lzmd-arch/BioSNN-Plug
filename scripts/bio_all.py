@@ -56,9 +56,9 @@ TAUS = (2.0, 16.0)
 V, K_DEF = 64, 8
 
 
-def make_task(n_seq: int, T: int, K: int, seed: int, dev: str):
+def make_task(n_seq: int, T: int, K: int, seed: int, dev: str, alpha: float = 3.0):
     g = torch.Generator().manual_seed(seed)
-    pref = seeded_dirichlet(3.0, K).to(dev)
+    pref = seeded_dirichlet(alpha, K).to(dev)
     seg = max(1, T // K)
     phase = torch.randint(0, K, (n_seq,), generator=g).to(dev)
     st = torch.zeros(n_seq, T, dtype=torch.long, device=dev)

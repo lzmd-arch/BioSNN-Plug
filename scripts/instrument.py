@@ -149,6 +149,9 @@ def mlp_probe(
     （A2–A7、R3–R11）。用线性探针去判"状态里有没有信息"，
     测到的是那根瓶颈，不是信息本身。
     """
+    if X.dim() == 3:  # (序列, 步, 特征) —— 与 dim_ladder.mlp 同接口，cut 仍是**行数**
+        X = X.reshape(-1, X.shape[-1])
+        Y = Y.reshape(-1)
     Xtr, Xte, Ytr, Yte = X[:cut], X[cut:], Y[:cut], Y[cut:]
     mu, sd = Xtr.mean(0), Xtr.std(0) + 1e-6
     Xtr, Xte = (Xtr - mu) / sd, (Xte - mu) / sd

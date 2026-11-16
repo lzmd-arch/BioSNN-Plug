@@ -229,3 +229,19 @@ def test_to_ball_does_not_saturate():
         assert float(n.std()) > 1e-3, (
             f"d={d} 时 to_ball 饱和：模长 {float(n.min())}~{float(n.max())}"
         )
+
+
+def test_mlp_probe_accepts_3d_features():
+    """`(序列, 步, 特征)` 也要能吃 —— `dim_ladder.mlp` 就是这个接口。
+
+    2026-11-16：`mlp_probe` 只做了 `X[:cut]`，对 3-D 输入切的是**序列维**，
+    于是 `mat1 and mat2 shapes cannot be multiplied (3072x8192 and 12x256)`。
+    """
+    from scripts.instrument import mlp_probe
+
+    torch.manual_seed(0)
+    X = torch.randn(80, 12, 32)
+    Y = torch.randint(0, 8, (80, 12))
+    acc3, _ = mlp_probe(X, Y, 64 * 12, 8, steps=20)
+    acc2, _ = mlp_probe(X.reshape(-1, 32), Y.reshape(-1), 64 * 12, 8, steps=20)
+    assert acc3 == acc2, f"3-D 与 2-D 输入结果不一致：{acc3} vs {acc2}"
