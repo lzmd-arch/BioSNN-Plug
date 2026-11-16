@@ -49,23 +49,25 @@ FAMS = list(range(8))
 
 ARMS = {
     "static_global": {"field_radius": 32, "g_field": 1.0, "g_local": 0.0, "gate_w": 0.0},
-    # **慢门控**：阈值设在网络会穿过的位置（全局 regime 下 φ≈0.13、局部下 ≈0.02），
-    # 这样 λ 才会在两个 regime 之间来回摆，而不是停在不动点。
-    "gated_t50": {
+    # **施密特滞后门控**：阈值随 λ 自移 ⇒ 弛豫振荡。
+    # 一阶滞后会收敛到不动点（上一版实测 PR 仍 1.00），必须加滞后。
+    "gated_hyst": {
         "field_radius": 2,
         "g_field": 1.0,
         "g_local": 2.0,
-        "gate_w": 0.04,
+        "gate_w": 0.02,
         "gate_phi0": 0.10,
         "gate_tau": 50.0,
+        "gate_hyst": 0.03,
     },
-    "gated_t200": {
+    "gated_hyst_strong": {
         "field_radius": 2,
         "g_field": 1.0,
         "g_local": 2.0,
-        "gate_w": 0.04,
+        "gate_w": 0.02,
         "gate_phi0": 0.10,
-        "gate_tau": 200.0,
+        "gate_tau": 50.0,
+        "gate_hyst": 0.06,
     },
 }
 P_LONG = 0.5
