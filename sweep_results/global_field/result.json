@@ -1,36 +1,10 @@
 {
  "scales": 25,
  "cells": {
-  "0.0": {
-   "viable_intact": [
-    2,
-    2,
-    2
-   ],
-   "viable_lesion": [
-    7,
-    7,
-    7
-   ],
-   "mean_intact": 2.0,
-   "mean_lesion": 7.0
-  },
   "0.5": {
    "viable_intact": [
     11,
     12,
-    11
-   ],
-   "viable_lesion": [
-    6,
-    6,
-    6
-   ],
-   "mean_intact": 11.333333333333334,
-   "mean_lesion": 6.0
-  },
-  "1.0": {
-   "viable_intact": [
     11,
     11,
     11
@@ -38,38 +12,12 @@
    "viable_lesion": [
     6,
     6,
+    6,
+    6,
     6
    ],
-   "mean_intact": 11.0,
+   "mean_intact": 11.2,
    "mean_lesion": 6.0
-  },
-  "2.0": {
-   "viable_intact": [
-    11,
-    9,
-    9
-   ],
-   "viable_lesion": [
-    5,
-    5,
-    5
-   ],
-   "mean_intact": 9.666666666666666,
-   "mean_lesion": 5.0
-  },
-  "4.0": {
-   "viable_intact": [
-    8,
-    4,
-    2
-   ],
-   "viable_lesion": [
-    3,
-    4,
-    4
-   ],
-   "mean_intact": 4.666666666666667,
-   "mean_lesion": 3.6666666666666665
   }
  }
 }

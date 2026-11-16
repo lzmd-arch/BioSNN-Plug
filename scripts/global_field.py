@@ -44,12 +44,21 @@ def run_gf(
     z = torch.zeros((b, n), device=dev)
     ref = torch.zeros((b, n), device=dev)
     f_run = fstar if mode == "homeo" else 0.0
+    a_gain = torch.ones(n, device=dev)
+    f_i = torch.full((n,), fstar, device=dev)
+    eta = 2.0  # 增益变化速度（扫出来）
     rate = 0.0
     for t in range(T):
         rec = torch.zeros_like(z)
         for j in range(pre.shape[1]):
             rec = rec + z[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
         cur = w_in[toks[:, t]]
+        if mode == "intrinsic":
+            # 逐神经元增益：调的是**输入驱动**，不是抑制
+            cur = cur * a_gain
+            f_i = 0.9 * f_i + 0.1 * z
+            if t % 4 == 3:
+                a_gain = torch.clamp(a_gain * torch.exp(eta * (fstar - f_i)), 0.2, 5.0)
         phi = float(z.mean())  # 场是全局标量（粗粒化 LFP）
         if mode == "homeo":
             g_eff = g_field * (f_run / max(fstar, 1e-9))
@@ -69,6 +78,7 @@ def run_gf(
 
 
 def n_viable(w_in, pre, wrec, toks, dev, g_field, alive, scales, mode="fixed"):
+    """`mode="intrinsic"` 时 `g_field` 参数不用，由内部增益机制接管。"""
     lo, hi = FIRING_WINDOW
     cnt = 0
     for s in scales:
@@ -84,7 +94,7 @@ def main() -> int:
     ap.add_argument("--n-seq", type=int, default=32)
     ap.add_argument("--gfs", default="0,0.5,1,2,4")
     ap.add_argument("--seeds", default="0,1,2")
-    ap.add_argument("--mode", default="fixed", choices=("fixed", "homeo"))
+    ap.add_argument("--mode", default="fixed", choices=("fixed", "homeo", "intrinsic"))
     ap.add_argument("--out", type=_pathlib.Path, default=OUT)
     args = ap.parse_args()
     dev = "cuda" if torch.cuda.is_available() else "cpu"
