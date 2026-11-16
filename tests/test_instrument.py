@@ -269,3 +269,31 @@ def test_run_md_firing_is_bounded():
     for a in (None, alive):
         _, fr = run_md(w_in, pre, wrec, toks, cue, dev, 0.05, 0.004, 0.0, alive=a)
         assert 0.0 <= fr <= 1.0, f"发放率越界 {fr}（alive={a is not None}）"
+
+
+def test_rng_seeded_is_reproducible():
+    """`seeded` 模式必须逐位可复现 —— M7-3 靠这条。"""
+    from scripts.rng import MODE_SEEDED, make_generator
+
+    a = torch.randn(8, generator=make_generator(1234, MODE_SEEDED))
+    b = torch.randn(8, generator=make_generator(1234, MODE_SEEDED))
+    assert torch.equal(a, b)
+
+
+def test_rng_unrecorded_differs_and_needs_no_seed():
+    """`unrecorded` 模式不给 seed，且两次不同。"""
+    from scripts.rng import MODE_UNRECORDED, make_generator
+
+    a = torch.randn(8, generator=make_generator(None, MODE_UNRECORDED))
+    b = torch.randn(8, generator=make_generator(None, MODE_UNRECORDED))
+    assert not torch.equal(a, b), "未记录种子两次给同一个流 —— 那它就不是未记录"
+
+
+def test_rng_seeded_requires_a_seed():
+    from scripts.rng import MODE_SEEDED, make_generator
+
+    try:
+        make_generator(None, MODE_SEEDED)
+    except ValueError:
+        return
+    raise AssertionError("seeded 模式不给 seed 应当报错")
