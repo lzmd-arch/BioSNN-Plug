@@ -48,12 +48,13 @@ K_THETA = 1.0
 CUE_STEPS = 4
 
 #: (beta, 代谢开, γ, η)  —— 四档取自 v3/v4
+#: v6：只留结构变量（活动变量在 v5 已无可测效应）
 ARMS = {
     "g0": (1.0, True, 0.0, 0.0),
     "g4": (1.0, True, 4.0, 0.0),
-    "eta0": (1.0, True, 1.0, 0.0),
-    "eta2": (1.0, True, 1.0, 2.0),
 }
+#: τ 的拟合窗（lag 1..5，信号在这段里还在地板之上）
+TAU_LAGS = (1, 2, 3, 4, 5)
 
 
 def make_delay_task(n_seq: int, T: int, seed: int, dev: str):
@@ -95,6 +96,26 @@ def run_md(w_in, pre, wrec, toks, cue, dev, c, r, gamma, lam=0.95):
     return torch.stack(feats, 1), rate / T
 
 
+def auc_of(curve, floor):
+    """曲线下面积（lag>=1，减底板）。"""
+    return sum(max(c - floor, 0.0) for c in curve[1:])
+
+
+def tau_of(curve, floor, lags=TAU_LAGS):
+    """指数拟合的衰减时间常数：log(acc-底板) ~ a - lag/tau。"""
+    ys = [(lg, curve[lg] - floor) for lg in lags if lg < len(curve) and curve[lg] - floor > 1e-3]
+    if len(ys) < 3:
+        return float("nan")
+    xs = torch.tensor([float(lg) for lg, _ in ys])
+    ls = torch.tensor([__import__("math").log(y) for _, y in ys])
+    xm, lm = xs.mean(), ls.mean()
+    denom = float(((xs - xm) ** 2).sum())
+    if denom <= 0:
+        return float("nan")
+    slope = float(((xs - xm) * (ls - lm)).sum()) / denom
+    return -1.0 / slope if slope < 0 else float("nan")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=2048)
@@ -120,7 +141,6 @@ def main() -> int:
     res["majority"] = floor
     print(f"  底板(多数类) {floor:.3f}", flush=True)
 
-    sort_key = list(ARMS).index
     for arm, (beta, metab, gamma, eta) in ARMS.items():
         c, r = (C_COST, R_RECOVER) if metab else (0.0, 0.0)
         curves, frs = [], []
@@ -182,6 +202,8 @@ def main() -> int:
             "curve": mean_curve,
             "curves": curves,
             "depth": depth,
+            "auc": [auc_of(cv, floor) for cv in curves],
+            "tau": [tau_of(cv, floor) for cv in curves],
             "firing": sum(frs) / len(frs),
             "gamma": gamma,
             "eta": eta,
@@ -220,28 +242,25 @@ def main() -> int:
     depths = {k: v["depth"] for k, v in cc.items()}
     print(f"  MD-2 深度：{depths}")
 
-    def _depth_of(cv):
-        d = -1
-        for i, a in enumerate(cv):
-            if a >= thresh:
-                d = i
-        return d
-
-    pairs = [(a, b) for a in cc for b in cc if sort_key(a) < sort_key(b)]
-    hit = []
-    for a, b in pairs:
-        pa = [_depth_of(cv) for cv in cc[a]["curves"]]
-        pb = [_depth_of(cv) for cv in cc[b]["curves"]]
-        diffs = [x - y for x, y in zip(pa, pb, strict=False)]
-        if any(abs(d) >= 1 for d in diffs):
-            same = all(d >= 1 for d in diffs) or all(d <= -1 for d in diffs)
-            hit.append((a, b, diffs, same))
-    if hit:
-        for a, b, diffs, same in hit:
-            print(f"  MD-3 {a} − {b} 逐种子深度差 {diffs}，同向 {'是' if same else '否'}")
-        print(f"  MD-3 => {'过' if any(h[3] for h in hit) else '不过'}")
-    else:
-        print("  MD-3 没有一对臂的深度差 ≥1 步 => 不过")
+    pa = cc["g0"]["auc"]
+    pb = cc["g4"]["auc"]
+    da = [b - a for a, b in zip(pa, pb, strict=False)]
+    pos = sum(1 for d in da if d > 0)
+    n = len(da)
+    print(f"  MD-4 AUC：逐种子 g4-g0 = {[round(d, 3) for d in da]}")
+    print(f"        同号 {max(pos, n - pos)}/{n} => {'过' if max(pos, n - pos) == n else '不过'}")
+    ta = cc["g0"]["tau"]
+    tb = cc["g4"]["tau"]
+    dt = [b - a for a, b in zip(ta, tb, strict=False)]
+    ok_t = all(d == d for d in dt)
+    pos_t = sum(1 for d in dt if d > 0)
+    print(f"  MD-5 tau：逐种子 g4-g0 = {[round(d, 4) for d in dt]}")
+    print(
+        f"        同号 {max(pos_t, n - pos_t)}/{n} => "
+        f"{'过' if ok_t and max(pos_t, n - pos_t) == n else '不过'}"
+    )
+    ra = (sum(pb) / len(pb)) / (sum(pa) / len(pa)) - 1.0
+    print(f"  效应量：AUC 相对差 {ra * 100:+.1f}%（不作判据）")
     return 0
 
 
