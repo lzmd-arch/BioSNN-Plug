@@ -485,7 +485,7 @@ lr = 1e-5    seed = 0    steps ≈ 150,000（48h @ 3.4 样本/秒 / batch 4）
 | `bio_all` | 六臂 0.108–0.130（随机 0.125） | ✅ **已重跑**，见 [`bio_all/README.md`](bio_all/README.md) |
 | `spatial_dim` | 1D/2D/3D/7D = 0.125/0.135/0.125/0.094 | ✅ **已重跑**，见 [`spatial_dim/README.md`](spatial_dim/README.md) |
 | `manifold_big` | 四几何 0.125–0.141 | 同上 |
-| `hyperbolic_readout` | `cells` 全空 | 同上 |
+| `hyperbolic_readout` | `cells` 全空 | ✅ **已重跑**，见 [`hyperbolic_readout/README.md`](hyperbolic_readout/README.md) |
 
 已修：`seeded_dirichlet`（`fork_rng`）+ 三条守卫测试；四个脚本的标定改走 `calibrate()`
 等比细网格。**`structure_ladder` 当天早些时候已修过同一个 bug，但没有传播出去。**
@@ -536,6 +536,26 @@ S-1/S-2 的不过没有信息量 —— 它们算在一堆底板读数上。
 真值是 8.50/3.20/2.67/2.03（旧值 2.50/2.49/2.24/1.75）⇒ **S-2 从来没被真正检验过**。
 
 详见 [`spatial_dim/README.md`](spatial_dim/README.md)。
+
+### N-3 重跑：双曲读出（`hyperbolic_readout`）—— 没有可测的差异
+
+| K | 随机 | 欧氏 | 双曲 | 差 |
+| ---: | ---: | ---: | ---: | ---: |
+| **4** | 0.250 | 0.414 | 0.430 | +0.016 |
+| 8 | 0.125 | 0.138 | 0.148 | +0.010 |
+| 16 | 0.0625 | 0.073 | 0.073 | +0.000 |
+| 32 | 0.0313 | **0.026** | **0.029** | +0.003 |
+
+- **HR-1 判在 K=32，而那里两臂都低于随机** ⇒ 判定无效。本实验没有"每档必须可解"的门，
+  是判据缺口，照实记下，**不事后改 HR-1**；
+- 唯一可解的 K=4：**逐种子 2 正 1 负**（−0.013 / +0.049 / +0.010），
+  种子跨度 12–14pp 比效应大一个量级 ⇒ 正确说法是「**没有可测的差异**」；
+- HR-3 过（参数量逐位相同）。
+
+与 `hyperbolic_tree.py` 的正结果（Sarkar 嵌入的树保真度）不矛盾：
+那里测"Poincaré 球**能**表示树"，这里测"拿它当读出**更好**"。
+
+详见 [`hyperbolic_readout/README.md`](hyperbolic_readout/README.md)。
 
 ---
 

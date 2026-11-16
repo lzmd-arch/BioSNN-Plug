@@ -238,13 +238,6 @@ def main() -> int:
     seeds = [int(x) for x in args.seeds.split(",")]
     res: dict = {"n": args.n, "deg": args.deg, "cells": {}}
 
-    cal = calibrate_scale(args.n, args.deg, seeds[0], dev, seq=args.seq)
-    if cal is None:
-        print("✗ 没有任何输入尺度能把发放率标进 [0.03, 0.20] —— **中止，不做比较**")
-        return 1
-    scale, probe_fr, _ = cal
-    print(f"  **标定输入尺度 {scale}（探测发放 {probe_fr:.4f}）**", flush=True)
-
     # ---- 正向对照：最近 8 个 token 的 one-hot，完全不经过网络 ----
     ceilings, majors = {}, {}
     for K in [int(x) for x in args.ks.split(",")]:
@@ -278,6 +271,14 @@ def main() -> int:
     res["majority"] = {str(k): v for k, v in majors.items()}
 
     for K in [int(x) for x in args.ks.split(",")]:
+        # **每个 K 单独标定**：K 变了任务分布就变，复用上一档的尺度会让网络静默
+        # （实测 K=16 复用 K=8 的 2.14 时四条臂发放全是 0.0019）
+        cal = calibrate_scale(args.n, args.deg, seeds[0], dev, K=K, seq=args.seq)
+        if cal is None:
+            print(f"  K={K} ✗ 标定失败，该 K 无效", flush=True)
+            continue
+        scale, probe_fr, _ = cal
+        print(f"  K={K} 标定输入尺度 {scale:.3f}（探测发放 {probe_fr:.4f}）", flush=True)
         for how in ("euclid", "sphere", "poincare", "product"):
             accs, frs = [], []
             for sd in seeds:
@@ -321,22 +322,32 @@ def main() -> int:
     print("\n判：")
     for K in [int(x) for x in args.ks.split(",")]:
         chance = 1.0 / K
-        for how in ("euclid", "sphere", "poincare", "product"):
+        have = [
+            h for h in ("euclid", "sphere", "poincare", "product") if f"K{K}/{h}" in res["cells"]
+        ]
+        if len(have) < 2:
+            print(f"  K={K} ✗ 有效臂不足（{len(have)}/4），该档不判", flush=True)
+            continue
+        for how in have:
             v = res["cells"][f"K{K}/{how}"]
             ok = v["acc"] >= chance + 0.15 and 0.03 <= v["firing"] <= 0.20
             print(
                 f"  G-0 K={K} {how:8s} acc {v['acc']:.3f} vs 门槛 {chance + 0.15:.3f} "
                 f"发放 {v['firing']:.4f} ⇒ {'✓' if ok else '✗'}"
             )
+        if f"K{K}/euclid" not in res["cells"]:
+            continue
         e = res["cells"][f"K{K}/euclid"]["acc"]
-        for how in ("sphere", "poincare", "product"):
+        for how in [h for h in ("sphere", "poincare", "product") if f"K{K}/{h}" in res["cells"]]:
             print(f"  G-1 K={K} {how:8s} − 欧氏 = {res['cells'][f'K{K}/{how}']['acc'] - e:+.3f}")
-        best_single = max(res["cells"][f"K{K}/{h}"]["acc"] for h in ("sphere", "poincare"))
-        prod = res["cells"][f"K{K}/product"]["acc"]
-        print(
-            f"  G-2 K={K} 产品 {prod:.3f} − 单因子最好 {best_single:.3f} = "
-            f"{prod - best_single:+.3f} ⇒ {'过' if prod >= best_single else '不过'}"
-        )
+        singles = [h for h in ("sphere", "poincare") if f"K{K}/{h}" in res["cells"]]
+        if singles and f"K{K}/product" in res["cells"]:
+            best_single = max(res["cells"][f"K{K}/{h}"]["acc"] for h in singles)
+            prod = res["cells"][f"K{K}/product"]["acc"]
+            print(
+                f"  G-2 K={K} 产品 {prod:.3f} − 单因子最好 {best_single:.3f} = "
+                f"{prod - best_single:+.3f} ⇒ {'过' if prod >= best_single else '不过'}"
+            )
     return 0
 
 
