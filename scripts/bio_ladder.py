@@ -50,18 +50,19 @@ RUNGS = [("L0", [])] + [(f"L{k + 1}", CHAIN[: k + 1]) for k in range(len(CHAIN))
 TARGET_CEIL = (0.45, 0.55)
 
 
-def ceiling_at(alpha: float, n_seq: int, seq: int, seed: int, dev: str) -> float:
-    """窗口 8-token 天花板（不经过网络）。"""
-    tr, trs = make_task(n_seq, seq, K, 10 + seed, dev, alpha)
+def ceiling_at(alpha: float, n_train: int, n_test: int, seq: int, seed: int, dev: str) -> float:
+    """窗口 8-token 天花板（不经过网络）。`cut` 用**训练序列数 x 步数**，不是总序列数。"""
+    tr, trs = make_task(n_train + n_test, seq, K, 10 + seed, dev, alpha)
+    st = trs[:, ::8]
     wf = window_features(tr, L=8, stride=8)
-    acc, _ = mlp_probe(wf, trs[:, ::8], n_seq * trs[:, ::8].shape[1], K)
+    acc, _ = mlp_probe(wf, st, n_train * st.shape[1], K)
     return acc
 
 
-def majority_at(alpha: float, n_seq: int, seq: int, seed: int, dev: str) -> float:
-    _, st = make_task(n_seq, seq, K, 10 + seed, dev, alpha)
+def majority_at(alpha: float, n_train: int, n_test: int, seq: int, seed: int, dev: str) -> float:
+    _, st = make_task(n_train + n_test, seq, K, 10 + seed, dev, alpha)
     st = st[:, ::8]
-    trp, tep = st[:n_seq], st[n_seq:]
+    trp, tep = st[:n_train], st[n_train:]
     top = int(torch.bincount(trp.reshape(-1), minlength=K).argmax())
     return float((tep == top).float().mean())
 
@@ -116,8 +117,7 @@ def main() -> int:
     cal = []
     for a in [float(x) for x in args.alphas.split(",")]:
         c = sum(
-            ceiling_at(a, args.train_seq + args.test_seq, args.seq, sd, dev)
-            for sd in args.seed_list
+            ceiling_at(a, args.train_seq, args.test_seq, args.seq, sd, dev) for sd in args.seed_list
         ) / len(args.seed_list)
         cal.append({"alpha": a, "ceiling": c})
         print(f"  alpha {a:5.1f}  天花板 {c:.3f}", flush=True)
@@ -136,7 +136,7 @@ def main() -> int:
     res["alpha"] = alpha
     res["ceiling"] = chosen["ceiling"]
     maj = sum(
-        majority_at(alpha, args.train_seq + args.test_seq, args.seq, sd, dev)
+        majority_at(alpha, args.train_seq, args.test_seq, args.seq, sd, dev)
         for sd in args.seed_list
     ) / len(args.seed_list)
     res["majority"] = maj
