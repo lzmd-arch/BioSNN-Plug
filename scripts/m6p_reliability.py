@@ -57,7 +57,7 @@ def main() -> int:
         for sd in range(args.seeds):
             outs = []
             for alpha, hs in ((A_LOW, 100 + sd), (A_HIGH, 100 + sd), (A_LOW, 900 + sd)):
-                r, _ = run_spont(sd, alpha, hs, 0.7, 0.02, dev, K, 0.0, g, e)
+                r, _, _ = run_spont(sd, alpha, hs, 0.7, 0.02, dev, K, 0.0, g, e)
                 outs.append(pool_rates(r, pid, K))  # (B, K) 逐样本
             Ra, Rb, Rn = outs
             ra, rb, rn = resid(Ra.mean(0)), resid(Rb.mean(0)), resid(Rn.mean(0))

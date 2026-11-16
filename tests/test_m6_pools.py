@@ -94,7 +94,8 @@ def test_run_spont_returns_batch_neuron_time() -> None:
 
     if not torch.cuda.is_available():
         pytest.skip("这条要真跑 1280 步，只在有 CUDA 的机器上跑")
-    rates, snaps = run_spont(0, 0.5, 100, 0.7, 0.02, "cuda", 1, 0.0, 0.0, -1.0)
+    rates, snaps, early = run_spont(0, 0.5, 100, 0.7, 0.02, "cuda", 1, 0.0, 0.0, -1.0)
     assert rates.shape == (B_BATCH, N)
     assert snaps.shape == (B_BATCH, N, T_LATE)
+    assert early.shape == (B_BATCH, N)
     assert float(rates.min()) >= 0.0 and float(rates.max()) <= 1.0

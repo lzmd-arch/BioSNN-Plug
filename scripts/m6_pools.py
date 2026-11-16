@@ -143,6 +143,7 @@ def run_spont(
         f_run = 0.9 * f_run + 0.1 * float(z.mean())
 
     rates = torch.zeros((B, N), device=dev)
+    early = torch.zeros((B, N), device=dev)  # 自发期**前** T_LATE 步（Q-4 的"停没停"）
     snaps = []
     for step in range(T_SPONT):
         rec = torch.zeros_like(z)
@@ -164,12 +165,15 @@ def run_spont(
             f_i = 0.9 * f_i + 0.1 * z.mean(0)
             if step % 4 == 3:
                 gain = torch.clamp(gain * torch.exp(eta_gain * (0.08 - f_i)), 0.2, 5.0)
+        if step < T_LATE:
+            early += z
         if step >= T_SPONT - T_LATE:
             rates += z
             snaps.append(z)
     del w_in, pre, wrec, hist
     torch.cuda.empty_cache()
-    return rates / T_LATE, torch.stack(snaps, 2)  # (B, N, T_LATE) —— dim=1 会变成 (B,T,N)
+    # 第三个返回是自发期**前** T_LATE 步的率，用于 Q-4（窗口内停没停）
+    return rates / T_LATE, torch.stack(snaps, 2), early / T_LATE  # (B,N,T_LATE)，dim=1 会变 (B,T,N)
 
 
 def pool_rates(r: torch.Tensor, pid, K: int) -> torch.Tensor:
@@ -227,9 +231,9 @@ def main() -> int:
         cov_b, cov_i, n_b, n_i = None, None, 0, 0
         pid = pool_id(dev, K)
         for sd in range(args.seeds):
-            ra, za = run_spont(sd, A_LOW, 100 + sd, args.scale, args.p, dev, K, beta, g, e)
-            rb, zb = run_spont(sd, A_HIGH, 100 + sd, args.scale, args.p, dev, K, beta, g, e)
-            rn, zn = run_spont(sd, A_LOW, 900 + sd, args.scale, args.p, dev, K, beta, g, e)
+            ra, za, _ = run_spont(sd, A_LOW, 100 + sd, args.scale, args.p, dev, K, beta, g, e)
+            rb, zb, _ = run_spont(sd, A_HIGH, 100 + sd, args.scale, args.p, dev, K, beta, g, e)
+            rn, zn, _ = run_spont(sd, A_LOW, 900 + sd, args.scale, args.p, dev, K, beta, g, e)
             frs.append(float(ra.mean()))
             sds.append(float((ra - ra.mean(1, keepdim=True)).std()))
             if K > 1:
