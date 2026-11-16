@@ -1,0 +1,33 @@
+{
+ "branch": 4,
+ "r_leaf": 6.0,
+ "rows": {
+  "2": {
+   "n": 21,
+   "euclid_rho": 0.6658377647399902,
+   "euclid_maxrel": 1.270850658416748,
+   "euclid_shuf_rho": 0.22545844316482544,
+   "hyperbolic_rho": 0.7825624942779541,
+   "hyperbolic_maxrel": 0.9570132493972778,
+   "hyperbolic_shuf_rho": 0.5668202042579651
+  },
+  "3": {
+   "n": 85,
+   "euclid_rho": 0.6923268437385559,
+   "euclid_maxrel": 2.829005718231201,
+   "euclid_shuf_rho": 0.2743317782878876,
+   "hyperbolic_rho": 0.7819345593452454,
+   "hyperbolic_maxrel": 2.2085788249969482,
+   "hyperbolic_shuf_rho": 0.5196331739425659
+  },
+  "4": {
+   "n": 341,
+   "euclid_rho": 0.7027364373207092,
+   "euclid_maxrel": 4.379570007324219,
+   "euclid_shuf_rho": 0.25106579065322876,
+   "hyperbolic_rho": 0.7826982736587524,
+   "hyperbolic_maxrel": 3.553457736968994,
+   "hyperbolic_shuf_rho": 0.5110187530517578
+  }
+ }
+}

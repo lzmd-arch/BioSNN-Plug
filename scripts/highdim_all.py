@@ -37,6 +37,7 @@
 
 from __future__ import annotations
 
+# ruff: noqa: N806  -- 矩阵推导里 X/W/A/T/K 是惯例
 import argparse
 import json
 import pathlib as _pathlib

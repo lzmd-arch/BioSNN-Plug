@@ -53,10 +53,7 @@ def tree_embed(branch: int, depth: int, r_max: float, hyperbolic: bool):
     radii = [r_max]
     cur = r_max
     for _ in range(depth - 1):
-        if hyperbolic:
-            cur = 2 * math.atanh(q * math.tanh(cur / 2))
-        else:
-            cur = q * cur
+        cur = 2 * math.atanh(q * math.tanh(cur / 2)) if hyperbolic else q * cur
         radii.append(cur)
     radii.reverse()  # 下标 0 = 根
     theta = torch.arange(n_leaf).float() * (2 * math.pi / n_leaf)
@@ -97,7 +94,6 @@ def evaluate(
         # **HM-3**：保留同样的半径分布，但角度随机打乱 ⇒ 层级结构消失
         theta = theta[torch.randperm(n_leaf, generator=g)]
     base = positions(theta, r_leaf, hyperbolic)
-    width = 2 * math.pi / n_leaf
     nq = min(256, n_leaf)
     idx = torch.randperm(n_leaf, generator=g)[:nq]
     if hyperbolic:

@@ -36,7 +36,6 @@ r 按 `cosh(r) ~ U(1, cosh(R))` 取，这样点在双曲度量下是**均匀**�
 from __future__ import annotations
 
 # ruff: noqa: N806  —— R（双曲半径）、T（序列长）是这类推导的惯例
-
 import argparse
 import json
 import math

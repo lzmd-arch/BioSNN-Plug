@@ -30,6 +30,7 @@ M-1 不过 ⇒ **三维这条路收口**，理由不再是"测出来差"，而�
 
 from __future__ import annotations
 
+# ruff: noqa: N806  -- 矩阵推导里 X/W/A/T/K 是惯例
 import argparse
 import json
 import pathlib as _pathlib

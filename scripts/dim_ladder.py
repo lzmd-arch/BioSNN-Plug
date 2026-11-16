@@ -34,6 +34,7 @@
 
 from __future__ import annotations
 
+# ruff: noqa: N806  -- 矩阵推导里 X/W/A/T/K 是惯例
 import argparse
 import json
 import pathlib as _pathlib
@@ -214,7 +215,7 @@ def main() -> int:
         f"{'过' if res['control']['window32_mean'] >= 1 / K + 0.2 else '不过'}"
     )
     gain = b["acc"] - base["acc"]
-    same = all(x >= y - 1e-9 for x, y in zip(b["runs"], base["runs"]))
+    same = all(x >= y - 1e-9 for x, y in zip(b["runs"], base["runs"], strict=False))
     print(
         f"  D-1 最佳 {best_key} {b['acc']:.3f} − 1D {base['acc']:.3f} = {gain:+.3f}；"
         f"三种子同向 {'是' if same else '否'} ⇒ {'过' if gain >= 0.05 and same else '不过'}"
