@@ -52,7 +52,9 @@ def knn_acc(Xtr, Ytr, Xte, Yte) -> float:
 
 
 @torch.no_grad()
-def cell(seed: int, p_long: float, per_fam: int, dev: str, pace: float = 0.02) -> dict:
+def cell(
+    seed: int, p_long: float, per_fam: int, dev: str, pace: float = 0.02, g_local: float = 1.0
+) -> dict:
     w_in, pre, wrec, pid = build_pools(seed, dev, K, 0.0, p_long=p_long)
     net = (w_in, pre, wrec, pid)
     full, binned, labels, states, frs = [], [], [], [], []
@@ -104,6 +106,7 @@ def main() -> int:
     ap.add_argument("--seeds", type=int, default=3)
     ap.add_argument("--plongs", default="0,0.25,0.5,0.75")
     ap.add_argument("--ps", default="0.02")
+    ap.add_argument("--glocals", default="1.0")
     ap.add_argument("--per-fam", type=int, default=32)
     ap.add_argument("--out", type=_pathlib.Path, default=OUT)
     args = ap.parse_args()
@@ -112,64 +115,71 @@ def main() -> int:
 
     res: dict = {"cells": {}}
     hits = []
-    for pace in [float(x) for x in args.ps.split(",")]:
-        for pl in [float(x) for x in args.plongs.split(",")]:
-            rows = [cell(sd, pl, args.per_fam, dev, pace) for sd in range(args.seeds)]
-            m = lambda k, _r=rows: sum(r[k] for r in _r) / len(_r)  # noqa: E731
-            # **探针必须在 no_grad 之外**（MLP 需要梯度）—— 2026-11-16 踩过
-            for i, r in enumerate(rows):
-                perm = torch.randperm(
-                    r["Y"].shape[0], generator=torch.Generator().manual_seed(3 + i)
+    for gl in [float(x) for x in args.glocals.split(",")]:
+        for pace in [float(x) for x in args.ps.split(",")]:
+            for pl in [float(x) for x in args.plongs.split(",")]:
+                rows = [cell(sd, pl, args.per_fam, dev, pace, gl) for sd in range(args.seeds)]
+                m = lambda k, _r=rows: sum(r[k] for r in _r) / len(_r)  # noqa: E731
+                # **探针必须在 no_grad 之外**（MLP 需要梯度）—— 2026-11-16 踩过
+                for i, r in enumerate(rows):
+                    perm = torch.randperm(
+                        r["Y"].shape[0], generator=torch.Generator().manual_seed(3 + i)
+                    )
+                    cut = int(r["Y"].shape[0] * 0.75)
+                    r["linear"] = probe(r["Xb"][perm], r["Y"][perm], cut, len(FAMS))[0]
+                    r["knn"] = knn_acc(
+                        r["Xb"][perm][:cut],
+                        r["Y"][perm][:cut],
+                        r["Xb"][perm][cut:],
+                        r["Y"][perm][cut:],
+                    )
+                    r["mlp"] = mlp_probe(r["Xf"][perm], r["Y"][perm], cut, len(FAMS))[0]
+                    r["floor"] = majority_baseline(
+                        r["Y"][perm][:cut], r["Y"][perm][cut:], len(FAMS)
+                    )
+                    # 张量不能进 JSON
+                    r.pop("Xf", None)
+                    r.pop("Xb", None)
+                    r.pop("Y", None)
+                key = f"gl={gl:g}/p={pace:g}/pl={pl:g}"
+                v = {
+                    "p_long": pl,
+                    "pace": pace,
+                    "g_local": gl,
+                    "pr": m("pr"),
+                    "integ": m("integ"),
+                    "seg": m("seg"),
+                    "linear": m("linear"),
+                    "knn": m("knn"),
+                    "mlp": m("mlp"),
+                    "floor": m("floor"),
+                    "firing": m("firing"),
+                    "rows": rows,
+                }
+                best_read = max(v["linear"], v["knn"], v["mlp"])
+                flags = {
+                    "窗口": 0.01 <= v["firing"] <= 0.20,
+                    "高维": v["pr"] > 10,
+                    "整合": v["integ"] > 0.3,
+                    "分离": v["seg"] > 0.5,
+                    "可解码": best_read > v["floor"] + 0.15,
+                }
+                v["flags"] = flags
+                v["all5"] = all(flags.values())
+                res["cells"][key] = v
+                if v["all5"]:
+                    hits.append(key)
+                print(
+                    f"  {key:9s} PR {v['pr']:6.2f} 整合 {v['integ']:.3f} 分离 {v['seg']:.2f} "
+                    f"发放 {v['firing']:.4f} | 线性 {v['linear']:.3f} 1-NN {v['knn']:.3f} "
+                    f"MLP {v['mlp']:.3f}（底 {v['floor']:.3f}）| "
+                    + "".join("✅" if b else "❌" for b in flags.values())
+                    + (" **五条全过**" if v["all5"] else ""),
+                    flush=True,
                 )
-                cut = int(r["Y"].shape[0] * 0.75)
-                r["linear"] = probe(r["Xb"][perm], r["Y"][perm], cut, len(FAMS))[0]
-                r["knn"] = knn_acc(
-                    r["Xb"][perm][:cut], r["Y"][perm][:cut], r["Xb"][perm][cut:], r["Y"][perm][cut:]
+                (args.out / "result.json").write_text(
+                    json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8", newline=chr(10)
                 )
-                r["mlp"] = mlp_probe(r["Xf"][perm], r["Y"][perm], cut, len(FAMS))[0]
-                r["floor"] = majority_baseline(r["Y"][perm][:cut], r["Y"][perm][cut:], len(FAMS))
-                # 张量不能进 JSON
-                r.pop("Xf", None)
-                r.pop("Xb", None)
-                r.pop("Y", None)
-            key = f"p={pace:g}/pl={pl:g}"
-            v = {
-                "p_long": pl,
-                "pace": pace,
-                "pr": m("pr"),
-                "integ": m("integ"),
-                "seg": m("seg"),
-                "linear": m("linear"),
-                "knn": m("knn"),
-                "mlp": m("mlp"),
-                "floor": m("floor"),
-                "firing": m("firing"),
-                "rows": rows,
-            }
-            best_read = max(v["linear"], v["knn"], v["mlp"])
-            flags = {
-                "窗口": 0.01 <= v["firing"] <= 0.20,
-                "高维": v["pr"] > 10,
-                "整合": v["integ"] > 0.3,
-                "分离": v["seg"] > 0.5,
-                "可解码": best_read > v["floor"] + 0.15,
-            }
-            v["flags"] = flags
-            v["all5"] = all(flags.values())
-            res["cells"][key] = v
-            if v["all5"]:
-                hits.append(key)
-            print(
-                f"  {key:9s} PR {v['pr']:6.2f} 整合 {v['integ']:.3f} 分离 {v['seg']:.2f} "
-                f"发放 {v['firing']:.4f} | 线性 {v['linear']:.3f} 1-NN {v['knn']:.3f} "
-                f"MLP {v['mlp']:.3f}（底 {v['floor']:.3f}）| "
-                + "".join("✅" if b else "❌" for b in flags.values())
-                + (" **五条全过**" if v["all5"] else ""),
-                flush=True,
-            )
-            (args.out / "result.json").write_text(
-                json.dumps(res, ensure_ascii=False, indent=1), encoding="utf-8", newline=chr(10)
-            )
 
     print("")
     print("判：")
