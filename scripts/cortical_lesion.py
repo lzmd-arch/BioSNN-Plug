@@ -52,7 +52,7 @@ def main() -> int:
 
     for arm, use_3d in (("sheet", False), ("space", True)):
         rows = {f"{lv:.2f}": [] for lv in LEVELS}
-        frs = []
+        frs = {f"{lv:.2f}": [] for lv in LEVELS}
         for sd in seeds:
             w_in, pre, wrec = build_fold(sd, dev, use_3d)
             cal_toks, cal_cue = make_delay_task(32, args.seq, 30 + sd, dev)
@@ -77,7 +77,7 @@ def main() -> int:
                 feat, fr = run_md(w_in * sc, pre, wrec, toks, cue, dev, 0.0, 0.0, 0.0, alive=alive)
                 acc, _ = mlp_probe(feat[:, 1], cue, args.train_seq, K_CUE)
                 rows[f"{lv:.2f}"].append(acc)
-                frs.append(fr)
+                frs[f"{lv:.2f}"].append(fr)
                 del feat
                 torch.cuda.empty_cache()
             del toks, cue, w_in, pre, wrec
@@ -85,10 +85,11 @@ def main() -> int:
         res["cells"][arm] = {
             "acc": {k: (sum(v) / len(v) if v else float("nan")) for k, v in rows.items()},
             "runs": rows,
-            "firing": sum(frs) / max(len(frs), 1),
+            "firing": {k: (sum(v) / len(v) if v else float("nan")) for k, v in frs.items()},
         }
         curve = [round(res["cells"][arm]["acc"][f"{lv:.2f}"], 3) for lv in LEVELS]
-        print(f"  {arm:5s} 峰值 {curve}  发放 {res['cells'][arm]['firing']:.4f}", flush=True)
+        fcs = [round(res["cells"][arm]["firing"][f"{lv:.2f}"], 4) for lv in LEVELS]
+        print(f"  {arm:5s} 峰值 {curve}  发放 {fcs}", flush=True)
 
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "result.json").write_text(
@@ -102,8 +103,9 @@ def main() -> int:
         print("  ✗ 有效臂不足")
         return 1
     thresh = floor + 0.10
+    # **只在 0% 那一档**要求工作点 —— 损伤本来就会降低发放
     l0 = all(cc[a]["acc"]["0.00"] >= thresh for a in cc) and all(
-        0.03 <= v["firing"] <= 0.20 for v in cc.values()
+        0.03 <= v["firing"]["0.00"] <= 0.20 for v in cc.values()
     )
     print(f"  L-0 0% 损伤峰值 ≥ {thresh:.3f}、工作点 => {'过' if l0 else '不过 => 作废'}")
     if not l0:
