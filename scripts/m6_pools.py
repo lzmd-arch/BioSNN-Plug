@@ -100,6 +100,8 @@ def run_spont(
     eta_gain: float = -1.0,
     t_hist: int = T_HIST,
     gain_route: str = "field",
+    t_spont: int = T_SPONT,
+    v0: torch.Tensor | None = None,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     w_in, pre, wrec, pid = build_pools(seed, dev, K, beta)
@@ -122,7 +124,9 @@ def run_spont(
     gain = torch.ones(N, device=dev)
     f_i = torch.full((N,), 0.08, device=dev)
     f_run = 0.08
-    hist, _ = make_task(B, t_hist, 8, hist_seed, dev, alpha)
+    hist = None
+    if t_hist > 0:
+        hist, _ = make_task(B, t_hist, 8, hist_seed, dev, alpha)
 
     for t in range(t_hist):
         rec = torch.zeros_like(z)
@@ -146,10 +150,13 @@ def run_spont(
                 gain = torch.clamp(gain * torch.exp(eta_hist * (0.08 - f_i)), 0.2, 5.0)
         f_run = 0.9 * f_run + 0.1 * float(z.mean())
 
+    if v0 is not None:
+        v = v0.clone()  # 吸引子计数用：绕过历史，直接给初值
+
     rates = torch.zeros((B, N), device=dev)
     early = torch.zeros((B, N), device=dev)  # 自发期**前** T_LATE 步（Q-4 的"停没停"）
     snaps = []
-    for step in range(T_SPONT):
+    for step in range(t_spont):
         rec = torch.zeros_like(z)
         for j in range(pre.shape[1]):
             rec = rec + z[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
@@ -173,7 +180,7 @@ def run_spont(
                 gain = torch.clamp(gain * torch.exp(eta_gain * (0.08 - f_i)), 0.2, 5.0)
         if step < T_LATE:
             early += z
-        if step >= T_SPONT - T_LATE:
+        if step >= t_spont - T_LATE:
             rates += z
             snaps.append(z)
     del w_in, pre, wrec, hist
