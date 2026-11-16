@@ -109,6 +109,7 @@ def run_spont(
     record_len: int = T_LATE,
     v_add: torch.Tensor | None = None,
     g_field: float = G_FIELD,
+    field_radius: int = 32,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     if net is None:
@@ -123,6 +124,18 @@ def run_spont(
     counts = torch.bincount(pid, minlength=K).float().clamp(min=1.0)
     onehot = torch.zeros(N, K, device=dev)
     onehot[torch.arange(N, device=dev), pid] = 1.0 / counts[pid]
+    # **局部场**：`field_radius < L` 时，每个神经元被自己邻域的平均活动压住，
+    # 而不是被全网络的标量压住。全局标量只允许一个活动水平 ⇒ 状态必然低维。
+    fmat = None
+    if field_radius < L:
+        ii = torch.arange(N, device=dev)
+        xi, yi = (ii % L).float(), (ii // L).float()
+        dx = (xi.unsqueeze(1) - xi.unsqueeze(0)).abs()
+        dx = torch.minimum(dx, L - dx)
+        dy = (yi.unsqueeze(1) - yi.unsqueeze(0)).abs()
+        dy = torch.minimum(dy, L - dy)
+        near = (torch.sqrt(dx * dx + dy * dy) <= float(field_radius)).float()
+        fmat = near / near.sum(1, keepdim=True).clamp(min=1.0)
 
     # 历史期的增益更新率固定 2.0（= M6/M7 的 `run_seg`），
     # `eta_gain` 只支配**自发期**；-1 = 自发期不施加增益（M6 原样）
@@ -149,7 +162,10 @@ def run_spont(
         phi_g = phk.mean()  # 全局场（与 run_seg 的 float(z.mean()) 一致）
         if eta_hist >= 0.0 and gain_route == "all":
             rec = rec * gain.unsqueeze(0)  # 增益乘**总**输入，不止 w_in
-        cur = w_in[hist[:, t]] * gain.unsqueeze(0) - g_field * (f_run / 0.08) * phi_g
+        if fmat is None:
+            cur = w_in[hist[:, t]] * gain.unsqueeze(0) - g_field * (f_run / 0.08) * phi_g
+        else:
+            cur = w_in[hist[:, t]] * gain.unsqueeze(0) - g_field * (f_run / 0.08) * (z @ fmat)
         if g_inh != 0.0:
             cur = cur + g_inh * (phk[:, pid] - phk.mean(1, keepdim=True))
         nv = 0.95 * v + cur + rec - z * 0.5
@@ -186,7 +202,7 @@ def run_spont(
             rec = rec + z[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
         phk = z @ onehot
         phi_g = phk.mean()
-        cur = pace.unsqueeze(0) - g_field * phi_g
+        cur = pace.unsqueeze(0) - g_field * (phi_g if fmat is None else (z @ fmat))
         if eta_gain >= 0.0:
             cur = cur * gain.unsqueeze(0)
             if gain_route == "all":
