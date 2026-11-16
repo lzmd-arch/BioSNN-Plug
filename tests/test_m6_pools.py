@@ -141,3 +141,35 @@ def test_field_args_maps_radius_to_strengths() -> None:
     assert field_args(32) == {"g_field": 1.0, "g_local": 0.0}
     assert field_args(2) == {"g_field": 0.0, "g_local": 1.0}
     assert field_args(8) == {"g_field": 0.0, "g_local": 1.0}
+
+
+def test_knobs_actually_change_the_dynamics() -> None:
+    """**今晚第十次静默替换失败的通用防线**：每个旋钮都必须真的改变结果。
+
+    2026-11-16 实际踩到：`m6ak` 里 `g_local` 与 `pace` 都写死在调用点上，
+    而签名和结果字典里都有它们 —— grep 看着"接上了"，跑出来两档逐位相同。
+    这条测试对每个旋钮跑一次短模拟，**两档必须不同**。
+    """
+    if not torch.cuda.is_available():
+        pytest.skip("要真跑，只在有 CUDA 的机器上跑")
+    from scripts.hist_families import make_family_hist
+    from scripts.m6_pools import B_BATCH, run_spont
+
+    toks = make_family_hist(0, 1, 64, B_BATCH, "cuda")
+    base = {"hist_in": toks, "t_spont": 64}
+
+    def run(**kw):
+        return run_spont(0, 0.5, 0, 0.7, 0.02, "cuda", 4, 0.0, 0.0, -1.0, **base, **kw)[0]
+
+    # pace
+    p1 = run_spont(0, 0.5, 0, 0.7, 0.02, "cuda", 4, 0.0, 0.0, -1.0, **base)[0]
+    p2 = run_spont(0, 0.5, 0, 0.7, 0.005, "cuda", 4, 0.0, 0.0, -1.0, **base)[0]
+    assert not torch.equal(p1, p2), "pace 没接上"
+    # g_local
+    g1 = run(field_radius=2, g_field=0.0, g_local=1.0)
+    g2 = run(field_radius=2, g_field=0.0, g_local=2.0)
+    assert not torch.equal(g1, g2), "g_local 没接上"
+    # field_radius
+    r1 = run(field_radius=2, g_field=0.0, g_local=1.0)
+    r2 = run(field_radius=8, g_field=0.0, g_local=1.0)
+    assert not torch.equal(r1, r2), "field_radius 没接上"
