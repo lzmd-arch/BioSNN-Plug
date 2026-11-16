@@ -67,7 +67,13 @@ def quad_m(Xtr: torch.Tensor, Xte: torch.Tensor, m: int):
     P = evec[:, order].float()
     Za, Zb = A @ P, B @ P
     iu = torch.triu_indices(m, m)
-    return (Za[:, iu[0]] * Za[:, iu[1]]), (Zb[:, iu[0]] * Zb[:, iu[1]])
+    # **同时返回该 m 下的线性特征** —— 否则线性臂用 64 维、二次臂只用 m 维，不是同一输入空间
+    return (
+        Za,
+        Zb,
+        (Za[:, iu[0]] * Za[:, iu[1]]),
+        (Zb[:, iu[0]] * Zb[:, iu[1]]),
+    )
 
 
 @torch.no_grad()
@@ -126,24 +132,29 @@ def main() -> int:
                 "floor": majority_baseline(Y[:cut], Y[cut:], len(FAMS)),
             }
             for m in ms:
-                Qtr, Qte = quad_m(X[:cut], X[cut:], m)
-                Xq = torch.cat([Qtr, Qte])
-                row[f"quad_m{m}"] = probe(Xq, Y, cut, len(FAMS))[0]
+                Ztr, Zte, Qtr, Qte = quad_m(X[:cut], X[cut:], m)
+                row[f"lin_m{m}"] = probe(torch.cat([Ztr, Zte]), Y, cut, len(FAMS))[0]
+                row[f"quad_m{m}"] = probe(torch.cat([Qtr, Qte]), Y, cut, len(FAMS))[0]
             rows.append(row)
             print(
                 f"  {name:16s} seed {sd}: 线性 {lin:.3f}  "
-                + "  ".join(f"m{m} {row[f'quad_m{m}']:.3f}" for m in ms)
+                + "  ".join(
+                    f"m{m}: lin {row[f'lin_m{m}']:.3f}/quad {row[f'quad_m{m}']:.3f}" for m in ms
+                )
                 + f"  底板 {row['floor']:.3f}",
                 flush=True,
             )
         m = lambda k, _r=rows: sum(r[k] for r in _r) / len(_r)  # noqa: E731
         v = {"linear": m("linear"), "firing": m("firing"), "floor": m("floor"), "rows": rows}
         for mm in ms:
+            v[f"lin_m{mm}"] = m(f"lin_m{mm}")
             v[f"quad_m{mm}"] = m(f"quad_m{mm}")
         res["cells"][name] = v
         print(
             f"  {name:16s} 均值：线性 {v['linear']:.3f}  "
-            + "  ".join(f"m{mm} {v[f'quad_m{mm}']:.3f}" for mm in ms),
+            + "  ".join(
+                f"m{mm}: lin {v[f'lin_m{mm}']:.3f}/quad {v[f'quad_m{mm}']:.3f}" for mm in ms
+            ),
             flush=True,
         )
         (args.out / "result.json").write_text(
@@ -158,7 +169,8 @@ def main() -> int:
     h = cc["high_dim(gl=2)"]
     ok0 = 0.01 <= h["firing"] <= 0.20
     print(f"  AT-0 发放在窗内：{h['firing']:.4f} => {'过' if ok0 else '不过 => 作废'}")
-    gains = {mm: h[f"quad_m{mm}"] - h["linear"] for mm in ms}
+    # **同一 m 下比较**：二次相对该 m 的线性增益
+    gains = {mm: h[f"quad_m{mm}"] - h[f"lin_m{mm}"] for mm in ms}
     best_m = max(gains, key=lambda k: gains[k])
     print(
         f"  AT-1 存在匹配的 m（二次 > 线性 +0.15）：最好 m={best_m} 增益 "
