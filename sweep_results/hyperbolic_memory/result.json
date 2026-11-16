@@ -1,0 +1,33 @@
+{
+ "branch": 4,
+ "curve": {
+  "3": {
+   "n": 64,
+   "euclid": 0.953125,
+   "euclid_shuffled": 0.9635416666666666,
+   "hyperbolic": 0.9791666666666666,
+   "hyperbolic_shuffled": 0.9739583333333334
+  },
+  "4": {
+   "n": 256,
+   "euclid": 0.953125,
+   "euclid_shuffled": 0.9557291666666666,
+   "hyperbolic": 0.9518229166666666,
+   "hyperbolic_shuffled": 0.9518229166666666
+  },
+  "5": {
+   "n": 1024,
+   "euclid": 0.9375,
+   "euclid_shuffled": 0.9635416666666666,
+   "hyperbolic": 0.9518229166666666,
+   "hyperbolic_shuffled": 0.9622395833333334
+  },
+  "6": {
+   "n": 4096,
+   "euclid": 0.9609375,
+   "euclid_shuffled": 0.96484375,
+   "hyperbolic": 0.9557291666666666,
+   "hyperbolic_shuffled": 0.9453125
+  }
+ }
+}
