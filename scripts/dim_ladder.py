@@ -129,7 +129,14 @@ def ridge(feats, st, n_train):
     return float(((Xte @ W).argmax(-1) == Y[cut:]).float().mean())
 
 
-def mlp(feats, st, n_train, steps=600, hidden=256):
+def mlp(feats, st, n_train, steps=600, hidden=256, seed: int = 0):
+    """MLP 探针。**必须播种** —— 否则初始化与 minibatch 顺序都随全局 RNG 漂。
+
+    2026-11-16 发现这里原来没有 `manual_seed`：同一个 `feats` 重跑两次会得到
+    不同的准确率，而那个差被当成了臂与臂之间的差。`instrument.mlp_probe`
+    是同一套超参的播种版。
+    """
+    torch.manual_seed(seed)
     X = feats.reshape(-1, feats.shape[-1])
     Y = st.reshape(-1)
     cut = n_train * st.shape[1]

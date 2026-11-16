@@ -192,3 +192,20 @@ def test_no_script_draws_dirichlet_from_the_global_rng():
             if "Dirichlet(" in line and "seeded_dirichlet" not in line:
                 bad.append(f"{f.name}:{i}  {line.strip()}")
     assert not bad, "未播种的 Dirichlet：\n" + "\n".join(bad)
+
+
+def test_mlp_probe_is_deterministic():
+    """**探针必须播种**：同一次 `feats` 重跑两次要给同一个准确率。
+
+    2026-11-16 发现 `dim_ladder.mlp` 原来没有 `manual_seed` —— 初始化与
+    minibatch 顺序都随全局 RNG 漂，那个差被当成了臂与臂之间的差。
+    """
+    from scripts.dim_ladder import mlp
+
+    torch.manual_seed(1234)
+    X = torch.randn(600, 16)
+    Y = torch.randint(0, 4, (600,))
+    feats, st = X.unsqueeze(1), Y.unsqueeze(1)
+    a = mlp(feats, st, 400)
+    b = mlp(feats, st, 400)
+    assert a == b, f"探针不可复现：{a} vs {b}"
