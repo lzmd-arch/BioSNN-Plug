@@ -53,6 +53,7 @@ def run_seg(w_in, pre, wrec, toks, dev, state, alive, gain, steps, stdp=0.0, rew
     read = torch.zeros((b, 2, N), device=dev)
     decays = torch.tensor([0.5, 0.0625], device=dev)  # τ = 2, 16
     f_i = torch.full((N,), 0.08, device=dev)
+    surp_ema = 0.05  # 惊奇基线（让 R 可正可负）
     f_run = 0.08
     for t in range(min(steps, toks.shape[1])):
         rec = torch.zeros_like(z)
@@ -78,9 +79,14 @@ def run_seg(w_in, pre, wrec, toks, dev, state, alive, gain, steps, stdp=0.0, rew
             if reward == "homeo":
                 rv = 0.08 - f_run
             elif reward == "pred":
-                rv = -abs(phi_now - f_run)
+                # **可正可负**：惊奇低于自身基线 => 正奖励（猜得准）
+                surp = abs(phi_now - f_run)
+                nonlocal_unused = 0  # noqa: F841
+                rv = -(surp - surp_ema)
             else:
                 rv = 1.0
+            if reward == "pred":
+                surp_ema = 0.99 * surp_ema + 0.01 * abs(phi_now - f_run)
             wrec = (wrec + stdp * rv * e).clamp(min=0.0)
             wrec = wrec * (1.2 / wrec.sum(1, keepdim=True).clamp(min=1e-9))
         ref = torch.clamp(ref + 2.0 * nz - 1.0, 0.0, 2.0)
