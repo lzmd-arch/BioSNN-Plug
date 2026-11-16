@@ -82,13 +82,6 @@ def cell(seed: int, p_long: float, per_fam: int, dev: str, pace: float = 0.02) -
         states.append(r.cpu())
         frs.append(float(r.mean()))
     Xf, Xb, Y = torch.cat(full), torch.cat(binned), torch.cat(labels)
-    perm = torch.randperm(Y.shape[0], generator=torch.Generator().manual_seed(3 + seed))
-    cut = int(Y.shape[0] * 0.75)
-    # 线性与 1-NN 用**空间桶**（低维、样本效率高）；MLP 用全分辨率（它能处理高维）
-    lin, _ = probe(Xb[perm], Y[perm], cut, len(FAMS))
-    nn = knn_acc(Xb[perm][:cut], Y[perm][:cut], Xb[perm][cut:], Y[perm][cut:])
-    mlp = mlp_probe(Xf[perm], Y[perm], cut, len(FAMS))[0]
-    floor = majority_baseline(Y[perm][:cut], Y[perm][cut:], len(FAMS))
     S = torch.cat(states)
     h = ((torch.arange(N) % SIDE) >= 16).long()
     A, B = S[:, h == 0], S[:, h == 1]
@@ -99,11 +92,10 @@ def cell(seed: int, p_long: float, per_fam: int, dev: str, pace: float = 0.02) -
         "pr": pr_of(S),
         "integ": integ,
         "seg": sum(segs) / 2,
-        "linear": lin,
-        "knn": nn,
-        "mlp": mlp,
-        "floor": floor,
         "firing": sum(frs) / len(frs),
+        "Xf": Xf,
+        "Xb": Xb,
+        "Y": Y,
     }
 
 
@@ -124,6 +116,18 @@ def main() -> int:
         for pl in [float(x) for x in args.plongs.split(",")]:
             rows = [cell(sd, pl, args.per_fam, dev, pace) for sd in range(args.seeds)]
             m = lambda k, _r=rows: sum(r[k] for r in _r) / len(_r)  # noqa: E731
+            # **探针必须在 no_grad 之外**（MLP 需要梯度）—— 2026-11-16 踩过
+            for i, r in enumerate(rows):
+                perm = torch.randperm(
+                    r["Y"].shape[0], generator=torch.Generator().manual_seed(3 + i)
+                )
+                cut = int(r["Y"].shape[0] * 0.75)
+                r["linear"] = probe(r["Xb"][perm], r["Y"][perm], cut, len(FAMS))[0]
+                r["knn"] = knn_acc(
+                    r["Xb"][perm][:cut], r["Y"][perm][:cut], r["Xb"][perm][cut:], r["Y"][perm][cut:]
+                )
+                r["mlp"] = mlp_probe(r["Xf"][perm], r["Y"][perm], cut, len(FAMS))[0]
+                r["floor"] = majority_baseline(r["Y"][perm][:cut], r["Y"][perm][cut:], len(FAMS))
             key = f"p={pace:g}/pl={pl:g}"
             v = {
                 "p_long": pl,
