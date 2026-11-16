@@ -45,7 +45,7 @@ OUT = _pathlib.Path("sweep_results/m6ay_quantum_loop")
 K = 4
 T_HIST, T_CLOSED = 1024, 256
 N_Q = 12
-GROUPS = 12
+GROUPS = 16  # 1024 / 16 = 64，必须整除
 I_PACE = 0.5
 
 
@@ -103,7 +103,7 @@ def run_loop(net, seed: int, hist, dev: str, t_closed: int, use_quantum: bool, o
         for j in range(pre.shape[1]):
             rec = rec + z[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
         phi = float(z.mean())
-        cur = w_in[hist[:, t]] - 1.0 * (f_run / 0.08) * phi
+        cur = w_in[hist[:, t]] + pace.unsqueeze(0) - 1.0 * (f_run / 0.08) * phi
         nv = 0.95 * v + cur + rec - z * 0.5
         nz = torch.where(ref > 0, torch.zeros_like(nv), ((nv - 0.5) / 0.5 > 0).float())
         ref = torch.clamp(ref + 2.0 * nz - 1.0, 0.0, 2.0)
@@ -117,7 +117,7 @@ def run_loop(net, seed: int, hist, dev: str, t_closed: int, use_quantum: bool, o
         for j in range(pre.shape[1]):
             rec = rec + z[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
         phi = float(z.mean())
-        cur = w_in[sym] - 1.0 * phi
+        cur = w_in[sym] + pace.unsqueeze(0) - 1.0 * phi
         nv = 0.95 * v + cur + rec - z * 0.5
         nz = torch.where(ref > 0, torch.zeros_like(nv), ((nv - 0.5) / 0.5 > 0).float())
         ref = torch.clamp(ref + 2.0 * nz - 1.0, 0.0, 2.0)
@@ -125,18 +125,22 @@ def run_loop(net, seed: int, hist, dev: str, t_closed: int, use_quantum: bool, o
         rates.append(float(z.mean()))
         if use_quantum:
             g = z.mean(0).reshape(GROUPS, N // GROUPS).mean(1)
-            theta = omega * g
+            theta = omega * g[:N_Q]  # 只取前 N_Q 组喂给 N_Q 个量子比特
             psi = psi * torch.exp(1j * (bits @ theta))
             psi = hadamard_layer(psi, N_Q)
             psi = cnot_ladder(psi, N_Q)
             psi = hadamard_layer(psi, N_Q)
             psi = psi / psi.norm()
-            p = (psi.abs() ** 2).clamp(min=0)
+            p = (psi.abs() ** 2).clamp(min=0).cpu()
+            p = p / p.sum().clamp(min=1e-12)
+            # **生成器在 CPU、张量也必须在 CPU**（否则 CUDA assert）
             s = int(torch.multinomial(p, 1, generator=torch.Generator().manual_seed(true_seed())))
             sym = torch.tensor([s & 7], device=dev)
             syms.append(s & 7)
         else:
-            s = int((wmot * z.mean(0)).sum(0).argmax())
+            # **必须在 8 个运动输出上取 argmax**（8xN 的投影），
+            # 写成 (wmot * z).sum(0).argmax() 会在 N=1024 上取，w_in 只有 64 行 ⇒ 越界
+            s = int((wmot @ z.mean(0)).argmax())
             sym = torch.tensor([s], device=dev)
             syms.append(s)
     return syms, rates
