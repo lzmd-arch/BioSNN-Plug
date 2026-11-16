@@ -112,9 +112,25 @@ def unit(x):
     return x / x.norm(dim=1, keepdim=True).clamp(min=1e-9)
 
 
-def to_ball(x, kappa=1.0):
-    """压进 Poincaré 球（半径随模长变化，不能是常数）。"""
+def to_ball(x, kappa=None):
+    """压进 Poincaré 球（半径随模长变化，不能是常数）。
+
+    **`kappa` 默认按数据定标**，否则整个双曲读出会退化。实测：标准化后的
+    4096 维特征模长中位数是 **63.99**，`tanh(63.99) = 1.0`（float32 下就是 1），
+    于是**所有点都被压到半径 0.95 的同一个球面上**。此时
+
+        d_poincare(u, v) = arccosh(1 + 2‖u−v‖² / 0.0975²)
+
+    是欧氏距离的**严格单调函数** ⇒ `argmin` 相同 ⇒ 双曲分类器与欧氏分类器
+    **逐位相同**。2026-11-16 的 `manifold_big` 就是这么跑的：
+    `poincare` 与 `euclid` 的逐种子准确率一模一样（0.119/0.119/0.137）。
+    **那次实验根本没有测到双曲几何。**
+
+    `kappa = 1 / median(‖x‖)` 让 `tanh` 落在有区分度的区间（中位点 tanh(1)≈0.76）。
+    """
     nrm = x.norm(dim=1, keepdim=True).clamp(min=1e-9)
+    if kappa is None:
+        kappa = 1.0 / max(float(nrm.median()), 1e-9)
     return unit(x) * torch.tanh(kappa * nrm) * 0.95
 
 

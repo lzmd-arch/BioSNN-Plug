@@ -484,7 +484,7 @@ lr = 1e-5    seed = 0    steps ≈ 150,000（48h @ 3.4 样本/秒 / batch 4）
 | :--- | :--- | :--- |
 | `bio_all` | 六臂 0.108–0.130（随机 0.125） | ✅ **已重跑**，见 [`bio_all/README.md`](bio_all/README.md) |
 | `spatial_dim` | 1D/2D/3D/7D = 0.125/0.135/0.125/0.094 | ✅ **已重跑**，见 [`spatial_dim/README.md`](spatial_dim/README.md) |
-| `manifold_big` | 四几何 0.125–0.141 | 同上 |
+| `manifold_big` | 四几何 0.125–0.141 | ✅ **已重跑**，见 [`manifold_big/README.md`](manifold_big/README.md) |
 | `hyperbolic_readout` | `cells` 全空 | ✅ **已重跑**，见 [`hyperbolic_readout/README.md`](hyperbolic_readout/README.md) |
 
 已修：`seeded_dirichlet`（`fork_rng`）+ 三条守卫测试；四个脚本的标定改走 `calibrate()`
@@ -556,6 +556,27 @@ S-1/S-2 的不过没有信息量 —— 它们算在一堆底板读数上。
 那里测"Poincaré 球**能**表示树"，这里测"拿它当读出**更好**"。
 
 详见 [`hyperbolic_readout/README.md`](hyperbolic_readout/README.md)。
+
+### N-4 重跑：四种几何（`manifold_big`）—— G-0 不过 ⇒ 作废；**而且双曲臂等于欧氏臂**
+
+| K | 天花板 | 底板 | euclid | sphere | poincare | product |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 8 | 0.371 | 0.125 | 0.125 | 0.134 | **0.125** | 0.122 |
+| 16 | 0.326 | 0.053 | 0.064 | 0.064 | **0.064** | 0.064 |
+
+**头号发现**：`poincare` 与 `euclid` 的**逐种子数字一模一样**（0.119/0.119/0.137）。
+原因是 `to_ball` 饱和 —— 4096 维标准化特征模长中位 63.99，`tanh(63.99)` 在 float32 下
+就是 1.0，**所有点被压到半径 0.95 的同一球面**。此时 Poincaré 距离是欧氏距离的
+严格单调函数，`argmin` 相同。
+
+⇒ **`manifold_big` 从来没有比较过双曲几何与欧氏几何**，四种几何实际只有三种。
+已修（`kappa = 1/median(‖x‖)`，修后半径 0.710–0.739）+ 守卫
+`test_to_ball_does_not_saturate`。**没有重跑** —— 修好 `to_ball` 后 G-0 仍不过。
+
+**G-0 为什么不过**：零参数最近原型读出。与 `spatial_dim` 是同一套仪器、同一个规模，
+两个独立实验一起复现了「这个规模上零参数原型够不到任务」。
+
+详见 [`manifold_big/README.md`](manifold_big/README.md)。
 
 ---
 

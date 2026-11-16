@@ -209,3 +209,23 @@ def test_mlp_probe_is_deterministic():
     a = mlp(feats, st, 400)
     b = mlp(feats, st, 400)
     assert a == b, f"探针不可复现：{a} vs {b}"
+
+
+def test_to_ball_does_not_saturate():
+    """**双曲嵌入不许把所有点压到同一半径。**
+
+    2026-11-16：标准化后的 4096 维特征模长约 64，`tanh(64)` 在 float32 下就是 1，
+    于是 `to_ball` 把每个点都放到半径 0.95 的球面上。此时 Poincaré 距离是欧氏距离的
+    严格单调函数，`argmin` 相同 —— 双曲分类器与欧氏分类器**逐位相同**，
+    `manifold_big` 那次实验根本没测到双曲几何。症状：`poincare` 与 `euclid` 的
+    逐种子数字一模一样。
+    """
+    from scripts.manifold_big import to_ball
+
+    torch.manual_seed(0)
+    for d in (16, 256, 4096):
+        x = torch.randn(512, d)
+        n = to_ball(x).norm(dim=1)
+        assert float(n.std()) > 1e-3, (
+            f"d={d} 时 to_ball 饱和：模长 {float(n.min())}~{float(n.max())}"
+        )
