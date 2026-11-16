@@ -28,7 +28,10 @@ N = 1024
 G_FIELD = 1.0
 #: 结构变化比例：历史中活跃最低的这批神经元被永久静默
 STRUCT_Q = 0.2
-T_HIST = 96
+#: 两种历史流的 Dirichlet 浓度（内容差异）
+A_LOW = 0.5
+A_HIGH = 20.0
+T_HIST = 1024
 T_GAP = 96
 T_PROBE = 32
 
@@ -162,9 +165,9 @@ def main() -> int:
         for gap in [int(x) for x in args.gaps.split(",")]:
             rel_hist, rel_null = [], []
             for sd in range(args.seeds):
-                _, fa = response(sd, 1.0, gap, dev, 100 + sd, scales[sd], struct)
-                _, fb = response(sd, 8.0, gap, dev, 100 + sd, scales[sd], struct)
-                _, fa2 = response(sd, 1.0, gap, dev, 900 + sd, scales[sd], struct)
+                _, fa = response(sd, A_LOW, gap, dev, 100 + sd, scales[sd], struct)
+                _, fb = response(sd, A_HIGH, gap, dev, 100 + sd, scales[sd], struct)
+                _, fa2 = response(sd, A_LOW, gap, dev, 900 + sd, scales[sd], struct)
                 rel_hist.append(float((fa - fb).norm() / (0.5 * (fa.norm() + fb.norm()) + 1e-12)))
                 rel_null.append(float((fa - fa2).norm() / (0.5 * (fa.norm() + fa2.norm()) + 1e-12)))
             m_hist = sum(rel_hist) / len(rel_hist)
@@ -186,8 +189,8 @@ def main() -> int:
             )
 
     # M7-3：同历史两次运行必须逐位相同
-    _, r1 = response(0, 1.0, 0, dev, 500, scales[0])
-    _, r2 = response(0, 1.0, 0, dev, 500, scales[0])
+    _, r1 = response(0, A_LOW, 0, dev, 500, scales[0])
+    _, r2 = response(0, A_LOW, 0, dev, 500, scales[0])
     res["m7_3_bitwise_equal"] = bool(torch.equal(r1, r2))
     print(f"  M7-3 同历史两次逐位相同：{res['m7_3_bitwise_equal']}", flush=True)
 
