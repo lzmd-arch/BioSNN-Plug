@@ -129,6 +129,7 @@ def run_spont(
     hormone_gain: float = 1.0,
     hormone_shift: float = 0.0,
     hormone_sweep: float = 0.0,
+    i_pace: float = I_PACE,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     if net is None:
@@ -138,7 +139,7 @@ def run_spont(
     w_in = w_in * scale
     alive = torch.ones(N, device=dev) if alive is None else alive
     gen = torch.Generator().manual_seed(seed + 31337)
-    pace = (torch.rand(N, generator=gen) < p).float().to(dev) * I_PACE
+    pace = (torch.rand(N, generator=gen) < p).float().to(dev) * i_pace
 
     counts = torch.bincount(pid, minlength=K).float().clamp(min=1.0)
     # **膜时间常数的异质性**：`tau_i = 20·exp(hetero_tau·N(0,1))`，`leak_i = 1 − 1/tau_i`。
