@@ -76,21 +76,30 @@ def decode_at(net, seed: int, t_spont: int, per_fam: int, g_field: float, dev: s
     return acc, majority_baseline(Y[:cut], Y[cut:], len(FAMS)), sum(frs) / len(frs)
 
 
-def fit_tau(ts, accs, floor: float) -> tuple[float, float]:
-    """网格搜索 τ（对数格），拟合 `acc = floor + A·exp(-t/τ)`；返回 `(τ, R²)`。"""
+def fit_tau(ts, accs, floor: float) -> tuple[float, float, float, float]:
+    """拟合**双分量** `acc = floor + P + A·exp(-t/τ)`。
+
+    单分量不够：M6ae 实测 1024→2048 只掉 0.016 —— 已经平了。
+    强行单指数会把"稳平台"算成"还在衰减的长尾"。固定 τ 时 P、A 是线性的，闭式解。
+    返回 `(τ, P, A, R²)`。
+    """
     ys = [a - floor for a in accs]
     ss_tot = sum((y - sum(ys) / len(ys)) ** 2 for y in ys) or 1e-12
-    best_tau, best_r2 = float("nan"), -1e9
-    for k in range(1, 400):
-        tau = 10.0 * (1.05**k)
+    best = (float("nan"), 0.0, 0.0, -1e9)
+    for k in range(1, 500):
+        tau = 10.0 * (1.04**k)
         es = [math.exp(-t / tau) for t in ts]
-        se = sum(e * e for e in es) or 1e-12
-        A = sum(y * e for y, e in zip(ys, es, strict=False)) / se
-        resid = sum((y - A * e) ** 2 for y, e in zip(ys, es, strict=False))
+        n = len(ys)
+        me, my = sum(es) / n, sum(ys) / n
+        cov = sum((e - me) * (y - my) for e, y in zip(es, ys, strict=False))
+        var = sum((e - me) ** 2 for e in es) or 1e-12
+        A = cov / var
+        P = my - A * me
+        resid = sum((y - P - A * e) ** 2 for y, e in zip(ys, es, strict=False))
         r2 = 1.0 - resid / ss_tot
-        if r2 > best_r2:
-            best_r2, best_tau = r2, tau
-    return best_tau, best_r2
+        if r2 > best[3]:
+            best = (tau, P, A, r2)
+    return best
 
 
 def main() -> int:
@@ -126,7 +135,7 @@ def main() -> int:
             )
         mean_curve = [sum(c[i] for c in curves) / len(curves) for i in range(len(ts))]
         fl = sum(floors) / len(floors)
-        tau, r2 = fit_tau(ts, mean_curve, fl)
+        tau, plateau, amp, r2 = fit_tau(ts, mean_curve, fl)
         key = f"gf={gf:g}"
         res["cells"][key] = {
             "g_field": gf,
@@ -134,13 +143,16 @@ def main() -> int:
             "curve": mean_curve,
             "floor": fl,
             "tau": tau,
+            "plateau": plateau,
+            "amp": amp,
             "r2": r2,
             "firing": sum(frs) / len(frs),
             "rows": curves,
         }
         print(
             f"  g_field={gf:g} 汇总：{', '.join(f'{a:.3f}' for a in mean_curve)}  "
-            f"τ={tau:.0f} 步  R²={r2:.3f}  发放 {sum(frs) / len(frs):.4f}",
+            f"τ={tau:.0f} 步  平台={plateau + fl:.3f}（高出底板 {plateau:.3f}）"
+            f"  快分量={amp:.3f}  R²={r2:.3f}  发放 {sum(frs) / len(frs):.4f}",
             flush=True,
         )
         (args.out / "result.json").write_text(
