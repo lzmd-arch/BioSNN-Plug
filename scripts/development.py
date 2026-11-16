@@ -47,12 +47,11 @@ R_RECOVER = C_COST * 0.08 / 0.92
 K_THETA = 1.0
 D0, D1 = 32, 8
 
-#: (beta, 代谢开, E 的指数)。gamma=0 表示痕迹不带能量
+#: (beta, 代谢开, E 的指数 gamma, 设定点指数 eta)
 ARMS = {
-    "g0": (1.0, True, 0.0),
-    "g1": (1.0, True, 1.0),
-    "g2": (1.0, True, 2.0),
-    "g4": (1.0, True, 4.0),
+    "eta0": (1.0, True, 1.0, 0.0),
+    "eta1": (1.0, True, 1.0, 1.0),
+    "eta2": (1.0, True, 1.0, 2.0),
 }
 
 
@@ -165,7 +164,7 @@ def main() -> int:
     print(f"  底板(多数类) {floor:.3f}   窗口天花板 {ceiling:.3f}", flush=True)
 
     structures: dict = {}
-    for arm, (beta, metab, gamma) in ARMS.items():
+    for arm, (beta, metab, gamma, eta) in ARMS.items():
         c, r = (C_COST, R_RECOVER) if metab else (0.0, 0.0)
         accs, frs, arms_struct = [], [], []
         for sd in seeds:
@@ -181,11 +180,12 @@ def main() -> int:
                 continue
             dev_toks, _ = make_task(args.dev_seq, args.seq, K, 30 + sd, dev)
             gen = torch.Generator().manual_seed(1000 + sd)
-            trace, _, _, rate_before = run_dev(w_in * sc, pre, wrec, dev_toks, dev, c, r, gamma)
+            trace, _, e_tr, rate_before = run_dev(w_in * sc, pre, wrec, dev_toks, dev, c, r, gamma)
+            e_bar = float(e_tr.mean())
+            # **设定点由代谢史决定**：更穷的个体把目标活动调得更低
+            target = rate_before * (e_bar**eta)
             p_new, w_new = prune(pre, wrec, trace, D1, beta, 0.5, gen)
-            w_new = homeostatic_rescale(
-                w_in * sc, p_new, w_new, dev_toks, dev, c, r, rate_before, gamma
-            )
+            w_new = homeostatic_rescale(w_in * sc, p_new, w_new, dev_toks, dev, c, r, target, gamma)
             tr, trs = make_task(args.train_seq, args.seq, K, 10 + sd, dev)
             te, tes = make_task(args.test_seq, args.seq, K, 20 + sd, dev)
             toks = torch.cat([tr, te])
@@ -201,6 +201,9 @@ def main() -> int:
             continue
         res["cells"][arm] = {
             "gamma": gamma,
+            "eta": eta,
+            "e_bar": e_bar,
+            "target_rate": target,
             "acc": sum(accs) / len(accs),
             "runs": accs,
             "firing": sum(frs) / len(frs),
@@ -214,7 +217,7 @@ def main() -> int:
 
     # 跨臂结构相似度（同种子配对）
     if structures.get("g0"):
-        for arm in ("g1", "g2", "g4"):
+        for arm in ("eta1", "eta2"):
             if structures.get(arm):
                 nn = min(len(structures["g0"]), len(structures[arm]))
                 js = [jaccard(structures[arm][i], structures["g0"][i], args.n) for i in range(nn)]
@@ -236,18 +239,45 @@ def main() -> int:
     print("")
     print("判：")
     cc = res["cells"]
-    if "g0" not in cc:
-        print("  ✗ 参照臂 g0 无效")
+    if "eta0" not in cc:
+        print("  ✗ 参照臂 eta0 无效")
         return 1
     d01 = ceiling >= floor + 0.20
     d02 = all(v["acc"] > floor for v in cc.values())
     d03 = all(0.03 <= v["firing"] <= 0.20 for v in cc.values())
     print(
-        f"  C-0 天花板 {ceiling:.3f} / 每臂>底板 / 工作点 => "
-        f"{'过' if (d01 and d02 and d03) else '不过 ⇒ 作废'}"
+        f"  E-0 天花板 {ceiling:.3f} / 每臂>底板 / 工作点 => "
+        f"{'过' if (d01 and d02 and d03) else '不过 => 作废'}"
     )
     if not (d01 and d02 and d03):
         return 0
+
+    fr = [cc[a]["firing"] for a in ("eta0", "eta1", "eta2") if a in cc]
+    mono = len(fr) == 3 and all(fr[i] > fr[i + 1] for i in range(2))
+    print(
+        f"  E-1 策略改变：发放 {[round(x, 4) for x in fr]} 随 eta 单调下降 => {'过' if mono else '不过'}"
+    )
+
+    base = cc["eta0"]["acc"]
+    cand = [a for a in ("eta1", "eta2") if a in cc]
+    best = max(cand, key=lambda a: cc[a]["acc"])
+    gain = cc[best]["acc"] - base
+    print(
+        f"  E-2 能力：最好 {best} {cc[best]['acc']:.3f} - eta0 {base:.3f} = {gain * 100:+.1f}pp "
+        f"(要 >=+3) => {'过' if gain >= 0.03 else '不过'}"
+    )
+
+    def _eff(a):
+        return (cc[a]["acc"] - floor) / max(cc[a]["firing"], 1e-9)
+
+    e0 = _eff("eta0")
+    eb = max(cand, key=_eff)
+    ratio = _eff(eb) / max(e0, 1e-12)
+    print(
+        f"  E-3 每脉冲能力：(acc-底板)/发放  eta0 {e0:.2f} / 最好 {eb} {_eff(eb):.2f} "
+        f"= {ratio:.2f}x (要 >=1.15) => {'过' if ratio >= 1.15 else '不过'}"
+    )
+    return 0
 
     js = [max(cc[a].get("jaccard_vs_g0", [1.0])) for a in ("g1", "g2", "g4") if a in cc]
     mono = len(js) == 3 and all(js[i] > js[i + 1] for i in range(len(js) - 1))
