@@ -99,3 +99,21 @@ def test_run_spont_returns_batch_neuron_time() -> None:
     assert snaps.shape == (B_BATCH, N, T_LATE)
     assert early.shape == (B_BATCH, N)
     assert float(rates.min()) >= 0.0 and float(rates.max()) <= 1.0
+
+
+def test_run_spont_follows_history_batch_size() -> None:
+    """**写死 batch=32 的 bug**：外部给 8 条历史时，`v/z/ref` 必须也是 8 行。
+
+    2026-11-16 实际踩到：`B = B_BATCH` 让 8 条历史的调用在 g_inh≠0 时形状不匹配。
+    """
+    from scripts.hist_families import make_family_hist
+    from scripts.m6_pools import T_LATE, run_spont
+
+    if not torch.cuda.is_available():
+        pytest.skip("要真跑，只在有 CUDA 的机器上跑")
+    toks = make_family_hist(0, 1, 64, 8, "cuda")
+    r, snaps, _ = run_spont(
+        0, 0.5, 0, 0.7, 0.02, "cuda", 4, 0.0, 2.0, -1.0, hist_in=toks, t_spont=64
+    )
+    assert r.shape == (8, N)
+    assert snaps.shape == (8, N, T_LATE)

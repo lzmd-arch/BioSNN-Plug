@@ -103,11 +103,17 @@ def run_spont(
     t_spont: int = T_SPONT,
     v0: torch.Tensor | None = None,
     hist_in: torch.Tensor | None = None,
+    net: tuple | None = None,
+    stdp: float = 0.0,
+    alive: torch.Tensor | None = None,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
-    w_in, pre, wrec, pid = build_pools(seed, dev, K, beta)
+    if net is None:
+        w_in, pre, wrec, pid = build_pools(seed, dev, K, beta)
+    else:
+        w_in, pre, wrec, pid = net
     w_in = w_in * scale
-    alive = torch.ones(N, device=dev)
+    alive = torch.ones(N, device=dev) if alive is None else alive
     gen = torch.Generator().manual_seed(seed + 31337)
     pace = (torch.rand(N, generator=gen) < p).float().to(dev) * I_PACE
 
@@ -118,18 +124,19 @@ def run_spont(
     # 历史期的增益更新率固定 2.0（= M6/M7 的 `run_seg`），
     # `eta_gain` 只支配**自发期**；-1 = 自发期不施加增益（M6 原样）
     eta_hist = 2.0 if eta_gain < 0.0 else eta_gain
-    B = B_BATCH
+    hist = hist_in
+    if hist is None and t_hist > 0:
+        hist, _ = make_task(B_BATCH, t_hist, 8, hist_seed, dev, alpha)
+    if hist is not None:
+        t_hist = hist.shape[1]  # **外部历史的长度说了算**
+    # **batch 必须跟着历史走** —— 写死 32 时外部给 8 条历史会形状不匹配
+    B = hist.shape[0] if hist is not None else B_BATCH
     v = torch.zeros((B, N), device=dev)
     z = torch.zeros((B, N), device=dev)
     ref = torch.zeros((B, N), device=dev)
     gain = torch.ones(N, device=dev)
     f_i = torch.full((N,), 0.08, device=dev)
     f_run = 0.08
-    hist = hist_in
-    if hist is None and t_hist > 0:
-        hist, _ = make_task(B, t_hist, 8, hist_seed, dev, alpha)
-    if hist is not None:
-        t_hist = hist.shape[1]
 
     for t in range(t_hist):
         rec = torch.zeros_like(z)
@@ -147,6 +154,15 @@ def run_spont(
         nz = torch.where(ref > 0, torch.zeros_like(fresh), fresh) * alive
         ref = torch.clamp(ref + 2.0 * nz - 1.0, 0.0, 2.0)
         v, z = nv, nz
+        if stdp > 0.0:
+            # STDP 原地改写 wrec —— 调用方传入同一张量即可跨阶段累积
+            from scripts.m7_history import a_minus, a_plus
+
+            e = a_plus * (nz.unsqueeze(2) * z[:, pre]).mean(0) - a_minus * (
+                z.unsqueeze(2) * nz[:, pre]
+            ).mean(0)
+            upd = (wrec + stdp * e).clamp(min=0.0)
+            wrec.copy_(upd * (1.2 / upd.sum(1, keepdim=True).clamp(min=1e-9)))
         if eta_hist >= 0.0:
             f_i = 0.9 * f_i + 0.1 * z.mean(0)
             if t % 4 == 3:
