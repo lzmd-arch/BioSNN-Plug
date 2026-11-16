@@ -1,0 +1,259 @@
+{
+ "cells": {
+  "r=2/gl=0.1/pl=0": {
+   "radius": 2,
+   "g_local": 0.1,
+   "p_long": 0.0,
+   "pr": 0.0,
+   "acc": 0.14583333333333334,
+   "floor": 0.052083333333333336,
+   "integ": 0.0,
+   "seg": 0.0,
+   "persist": 0.0,
+   "firing": 0.5,
+   "firing_x_pace": 25.0,
+   "rows": [
+    {
+     "pr": 0.0,
+     "acc": 0.125,
+     "floor": 0.0625,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    },
+    {
+     "pr": 0.0,
+     "acc": 0.21875,
+     "floor": 0.0625,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    },
+    {
+     "pr": 0.0,
+     "acc": 0.09375,
+     "floor": 0.03125,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    }
+   ],
+   "flags": {
+    "高维": false,
+    "停住": true,
+    "可解码": false,
+    "整合": false,
+    "分离": false,
+    "窗口": false
+   },
+   "all5": false
+  },
+  "r=2/gl=0.1/pl=0.25": {
+   "radius": 2,
+   "g_local": 0.1,
+   "p_long": 0.25,
+   "pr": 0.0,
+   "acc": 0.14583333333333334,
+   "floor": 0.052083333333333336,
+   "integ": 0.0,
+   "seg": 0.0,
+   "persist": 0.0,
+   "firing": 0.5,
+   "firing_x_pace": 25.0,
+   "rows": [
+    {
+     "pr": 0.0,
+     "acc": 0.125,
+     "floor": 0.0625,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    },
+    {
+     "pr": 0.0,
+     "acc": 0.21875,
+     "floor": 0.0625,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    },
+    {
+     "pr": 0.0,
+     "acc": 0.09375,
+     "floor": 0.03125,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    }
+   ],
+   "flags": {
+    "高维": false,
+    "停住": true,
+    "可解码": false,
+    "整合": false,
+    "分离": false,
+    "窗口": false
+   },
+   "all5": false
+  },
+  "r=2/gl=0.2/pl=0": {
+   "radius": 2,
+   "g_local": 0.2,
+   "p_long": 0.0,
+   "pr": 0.0,
+   "acc": 0.14583333333333334,
+   "floor": 0.052083333333333336,
+   "integ": 0.0,
+   "seg": 0.0,
+   "persist": 0.0,
+   "firing": 0.5,
+   "firing_x_pace": 25.0,
+   "rows": [
+    {
+     "pr": 0.0,
+     "acc": 0.125,
+     "floor": 0.0625,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    },
+    {
+     "pr": 0.0,
+     "acc": 0.21875,
+     "floor": 0.0625,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    },
+    {
+     "pr": 0.0,
+     "acc": 0.09375,
+     "floor": 0.03125,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    }
+   ],
+   "flags": {
+    "高维": false,
+    "停住": true,
+    "可解码": false,
+    "整合": false,
+    "分离": false,
+    "窗口": false
+   },
+   "all5": false
+  },
+  "r=2/gl=0.2/pl=0.25": {
+   "radius": 2,
+   "g_local": 0.2,
+   "p_long": 0.25,
+   "pr": 0.0,
+   "acc": 0.14583333333333334,
+   "floor": 0.052083333333333336,
+   "integ": 0.0,
+   "seg": 0.0,
+   "persist": 0.0,
+   "firing": 0.5,
+   "firing_x_pace": 25.0,
+   "rows": [
+    {
+     "pr": 0.0,
+     "acc": 0.125,
+     "floor": 0.0625,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    },
+    {
+     "pr": 0.0,
+     "acc": 0.21875,
+     "floor": 0.0625,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    },
+    {
+     "pr": 0.0,
+     "acc": 0.09375,
+     "floor": 0.03125,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    }
+   ],
+   "flags": {
+    "高维": false,
+    "停住": true,
+    "可解码": false,
+    "整合": false,
+    "分离": false,
+    "窗口": false
+   },
+   "all5": false
+  },
+  "r=2/gl=0.35/pl=0": {
+   "radius": 2,
+   "g_local": 0.35,
+   "p_long": 0.0,
+   "pr": 0.0,
+   "acc": 0.14583333333333334,
+   "floor": 0.052083333333333336,
+   "integ": 0.0,
+   "seg": 0.0,
+   "persist": 0.0,
+   "firing": 0.5,
+   "firing_x_pace": 25.0,
+   "rows": [
+    {
+     "pr": 0.0,
+     "acc": 0.125,
+     "floor": 0.0625,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    },
+    {
+     "pr": 0.0,
+     "acc": 0.21875,
+     "floor": 0.0625,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    },
+    {
+     "pr": 0.0,
+     "acc": 0.09375,
+     "floor": 0.03125,
+     "integ": 0.0,
+     "seg": 0.0,
+     "persist": 0.0,
+     "firing": 0.5
+    }
+   ],
+   "flags": {
+    "高维": false,
+    "停住": true,
+    "可解码": false,
+    "整合": false,
+    "分离": false,
+    "窗口": false
+   },
+   "all5": false
+  }
+ }
+}
