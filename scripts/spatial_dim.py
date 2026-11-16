@@ -39,7 +39,7 @@ _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
 
 import torch
 
-from scripts.instrument import calibrate
+from scripts.instrument import calibrate, mlp_probe
 from scripts.manifold_big import acc_of, make_task, to_ball
 from scripts.structure_ladder import window_features
 
@@ -174,8 +174,8 @@ def main() -> int:
     ap.add_argument("--k", type=int, default=1024)
     ap.add_argument("--ks-class", type=int, default=8)
     ap.add_argument("--seq", type=int, default=64)
-    ap.add_argument("--train-seq", type=int, default=128)
-    ap.add_argument("--test-seq", type=int, default=32)
+    ap.add_argument("--train-seq", type=int, default=384)
+    ap.add_argument("--test-seq", type=int, default=96)
     ap.add_argument("--seeds", default="0,1,2")
     ap.add_argument("--geometry", default="product")
     ap.add_argument("--out", type=_pathlib.Path, default=OUT)
@@ -227,7 +227,7 @@ def main() -> int:
             continue
         diam = mean_degree_diameter(pre, dims, n)
         # ---- 正式跑 ----
-        accs, frs = [], []
+        accs, frs, protos = [], [], []
         for sd in seeds:
             tr, trs = make_task(args.train_seq, args.seq, K, 10 + sd, dev)
             te, tes = make_task(args.test_seq, args.seq, K, 20 + sd, dev)
@@ -243,9 +243,13 @@ def main() -> int:
             mu, sdv = X[:cut].mean(0), X[:cut].std(0) + 1e-6
             X = (X - mu) / sdv
             Xtr, Xte = to_ball(X[:cut]), to_ball(X[cut:])
-            accs.append(acc_of(Xtr, Y[:cut], Xte, Y[cut:], args.geometry, K))
+            protos.append(acc_of(Xtr, Y[:cut], Xte, Y[cut:], args.geometry, K))
+            # **判据用的读出**：与 dim_ladder.mlp / instrument.mlp_probe 逐字同超参。
+            # 四条臂的读出完全相同 ⇒ 臂间差异只能来自特征本身。
+            m, _ = mlp_probe(X, Y, cut, K, batch=1024)
+            accs.append(m)
             frs.append(fr)
-            del feat, X
+            del feat, X, Xtr, Xte
             torch.cuda.empty_cache()
         fr_mean = sum(frs) / len(frs)
         if not (0.03 <= fr_mean <= 0.20):
@@ -254,13 +258,16 @@ def main() -> int:
         res["cells"][name] = {
             "acc": sum(accs) / len(accs),
             "runs": accs,
+            "proto": sum(protos) / len(protos),
+            "proto_runs": protos,
             "firing": sum(frs) / len(frs),
             "diameter": diam,
             "scale": sc,
         }
         print(
             f"  {name:3s} 直径 {diam:7.1f}  发放 {sum(frs) / len(frs):.4f}  "
-            f"acc {sum(accs) / len(accs):.3f}  ({', '.join(f'{a:.3f}' for a in accs)})",
+            f"mlp {sum(accs) / len(accs):.3f} ({', '.join(f'{a:.3f}' for a in accs)})  "
+            f"proto {sum(protos) / len(protos):.3f}",
             flush=True,
         )
         del mats
