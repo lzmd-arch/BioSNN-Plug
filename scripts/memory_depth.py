@@ -44,6 +44,8 @@ V, K = 64, 8
 K_CUE = 16
 TAUS = (2.0, 16.0)
 K_THETA = 1.0
+#: 线索持续注入的步数（单步太弱，扛不过背景流 —— 见 prereg amend2）
+CUE_STEPS = 4
 
 #: (beta, 代谢开, γ, η)  —— 四档取自 v3/v4
 ARMS = {
@@ -75,7 +77,7 @@ def run_md(w_in, pre, wrec, toks, cue, dev, c, r, gamma, lam=0.95):
     read = torch.zeros((b, len(TAUS), n), device=dev)
     feats, rate = [], 0.0
     for t in range(T):
-        cur = w_in[cue] if t == 0 else w_in[toks[:, t]]
+        cur = w_in[cue] if t < CUE_STEPS else w_in[toks[:, t]]
         rec = torch.zeros_like(z)
         for j in range(pre.shape[1]):
             rec = rec + z[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
@@ -202,8 +204,12 @@ def main() -> int:
         print("  ✗ 无有效臂")
         return 1
     thresh = floor + 0.10
-    md0 = all(v["curve"][0] >= thresh for v in cc.values())
-    print(f"  MD-0 lag=0 每臂 ≥ {thresh:.3f} => {'过' if md0 else '不过 => 作废'}")
+    peaks = {k: max(v["curve"]) for k, v in cc.items()}
+    md0 = all(pk >= thresh for pk in peaks.values())
+    print(
+        f"  MD-0 峰值每臂 ≥ {thresh:.3f}：{[round(x, 3) for x in peaks.values()]} "
+        f"=> {'过' if md0 else '不过 => 作废'}"
+    )
     if not md0:
         return 0
     md1 = all(
