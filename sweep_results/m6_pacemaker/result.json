@@ -1,0 +1,40 @@
+{
+ "cells": {
+  "p=0": {
+   "firing_late": 0.13574624061584473,
+   "spatial_sd": 0.023319573141634464,
+   "ratio_early": 1.8934484044670365,
+   "ratio_late": 1.8936449564629982,
+   "wins_early": 6,
+   "wins_late": 6,
+   "n": 6
+  },
+  "p=0.02": {
+   "firing_late": 0.14197651545206705,
+   "spatial_sd": 0.05465054574112097,
+   "ratio_early": 1.9218308778425006,
+   "ratio_late": 2.016752364834645,
+   "wins_early": 6,
+   "wins_late": 6,
+   "n": 6
+  },
+  "p=0.05": {
+   "firing_late": 0.15663226445515951,
+   "spatial_sd": 0.09457940980792046,
+   "ratio_early": 1.9278721294406718,
+   "ratio_late": 1.4798075639953259,
+   "wins_early": 6,
+   "wins_late": 5,
+   "n": 6
+  },
+  "p=0.1": {
+   "firing_late": 0.17654053370157877,
+   "spatial_sd": 0.12569626917441687,
+   "ratio_early": 1.9651990246119908,
+   "ratio_late": 1.8251879151928503,
+   "wins_early": 6,
+   "wins_late": 6,
+   "n": 6
+  }
+ }
+}
