@@ -32,8 +32,13 @@ REC = 256
 FAMS = list(range(8))
 
 
-def breadth(Z: torch.Tensor, target: float = 0.8, load: float = 0.3) -> float:
-    """`Z` 是 `(N, T)`；返回解释 `target` 方差的主成分覆盖的神经元比例。"""
+def breadth(Z: torch.Tensor, target: float = 0.8, alpha: float = 3.0) -> float:
+    """`Z` 是 `(N, T)`；返回解释 `target` 方差的主成分覆盖的神经元比例。
+
+    **阈值必须相对于均匀分布定**：单位化特征向量在单个神经元上的载荷是 `1/√N`（≈0.03），
+    用绝对阈值（初版写 0.3）**永远不触发**，广度恒为 0 —— 冒烟才发现的。
+    改成参与度 `part_i = Σ_j v_ij²`，均匀值 `k/N`，判 `part_i > alpha · k/N`。
+    """
     Zc = Z - Z.mean(1, keepdim=True)
     C = Zc @ Zc.T / max(Zc.shape[1], 1)
     ev, evec = torch.linalg.eigh(C.double())
@@ -42,11 +47,12 @@ def breadth(Z: torch.Tensor, target: float = 0.8, load: float = 0.3) -> float:
     ev = ev.clamp(min=0)
     k = int((ev.cumsum(0) / max(float(ev.sum()), 1e-12) < target).sum().item()) + 1
     n = Z.shape[0]
-    hit = torch.zeros(n)
-    for j in range(k):
-        v = evec[:, j]
-        hit = torch.maximum(hit, (v.abs() > load).float())
-    return float(hit.mean())
+    part = (evec[:, :k] ** 2).sum(1)
+    frac_hit = float((part > alpha * k / n).float().mean())
+    # **主判据**：每个神经元有多少方差被前 k 个共享模态解释（加权后）
+    weighted = (evec**2) * ev.unsqueeze(0)
+    share = weighted[:, :k].sum(1) / (weighted.sum(1) + 1e-12)
+    return frac_hit, float(share.mean())
 
 
 @torch.no_grad()
@@ -85,15 +91,15 @@ def main() -> int:
         raw, res_, nul = [], [], []
         for fam in FAMS:
             Z = run_one(net, sd, fam, dev)
-            raw.append(breadth(Z))
+            raw.append(breadth(Z)[1])
             Zr = Z - Z.mean(0, keepdim=True)  # 扣掉每时刻的群体均值
-            res_.append(breadth(Zr))
+            res_.append(breadth(Zr)[1])
             g = torch.Generator().manual_seed(sd * 7 + fam)
             perm = torch.stack(
                 [torch.randperm(Zr.shape[1], generator=g) for _ in range(Zr.shape[0])]
             )
             Zs = Zr.gather(1, perm)
-            nul.append(breadth(Zs))
+            nul.append(breadth(Zs)[1])
         m = lambda v: sum(v) / len(v)  # noqa: E731
         row = {
             "seed": sd,
