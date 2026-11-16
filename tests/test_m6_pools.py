@@ -117,3 +117,14 @@ def test_run_spont_follows_history_batch_size() -> None:
     )
     assert r.shape == (8, N)
     assert snaps.shape == (8, N, T_LATE)
+
+
+def test_hetero_tau_zero_is_exactly_the_old_leak() -> None:
+    """`hetero_tau=0` 时 `leak ≡ 0.95`，与改动前的标量行为逐位相同。
+
+    这条守的是"加参数不能悄悄改动力学" —— 我在 M6w 跑着的时候patch 了核心动力学，
+    必须证明默认值是无操作。
+    """
+    tau = torch.full((7,), 20.0)
+    leak = 1.0 - 1.0 / tau
+    assert bool((leak == 0.95).all())

@@ -110,6 +110,7 @@ def run_spont(
     v_add: torch.Tensor | None = None,
     g_field: float = G_FIELD,
     field_radius: int = 32,
+    hetero_tau: float = 0.0,
 ):
     """历史 → 零输入自发。返回 `(每个体后期发射率 (B,N), 后期快照 (B,N,T_LATE))`。"""
     if net is None:
@@ -122,6 +123,11 @@ def run_spont(
     pace = (torch.rand(N, generator=gen) < p).float().to(dev) * I_PACE
 
     counts = torch.bincount(pid, minlength=K).float().clamp(min=1.0)
+    # **膜时间常数的异质性**：`tau_i = 20·exp(hetero_tau·N(0,1))`，`leak_i = 1 − 1/tau_i`。
+    # `hetero_tau=0` 时 `leak≡0.95`，与原来的标量行为逐位相同。
+    tg = torch.Generator().manual_seed(seed + 9091)
+    tau = (20.0 * torch.exp(hetero_tau * torch.randn(N, generator=tg))).clamp(5.0, 200.0)
+    leak = (1.0 - 1.0 / tau).to(dev)
     onehot = torch.zeros(N, K, device=dev)
     onehot[torch.arange(N, device=dev), pid] = 1.0 / counts[pid]
     # **局部场**：`field_radius < L` 时，每个神经元被自己邻域的平均活动压住，
@@ -168,7 +174,7 @@ def run_spont(
             cur = w_in[hist[:, t]] * gain.unsqueeze(0) - g_field * (f_run / 0.08) * (z @ fmat)
         if g_inh != 0.0:
             cur = cur + g_inh * (phk[:, pid] - phk.mean(1, keepdim=True))
-        nv = 0.95 * v + cur + rec - z * 0.5
+        nv = leak * v + cur + rec - z * 0.5
         fresh = ((nv - 0.5) / 0.5 > 0).float()
         nz = torch.where(ref > 0, torch.zeros_like(fresh), fresh) * alive
         ref = torch.clamp(ref + 2.0 * nz - 1.0, 0.0, 2.0)
@@ -209,7 +215,7 @@ def run_spont(
                 rec = rec * gain.unsqueeze(0)
         if g_inh != 0.0:
             cur = cur + g_inh * (phk[:, pid] - phk.mean(1, keepdim=True))
-        nv = 0.95 * v + cur + rec - z * 0.5
+        nv = leak * v + cur + rec - z * 0.5
         fresh = ((nv - 0.5) / 0.5 > 0).float()
         nz = torch.where(ref > 0, torch.zeros_like(fresh), fresh) * alive
         ref = torch.clamp(ref + 2.0 * nz - 1.0, 0.0, 2.0)
