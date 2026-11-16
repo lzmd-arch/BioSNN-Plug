@@ -91,8 +91,8 @@ def cell(seed: int, radius: int, g_local: float, p_long: float, per_fam: int, de
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", type=int, default=3)
-    ap.add_argument("--radii", default="2,8")
-    ap.add_argument("--glocals", default="0.5,1,2,4")
+    ap.add_argument("--radii", default="2")
+    ap.add_argument("--glocals", default="0.1,0.2,0.35,0.5,1.0")
     ap.add_argument("--plongs", default="0,0.25")
     ap.add_argument("--per-fam", type=int, default=16)
     ap.add_argument("--out", type=_pathlib.Path, default=OUT)
@@ -119,6 +119,7 @@ def main() -> int:
                     "seg": m("seg"),
                     "persist": m("persist"),
                     "firing": m("firing"),
+                    "firing_x_pace": m("firing") / 0.02,  # 发放 / 起搏比例，>1 才说明输入在驱动
                     "rows": rows,
                 }
                 flags = {
