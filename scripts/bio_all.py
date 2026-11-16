@@ -48,6 +48,7 @@ _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
 import torch
 
 from scripts.dim_ladder import mlp
+from scripts.instrument import calibrate, seeded_dirichlet
 
 OUT = _pathlib.Path("sweep_results/bio_all")
 TAUS = (2.0, 16.0)
@@ -56,7 +57,7 @@ V, K_DEF = 64, 8
 
 def make_task(n_seq: int, T: int, K: int, seed: int, dev: str):
     g = torch.Generator().manual_seed(seed)
-    pref = torch.distributions.Dirichlet(torch.full((K,), 3.0)).sample((K,)).to(dev)
+    pref = seeded_dirichlet(3.0, K).to(dev)
     seg = max(1, T // K)
     phase = torch.randint(0, K, (n_seq,), generator=g).to(dev)
     st = torch.zeros(n_seq, T, dtype=torch.long, device=dev)
@@ -164,15 +165,13 @@ def main() -> int:
         tr0, _ = make_task(32, 48, K, 10, dev)
         w_in, pre, wrec, alpha, delay, pool_id = build(args.n, sw, 0, dev, args.deg)
         cur = (w_in, pre, wrec, alpha, delay, pool_id, sw)
-        best = None
-        for sc in (0.5, 1, 2, 3, 4, 6, 8, 12, 20, 32):
-            _, fr = run((w_in * sc, *cur[1:]), tr0, dev)
-            if 0.03 <= fr <= 0.20 and (best is None or abs(fr - 0.08) < best[2]):
-                best = (sc, fr, abs(fr - 0.08))
-        if best is None:
-            print(f"  {name:6s} ✗ 标定失败", flush=True)
+        # 标定走仪器：等比细网格 + 窗口判定（粗网格会整段跨过窗口）
+        ok_cal, sc, _pfr = calibrate(
+            lambda s, _w=w_in, _rest=cur[1:], _t=tr0: run((_w * s, *_rest), _t, dev)[1]
+        )
+        if not ok_cal:
+            print(f"  {name:6s} ✗ 标定失败，该臂无效", flush=True)
             continue
-        sc, _pfr, _ = best
         accs, frs = [], []
         for sd in seeds:
             tr, trs = make_task(args.train_seq, args.seq, K, 10 + sd, dev)

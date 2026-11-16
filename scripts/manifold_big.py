@@ -40,6 +40,8 @@ _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
 
 import torch
 
+from scripts.instrument import TARGET_FIRING, calibrate, seeded_dirichlet
+
 OUT = _pathlib.Path("sweep_results/manifold_big")
 TAUS = (2.0, 16.0)
 
@@ -47,7 +49,7 @@ TAUS = (2.0, 16.0)
 # ---------------------------------------------------------------- 任务
 def make_task(n_seq: int, T: int, K: int, seed: int, dev: str, vocab: int = 64):
     g = torch.Generator().manual_seed(seed)
-    pref = torch.distributions.Dirichlet(torch.full((K,), 3.0)).sample((K,)).to(dev)
+    pref = seeded_dirichlet(3.0, K).to(dev)
     seg = max(1, T // K)
     phase = torch.randint(0, K, (n_seq,), generator=g).to(dev)
     st = torch.zeros(n_seq, T, dtype=torch.long, device=dev)
@@ -205,25 +207,19 @@ def acc_of(Xtr, Ytr, Xte, Yte, how, K):
     return float((d.argmin(1) == Yte).float().mean())
 
 
-def calibrate_scale(n: int, deg: int, seed: int, dev: str, K: int = 8, target: float = 0.08):
+def calibrate_scale(n: int, deg: int, seed: int, dev: str, K: int = 8):
     """**先标定工作点，不达标就不许跑比较**。
 
     今天已经三次栽在同一处：改 n 之后忘了输入也随 1/√n 缩，网络静默、
     读出全零、"准确率"退化成多数类。这次把标定写进主流程。
     """
     tr, _ = make_task(32, 48, K, 10 + seed, dev)
-    best = None
+    w_in, mats = build_net(n, deg, 64, seed, dev)  # 只建一次：同 seed 逐位相同
     # 细网格：树突的 sign·√|·| 让小信号被放大，阈值附近很陡，粗网格会跨过去
-    for sc in (1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.4, 4.0, 8.0):
-        w_in, mats = build_net(n, deg, 64, seed, dev)
-        w_in = w_in * sc
-        _, fr = run_net(w_in, mats, tr, dev)
-        print(f"    标定 scale={sc:4.1f} 发放 {fr:.4f}", flush=True)
-        if 0.03 <= fr <= 0.20:
-            score = abs(fr - target)
-            if best is None or score < best[2]:
-                best = (sc, fr, score)
-    return best
+    ok, sc, fr = calibrate(lambda s: run_net(w_in * s, mats, tr, dev)[1])
+    if not ok:
+        return None
+    return (sc, fr, abs(fr - TARGET_FIRING))
 
 
 def main() -> int:

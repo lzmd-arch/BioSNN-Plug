@@ -39,6 +39,7 @@ _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
 
 import torch
 
+from scripts.instrument import calibrate
 from scripts.manifold_big import acc_of, make_task, to_ball
 
 OUT = _pathlib.Path("sweep_results/spatial_dim")
@@ -177,15 +178,12 @@ def main() -> int:
         tr, _ = make_task(32, 48, K, 10, dev)
         mats, pre, _dist = build_spatial(dims, n, args.k, 0, dev)
         w_in = (torch.randn(64, n, generator=torch.Generator().manual_seed(0)) / n**0.5).to(dev)
-        best = None
-        for sc in (1.8, 2.0, 2.2, 2.5, 2.8, 3.2, 4.0):
-            _, fr = run_spatial(mats, w_in * sc, tr, dev)
-            if 0.03 <= fr <= 0.20 and (best is None or abs(fr - 0.08) < best[2]):
-                best = (sc, fr, abs(fr - 0.08))
-        if best is None:
-            print(f"  {name:3s} ✗ 标定失败，跳过", flush=True)
+        ok_cal, sc, _pfr = calibrate(
+            lambda s, _m=mats, _w=w_in, _t=tr: run_spatial(_m, _w * s, _t, dev)[1]
+        )
+        if not ok_cal:
+            print(f"  {name:3s} ✗ 标定失败，该臂无效", flush=True)
             continue
-        sc, _pfr, _ = best
         diam = mean_degree_diameter(pre, dims, n)
         # ---- 正式跑 ----
         accs, frs = [], []

@@ -26,7 +26,7 @@ from pathlib import Path
 
 import numpy as np
 
-from research.sos.grid import make_maze, step
+from research.sos import make_maze, step
 
 OUT = Path("sweep_results/arousal_switch")
 SEGMENT = 40  # 每段回合数

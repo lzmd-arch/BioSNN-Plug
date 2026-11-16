@@ -23,7 +23,10 @@ from scripts.instrument import (
     assert_patched,
     calibrate,
     linear_probe_acc,
+    majority_baseline,
+    probe_gain,
     scale_grid,
+    seeded_dirichlet,
     validity,
 )
 
@@ -79,21 +82,49 @@ def test_linear_probe_acc_at_chance_for_random_features():
     assert acc < 1.0 / C + 0.10, f"随机特征不该有高准确率：{acc}"
 
 
+def test_majority_baseline_is_the_real_floor():
+    """**底板必须实测**：类别 0 占 70% 时，1/8 = 0.125 会低得离谱。"""
+    Ytr = torch.cat([torch.zeros(700, dtype=torch.long), torch.ones(300, dtype=torch.long)])
+    Yte = torch.cat([torch.zeros(70, dtype=torch.long), torch.ones(30, dtype=torch.long)])
+    floor = majority_baseline(Ytr, Yte, 2)
+    assert abs(floor - 0.7) < 1e-6, floor
+    assert floor > 1.0 / 2 + 0.19  # 与 1/n_class 的差距必须看得见
+
+
+def test_majority_baseline_on_balanced_case_matches_chance():
+    Ytr = torch.arange(8).repeat(100)
+    Yte = torch.arange(8).repeat(10)
+    assert abs(majority_baseline(Ytr, Yte, 8) - 0.125) < 1e-6
+
+
+def test_probe_gain_is_normalised():
+    assert abs(probe_gain(0.125, 0.125)) < 1e-9  # 在底板上
+    assert abs(probe_gain(1.0, 0.125) - 1.0) < 1e-9  # 天花板
+    assert abs(probe_gain(0.5625, 0.125) - 0.5) < 1e-9  # 走了一半
+
+
 @pytest.mark.parametrize(
-    "acc,firing,should_fail",
+    "acc,firing,floor,n_test,should_fail",
     [
-        (0.60, 0.08, False),
-        (float("nan"), 0.08, True),
-        (0.60, float("inf"), True),
-        (0.60, 0.001, True),  # 静默
-        (0.60, 0.50, True),  # 饱和
-        (0.13, 0.08, True),  # 底板（随机 0.125 + 0.15 门槛）
-        (1.5, 0.08, True),  # 越界
+        (0.60, 0.08, 0.125, 1000, False),
+        (float("nan"), 0.08, 0.125, 1000, True),
+        (0.60, float("inf"), 0.125, 1000, True),
+        (0.60, 0.001, 0.125, 1000, True),  # 静默
+        (0.60, 0.50, 0.125, 1000, True),  # 饱和
+        (0.376, 0.08, 0.376, 1000, True),  # **历史上的假结果**：acc 恰好等于多数类
+        (1.5, 0.08, 0.125, 1000, True),  # 越界
+        # 2026-11-16 的 64 类实战：1/64 随机线曾让门槛不可达；实测底板后这一档应当**通过**
+        (0.057, 0.08, 0.025, 1440, False),
     ],
 )
-def test_validity_gate(acc, firing, should_fail):
-    ok, reasons = validity(acc, firing, chance=0.125)
+def test_validity_gate(acc, firing, floor, n_test, should_fail):
+    ok, reasons = validity(acc, firing, floor, n_test)
     assert ok is (not should_fail), reasons
+
+
+def test_validity_reports_every_problem_not_just_the_first():
+    ok, reasons = validity(0.0, 0.5, 0.5, 100)
+    assert not ok and len(reasons) >= 2, reasons
 
 
 def test_assert_patched_raises_on_miss():
@@ -103,3 +134,61 @@ def test_assert_patched_raises_on_miss():
 
 def test_assert_patched_passes_on_hit():
     assert_patched("这里有 old 片段", "old")
+
+
+# ---------------------------------------------------------------- 任务播种
+# 2026-11-16：`torch.distributions.Dirichlet(...).sample()` 走全局 RNG，不吃局部
+# generator。四个脚本因此在**每次调用**都抽出一个新的 `pref`，于是训练集与测试集
+# 是两个不同的任务，所有臂掉到随机 —— 却完全不像 bug。下面三条守死它。
+
+
+def test_seeded_dirichlet_is_deterministic():
+    a = seeded_dirichlet(3.0, 8, 0)
+    b = seeded_dirichlet(3.0, 8, 0)
+    assert torch.equal(a, b), "同一个 seed 必须给出同一个 pref"
+    c = seeded_dirichlet(3.0, 8, 1)
+    assert not torch.equal(a, c), "不同 seed 应当给出不同的 pref"
+
+
+def test_seeded_dirichlet_does_not_disturb_global_rng():
+    """`fork_rng` 的意义：仪器不能偷偷改动调用方的随机流。"""
+    torch.manual_seed(123)
+    before = torch.randn(3)
+    torch.manual_seed(123)
+    seeded_dirichlet(3.0, 8, 7)
+    after = torch.randn(3)
+    assert torch.equal(before, after)
+
+
+def test_make_task_uses_one_pref_for_train_and_test():
+    """**行为级守卫**：两个不同 seed 的 `make_task` 必须是同一个任务。"""
+    from scripts.manifold_big import make_task
+
+    K, V = 8, 64
+    tr, st_tr = make_task(400, 32, K, 1, "cpu")
+    te, st_te = make_task(400, 32, K, 2, "cpu")
+
+    def prof(toks, st):
+        out = torch.zeros(K, V)
+        for s in range(K):
+            out[s] = torch.nn.functional.one_hot(toks[st == s], V).float().mean(0)
+        return out
+
+    a, b = prof(tr, st_tr), prof(te, st_te)
+    ca = (a - a.mean(1, keepdim=True)).flatten()
+    cb = (b - b.mean(1, keepdim=True)).flatten()
+    r = float((ca @ cb) / (ca.norm() * cb.norm() + 1e-9))
+    assert r > 0.9, f"训练集与测试集不是同一个任务：corr={r:.3f}"
+
+
+def test_no_script_draws_dirichlet_from_the_global_rng():
+    """**静态守卫**：脚本里不许再出现未播种的 `Dirichlet(` 抽样。"""
+    root = Path(__file__).resolve().parents[1] / "scripts"
+    bad = []
+    for f in sorted(root.glob("*.py")):
+        if f.name == "instrument.py":  # 唯一允许出现的地方
+            continue
+        for i, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
+            if "Dirichlet(" in line and "seeded_dirichlet" not in line:
+                bad.append(f"{f.name}:{i}  {line.strip()}")
+    assert not bad, "未播种的 Dirichlet：\n" + "\n".join(bad)

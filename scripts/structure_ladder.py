@@ -53,6 +53,8 @@ _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
 
 import torch
 
+from scripts.instrument import seeded_dirichlet
+
 OUT = _pathlib.Path("sweep_results/structure_ladder")
 V, K = 64, 8
 P_STAY = 0.97
@@ -65,8 +67,7 @@ def make_pref(seed: int = 0, alpha: float = 3.0) -> torch.Tensor:
     `alpha` 越大分布越平 ⇒ 单个 token 携带的状态证据越弱 ⇒ 必须**跨多步积分**
     才能解码。这正是让"结构有没有用"可测的前提。
     """
-    torch.manual_seed(seed)
-    return torch.distributions.Dirichlet(torch.full((K,), alpha)).sample((K,))
+    return seeded_dirichlet(alpha, K, seed)
 
 
 def make_task(n_seq: int, T: int, seed: int, dev: str, pref: torch.Tensor):

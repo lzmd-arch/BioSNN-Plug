@@ -38,6 +38,7 @@ _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
 
 import torch
 
+from scripts.instrument import seeded_dirichlet
 from scripts.structure_ladder import V
 
 OUT = _pathlib.Path("sweep_results/hyperbolic_readout")
@@ -53,7 +54,7 @@ def make_task_k(n_seq: int, T: int, K: int, seed: int, dev: str):
     改后：每个状态都出现 `seg` 步，且**相位每条序列随机** ⇒ 位置不能用来作弊。
     """
     g = torch.Generator().manual_seed(seed)
-    pref = torch.distributions.Dirichlet(torch.full((K,), 3.0)).sample((K,)).to(dev)
+    pref = seeded_dirichlet(3.0, K).to(dev)
     seg = max(1, T // K)
     phase = torch.randint(0, K, (n_seq,), generator=g).to(dev)
     states = torch.zeros(n_seq, T, dtype=torch.long, device=dev)
