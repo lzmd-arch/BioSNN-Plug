@@ -1,42 +1,6 @@
 {
  "n_seeds": 20,
  "cells": {
-  "frac=0.1/comp=0": {
-   "auc_firing": 0.23,
-   "auc_silent": 1.0,
-   "firing_intact": 0.029637781778971355,
-   "firing_lesion": 0.017333026011397124,
-   "silent_intact": 0.01181640625,
-   "silent_lesion": 0.195703125,
-   "gain_mean": 1.0
-  },
-  "frac=0.1/comp=1": {
-   "auc_firing": 0.235,
-   "auc_silent": 1.0,
-   "firing_intact": 0.06344118118286132,
-   "firing_lesion": 0.060186310443498314,
-   "silent_intact": 0.0,
-   "silent_lesion": 0.099072265625,
-   "gain_mean": 1.4524885714054108
-  },
-  "frac=0.25/comp=0": {
-   "auc_firing": 0.01,
-   "auc_silent": 1.0,
-   "firing_intact": 0.029637781778971355,
-   "firing_lesion": 0.0050561033003001885,
-   "silent_intact": 0.01181640625,
-   "silent_lesion": 0.590283203125,
-   "gain_mean": 1.0
-  },
-  "frac=0.25/comp=1": {
-   "auc_firing": 0.0,
-   "auc_silent": 1.0,
-   "firing_intact": 0.06344118118286132,
-   "firing_lesion": 0.050621959209953125,
-   "silent_intact": 0.0,
-   "silent_lesion": 0.253466796875,
-   "gain_mean": 1.6681897282600402
-  },
   "frac=0.5/comp=0": {
    "auc_firing": 0.0,
    "auc_silent": 1.0,
@@ -54,6 +18,15 @@
    "silent_intact": 0.0,
    "silent_lesion": 0.606591796875,
    "gain_mean": 1.856479561328888
+  },
+  "frac=0.5/comp=1S": {
+   "auc_firing": 0.0025,
+   "auc_silent": 1.0,
+   "firing_intact": 0.09342209498087564,
+   "firing_lesion": 0.0695298606529832,
+   "silent_intact": 0.00810546875,
+   "silent_lesion": 0.505322265625,
+   "gain_mean": 21.12479944229126
   }
  }
 }

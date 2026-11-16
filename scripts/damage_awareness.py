@@ -29,18 +29,22 @@ N = 1024
 
 
 @torch.no_grad()
-def measure(seed: int, frac: float, comp: bool, dev: str):
-    """返回 `(每存活神经元发放, 长期静默比例, 平均增益)`。"""
+def measure(seed: int, frac: float, comp: bool, dev: str, strong: bool = False):
+    """返回 `(每存活神经元发放, 长期静默比例, 平均增益)`。
+
+    `strong=True` 时把补偿做到接近完全（20 轮、clip [0.1, 30]、η=6）——
+    只有这样才能检验"稳态与损伤自知互斥"那个两难。
+    """
     toks, _ = make_task(32, 48, 8, 10 + seed, dev)
     w_in, pre, wrec = build_net(seed, dev)
     gen = torch.Generator().manual_seed(9000 + seed)
     alive = (torch.rand(N, generator=gen) >= frac).float().to(dev)
     gain = torch.ones(N, device=dev)
     if comp:
-        # 内增益：逐神经元把发放拉向 f*
-        for _ in range(4):
+        iters, clip_hi, eta = (20, 30.0, 6.0) if strong else (4, 5.0, 2.0)
+        for _ in range(iters):
             act, _fr = run_block(w_in, pre, wrec, toks, dev, alive, gain)
-            gain = torch.clamp(gain * torch.exp(2.0 * (0.08 - act)), 0.2, 5.0)
+            gain = torch.clamp(gain * torch.exp(eta * (0.08 - act)), 0.1, clip_hi)
     act, fr = run_block(w_in, pre, wrec, toks, dev, alive, gain)
     silent = float((act < 1e-6).float().mean())
     del w_in, pre, wrec, toks
@@ -67,17 +71,17 @@ def main() -> int:
     res: dict = {"n_seeds": args.seeds, "cells": {}}
 
     for frac in [float(x) for x in args.fracs.split(",")]:
-        for comp in (False, True):
+        for comp, strong in ((False, False), (True, False), (True, True)):
             fr_int, fr_les, si_int, si_les, gm = [], [], [], [], []
             for sd in range(args.seeds):
-                a = measure(sd, 0.0, comp, dev)
-                b = measure(sd, frac, comp, dev)
+                a = measure(sd, 0.0, comp, dev, strong)
+                b = measure(sd, frac, comp, dev, strong)
                 fr_int.append(a[0])
                 fr_les.append(b[0])
                 si_int.append(a[1])
                 si_les.append(b[1])
                 gm.append(b[2])
-            key = f"frac={frac:g}/comp={int(comp)}"
+            key = f"frac={frac:g}/comp={int(comp)}" + ("S" if strong else "")
             res["cells"][key] = {
                 "auc_firing": auc(fr_les, fr_int),
                 "auc_silent": auc(si_les, si_int),
