@@ -47,7 +47,7 @@ V, K = 64, 8
 CHAIN = ["inhib", "ei", "alif", "delay", "tau"]
 RUNGS = [("L0", [])] + [(f"L{k + 1}", CHAIN[: k + 1]) for k in range(len(CHAIN))]
 #: 天花板的目标区间
-TARGET_CEIL = (0.45, 0.55)
+TARGET_CEIL = (0.40, 0.60)  # amend1：原为 (0.45, 0.55)，两个相邻网格点正好跨在带子两边
 
 
 def ceiling_at(alpha: float, n_train: int, n_test: int, seq: int, seed: int, dev: str) -> float:
