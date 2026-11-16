@@ -30,21 +30,32 @@ OUT = _pathlib.Path("sweep_results/global_field")
 
 
 @torch.no_grad()
-def run_gf(w_in, pre, wrec, toks, dev, g_field: float, alive=None):
-    """带全局场的 LIF。返回每存活神经元的平均发放。"""
+def run_gf(
+    w_in, pre, wrec, toks, dev, g_field: float, alive=None, mode: str = "fixed", fstar: float = 0.08
+):
+    """带全局场的 LIF。返回每存活神经元的平均发放。
+
+    `mode="fixed"`：`cur += g_field·Φ`（v14 原样）
+    `mode="homeo"`：`cur += −g0·(f_run/f*)·Φ` —— 稳态反馈，活动高就压
+    """
     b, T = toks.shape
     n = w_in.shape[1]
     v = torch.zeros((b, n), device=dev)
     z = torch.zeros((b, n), device=dev)
     ref = torch.zeros((b, n), device=dev)
+    f_run = fstar if mode == "homeo" else 0.0
     rate = 0.0
     for t in range(T):
         rec = torch.zeros_like(z)
         for j in range(pre.shape[1]):
             rec = rec + z[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
         cur = w_in[toks[:, t]]
-        if g_field != 0.0:  # **不能写 > 0**：负的（抑制性）场要真的施加
-            phi = float(z.mean())  # 场是全局标量（粗粒化 LFP）
+        phi = float(z.mean())  # 场是全局标量（粗粒化 LFP）
+        if mode == "homeo":
+            g_eff = g_field * (f_run / max(fstar, 1e-9))
+            cur = cur - g_eff * phi
+            f_run = 0.9 * f_run + 0.1 * phi
+        elif g_field != 0.0:  # **不能写 > 0**：负的（抑制性）场要真的施加
             cur = cur + g_field * phi
         nv = 0.95 * v + cur + rec - z * 0.5
         fresh = ((nv - 0.5) / 0.5 > 0).float()
@@ -57,11 +68,11 @@ def run_gf(w_in, pre, wrec, toks, dev, g_field: float, alive=None):
     return rate / T
 
 
-def n_viable(w_in, pre, wrec, toks, dev, g_field, alive, scales):
+def n_viable(w_in, pre, wrec, toks, dev, g_field, alive, scales, mode="fixed"):
     lo, hi = FIRING_WINDOW
     cnt = 0
     for s in scales:
-        fr = run_gf(w_in * s, pre, wrec, toks, dev, g_field, alive)
+        fr = run_gf(w_in * s, pre, wrec, toks, dev, g_field, alive, mode=mode)
         if lo <= fr <= hi:
             cnt += 1
     return cnt
@@ -73,6 +84,7 @@ def main() -> int:
     ap.add_argument("--n-seq", type=int, default=32)
     ap.add_argument("--gfs", default="0,0.5,1,2,4")
     ap.add_argument("--seeds", default="0,1,2")
+    ap.add_argument("--mode", default="fixed", choices=("fixed", "homeo"))
     ap.add_argument("--out", type=_pathlib.Path, default=OUT)
     args = ap.parse_args()
     dev = "cuda" if torch.cuda.is_available() else "cpu"
@@ -87,8 +99,8 @@ def main() -> int:
             w_in, pre, wrec, _a, _d, _p = build(N, set(), sd, dev, 8)
             gen = torch.Generator().manual_seed(7000 + sd)
             alive = (torch.rand(N, generator=gen) >= 0.5).float().to(dev)
-            vi_int.append(n_viable(w_in, pre, wrec, toks, dev, gf, None, scales))
-            vi_les.append(n_viable(w_in, pre, wrec, toks, dev, gf, alive, scales))
+            vi_int.append(n_viable(w_in, pre, wrec, toks, dev, gf, None, scales, args.mode))
+            vi_les.append(n_viable(w_in, pre, wrec, toks, dev, gf, alive, scales, args.mode))
             del w_in, pre, wrec, toks
             torch.cuda.empty_cache()
         res["cells"][f"{gf:.1f}"] = {
@@ -98,7 +110,7 @@ def main() -> int:
             "mean_lesion": sum(vi_les) / len(vi_les),
         }
         print(
-            f"  g_field={gf:4.1f}  完整 n_viable {vi_int}  损伤50% {vi_les}",
+            f"  [{args.mode}] g={gf:5.1f}  完整 n_viable {vi_int}  损伤50% {vi_les}",
             flush=True,
         )
 
