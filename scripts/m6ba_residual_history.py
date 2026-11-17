@@ -46,11 +46,11 @@ N_SYM = 8
 
 
 @torch.no_grad()
-def collect(seed: int, alpha_seed: int, per_fam: int, dev: str):
+def collect(seed: int, alpha_seed: int, per_fam: int, dev: str, conc: float = 0.7):
     net = build_pools(seed, dev, K, 0.0, p_long=0.5)
     states, labels = [], []
     for fam in range(N_SYM):
-        toks = make_family_hist(fam, alpha_seed * 1000 + fam * 7, T_HIST, per_fam, dev)
+        toks = make_family_hist(fam, alpha_seed * 1000 + fam * 7, T_HIST, per_fam, dev, conc=conc)
         r = run_spont(
             seed,
             0.5,
@@ -110,9 +110,11 @@ def main() -> int:
 
     res: dict = {"cells": []}
     for sd in range(args.seeds):
-        Xa, Ya = collect(sd, 100 + sd, args.per_fam, dev)
-        Xb, _ = collect(sd, 200 + sd, args.per_fam, dev)
-        Xn, _ = collect(sd, 900 + sd, args.per_fam, dev)
+        # **A 与 B 必须是不同的统计量**（conc 0.7 vs 0.3）；A' 同 A 的统计量、只换随机流。
+        # 第一版只换了 seed ⇒ 对照没有区别 ⇒ 结果无效（R-0 只有 1.06x 就是证据）。
+        Xa, Ya = collect(sd, 100 + sd, args.per_fam, dev, conc=0.7)
+        Xb, _ = collect(sd, 100 + sd, args.per_fam, dev, conc=0.3)
+        Xn, _ = collect(sd, 900 + sd, args.per_fam, dev, conc=0.7)
         # 只取族均值向量（每个族一个状态），个体间比较
         ra = torch.stack([Xa[Ya == f].mean(0) for f in range(N_SYM)])
         rb = torch.stack([Xb[Ya == f].mean(0) for f in range(N_SYM)])
