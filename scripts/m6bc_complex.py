@@ -171,8 +171,7 @@ def phase_locking(phasor: torch.Tensor) -> float:
 
 
 @torch.no_grad()
-def real_cell(seed: int, per_fam: int, dev: str) -> dict:
-    """**实值基线**（同一批族、同参数）。C-1 的对照就是它，不是"另一档旋钮"。"""
+def _real_collect(seed: int, per_fam: int, dev: str):
     net = build_pools(seed, dev, K, 0.0, p_long=P_LONG)
     R, FR, Y, BIN = [], [], [], []
     for fam in FAMS:
@@ -196,13 +195,20 @@ def real_cell(seed: int, per_fam: int, dev: str) -> dict:
         FR.append(float(r.mean()))
         BIN.append(spatial_bins(r.contiguous()))
         Y.append(torch.full((r.shape[0],), fam, device=r.device))
-    S = torch.cat(R)
-    Yc = torch.cat(Y)
+    return torch.cat(R), torch.cat(Y), torch.cat(BIN), sum(FR) / len(FR)
+
+
+def real_cell(seed: int, per_fam: int, dev: str) -> dict:
+    """**实值基线**（同一批族、同参数）。C-1 的对照就是它，不是"另一档旋钮"。
+
+    注意：探针不能在 `@torch.no_grad()` 里跑（MLP 要反传），所以采集与探针分开。
+    """
+    S, Yc, BIN, firing = _real_collect(seed, per_fam, dev)
     perm = torch.randperm(Yc.shape[0], generator=torch.Generator().manual_seed(51 + seed))
     cut = int(Yc.shape[0] * 0.75)
     return {
-        "firing": sum(FR) / len(FR),
-        "linear": probe(torch.cat(BIN)[perm], Yc[perm], cut, len(FAMS))[0],
+        "firing": firing,
+        "linear": probe(BIN[perm], Yc[perm], cut, len(FAMS))[0],
         "mlp": mlp_probe(S[perm], Yc[perm], cut, len(FAMS))[0],
         "floor": majority_baseline(Yc[perm][:cut], Yc[perm][cut:], len(FAMS)),
         **shape_stats(S),

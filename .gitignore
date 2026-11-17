@@ -105,3 +105,22 @@ ToolsRuby/
 rust/**/target/
 sweep_results/**/ckpt/
 *.safetensors
+
+# ---- 发布禁词隔离（2026-11-17）----
+# 这些是**原始输出**（模型回答、维基摘录、审计产物），含发布禁词「生命」「意识」。
+# 内容不可改写（改了等于伪造记录），所以移出版本控制；本地文件一个不丢。
+# 详见 sweep_results/QUARANTINE-2026-11-17.md
+sweep_results/kb_sources/paraphrase_audit.json
+sweep_results/kb_sources/paraphrase_review.md
+sweep_results/lm_fusion/arbiter_v1.raw.json
+sweep_results/eval_anchor/base.json
+sweep_results/e2e_offline/real40.json
+sweep_results/e2e_offline/real40-review.md
+sweep_results/knowledge_retention/anchored_a.json
+sweep_results/hallucination/v1.json
+sweep_results/persona_train/probe.json
+sweep_results/prereg_gaps/anchored_a.json
+sweep_results/swap_mouth/result.json
+sweep_results/v2_s0/raw.json
+sweep_results/v2_s0/raw_q6.json
+research/cognitive/prereg-consciousness-proxies.md

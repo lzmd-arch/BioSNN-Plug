@@ -34,16 +34,15 @@ WHITELIST = {
 
 
 def iter_files(root: _pathlib.Path, staged: bool):
-    if staged:
-        out = subprocess.run(
-            ["git", "diff", "--cached", "--name-only"], capture_output=True, text=True
-        ).stdout
-        for line in out.splitlines():
-            p = root / line.strip()
-            if p.suffix in TEXT_EXT and p.exists():
-                yield p
-        return
-    for p in root.rglob("*"):
+    """**扫描对象 = 会被发布的文件集**（`git ls-files`），不是文件系统。
+
+    2026-11-17 修正：原先用 `rglob` 扫盘，把 `.gitignore` 里的本地留档也算成公开内容，
+    于是"把原始输出移出版本控制"这一步在扫描里看不见。防火墙要量的是**仓库内容**。
+    """
+    cmd = ["git", "diff", "--cached", "--name-only"] if staged else ["git", "ls-files"]
+    out = subprocess.run(cmd, capture_output=True, text=True, cwd=root).stdout
+    for line in out.splitlines():
+        p = root / line.strip()
         if not p.is_file() or p.suffix not in TEXT_EXT:
             continue
         if any(part in SKIP_DIRS for part in p.parts):
