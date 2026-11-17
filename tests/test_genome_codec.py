@@ -445,3 +445,27 @@ def test_call_variants_empty_on_identical():
     ref_seq = encode_genome(VALUES, LAYOUT)
     assert call_variants(ref_seq, ref_seq, LAYOUT, CONSTANTS) == []
     assert worst_effect([]) == "无变异"
+
+
+def test_codominance_averages_continuous_traits():
+    """**两条同源都在带内 ⇒ 连续量取平均**（真实定量遗传是加性的，不是"a 优先"）。"""
+    ref_seq = encode_genome(VALUES, LAYOUT)
+    rng = random.Random(41)
+    lo, hi = 0.10, 0.10
+    alt = ref_seq
+    for _ in range(400):
+        cand, v = substitute(alt, LAYOUT, REGULATORY, rng, ref=CONSTANTS, tol=lo)
+        if v.ok and not v.lethal:
+            vals = decode_genome(cand, LAYOUT)
+            if any(abs(float(vals[k]) - float(CONSTANTS[k])) > 1e-6 for k in CONSTANTS):
+                alt = cand
+                break
+    assert alt != ref_seq
+    va, vb = decode_genome(ref_seq, LAYOUT), decode_genome(alt, LAYOUT)
+    merged, why = express(ref_seq, alt, LAYOUT, CONSTANTS, tol=hi)
+    assert merged is not None and "共显性" in why
+    diffs = [k for k in CONSTANTS if abs(float(va[k]) - float(vb[k])) > 1e-6]
+    assert diffs, "没造出杂合位点"
+    for k in diffs:
+        want = (float(va[k]) + float(vb[k])) / 2.0
+        assert abs(float(merged[k]) - want) < 1e-6, k

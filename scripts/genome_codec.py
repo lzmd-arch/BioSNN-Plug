@@ -535,23 +535,46 @@ def express(
     tol: float = 0.10,
     gate=None,
 ) -> tuple[dict | None, str]:
-    """二倍体表达。**坏等位自动隐性**：能过闸的那条被表达，两条都过不了才致死。
+    """二倍体表达。**坏等位自动隐性；两条都好时连续量共显性（取平均）。**
+
+    共显性是真实定量遗传的实际形态（多基因性状是加性的），不是"a 优先"。
+    只有合成后过不了闸时，才退回完全显性（先 a 后 b）。
 
     `gate(values) -> bool` 是昂贵的验收闸（展开后跑网络）；不传则只看调控区。
     """
     cands = []
     for tag, seq in (("a", homolog_a), ("b", homolog_b)):
         vals = decode_genome(seq, layout)
+        ok, _why = viable(vals, ref, tol)
+        cands.append((tag, vals, ok))
+
+    def passes(vals: dict) -> tuple[bool, str]:
         ok, why = viable(vals, ref, tol)
-        if ok and gate is not None:
-            ok = bool(gate(vals))
-            why = "ok" if ok else "验收闸不过"
-        cands.append((tag, vals, ok, why))
-    for tag, vals, ok, _why in cands:
-        if ok:
-            masked = "（另一条同源被掩蔽）" if tag == "a" and cands[1][2] is False else ""
+        if not ok:
+            return False, why
+        if gate is not None and not gate(vals):
+            return False, "验收闸不过"
+        return True, "ok"
+
+    if all(c[2] for c in cands):
+        merged = dict(cands[0][1])
+        for name, _k, _w, codec in layout:
+            key = bare(name)
+            if codec == "float" and key in cands[0][1] and key in cands[1][1]:
+                merged[key] = (float(cands[0][1][key]) + float(cands[1][1][key])) / 2.0
+        good, _ = passes(merged)
+        if good:
+            return merged, "共显性（两条同源都在带内，连续量取平均）"
+
+    for tag, vals, _ok in cands:
+        good, _ = passes(vals)
+        if good:
+            other_failed = any(not c[2] for c in cands if c[0] != tag)
+            masked = "（另一条同源被掩蔽）" if other_failed else ""
             return vals, f"表达同源 {tag}{masked}"
-    return None, "两条同源都过不了闸 ⇒ 致死：" + "; ".join(f"{c[0]}:{c[3]}" for c in cands)
+
+    fails = "; ".join(f"{c[0]}:{passes(c[1])[1]}" for c in cands)
+    return None, f"两条同源都过不了闸 ⇒ 致死：{fails}"
 
 
 # --------------------------------------------------------------------------- #
