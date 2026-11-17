@@ -13,6 +13,8 @@ from pathlib import Path
 import pytest
 import torch
 
+pytest.importorskip("torch", reason="无 torch 的 CI 腿跳过")
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.m6_pools import N, pool_id, pool_rates, pr_of

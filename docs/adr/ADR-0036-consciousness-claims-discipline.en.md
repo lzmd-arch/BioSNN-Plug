@@ -7,7 +7,7 @@
 - **Related**: [`docs/consciousness-framework.en.md`](../consciousness-framework.en.md) (the "why" of this ADR),
   [ADR-0028](ADR-0028-metacog-gate-threshold-first.en.md) (metacognitive gate equivalent to a single threshold — cited here as a counter-example),
   [ADR-0035](ADR-0035-local-learning-lm.en.md) (capability boundaries of the local-learning LM, the factual basis for the model card),
-  [`research/cognitive/prereg-consciousness-proxies.md`](../../research/cognitive/prereg-consciousness-proxies.md) (proxy criteria)
+  `research/cognitive/prereg-consciousness-proxies.md`（内部留档，未随仓库发布） (proxy criteria)
 
 ## Context
 

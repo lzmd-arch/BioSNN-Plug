@@ -7,7 +7,7 @@
 
 ## パッケージの中身
 
-```
+```text
 semprea-anchor-v1/
   model/            Semprea-Anchor-0.5B（人格はすでに重みの中）
   persona_core/     汎用の人格・記憶核（記憶庫・状態・影響チャネル）

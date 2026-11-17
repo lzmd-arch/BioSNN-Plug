@@ -61,7 +61,7 @@
 ### 1.4 行動：意識プロキシ指標の事前登録
 
 四つの指標、三つの署名列、一つの表現テンプレート。**判定基準はすでに保存済み**：
-[`research/cognitive/prereg-consciousness-proxies.md`](../research/cognitive/prereg-consciousness-proxies.md)。
+`research/cognitive/prereg-consciousness-proxies.md`（内部留档，未随仓库发布）。
 
 | 指標 | 署名列 | 測るもの | 既にあるもの |
 | :--- | :--- | :--- | :--- |
@@ -237,7 +237,7 @@ AGI ノートの「ハードウェアの錨」を第一世代のインスタン�
 | 2 | 実体保存の基盤（五点セット＋移行契約） | ⬜ 未着手 | 設計は §4。**コードは一切無い** |
 | 3 | 記憶階層化の製品設計（「記憶の引き出し」） | ⬜ 未着手 | Axo 側は人格アンカーの階層化のみで、エピソード層の消去入り口が無い |
 | 4 | コンプライアンス ADR の型＋規制の哨兵の起動 | ✅ 完了 | [`ADR-0036`](adr/ADR-0036-consciousness-claims-discipline.ja.md) |
-| 5 | 意識プロキシ指標の事前登録（四指標） | ✅ 完了 | [`research/cognitive/prereg-consciousness-proxies.md`](../research/cognitive/prereg-consciousness-proxies.md) |
+| 5 | 意識プロキシ指標の事前登録（四指標） | ✅ 完了 | `research/cognitive/prereg-consciousness-proxies.md`（内部留档，未随仓库发布） |
 | 6 | licenses/ の出所別アーカイブ（リリースゲート） | ◐ 製品側は完了、研究側は未了 | Axo リポジトリの `licenses/` ＋ `THIRD-PARTY-NOTICES.md`（ビルド時にパッケージ単位で照合）。**研究側の千問の重みとコーパスのライセンスは未登録** |
 | 7 | 創発／基板の二つのゲートを事前登録の型に書き込む | ✅ 完了 | [`research/prereg-template.md`](../research/prereg-template.md) |
 | 8 | 製品化段階での法律事務所の起用（届出＋PIPL の細部） | ⬜ 未着手 | **本フレームワークは法的助言の代替にはならない**。人にしかできない |

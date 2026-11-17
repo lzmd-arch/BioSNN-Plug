@@ -9,7 +9,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
 import torch
+
+pytest.importorskip("torch", reason="无 torch 的 CI 腿跳过")
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 

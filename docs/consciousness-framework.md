@@ -56,7 +56,7 @@
 ### 1.4 行动：预注册一组意识代理指标
 
 四个指标、三个签名类别、一份措辞模板。**判据已经落盘**：
-[`research/cognitive/prereg-consciousness-proxies.md`](../research/cognitive/prereg-consciousness-proxies.md)。
+`research/cognitive/prereg-consciousness-proxies.md`（内部留档，未随仓库发布）。
 
 | 指标 | 签名类别 | 测什么 | 现有的东西 |
 | :--- | :--- | :--- | :--- |
@@ -215,7 +215,7 @@
 | 2 | 实体保存基建（五件套 + 迁移契约） | ⬜ 未开始 | 设计见 §4；**没有任何代码** |
 | 3 | 记忆分层产品设计（"记忆抽屉"） | ⬜ 未开始 | Axo 侧只有人格锚分层，无情景层清空入口 |
 | 4 | 合规 ADR 模板 + 监管哨兵启动 | ✅ 已落 | [`ADR-0036`](adr/ADR-0036-consciousness-claims-discipline.md) |
-| 5 | 意识代理指标预注册（四指标） | ✅ 已落 | [`research/cognitive/prereg-consciousness-proxies.md`](../research/cognitive/prereg-consciousness-proxies.md) |
+| 5 | 意识代理指标预注册（四指标） | ✅ 已落 | `research/cognitive/prereg-consciousness-proxies.md`（内部留档，未随仓库发布） |
 | 6 | licenses/ per-source 归档（发布门禁） | ◐ 产品侧已落、研究侧未落 | Axo 仓 `licenses/` + `THIRD-PARTY-NOTICES.md`（构建期逐包核对）；**研究侧的千问权重与语料许可未登记** |
 | 7 | 涌现/基底双里程碑门禁写入预注册模板 | ✅ 已落 | [`research/prereg-template.md`](../research/prereg-template.md) |
 | 8 | 产品化阶段聘律所（备案 + PIPL 细节） | ⬜ 未开始 | **本框架不替代法律意见**；只能由人做 |

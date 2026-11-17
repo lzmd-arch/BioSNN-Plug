@@ -66,7 +66,7 @@ was trained on the entire human discourse about consciousness; "I feel it" carri
 ### 1.4 Action: pre-register a set of consciousness proxies
 
 Four indicators, three signature categories, one wording template. **The criteria are already on disk**:
-[`research/cognitive/prereg-consciousness-proxies.md`](../research/cognitive/prereg-consciousness-proxies.md).
+`research/cognitive/prereg-consciousness-proxies.md`（内部留档，未随仓库发布）.
 
 | Indicator | Signature category | What it measures | What already exists |
 | :--- | :--- | :--- | :--- |
@@ -252,7 +252,7 @@ pre-register the consciousness proxies.
 | 2 | Entity-preservation infrastructure (five-piece set + migration contract) | ⬜ Not started | Design in §4; **no code at all** |
 | 3 | Memory-layering product design (the "memory drawer") | ⬜ Not started | Axo has persona-anchor layering only; no entry point for clearing the episodic layer |
 | 4 | Compliance ADR template + regulatory sentinel started | ✅ Landed | [`ADR-0036`](adr/ADR-0036-consciousness-claims-discipline.en.md) |
-| 5 | Pre-registration of consciousness proxies (four indicators) | ✅ Landed | [`research/cognitive/prereg-consciousness-proxies.md`](../research/cognitive/prereg-consciousness-proxies.md) |
+| 5 | Pre-registration of consciousness proxies (four indicators) | ✅ Landed | `research/cognitive/prereg-consciousness-proxies.md`（内部留档，未随仓库发布） |
 | 6 | Per-source licence archive (`licenses/`) as a release gate | ◐ Product side landed, research side not | Axo repo `licenses/` + `THIRD-PARTY-NOTICES.md` (package-by-package check at build time); **the research side has not registered the Qwen weights or the corpus licence** |
 | 7 | Emergence/substrate gates written into the pre-registration template | ✅ Landed | [`research/prereg-template.md`](../research/prereg-template.md) |
 | 8 | Retain counsel at the productisation stage (filing + PIPL details) | ⬜ Not started | **This framework is not a substitute for legal advice**; only a person can do this |

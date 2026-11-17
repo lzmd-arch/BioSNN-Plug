@@ -7,7 +7,7 @@
 - **関連**：[`docs/consciousness-framework.ja.md`](../consciousness-framework.ja.md)（本 ADR の「なぜ」）、
   [ADR-0028](ADR-0028-metacog-gate-threshold-first.ja.md)（メタ認知ゲートは単一しきい値と等価——本 ADR は反例として引く）、
   [ADR-0035](ADR-0035-local-learning-lm.ja.md)（局所学習 LM の能力境界、model card の事実根拠）、
-  [`research/cognitive/prereg-consciousness-proxies.md`](../../research/cognitive/prereg-consciousness-proxies.md)（プロキシ指標の判定基準）
+  `research/cognitive/prereg-consciousness-proxies.md`（内部留档，未随仓库发布）（プロキシ指標の判定基準）
 
 ## Context
 

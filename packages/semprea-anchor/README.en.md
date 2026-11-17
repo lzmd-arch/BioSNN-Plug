@@ -7,7 +7,7 @@ when she should not speak*. The mouth comes from the cloud: swap the mouth, not 
 
 ## What is in the box
 
-```
+```text
 semprea-anchor-v1/
   model/            Semprea-Anchor-0.5B (the persona already lives in the weights)
   persona_core/     the general persona-and-memory core (store, state, influence channel)

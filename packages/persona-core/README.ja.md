@@ -23,7 +23,7 @@ python -m persona_core manifest   --root ~/persona-core
 
 `init-memory` が作るもの：
 
-```
+```text
 <root>/memory/mem.db           記憶庫（schema は memcore と同一）
 <root>/identity/instance.json  実体 id、誕生日、誕生時の年齢
 ```

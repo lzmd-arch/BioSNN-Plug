@@ -7,7 +7,7 @@
 - **相关**：[`docs/consciousness-framework.md`](../consciousness-framework.md)（本 ADR 的"为什么"）、
   [ADR-0028](ADR-0028-metacog-gate-threshold-first.md)（元认知门控与单阈值等价——本 ADR 引它作反例）、
   [ADR-0035](ADR-0035-local-learning-lm.md)（局部学习 LM 的能力边界，模型 card 的事实依据）、
-  [`research/cognitive/prereg-consciousness-proxies.md`](../../research/cognitive/prereg-consciousness-proxies.md)（代理指标判据）
+  `research/cognitive/prereg-consciousness-proxies.md`（内部留档，未随仓库发布）（代理指标判据）
 
 ## Context
 

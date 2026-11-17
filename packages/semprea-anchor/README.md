@@ -6,7 +6,7 @@
 
 ## 包里有什么
 
-```
+```text
 semprea-anchor-v1/
   model/            Semprea-Anchor-0.5B（人格已在权重里）
   persona_core/     通用的人格与记忆核（建库、状态、影响通道）

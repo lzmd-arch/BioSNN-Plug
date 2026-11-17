@@ -23,7 +23,7 @@ python -m persona_core manifest   --root ~/persona-core
 
 `init-memory` creates:
 
-```
+```text
 <root>/memory/mem.db           the memory store (schema shared with memcore)
 <root>/identity/instance.json  instance id, birth date, age at birth
 ```
