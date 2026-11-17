@@ -407,6 +407,71 @@ def indel(
 
 
 # --------------------------------------------------------------------------- #
+# 测序工程：变异检出与判定
+# --------------------------------------------------------------------------- #
+#: 变异后果，按严重度排序（后面的更严重）
+EFFECTS = ("沉默", "调控漂移", "编码改变", "物种改变", "致死")
+
+
+@dataclass(frozen=True)
+class Variant:
+    pos: int
+    field: str
+    kind: str
+    ref_base: str
+    alt_base: str
+    effect: str
+
+
+def call_variants(seq: str, ref_seq: str, layout: list[Field], ref: dict, *, tol: float = 0.10):
+    """**变异检出 + 判定**：逐个字段比对，按区域给后果。
+
+    这是"有害突变可预防"的**提交前筛查**——不是等它长出来再死，
+    而是在变异进入种群之前就知道它属于哪一档。
+    """
+    out: list[Variant] = []
+    for name, kind, _w, codec in layout:
+        if codec == "checksum":
+            continue  # 尾巴是校验和，不是信息
+        a, b = _span_of(ref_seq, layout, name), _span_of(seq, layout, name)
+        if a == b:
+            continue
+        if kind in (FIXED, CONSERVED):
+            effect = "物种改变"
+        elif kind == INTRON:
+            effect = "沉默"
+        elif kind == CODING:
+            effect = "编码改变"
+        else:  # REGULATORY：按字段值判，不按单个碱基
+            key = bare(name)
+            r = float(ref[key])
+            v = decode_int(b) if codec == "int" else decode_float(b)
+            v = int(v) if codec == "int" else v
+            out_of_band = (r == 0.0 and v != 0) or (r != 0.0 and abs(v - r) / abs(r) > tol)
+            effect = "致死" if out_of_band else "调控漂移"
+        for i, (x, y) in enumerate(zip(a, b, strict=True)):
+            if x != y:
+                out.append(
+                    Variant(
+                        pos=spans(layout, len(seq))[name][0] + i,
+                        field=name,
+                        kind=kind,
+                        ref_base=x,
+                        alt_base=y,
+                        effect=effect,
+                    )
+                )
+    return out
+
+
+def worst_effect(variants: list[Variant]) -> str:
+    """最严重的那个后果。空变异 = 与参照相同。"""
+    if not variants:
+        return "无变异"
+    return max((v.effect for v in variants), key=EFFECTS.index)
+
+
+# --------------------------------------------------------------------------- #
 # 修复：移植，不是复活
 # --------------------------------------------------------------------------- #
 #: 管家区 —— 修复时从备份取这一段

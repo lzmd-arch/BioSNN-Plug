@@ -38,6 +38,7 @@ from scripts.genome_codec import (
     UnreadableError,
     _span_of,
     backup,
+    call_variants,
     decode_genome,
     decode_int,
     default_layout,
@@ -59,6 +60,7 @@ from scripts.genome_codec import (
     verify_backup,
     verify_checksum,
     viable,
+    worst_effect,
 )
 
 CONSTANTS = {"a": 0.5, "b": 2.0, "N": 1024}
@@ -402,3 +404,44 @@ def test_transplant_restores_a_dead_individual():
     fixed_seq, v = transplant(dead, ref_seq, LAYOUT, CONSTANTS, tol=0.01)
     assert v.ok
     assert express(fixed_seq, dead, LAYOUT, CONSTANTS, tol=0.01)[0] is not None
+
+
+# --------------------------------------------------------------------------- #
+# 测序工程：变异检出
+# --------------------------------------------------------------------------- #
+def test_call_variants_classifies_by_region():
+    """**提交前筛查**：同一个碱基替换，落在哪个区就有哪种后果。"""
+    ref_seq = encode_genome(VALUES, LAYOUT)
+    rng = random.Random(31)
+    cases = {
+        INTRON: "沉默",
+        CODING: "编码改变",
+        CONSERVED: "物种改变",
+    }
+    for kind, want in cases.items():
+        got = None
+        for _ in range(60):
+            seq, _v = substitute(ref_seq, LAYOUT, kind, rng, ref=CONSTANTS)
+            vs = call_variants(seq, ref_seq, LAYOUT, CONSTANTS)
+            if vs:
+                got = worst_effect(vs)
+                break
+        assert got == want, f"{kind}: 期望 {want}，得到 {got}"
+
+
+def test_call_variants_flags_lethal_regulatory():
+    ref_seq = encode_genome(VALUES, LAYOUT)
+    rng = random.Random(32)
+    for _ in range(400):
+        seq, v = substitute(ref_seq, LAYOUT, REGULATORY, rng, ref=CONSTANTS, tol=0.01)
+        if v.lethal:
+            got = worst_effect(call_variants(seq, ref_seq, LAYOUT, CONSTANTS, tol=0.01))
+            assert got == "致死"
+            return
+    raise AssertionError("400 次都没造出出带变异")
+
+
+def test_call_variants_empty_on_identical():
+    ref_seq = encode_genome(VALUES, LAYOUT)
+    assert call_variants(ref_seq, ref_seq, LAYOUT, CONSTANTS) == []
+    assert worst_effect([]) == "无变异"

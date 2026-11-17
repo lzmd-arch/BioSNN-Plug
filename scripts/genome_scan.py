@@ -37,6 +37,7 @@ from scripts.genome_codec import (
     QuantumAxis,
     _span_of,
     backup,
+    call_variants,
     decode_genome,
     default_layout,
     express,
@@ -49,6 +50,7 @@ from scripts.genome_codec import (
     verify_backup,
     verify_checksum,
     viable,
+    worst_effect,
 )
 
 INT_CONSTANTS = {"N", "L", "DEG", "RAD", "V", "K_pools", "field_radius"}
@@ -220,6 +222,11 @@ def main() -> int:
         if v.lethal:
             live = cand
             break
+    vs = call_variants(live, plus, LAYOUT, REF, tol=0.01)
+    print(
+        f"  提交前筛查 检出变异 {len(vs)} 个，最严重 = **{worst_effect(vs)}**；"
+        f"字段 = {sorted({v.field for v in vs})[:6]}"
+    )
     print(
         f"  个体现状   编码区已换（有益 ok={v_good.ok}），调控区出带 ⇒ 可活？"
         f"{viable(decode_genome(live, LAYOUT), REF, tol=0.01)[0]}"

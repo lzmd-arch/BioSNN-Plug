@@ -1,0 +1,46 @@
+{
+ "cells": [
+  {
+   "seed": 0,
+   "readable": 0.8120381772325488,
+   "residual": 1.1159817406188288,
+   "win_read": 0,
+   "win_res": 1
+  },
+  {
+   "seed": 1,
+   "readable": 1.4365386710237138,
+   "residual": 1.3362925536475403,
+   "win_read": 1,
+   "win_res": 1
+  },
+  {
+   "seed": 2,
+   "readable": 1.4548060323099983,
+   "residual": 1.7648075162289265,
+   "win_read": 1,
+   "win_res": 1
+  },
+  {
+   "seed": 3,
+   "readable": 0.8852735310287572,
+   "residual": 0.9968905782043899,
+   "win_read": 0,
+   "win_res": 0
+  },
+  {
+   "seed": 4,
+   "readable": 0.9616070778911913,
+   "residual": 1.0647818178594157,
+   "win_read": 0,
+   "win_res": 1
+  },
+  {
+   "seed": 5,
+   "readable": 0.8388409346884123,
+   "residual": 0.9298610185443732,
+   "win_read": 0,
+   "win_res": 0
+  }
+ ]
+}
