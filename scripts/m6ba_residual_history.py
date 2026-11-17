@@ -26,9 +26,8 @@
 
 from __future__ import annotations
 
-# ruff: noqa: N806
+# ruff: noqa: N803, N806
 import argparse
-import itertools
 import json
 import pathlib as _pathlib
 import sys as _sys
