@@ -69,7 +69,11 @@ def run_complex(
     g_field: float = G_FIELD,
     record_len: int = T_LATE,
 ):
-    """复值 LIF。返回 `(发放率 (B,N), 复状态均值 (B,N) complex)`。"""
+    """复值 LIF。返回 `(发放率 (B,N), 复状态均值 (B,N) complex)`。
+
+    **与 `run_spont` 同构**：脉冲是上一步的量、复位是"减去上一步脉冲的 θ 倍"、
+    阈值判在新膜电位上、稳态增益与起搏电流照搬。ω=0 时应当逐项对上实值引擎。
+    """
     w_in, pre, wrec, _pid = (
         net if net is not None else build_pools(seed, dev, K, 0.0, p_long=P_LONG)
     )
@@ -83,42 +87,48 @@ def run_complex(
     B, T = hist_in.shape
     x = torch.zeros((B, N), device=dev)
     y = torch.zeros((B, N), device=dev)
+    px = torch.zeros((B, N), device=dev)  # 复脉冲（上一步）：幅度 0/1、相位 = 膜电位相位
+    py = torch.zeros((B, N), device=dev)
     ref = torch.zeros((B, N), device=dev)
+    gain = torch.ones(N, device=dev)
+    f_i = torch.full((N,), 0.08, device=dev)
+    f_run = 0.08
+    pg = torch.Generator().manual_seed(seed + 31337)
+    pace = ((torch.rand(N, generator=pg) < 0.02).float() * 0.5).to(dev)
     stats = []
+    rate_acc = torch.zeros((B, N), device=dev)
 
     for t in range(T + t_spont):
-        mag = torch.sqrt(x * x + y * y)
-        fired = (mag > theta) & (ref <= 0)
-        # **单位复脉冲**：幅度 1、相位 = 膜电位相位。实值版的 0/1 脉冲是它的 ω=0 特例。
-        inv = 1.0 / mag.clamp(min=1e-9)
-        zx = x * inv * fired
-        zy = y * inv * fired
         rec_x = torch.zeros_like(x)
         rec_y = torch.zeros_like(y)
         for j in range(pre.shape[1]):
-            rec_x = rec_x + zx[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
-            rec_y = rec_y + zy[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
-        phi_g = float(fired.float().mean())
-        # 复数泄漏 = 旋转 + 衰减；输入是实的（电流加在实部）
-        nx = leak * (cos_w * x - sin_w * y) + rec_x - g_field * phi_g
-        ny = leak * (sin_w * x + cos_w * y) + rec_y
-        if t < T:
-            cur = w_in[hist_in[:, t]]
-            nx = nx + cur
-        # **保相位复位**：沿径向减去阈值
-        mag2 = torch.sqrt(nx * nx + ny * ny).clamp(min=1e-9)
-        scale_r = (1.0 - theta / mag2).clamp(min=0.0)
-        nf = (mag2 > theta) & (ref <= 0)
-        nx = torch.where(nf, nx * scale_r, nx)
-        ny = torch.where(nf, ny * scale_r, ny)
+            rec_x = rec_x + px[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
+            rec_y = rec_y + py[:, pre[:, j]] * wrec[:, j].unsqueeze(0)
+        phi_g = float(px.abs().mean())
+        nx = leak * (cos_w * x - sin_w * y) + rec_x - theta * px - g_field * (f_run / 0.08) * phi_g
+        ny = leak * (sin_w * x + cos_w * y) + rec_y - theta * py
+        # **起搏只在自发期**：历史期由输入驱动，自发期靠 2% 起搏神经元维持
+        drive = w_in[hist_in[:, t]] * gain.unsqueeze(0) if t < T else pace.unsqueeze(0)
+        nx = nx + drive
+        # **发放判在实部**（实部 = 电压，虚部 = 正交分量）。
+        # 用 |z|>θ 会让负膜电位也触发，而复位沿相位方向 ⇒ 等于把电流加回去。
+        mag = torch.sqrt(nx * nx + ny * ny)
+        nf = (nx > theta) & (ref <= 0)
+        inv = 1.0 / mag.clamp(min=1e-9)
+        px, py = nx * inv * nf, ny * inv * nf
         ref = torch.clamp(ref + 2.0 * nf.float() - 1.0, 0.0, 2.0)
         x, y = nx, ny
+        f_run = 0.9 * f_run + 0.1 * float(nf.float().mean())
+        if t < T:
+            f_i = 0.9 * f_i + 0.1 * nf.float().mean(0)
+            if t % 4 == 3:
+                gain = torch.clamp(gain * torch.exp(2.0 * (0.08 - f_i)), 0.2, 5.0)
         if t >= T + t_spont - record_len:
             stats.append(torch.complex(x, y))
+            rate_acc += nf.float()
 
     z = torch.stack(stats, 2)  # (B, N, record_len)
-    rate = (z.abs() > theta * 0.5).float().mean(2)
-    return rate, z.mean(2)
+    return rate_acc / max(record_len, 1), z.mean(2)
 
 
 def split_features(zmean: torch.Tensor, binned: bool = False) -> torch.Tensor:
