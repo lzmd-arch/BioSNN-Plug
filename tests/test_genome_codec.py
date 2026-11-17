@@ -36,6 +36,7 @@ from scripts.genome_codec import (
     NoCloneError,
     QuantumAxis,
     UnreadableError,
+    _span_of,
     backup,
     decode_genome,
     decode_int,
@@ -54,6 +55,7 @@ from scripts.genome_codec import (
     spans,
     species_barcode,
     substitute,
+    transplant,
     verify_backup,
     verify_checksum,
     viable,
@@ -354,3 +356,49 @@ def test_verify_backup_roundtrip_and_tamper():
     blob_other["plus_a"] = blob_other["plus_b"] = other_seq
     ok3, bad3 = verify_backup(blob_other, LAYOUT)
     assert not ok3 and any("个体身份" in x for x in bad3)
+
+
+def test_transplant_repairs_housekeeping_and_keeps_own_coding():
+    """**修复 = 移植管家区，不是复活旧副本。**
+
+    个体后来得了两个变异：一个有害（调控区出带）、一个有益（编码区换种子）。
+    修复后：有害的没了（管家区来自备份），**有益的还在**（编码区来自她自己）。
+    """
+    ref_seq = encode_genome(VALUES, LAYOUT)
+    rng = random.Random(21)
+    live = ref_seq
+    # 有益：编码区换一次种子
+    live, v_good = substitute(live, LAYOUT, CODING, rng, ref=CONSTANTS)
+    assert v_good.ok
+    code_before = _span_of(live, LAYOUT, "S_net")
+    # 有害：调控区出带
+    for _ in range(500):
+        cand, v = substitute(live, LAYOUT, REGULATORY, rng, ref=CONSTANTS, tol=0.01)
+        if v.lethal:
+            live = cand
+            break
+    assert not viable(decode_genome(live, LAYOUT), CONSTANTS, tol=0.01)[0]
+
+    fixed_seq, v_fix = transplant(live, ref_seq, LAYOUT, CONSTANTS, tol=0.01)
+    assert v_fix.ok, v_fix.why
+    assert viable(decode_genome(fixed_seq, LAYOUT), CONSTANTS, tol=0.01)[0]
+    # 有益变异没被抹掉：个体身份仍与备份不同，编码区仍是她自己那段
+    assert _span_of(fixed_seq, LAYOUT, "S_net") == code_before
+    assert species_barcode(fixed_seq, LAYOUT) == species_barcode(ref_seq, LAYOUT)
+    assert fixed_seq != ref_seq
+
+
+def test_transplant_restores_a_dead_individual():
+    """纯合致死也能修：管家区换回来就活了。"""
+    ref_seq = encode_genome(VALUES, LAYOUT)
+    rng = random.Random(22)
+    dead = ref_seq
+    for _ in range(500):
+        cand, v = substitute(dead, LAYOUT, REGULATORY, rng, ref=CONSTANTS, tol=0.01)
+        if v.lethal:
+            dead = cand
+            break
+    assert express(dead, dead, LAYOUT, CONSTANTS, tol=0.01)[0] is None
+    fixed_seq, v = transplant(dead, ref_seq, LAYOUT, CONSTANTS, tol=0.01)
+    assert v.ok
+    assert express(fixed_seq, dead, LAYOUT, CONSTANTS, tol=0.01)[0] is not None

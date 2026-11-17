@@ -407,6 +407,44 @@ def indel(
 
 
 # --------------------------------------------------------------------------- #
+# 修复：移植，不是复活
+# --------------------------------------------------------------------------- #
+#: 管家区 —— 修复时从备份取这一段
+HOUSEKEEPING = (FIXED, CONSERVED, REGULATORY)
+
+
+def _span_of(seq: str, layout: list[Field], name: str) -> str:
+    return seq[slice(*spans(layout, len(seq))[name])]
+
+
+def transplant(
+    live: str, backup: str, layout: list[Field], ref: dict, *, tol: float = 0.10
+) -> tuple[str, Verdict]:
+    """**修复 = 移植，不是复活。**
+
+    拿备份的**管家区**（固定 / 保守 / 调控）换上，**保留个体自己的编码区与内含子**。
+
+    为什么不能直接恢复到备份：备份是旧的。直接恢复会把个体后来获得的
+    **有益编码变异一起抹掉**，那是复活一个旧副本，不是修好现在这个个体。
+    """
+    tail_w = sum(w for _n, _k, w, c in layout if c == "checksum")
+    parts: list[str] = []
+    for name, kind, _w, codec in layout:
+        if codec == "checksum":
+            continue
+        parts.append(_span_of(backup if kind in HOUSEKEEPING else live, layout, name))
+    seq = _refresh_tail("".join(parts) + "A" * tail_w, layout)
+    if not verify_checksum(seq, layout):
+        return seq, Verdict(False, True, "移植后校验和不符 ⇒ 工程错误")
+    vals = decode_genome(seq, layout)
+    ok, why = viable(vals, ref, tol)
+    if not ok:
+        return seq, Verdict(False, True, f"移植后仍不可活：{why}")
+    same = species_barcode(seq, layout) == species_barcode(backup, layout)
+    return seq, Verdict(True, False, f"移植完成，与备份同种 = {same}")
+
+
+# --------------------------------------------------------------------------- #
 # 表达：二倍体掩蔽
 # --------------------------------------------------------------------------- #
 def viable(values: dict, ref: dict, tol: float = 0.10) -> tuple[bool, str]:

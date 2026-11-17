@@ -35,6 +35,7 @@ from scripts.genome_codec import (
     Chromosome,
     Genome,
     QuantumAxis,
+    _span_of,
     backup,
     decode_genome,
     default_layout,
@@ -44,6 +45,7 @@ from scripts.genome_codec import (
     select,
     species_barcode,
     substitute,
+    transplant,
     verify_backup,
     verify_checksum,
     viable,
@@ -208,6 +210,32 @@ def main() -> int:
 
     print()
     print("=" * 78)
+    print("步 5  修复 = 移植管家区，不是复活旧副本")
+    print("=" * 78)
+    live = plus
+    live, v_good = substitute(live, LAYOUT, CODING, rng, ref=REF)  # 有益：换种子
+    code_before = _span_of(live, LAYOUT, "S_net")
+    for _ in range(800):
+        cand, v = substitute(live, LAYOUT, REGULATORY, rng, ref=REF, tol=0.01)
+        if v.lethal:
+            live = cand
+            break
+    print(
+        f"  个体现状   编码区已换（有益 ok={v_good.ok}），调控区出带 ⇒ 可活？"
+        f"{viable(decode_genome(live, LAYOUT), REF, tol=0.01)[0]}"
+    )
+    fixed_seq, v_fix = transplant(live, plus, LAYOUT, REF, tol=0.01)
+    same_code = _span_of(fixed_seq, LAYOUT, "S_net") == code_before
+    print(f"  移植修复   {v_fix.why}")
+    print(f"  管家区换回 ⇒ 可活？{viable(decode_genome(fixed_seq, LAYOUT), REF, tol=0.01)[0]}")
+    print(
+        f"  编码区保留 ⇒ 她还是她？{same_code}；与备份同种 "
+        f"{species_barcode(fixed_seq, LAYOUT) == blob['species']}"
+    )
+    s6 = v_fix.ok and same_code
+
+    print()
+    print("=" * 78)
     print("判：")
     for tag, ok in (
         ("S-1 测序无损", s1),
@@ -215,12 +243,13 @@ def main() -> int:
         ("S-3 二倍体掩蔽救回", s3),
         ("S-4 择优只认存活", s4),
         ("S-5 备份可恢复、损伤可修", s5),
+        ("S-6 修复是移植不是复活", s6),
     ):
         print(f"  {tag:<24}{'过' if ok else '不通过'}")
     print()
     print("  第三轴语义：基因组只带它的初值与生成器。备份出去的永远是")
     print("  **同基因组的个体**，不是同一个体；唯一能保住同一段历史的是不停机迁移。")
-    return 0 if all((s1, s2, s3, s4, s5)) else 1
+    return 0 if all((s1, s2, s3, s4, s5, s6)) else 1
 
 
 if __name__ == "__main__":
