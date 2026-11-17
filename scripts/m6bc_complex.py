@@ -40,8 +40,8 @@ _sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1]))
 import torch
 
 from scripts.hist_families import make_family_hist, spatial_bins
-from scripts.instrument import majority_baseline, mlp_probe, probe
-from scripts.m6_pools import N, build_pools
+from scripts.instrument import FIRING_WINDOW, majority_baseline, mlp_probe, probe
+from scripts.m6_pools import N, build_pools, run_spont
 from scripts.m6v_dimension import pr_of
 
 OUT = _pathlib.Path("sweep_results/m6bc_complex")
@@ -124,7 +124,9 @@ def run_complex(
             if t % 4 == 3:
                 gain = torch.clamp(gain * torch.exp(2.0 * (0.08 - f_i)), 0.2, 5.0)
         if t >= T + t_spont - record_len:
-            stats.append(torch.complex(x, y))
+            # **记录脉冲相量**（幅度 0/1、相位 = 发放时的膜电位相位）。
+            # 记膜电位均值是错的：ω=0 时它是一堆常数，解码会掉到地板。
+            stats.append(torch.complex(px, py))
             rate_acc += nf.float()
 
     z = torch.stack(stats, 2)  # (B, N, record_len)
@@ -148,25 +150,74 @@ def scramble_phase(zmean: torch.Tensor, seed: int) -> torch.Tensor:
     return zmean * rot
 
 
-def shape_stats(zmean: torch.Tensor) -> dict:
-    S = split_features(zmean)
+def shape_stats(rate: torch.Tensor) -> dict:
+    """三个形状量**都算在脉冲率上** —— 与 `m6az` 的实值工作点可以直接比。"""
     h = (torch.arange(N) % SIDE >= 16).long()
-    h2 = torch.cat([h, h]).bool()  # 实部/虚部各有一份同样的半球划分
-    A, B = S[:, ~h2], S[:, h2]
+    A, B = rate[:, h == 0], rate[:, h == 1]
     a_, b_ = A.mean(1) - A.mean(), B.mean(1) - B.mean()
     integ = abs(float((a_ * b_).sum() / (a_.norm() * b_.norm() + 1e-12)))
     segs = [float((H.std(1) / (H.mean(1) + 1e-9)).mean()) for H in (A, B)]
-    return {"pr": pr_of(S), "integ": integ, "seg": sum(segs) / 2}
+    return {"pr": pr_of(rate), "integ": integ, "seg": sum(segs) / 2}
+
+
+def phase_locking(phasor: torch.Tensor) -> float:
+    """**相位锁定值** R = |平均单位相量|。1 = 全群同相，0 = 相位均匀散布。"""
+    ang = torch.angle(phasor)
+    mag = phasor.abs()
+    w = mag / mag.sum(1, keepdim=True).clamp(min=1e-9)
+    return float(
+        (w * torch.cos(ang)).sum(1).pow(2).add((w * torch.sin(ang)).sum(1).pow(2)).sqrt().mean()
+    )
+
+
+@torch.no_grad()
+def real_cell(seed: int, per_fam: int, dev: str) -> dict:
+    """**实值基线**（同一批族、同参数）。C-1 的对照就是它，不是"另一档旋钮"。"""
+    net = build_pools(seed, dev, K, 0.0, p_long=P_LONG)
+    R, FR, Y, BIN = [], [], [], []
+    for fam in FAMS:
+        toks = make_family_hist(fam, seed * 809 + fam * 43 + 21, T_HIST, per_fam, dev)
+        r = run_spont(
+            seed,
+            0.5,
+            0,
+            0.7,
+            0.02,
+            dev,
+            K,
+            0.0,
+            0.0,
+            -1.0,
+            hist_in=toks,
+            t_spont=T_SPONT,
+            net=net,
+        )[0]
+        R.append(r)
+        FR.append(float(r.mean()))
+        BIN.append(spatial_bins(r.contiguous()))
+        Y.append(torch.full((r.shape[0],), fam, device=r.device))
+    S = torch.cat(R)
+    Yc = torch.cat(Y)
+    perm = torch.randperm(Yc.shape[0], generator=torch.Generator().manual_seed(51 + seed))
+    cut = int(Yc.shape[0] * 0.75)
+    return {
+        "firing": sum(FR) / len(FR),
+        "linear": probe(torch.cat(BIN)[perm], Yc[perm], cut, len(FAMS))[0],
+        "mlp": mlp_probe(S[perm], Yc[perm], cut, len(FAMS))[0],
+        "floor": majority_baseline(Yc[perm][:cut], Yc[perm][cut:], len(FAMS)),
+        **shape_stats(S),
+    }
 
 
 @torch.no_grad()
 def cell(seed: int, sigma_omega: float, hetero: float, per_fam: int, dev: str) -> dict:
     net = build_pools(seed, dev, K, 0.0, p_long=P_LONG)
-    Z, FR, Y, BIN = [], [], [], []
+    Z, R, FR, Y, BIN = [], [], [], [], []
     for fam in FAMS:
         toks = make_family_hist(fam, seed * 809 + fam * 43 + 21, T_HIST, per_fam, dev)
         rate, zm = run_complex(seed, dev, toks, sigma_omega=sigma_omega, hetero=hetero, net=net)
         Z.append(zm)
+        R.append(rate)
         FR.append(float(rate.mean()))
         BIN.append(split_features(zm, binned=True))
         Y.append(torch.full((zm.shape[0],), fam, device=zm.device))
@@ -176,7 +227,8 @@ def cell(seed: int, sigma_omega: float, hetero: float, per_fam: int, dev: str) -
         "firing": sum(FR) / len(FR),
         "BIN": torch.cat(BIN),
         "Y": Yc,
-        **shape_stats(Z),
+        "lock": phase_locking(Z),
+        **shape_stats(torch.cat(R)),
     }
     out["FULL"] = split_features(Z)
     out["FULLscr"] = split_features(scramble_phase(Z, seed))
@@ -188,17 +240,33 @@ def main() -> int:
     ap.add_argument("--seeds", type=int, default=6)
     ap.add_argument("--sigmas", default="0,0.02,0.1,0.3")
     ap.add_argument("--hetero", type=float, default=0.0)
-    ap.add_argument("--per-fam", type=int, default=32)
+    ap.add_argument("--per-fam", type=int, default=64)
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--out", type=_pathlib.Path, default=OUT)
     args = ap.parse_args()
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     args.out.mkdir(parents=True, exist_ok=True)
+    n_seeds = 1 if args.smoke else args.seeds
 
-    res: dict = {"cells": {}}
-    for sg in [float(s) for s in args.sigmas.split(",")]:
+    print("实值基线（A/B 的对照）：", flush=True)
+    real = [real_cell(sd, args.per_fam, dev) for sd in range(n_seeds)]
+    for sd, r in enumerate(real):
+        print(
+            f"  seed {sd}: 发放 {r['firing']:.4f} 线性 {r['linear']:.3f} "
+            f"MLP {r['mlp']:.3f} PR {r['pr']:6.2f} 底板 {r['floor']:.3f}",
+            flush=True,
+        )
+    mean = lambda rows, k: sum(x[k] for x in rows) / len(rows)  # noqa: E731
+    base_read = (
+        mean(real, "linear") if mean(real, "linear") > mean(real, "mlp") else mean(real, "mlp")
+    )
+    base_f, base_pr = mean(real, "firing"), mean(real, "pr")
+    print(f"  => 基线 可读 {base_read:.3f} 发放 {base_f:.4f} PR {base_pr:.2f}", flush=True)
+
+    res: dict = {"real": real, "cells": {}}
+    for sg in [float(x) for x in args.sigmas.split(",")]:
         rows = []
-        for sd in range(args.seeds):
+        for sd in range(n_seeds):
             r = cell(sd, sg, args.hetero, args.per_fam, dev)
             perm = torch.randperm(r["Y"].shape[0], generator=torch.Generator().manual_seed(51 + sd))
             cut = int(r["Y"].shape[0] * 0.75)
@@ -207,28 +275,25 @@ def main() -> int:
             r["mlp"] = mlp_probe(r["FULL"][perm], Yp, cut, len(FAMS))[0]
             r["mlp_scr"] = mlp_probe(r["FULLscr"][perm], Yp, cut, len(FAMS))[0]
             r["floor"] = majority_baseline(Yp[:cut], Yp[cut:], len(FAMS))
+            r["read"] = max(r["linear"], r["mlp"])
+            r["phase_gain"] = r["mlp"] - r["mlp_scr"]
             for k in ("Z", "FULL", "BIN", "FULLscr", "Y"):
                 r.pop(k, None)
             rows.append(r)
             print(
                 f"  σ_ω={sg:g} seed {sd}: PR {r['pr']:6.2f} 整合 {r['integ']:.3f} "
                 f"分离 {r['seg']:.2f} 线性 {r['linear']:.3f} MLP {r['mlp']:.3f} "
-                f"打乱 {r['mlp_scr']:.3f} 发放 {r['firing']:.4f}",
+                f"打乱 {r['mlp_scr']:.3f} 锁相 {r['lock']:.3f} 发放 {r['firing']:.4f}",
                 flush=True,
             )
-            if args.smoke:
-                break
-        if not rows:
-            continue
-        v = {k: sum(x[k] for x in rows) / len(rows) for k in rows[0]}
+        v = {k: mean(rows, k) for k in rows[0]}
         v["rows"] = rows
         v["sigma_omega"] = sg
-        v["phase_gain"] = v["mlp"] - v["mlp_scr"]
         res["cells"][f"sigma={sg:g}"] = v
         print(
-            f"  => σ_ω={sg:g}: PR {v['pr']:.2f} 整合 {v['integ']:.3f} 分离 {v['seg']:.2f} "
-            f"可读 {max(v['linear'], v['mlp']):.3f}（底板 {v['floor']:.3f}）"
-            f" 相位增益 {v['phase_gain']:+.3f} 发放 {v['firing']:.4f}",
+            f"  => σ_ω={sg:g}: 可读 {v['read']:.3f}（基线 {base_read:.3f}，"
+            f"差 {v['read'] - base_read:+.3f}）相位增益 {v['phase_gain']:+.3f} "
+            f"PR {v['pr']:.2f}（基线 {base_pr:.2f}）发放 {v['firing']:.4f}",
             flush=True,
         )
         (args.out / "result.json").write_text(
@@ -238,33 +303,42 @@ def main() -> int:
         )
 
     print("")
-    print("判：")
+    print("判（照 amend1 的相对 A/B）：")
     c = res["cells"]
     c0 = c.get("sigma=0")
+    fw = FIRING_WINDOW
     if c0 is not None:
-        ok0 = 0.01 <= c0["firing"] <= 0.20 and max(c0["linear"], c0["mlp"]) > c0["floor"] + 0.15
-        print(f"  C-0 仪器自检（σ_ω=0 复现工作点）：{'过' if ok0 else '**不过 ⇒ 作废**'}")
-        if not ok0:
+        a = abs(c0["firing"] - base_f) <= 0.05
+        b = c0["read"] > c0["floor"] + 0.05
+        print(
+            f"  C-0 仪器自检：|发放差| {abs(c0['firing'] - base_f):.4f} ≤0.05 {a}；"
+            f"可读 {c0['read']:.3f} > 底板+0.05 {c0['floor'] + 0.05:.3f} {b} => "
+            f"{'过' if a and b else '**不过 ⇒ 作废**'}"
+        )
+        if not (a and b):
             return 0
     hit = [
         k
         for k, v in c.items()
-        if v["sigma_omega"] > 0
-        and 0.01 <= v["firing"] <= 0.20
-        and v["pr"] > 10
-        and v["integ"] > 0.3
-        and v["seg"] > 0.5
-        and max(v["linear"], v["mlp"]) > v["floor"] + 0.15
+        if v["sigma_omega"] > 0 and fw[0] <= v["firing"] <= fw[1] and v["read"] - base_read >= 0.15
     ]
-    print(f"  C-1 存在复值工作点：{hit or '无'} => {'过' if hit else '不过'}")
+    print(f"  C-1 相位带来可读性（≥ 实值基线 +0.15）：{hit or '无'} => {'过' if hit else '不过'}")
     if hit:
         g = max(c[k]["phase_gain"] for k in hit)
         print(
-            f"  C-2 相位承载信息（打乱后掉幅 >0.15）：最大相位增益 {g:+.3f} => "
-            f"{'过：相空间效应' if g > 0.15 else ('方向相反：只有维度效应' if g < 0.05 else '中间，不判方向')}"
+            f"  C-2 信息在相位里（可读 − 相位打乱 ≥0.15）：最大 {g:+.3f} => "
+            f"{'过' if g >= 0.15 else ('方向相反：只是双倍维度' if g < 0.05 else '中间，不判方向')}"
         )
-    if not hit:
-        print("  C-4 全负 ⇒ **工作点不在复平面**，照登负结果，不调剂量重跑。")
+        ok3 = all(c[k]["pr"] >= 0.8 * base_pr for k in hit)
+        print(
+            f"  C-3 不许用塌缩换解码（PR ≥ 0.8×基线 {0.8 * base_pr:.2f}）："
+            f"{[(k, round(c[k]['pr'], 2)) for k in hit]} => {'过' if ok3 else '**不过**'}"
+        )
+    else:
+        print("  C-4 全负 ⇒ **相位这一个自由度买不到实值读出看不见的可读性**，照登。")
+    print("")
+    print("  限定语：本轮默认工作点是 PR≈1 的秩 1 共同模态 ⇒ 只回答「相位能不能承载信息」，")
+    print("  **不回答「三轴能不能兼得」**（那要在 amp_gate 复核值引擎里问）。")
     return 0
 
 
