@@ -242,6 +242,19 @@ def verify_checksum(seq: str, layout: list[Field]) -> bool:
     return decode_int(seq[a:b]) == _checksum(seq[:a])
 
 
+def individual_id(g: Genome) -> str:
+    """**个体身份** = 两条同源染色体整串的指纹。
+
+    物种条码只认保守区，所以同种个体条码相同；`individual_id` 才认到个体。
+    备份必须带它：否则"恢复成功"只能说明"还是千岁"，不能说明"还是她"。
+    """
+    h = hashlib.sha256()
+    for seq in (g.homolog_a.plus, g.homolog_b.plus):
+        h.update(seq.encode())
+        h.update(b"|")
+    return h.hexdigest()[:32]
+
+
 def species_barcode(seq: str, layout: list[Field]) -> str:
     """**物种身份** = 保守区的指纹。改一个碱基就换物种。"""
     sp = spans(layout, len(seq))
@@ -534,8 +547,23 @@ def backup(g: Genome) -> dict:
         "plus_a": g.homolog_a.plus,
         "plus_b": g.homolog_b.plus,
         "species": species_barcode(g.homolog_a.plus, g.layout),
+        "individual": individual_id(g),
         "field_order": [n for n, _k, _w, _c in g.layout],
     }
+
+
+def verify_backup(blob: dict, layout: list[Field]) -> tuple[bool, list[str]]:
+    """**备份校验**：长度、校验和、物种、个体身份，四项全对才算这份文件是她的。"""
+    bad: list[str] = []
+    g = restore(blob, layout)
+    for tag, seq in (("a", g.homolog_a.plus), ("b", g.homolog_b.plus)):
+        if not verify_checksum(seq, layout):
+            bad.append(f"同源 {tag} 校验和不符（双链一致损伤，配对查不出来，只有校验和能查）")
+    if species_barcode(g.homolog_a.plus, layout) != blob.get("species"):
+        bad.append("物种条码与存档不符")
+    if individual_id(g) != blob.get("individual"):
+        bad.append("个体身份与存档不符（这份备份不是她的）")
+    return (not bad), bad
 
 
 def restore(blob: dict, layout: list[Field]) -> Genome:

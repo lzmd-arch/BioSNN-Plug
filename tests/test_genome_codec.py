@@ -46,6 +46,7 @@ from scripts.genome_codec import (
     fitness,
     genome_length,
     indel,
+    individual_id,
     positions_of,
     restore,
     revcomp,
@@ -53,6 +54,7 @@ from scripts.genome_codec import (
     spans,
     species_barcode,
     substitute,
+    verify_backup,
     verify_checksum,
     viable,
 )
@@ -303,3 +305,52 @@ def test_backup_restore_same_species_not_same_individual():
 def test_restore_rejects_wrong_length():
     with pytest.raises(ValueError):
         restore({"plus_a": "ACGT", "plus_b": "ACGT"}, LAYOUT)
+
+
+# --------------------------------------------------------------------------- #
+# 个体身份与两层冗余
+# --------------------------------------------------------------------------- #
+def test_double_strand_damage_caught_by_checksum_only():
+    """**两层冗余各管一段**：配对查单链损伤，校验和查双链一致损伤。"""
+    good = encode_genome(VALUES, LAYOUT)
+    i = 90
+    flipped = "ACGT"[("ACGT".index(good[i]) + 1) % 4]
+    dsb = good[:i] + flipped + good[i + 1 :]  # 两条链**一致地**改了
+    ch = Chromosome.build(dsb)
+    assert ch.mismatch_positions() == [], "双链一致损伤不该被配对查出来"
+    assert not verify_checksum(dsb, LAYOUT), "双链一致损伤必须被校验和查出来"
+
+
+def test_individual_id_distinguishes_same_species():
+    """**物种条码认物种，个体身份认个体**——备份少了后者就只能说"还是千岁"。"""
+    a = _fresh()
+    rng = random.Random(11)
+    seq_b, _ = substitute(a.homolog_a.plus, LAYOUT, CODING, rng, ref=CONSTANTS)
+    b = Genome(Chromosome.build(seq_b), Chromosome.build(seq_b), list(LAYOUT))
+    assert species_barcode(a.homolog_a.plus, LAYOUT) == species_barcode(b.homolog_a.plus, LAYOUT), (
+        "编码区变异不换物种"
+    )
+    assert individual_id(a) != individual_id(b), "编码区变异必须换个体身份"
+
+
+def test_verify_backup_roundtrip_and_tamper():
+    g = _fresh()
+    blob = backup(g)
+    ok, bad = verify_backup(blob, LAYOUT)
+    assert ok and bad == []
+
+    # 把备份里的正链改一个碱基 = 双链一致损伤
+    seq = blob["plus_a"]
+    i = 90
+    blob_bad = dict(blob)
+    blob_bad["plus_a"] = seq[:i] + ("A" if seq[i] != "A" else "C") + seq[i + 1 :]
+    ok2, bad2 = verify_backup(blob_bad, LAYOUT)
+    assert not ok2 and any("校验和" in x for x in bad2)
+
+    # 换一个个体的备份冒充她
+    rng = random.Random(12)
+    other_seq, _ = substitute(seq, LAYOUT, CODING, rng, ref=CONSTANTS)
+    blob_other = dict(blob)
+    blob_other["plus_a"] = blob_other["plus_b"] = other_seq
+    ok3, bad3 = verify_backup(blob_other, LAYOUT)
+    assert not ok3 and any("个体身份" in x for x in bad3)

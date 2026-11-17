@@ -44,6 +44,7 @@ from scripts.genome_codec import (
     select,
     species_barcode,
     substitute,
+    verify_backup,
     verify_checksum,
     viable,
 )
@@ -160,8 +161,11 @@ def main() -> int:
     print("=" * 78)
     blob = backup(g)
     g2 = restore(blob, LAYOUT)
+    vb, vbad = verify_backup(blob, LAYOUT)
+    print(f"  物种条码   {blob['species']}")
+    print(f"  个体身份   {blob['individual']}")
     print(f"  备份内容   {sorted(blob)}")
-    print(f"  恢复体检   {g2.integrity() or '通过'}")
+    print(f"  恢复体检   {g2.integrity() or '通过'}；备份校验 {'通过' if vb else vbad}")
     q = QuantumAxis(generator_seed=int(vals["net"]), birth_hash=blob["species"])
     try:
         q.clone()
@@ -186,7 +190,20 @@ def main() -> int:
         f"  以负链为模板修复 ⇒ 错配 {fixed.mismatch_positions() or '无'}，校验和 "
         f"{'完好' if ck else '仍不符'}，与原件同种 {species_barcode(fixed.plus, LAYOUT) == blob['species']}"
     )
-    s5 = g2.integrity() == [] and fixed.mismatch_positions() == [] and ck
+    # 双链一致损伤：配对查不出来，只有校验和能查
+    dsb_seq = plus[:i] + flipped + plus[i + 1 :]
+    dsb = Chromosome.build(dsb_seq)
+    print(
+        f"  双链一致损伤 ⇒ 错配 {dsb.mismatch_positions() or '无'}，校验和 "
+        f"{'完好' if verify_checksum(dsb_seq, LAYOUT) else '不符（被查出）'}"
+    )
+    s5 = (
+        g2.integrity() == []
+        and fixed.mismatch_positions() == []
+        and ck
+        and vb
+        and verify_checksum(dsb_seq, LAYOUT) is False
+    )
     print(f"  S-5 备份可恢复且损伤可修：{'**过**' if s5 else '不过'}")
 
     print()
